@@ -9,7 +9,7 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
-import life.genny.qwandaq.serialization.entityattribute.EntityAttribute;
+import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.utils.EntityAttributeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -176,7 +176,7 @@ public class Validator {
 
 		BaseEntity originalTarget = beUtils.getBaseEntity(processData.getTargetCode());
 
-		EntityAttribute baseEntityAttribute = (EntityAttribute) beaUtils.getEntityAttribute(definition.getRealm(), definition.getCode(), "UNQ_" + attributeCode).toSerializableCoreEntity();
+		EntityAttribute baseEntityAttribute = beaUtils.getEntityAttribute(definition.getRealm(), definition.getCode(), "UNQ_" + attributeCode);
 		if (baseEntityAttribute != null) {
 			if (qwandaUtils.isDuplicate(definition, answer, target, originalTarget)) {
 				log.error("Duplicate answer detected for target " + answer.getTargetCode());
@@ -318,8 +318,12 @@ public class Validator {
 
 			// So send back a dummy empty value for the LNK_PERSON
 			try {
-				target.setValue(attribute, "[]");
-
+				EntityAttribute entityAttribute = beaUtils.getEntityAttribute(target.getRealm(), target.getCode(), attribute.getCode());
+				if (entityAttribute == null) {
+					entityAttribute = new EntityAttribute(target, attribute, 0.0, "[]");
+					beaUtils.updateEntityAttribute(entityAttribute);
+				}
+				target.addAttribute(entityAttribute);
 				QDataBaseEntityMessage responseMsg = new QDataBaseEntityMessage(target);
 				responseMsg.setTotal(1L);
 				responseMsg.setReturnCount(1L);

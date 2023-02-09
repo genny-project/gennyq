@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 import javax.json.bind.annotation.JsonbTransient;
 import javax.persistence.Transient;
 
+import life.genny.qwandaq.converter.CapabilityConverter;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.jboss.logging.Logger;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -73,12 +74,6 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 	public static final String PRI_EMAIL = "PRI_EMAIL";
 
 	private Map<String, EntityAttribute> baseEntityAttributes = new HashMap<>(0);
-
-	private Set<EntityEntity> links = new LinkedHashSet<>();
-
-	@Transient
-	@JsonbTransient
-	private Set<EntityQuestion> questions = new HashSet<EntityQuestion>(0);
 
 	private transient Set<AnswerLink> answers = new HashSet<AnswerLink>(0);
 
@@ -151,33 +146,6 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 		baseEntityAttributes.forEach(bea -> this.baseEntityAttributes.put(bea.getAttributeCode(), bea));
 	}
 
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public Set<EntityEntity> getLinks() {
-		return links;
-	}
-
-	public void setLinks(final Set<EntityEntity> links) {
-		this.links = links;
-	}
-
-	public void setLinks(final List<EntityEntity> links) {
-		this.links.addAll(links);
-	}
-
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public Set<EntityQuestion> getQuestions() {
-		return this.questions;
-	}
-
-	public void setQuestions(final Set<EntityQuestion> questions) {
-		this.questions = questions;
-	}
-
-	@JsonbTransient
-	public void setQuestions(final List<EntityQuestion> questions) {
-		this.questions.addAll(questions);
-	}
-
 	/**
 	 * containsEntityAttribute This checks if an attribute exists in the baseEntity.
 	 * 
@@ -186,39 +154,6 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 	 */
 	public boolean containsEntityAttribute(final String attributeCode) {
 		return getBaseEntityAttributesMap().containsKey(attributeCode);
-	}
-
-	/**
-	 * containsLink This checks if an attribute link code is linked to the
-	 * baseEntity.
-	 * 
-	 * @param linkAttributeCode the linkAttributeCode to check
-	 * @return boolean
-	 */
-	public boolean containsLink(final String linkAttributeCode) {
-		boolean ret = false;
-		// Check if this code exists in the baseEntityAttributes
-		if (getLinks().parallelStream().anyMatch(ti -> ti.getAttribute().getCode().equals(linkAttributeCode))) {
-			ret = true;
-		}
-		return ret;
-	}
-
-	/**
-	 * containsTarget This checks if another baseEntity is linked to the baseEntity.
-	 * 
-	 * @param targetCode        the targetCode to check
-	 * @param linkAttributeCode the linkAttributeCode to check
-	 * @return boolean
-	 */
-	public boolean containsTarget(final String targetCode, final String linkAttributeCode) {
-		boolean ret = false;
-		// Check if this code exists in the baseEntityAttributes
-		if (getLinks().parallelStream().anyMatch(ti -> (ti.getLink().getAttributeCode().equals(linkAttributeCode)
-				&& (ti.getLink().getTargetCode().equals(targetCode))))) {
-			ret = true;
-		}
-		return ret;
 	}
 
 	/**
@@ -313,22 +248,19 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 	 */
 	public EntityAttribute addAttribute(final Attribute attribute, final Double weight, final Object value)
 			throws BadDataException {
-
 		if (attribute == null)
 			throw new BadDataException("missing Attribute");
 		if (weight == null)
 			throw new BadDataException("missing weight");
-
-		final EntityAttribute entityAttribute = new EntityAttribute(this, attribute, weight, value);
-		entityAttribute.setRealm(getRealm());
-		EntityAttribute existing = this.baseEntityAttributes.get(attribute.getCode());
-		if (existing != null) {
-			if (value != null)
-				existing.setValue(value);
-			existing.setWeight(weight);
-		} else {
-			this.baseEntityAttributes.put(attribute.getCode(), entityAttribute);
+		EntityAttribute entityAttribute = this.baseEntityAttributes.get(attribute.getCode());
+		if (entityAttribute == null) {
+			entityAttribute = new EntityAttribute(this, attribute, weight, value);
 		}
+		if (value != null) {
+			entityAttribute.setValue(value);
+		}
+		entityAttribute.setWeight(weight);
+		this.baseEntityAttributes.put(attribute.getCode(), entityAttribute);
 		return entityAttribute;
 	}
 
@@ -368,50 +300,6 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 	 */
 	public Boolean removeAttribute(final String attributeCode) {
 		return this.getBaseEntityAttributesMap().remove(attributeCode) != null ? true : false;
-	}
-
-	/**
-	 * addTarget This links this baseEntity to a target BaseEntity and associated
-	 * weight,value to the baseEntity. It auto creates the EntityEntity object and
-	 * sets itself to be the source. For efficiency we assume the link does not
-	 * already exist
-	 * 
-	 * @param target        the target to add
-	 * @param linkAttribute the attribute link
-	 * @param weight        the weight of the target
-	 * @return EntityEntity
-	 * @throws BadDataException if the target could not be added
-	 */
-	public EntityEntity addTarget(final BaseEntity target, final Attribute linkAttribute, final Double weight)
-			throws BadDataException {
-		return addTarget(target, linkAttribute, weight, null);
-	}
-
-	/**
-	 * addTarget This links this baseEntity to a target BaseEntity and associated
-	 * weight,value to the baseEntity. It auto creates the EntityEntity object and
-	 * sets itself to be the source. For efficiency we assume the link does not
-	 * already exist
-	 * 
-	 * @param target        the target to add
-	 * @param linkAttribute the attribute link
-	 * @param weight        the weight of the target
-	 * @param value         the value of the target
-	 * @return EntityEntity
-	 * @throws BadDataException if the target could not be added
-	 */
-	public EntityEntity addTarget(final BaseEntity target, final Attribute linkAttribute, final Double weight,
-			final Object value) throws BadDataException {
-		if (target == null)
-			throw new BadDataException("missing Target Entity");
-		if (linkAttribute == null)
-			throw new BadDataException("missing Link Attribute");
-		if (weight == null)
-			throw new BadDataException("missing weight");
-
-		final EntityEntity entityEntity = new EntityEntity(getRealm(), getCode(), target.getCode(), linkAttribute, value, weight);
-		getLinks().add(entityEntity);
-		return entityEntity;
 	}
 
 	/**
@@ -829,11 +717,11 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 		baseEntitySerializable.setCode(getCode());
 		baseEntitySerializable.setCreated(getCreated());
 		// baseEntitySerializable.setDtype();
-		baseEntitySerializable.setId(getId());
 		baseEntitySerializable.setName(getName());
 		baseEntitySerializable.setRealm(getRealm());
 		baseEntitySerializable.setStatus(getStatus().ordinal());
 		baseEntitySerializable.setUpdated(getUpdated());
+		baseEntitySerializable.setCapreqs(CapabilityConverter.convertToDBColumn(getCapabilityRequirements()));
 		return baseEntitySerializable;
 	}
 
@@ -853,7 +741,6 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 		hBaseEntity.setCode(getCode());
 		hBaseEntity.setCreated(getCreated());
 		// hBaseEntity.setDtype();
-		hBaseEntity.setId(getId());
 		hBaseEntity.setName(getName());
 		hBaseEntity.setRealm(getRealm());
 		hBaseEntity.setStatus(getStatus());
@@ -869,6 +756,7 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 		clone.setRealm(getRealm());
 		clone.setStatus(getStatus());
 		clone.setUpdated(getUpdated());
+		clone.setCapabilityRequirements(getCapabilityRequirements());
 		if(includeAttributes) {
 			Map<String, EntityAttribute> baseEntityAttributesMap = getBaseEntityAttributesMap();
 			Map<String, EntityAttribute> clonedBaseEntityAttributesMap = new HashMap<>(baseEntityAttributesMap.size());

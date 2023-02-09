@@ -5,7 +5,6 @@ import life.genny.qwandaq.Link;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.attribute.HAttribute;
 import life.genny.qwandaq.attribute.HEntityAttribute;
 import life.genny.qwandaq.datatype.capability.core.Capability;
@@ -26,7 +25,6 @@ import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.persistence.Table;
 import javax.transaction.Transactional;
-import java.lang.invoke.MethodHandles;
 import java.util.LinkedList;
 import java.util.List;
 

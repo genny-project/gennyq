@@ -8,6 +8,9 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+
+import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.utils.*;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.errors.RevisionSyntaxException;
 import org.jboss.logging.Logger;
@@ -18,11 +21,6 @@ import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.ServiceToken;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.DatabaseUtils;
-import life.genny.qwandaq.utils.DefUtils;
-import life.genny.qwandaq.utils.GithubUtils;
-import life.genny.qwandaq.utils.SearchUtils;
 
 @ApplicationScoped
 public class ImportGithubService {
@@ -38,7 +36,7 @@ public class ImportGithubService {
 	BaseEntityUtils beUtils;
 
 	@Inject
-	SearchUtils searchUtils;
+	EntityAttributeUtils beaUtils;
 
 	@Inject
 	ServiceToken serviceToken;
@@ -75,16 +73,20 @@ public class ImportGithubService {
 		}
 		log.info("bes = " + bes.size());
 		Definition dotDef = Definition.from(beUtils.getBaseEntity(realm, "DEF_DOCUMENT_TEMPLATE"));
+		dotDef.setBaseEntityAttributes(beaUtils.getAllEntityAttributesForBaseEntity(realm, "DEF_DOCUMENT_TEMPLATE"));
 		for (BaseEntity be : bes) {
 			if (be != null) {
-				log.info("saving be = " + be.getCode() + ":" + be.getName());
-				BaseEntity newBe = beUtils.create(dotDef, be.getName(), be.getCode());
-				newBe.setRealm(be.getRealm());
+				String beCode = be.getCode();
+				log.info("saving be = " + beCode + ":" + be.getName());
+				BaseEntity newBe = beUtils.create(dotDef, be.getName(), beCode);
+				String productCode = be.getRealm();
+				newBe.setRealm(productCode);
 
 				newBe.addAnswer(new Answer(newBe, newBe, cm.getAttribute("PRI_NAME"), be.getName()));
-				newBe.addAnswer(new Answer(newBe, newBe, cm.getAttribute("PRI_CODE"), be.getCode()));
+				newBe.addAnswer(new Answer(newBe, newBe, cm.getAttribute("PRI_CODE"), beCode));
 				newBe.addAnswer(new Answer(newBe, newBe, cm.getAttribute("PRI_HTML_MERGE"),
-						be.getValueAsString("PRI_HTML_MERGE")));
+						beaUtils.getEntityAttribute(
+								productCode, beCode, "PRI_HTML_MERGE").getValueString()));
 
 				beUtils.updateBaseEntity(newBe);
 			} else {

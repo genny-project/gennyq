@@ -28,6 +28,9 @@ public class MessageProcessor {
 
 	private static final ManagedExecutor executor = ManagedExecutor.builder().build();
 
+    @Inject
+    KeycloakUtils keycloakUtils;
+
 	@Inject
 	BaseEntityUtils beUtils;
 
@@ -176,7 +179,7 @@ public class MessageProcessor {
 						+ recipientBe.getCode() + " with realm " + serviceToken.getRealm());
 
                 // Fetch access token
-				String accessToken = KeycloakUtils.getImpersonatedToken(recipientBe, serviceToken, projectBe);
+				String accessToken = keycloakUtils.getImpersonatedToken(recipientBe, serviceToken, projectBe);
 
                 // Encode URL and put back in the map
                 String url = MsgUtils.encodedUrlBuilder(GennySettings.projectUrl() + "/home", parentCode, code, targetCode, accessToken);

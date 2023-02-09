@@ -55,6 +55,9 @@ public class DefUtils {
 	BaseEntityUtils beUtils;
 
 	@Inject
+	EntityAttributeUtils beaUtils;
+
+	@Inject
 	SearchUtils searchUtils;
 
 	@Inject
@@ -114,7 +117,7 @@ public class DefUtils {
 			Definition definition = beUtils.getDefinition(code);
 
 			// merge into new def
-			for (EntityAttribute ea : definition.getBaseEntityAttributes()) {
+			for (EntityAttribute ea : beaUtils.getAllEntityAttributesForBaseEntity(definition)) {
 				try {
 					mergedDef.addAttribute(ea);
 				} catch (Exception e) {
@@ -185,8 +188,7 @@ public class DefUtils {
 	 * saved to a {@link BaseEntity}
 	 *
 	 * @param defBE     the defBE to check with
-	 * @param attribute the attribute to check
-	 * @param value     the value to check
+	 * @param acvs     the attribute code value to check
 	 * @return Boolean
 	 */
 	public Boolean attributeValueValidForDEF(BaseEntity defBE, AttributeCodeValueString acvs) {
@@ -233,11 +235,10 @@ public class DefUtils {
 	 */
 	@Deprecated
 	public SearchEntity mergeFilterValueVariables(SearchEntity searchBE, Map<String, Object> ctxMap) {
-
-		for (Map.Entry<String, EntityAttribute> entry : searchBE.getBaseEntityAttributesMap().entrySet()) {
+		List<EntityAttribute> entityAttributes = beaUtils.getAllEntityAttributesForBaseEntity(searchBE);
+		for (EntityAttribute entityAttribute : entityAttributes) {
 			// iterate all Filters
-			String attributeCode = entry.getKey();
-			EntityAttribute ea = entry.getValue();
+			String attributeCode = entityAttribute.getAttributeCode();
 			if (attributeCode.startsWith("PRI_") || attributeCode.startsWith("LNK_")) {
 
 				// grab the Attribute for this Code, using array in case this is an associated
@@ -248,11 +249,11 @@ public class DefUtils {
 				Attribute att = cm.getAttribute(attributeCodeLast);
 				DataType dataType = att.getDataType();
 
-				Object attributeFilterValue = ea.getValue();
+				Object attributeFilterValue = entityAttribute.getValue();
 				if (attributeFilterValue != null) {
 					// ensure EntityAttribute Dataype is Correct for Filter
-					Attribute searchAtt = new Attribute(attributeCode, ea.getAttributeName(), dataType);
-					ea.setAttribute(searchAtt);
+					Attribute searchAtt = new Attribute(attributeCode, entityAttribute.getAttributeName(), dataType);
+					entityAttribute.setAttribute(searchAtt);
 					String attrValStr = attributeFilterValue.toString();
 
 					// first check if merge is required
@@ -278,7 +279,7 @@ public class DefUtils {
 							Object mergedObj = mergeUtils.wordMerge(attrValStr.replace("[[", "").replace("]]", ""),
 									ctxMap);
 							// Ensure Datatype is Correct, then set Value
-							ea.setValue(mergedObj);
+							entityAttribute.setValue(mergedObj);
 						} else {
 							log.warn(ANSIColour.RED + "Not all contexts are present for " + attrValStr
 									+ ANSIColour.RESET);
@@ -286,7 +287,7 @@ public class DefUtils {
 						}
 					} else {
 						// this should filter out any values of incorrect datatype
-						ea.setValue(attributeFilterValue);
+						entityAttribute.setValue(attributeFilterValue);
 					}
 				} else {
 					log.error(

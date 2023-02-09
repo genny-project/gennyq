@@ -30,7 +30,7 @@ import javax.persistence.criteria.Root;
 
 import life.genny.qwandaq.entity.*;
 import life.genny.qwandaq.entity.search.SearchEntity;
-import life.genny.qwandaq.serialization.entityattribute.EntityAttribute;
+import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.utils.*;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
@@ -268,16 +268,6 @@ public class FyodorUltra {
 			cauldron.add(cb.equal(join.get("realm"), realm));
 		});
 
-		// ensure link join realm is correct
-		Root<HEntityEntity> link = cauldron.getLink();
-		if (link != null) {
-			cauldron.add(cb.equal(link.get("realm"), realm));
-
-			// order by weight of link if no orders are set
-			if (cauldron.getOrders().isEmpty())
-				cauldron.add(cb.asc(link.get("weight")));
-		}
-
 		// handle status (defaults to ACTIVE)
 		EEntityStatus status = searchEntity.getSearchStatus();
 		Case<Number> sc = selectCaseEntityStatus(root);
@@ -452,7 +442,7 @@ public class FyodorUltra {
 
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 		Root<HBaseEntity> root = cauldron.getRoot();
-		Root<HEntityEntity> entityEntity = query.from(HEntityEntity.class);
+		/*Root<HEntityEntity> entityEntity = query.from(HEntityEntity.class);
 		cauldron.setLink(entityEntity);
 
 		// Only look in targetCode if both are null
@@ -472,7 +462,7 @@ public class FyodorUltra {
 			predicates.add(cb.equal(entityEntity.get("link").get("attributeCode"), linkCode));
 		}
 		if (linkValue != null)
-			predicates.add(cb.equal(entityEntity.get("link").get("linkValue"), linkValue));
+			predicates.add(cb.equal(entityEntity.get("link").get("linkValue"), linkValue));*/
 
 		return predicates;
 	}
@@ -510,7 +500,7 @@ public class FyodorUltra {
 		Root<HBaseEntity> root = cauldron.getRoot();
 
 		Join<HBaseEntity, HEntityAttribute> join = root.join("baseEntityAttributes", JoinType.LEFT);
-		join.on(cb.equal(root.get("id"), join.get("pk").get("baseEntity").get("id")));
+		join.on(cb.equal(root.get("code"), join.get("baseEntityCode")));
 		cauldron.getJoinMap().put("WILDCARD", join);
 
 		return cb.like(join.get("valueString"), "%" + wildcard + "%");
@@ -655,7 +645,8 @@ public class FyodorUltra {
 		// add to map if not already there
 		if (!cauldron.getJoinMap().containsKey(code)) {
 			Join<HBaseEntity, HEntityAttribute> join = cauldron.getRoot().join("baseEntityAttributes", JoinType.LEFT);
-			join.on(cb.equal(join.get("pk").get("attribute").get("code"), code));
+			join.on(cb.equal(join.get("attributeCode"), code));
+			join.on(cb.equal(join.get("realm"), cauldron.getSearchEntity().getRealm()));
 			cauldron.getJoinMap().put(code, join);
 		}
 
@@ -728,12 +719,12 @@ public class FyodorUltra {
 
 		// find value
 		String value;
-		if (Attribute.PRI_NAME.equals(attributeCode))
+		if (Attribute.PRI_NAME.equals(attributeCode)) {
 			value = entity.getName();
-		if (Attribute.PRI_CODE.equals(attributeCode))
+		} else if (Attribute.PRI_CODE.equals(attributeCode)) {
 			value = entity.getCode();
-		else {
-			EntityAttribute entityAttribute = (EntityAttribute) beaUtils.getEntityAttribute(entity.getRealm(), entity.getCode(), attributeCode).toSerializableCoreEntity();
+		} else {
+			EntityAttribute entityAttribute = beaUtils.getEntityAttribute(entity.getRealm(), entity.getCode(), attributeCode);
 			if (entityAttribute != null)
 				value = entityAttribute.getValueString();
 			else

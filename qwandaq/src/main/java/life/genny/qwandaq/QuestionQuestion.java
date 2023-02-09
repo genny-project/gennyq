@@ -1,8 +1,10 @@
 package life.genny.qwandaq;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.converter.CapabilityConverter;
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.intf.ICapabilityHiddenFilterable;
+import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -17,7 +19,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @RegisterForReflection
-public class QuestionQuestion implements java.io.Serializable, Comparable<Object>, ICapabilityHiddenFilterable {
+public class QuestionQuestion implements CoreEntityPersistable, Comparable<Object>, ICapabilityHiddenFilterable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -396,4 +398,22 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 		this.capabilityRequirements = requirements;
 	}
 
+	@Override
+	public CoreEntitySerializable toSerializableCoreEntity() {
+		life.genny.qwandaq.serialization.questionquestion.QuestionQuestion questionQuestion = new life.genny.qwandaq.serialization.questionquestion.QuestionQuestion();
+		questionQuestion.setParentCode(getParentCode());
+		questionQuestion.setChildCode(getChildCode());
+		questionQuestion.setCreated(getCreated());
+		questionQuestion.setDisabled(getDisabled());
+		questionQuestion.setHidden(getHidden());
+		questionQuestion.setIcon(getIcon());
+		questionQuestion.setMandatory(getMandatory());
+		questionQuestion.setReadonly(getReadonly());
+		questionQuestion.setRealm(getRealm());
+		questionQuestion.setUpdated(getUpdated());
+		questionQuestion.setVersion(getVersion());
+		questionQuestion.setWeight(getWeight());
+		questionQuestion.setCapreqs(CapabilityConverter.convertToDBColumn(getCapabilityRequirements()));
+		return questionQuestion;
+	}
 }

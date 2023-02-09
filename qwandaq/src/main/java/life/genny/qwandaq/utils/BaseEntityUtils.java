@@ -19,6 +19,7 @@ import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
+import org.jetbrains.annotations.Nullable;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.control.ActivateRequestContext;
@@ -104,7 +105,10 @@ public class BaseEntityUtils {
 	 * @return
 	 */
 	public Definition getDefinition(String code) {
-		return Definition.from(getBaseEntity(code));
+		BaseEntity baseEntity = getBaseEntity(code);
+		Definition definition = Definition.from(baseEntity);
+		definition.setBaseEntityAttributes(beaUtils.getAllEntityAttributesForBaseEntity(baseEntity));
+		return definition;
 	}
 
 	/**
@@ -127,7 +131,7 @@ public class BaseEntityUtils {
 	 * @return The BaseEntity
 	 */
 	public BaseEntity getBaseEntity(String productCode, String code) {
-		return getBaseEntity(productCode, code, true);
+		return getBaseEntity(productCode, code, false);
 	}
 
 	/**
@@ -156,7 +160,7 @@ public class BaseEntityUtils {
 				log.debugf("%s BaseEntityAttributes found for base entity [%s:%s]. Setting them to BE...", entityAttributesForBaseEntity.size(), productCode, code);
 			}
 			baseEntity.setBaseEntityAttributes(entityAttributesForBaseEntity);
-			for(EntityAttribute entityAttribute : baseEntity.getBaseEntityAttributes()) {
+			for(EntityAttribute entityAttribute : beaUtils.getAllEntityAttributesForBaseEntity(baseEntity)) {
 				log.debugf("BaseEntityAttribute found in base entity [%s:%s:%s].", entityAttribute.getRealm(), entityAttribute.getBaseEntityCode(), entityAttribute.getAttributeCode());
 			}
 			log.debugf("Added %s BaseEntityAttributes to BE [%s:%s]", baseEntity.getBaseEntityAttributesMap().size(), baseEntity.getRealm(), baseEntity.getCode());
@@ -182,42 +186,25 @@ public class BaseEntityUtils {
 	 * @return the newly cached BaseEntity
 	 */
 	public BaseEntity updateBaseEntity(BaseEntity baseEntity, boolean updateBaseEntityAttributes) {
-		// ensure for all entityAttribute that baseentity and attribute are not null
-		for (EntityAttribute ea : baseEntity.getBaseEntityAttributes()) {
-			if (ea.getRealm() == null) {
-				ea.setRealm(baseEntity.getRealm());
-			}
-			if (ea.getBaseEntityCode() == null) {
-				ea.setBaseEntityCode(baseEntity.getCode());
-			}
-			if (ea.getAttribute() == null) {
-				Attribute attribute = cm.getAttribute(baseEntity.getRealm(), ea.getAttributeCode());
-				ea.setAttribute(attribute);
-			}
-		}
-
-		// databaseUtils.saveBaseEntity(baseEntity);
-		// cache.putObject(userToken.getProductCode(), baseEntity.getCode(), baseEntity);
-
 		BaseEntityKey key = new BaseEntityKey(baseEntity.getRealm(), baseEntity.getCode());
-		boolean savedSuccssfully = cm.saveEntity(CacheManager.CACHE_NAME_BASEENTITY, key, baseEntity);
+		boolean savedSuccessfully = cm.saveEntity(CacheManager.CACHE_NAME_BASEENTITY, key, baseEntity);
 		if (updateBaseEntityAttributes) {
-			baseEntity.getBaseEntityAttributes().forEach(bea -> beaUtils.updateEntityAttribute(bea));
+			beaUtils.getAllEntityAttributesForBaseEntity(baseEntity).forEach(bea -> {
+				// ensure for all entityAttribute that baseentity and attribute are not null
+				if (bea.getRealm() == null) {
+					bea.setRealm(baseEntity.getRealm());
+				}
+				if (bea.getBaseEntityCode() == null) {
+					bea.setBaseEntityCode(baseEntity.getCode());
+				}
+				if (bea.getAttribute() == null) {
+					Attribute attribute = cm.getAttribute(baseEntity.getRealm(), bea.getAttributeCode());
+					bea.setAttribute(attribute);
+				}
+				beaUtils.updateEntityAttribute(bea);
+			});
 		}
-		return savedSuccssfully ? baseEntity : null;
-	}
-
-	/**
-	 * Get the BaseEntity that is linked with a specific attribute. Generally this
-	 * will be a LNK attribute, although it doesn't have to be.
-	 *
-	 * @param baseEntityCode The targeted BaseEntity Code
-	 * @param attributeCode  The attribute storing the data
-	 * @return The BaseEntity with code stored in the attribute
-	 */
-	public BaseEntity getBaseEntityFromLinkAttribute(String baseEntityCode, String attributeCode) {
-		BaseEntity be = getBaseEntity(baseEntityCode);
-		return getBaseEntityFromLinkAttribute(be, attributeCode);
+		return savedSuccessfully ? baseEntity : null;
 	}
 
 	/**
@@ -228,29 +215,13 @@ public class BaseEntityUtils {
 	 * @return The BaseEntity with code stored in the attribute
 	 */
 	public BaseEntity getBaseEntityFromLinkAttribute(BaseEntity baseEntity, String attributeCode) {
-		String newBaseEntityCode = getBaseEntityCodeFromLinkAttribute(baseEntity, attributeCode);
-		// return null if attributeCode valueString is null or empty
-		if (StringUtils.isEmpty(newBaseEntityCode))
-			return null;
+		String newBaseEntityCode = CommonUtils.cleanUpAttributeValue(getStringValueOfAttribute(baseEntity, attributeCode));
 		try {
-			BaseEntity newBe = getBaseEntity(newBaseEntityCode);
-			return newBe;
+			return getBaseEntity(newBaseEntityCode);
 		} catch (ItemNotFoundException e) {
 			log.error(ANSIColour.RED + "Could not find entity: " + newBaseEntityCode + ANSIColour.RESET);
 			return null;
 		}
-	}
-
-	/**
-	 * Get the code of the BaseEntity that is linked with a specific attribute.
-	 *
-	 * @param baseEntityCode The targeted BaseEntity Code
-	 * @param attributeCode  The attribute storing the data
-	 * @return The BaseEntity code stored in the attribute
-	 */
-	public String getBaseEntityCodeFromLinkAttribute(String baseEntityCode, String attributeCode) {
-		BaseEntity be = getBaseEntity(baseEntityCode);
-		return getBaseEntityCodeFromLinkAttribute(be, attributeCode);
 	}
 
 	/**
@@ -261,20 +232,23 @@ public class BaseEntityUtils {
 	 * @return The BaseEntity code stored in the attribute
 	 */
 	public String getBaseEntityCodeFromLinkAttribute(BaseEntity baseEntity, String attributeCode) {
+		String attributeValue = getStringValueOfAttribute(baseEntity, attributeCode);
+		if (attributeValue == null || !(attributeValue instanceof String))
+			return null;
+		return CommonUtils.cleanUpAttributeValue(attributeValue);
+	}
 
-		Optional<String> attributeValue = baseEntity.getValue(attributeCode);
-		if (attributeValue.isPresent()) {
+	public String getStringValueOfAttribute(BaseEntity baseEntity, String attributeCode) {
+		return getAttributeValue(baseEntity, attributeCode);
+	}
 
-			Object value = attributeValue.get();
-			if (value == null)
-				return null;
-			if (!(value instanceof String))
-				return null;
-
-			return CommonUtils.cleanUpAttributeValue((String) value);
+	@Nullable
+	private <T> T getAttributeValue(BaseEntity baseEntity, String attributeCode) {
+		EntityAttribute entityAttribute = beaUtils.getEntityAttribute(baseEntity.getRealm(), baseEntity.getCode(), attributeCode);
+		if (entityAttribute == null) {
+			return null;
 		}
-
-		return null;
+		return entityAttribute.getValue();
 	}
 
 	/**
@@ -540,14 +514,20 @@ public class BaseEntityUtils {
 			throw new DebugException("Code parameter " + code + " is not a valid BE code!");
 
 		BaseEntity item = null;
-		Optional<EntityAttribute> uuidEA = definition.findEntityAttribute(Prefix.ATT.concat(Attribute.PRI_UUID));
-
-		if (uuidEA.isPresent())
+		String productCode = definition.getRealm();
+		String definitionCode = definition.getCode();
+		EntityAttribute uuidEA = beaUtils.getEntityAttribute(productCode, definitionCode, Prefix.ATT.concat(Attribute.PRI_UUID));
+		if (uuidEA != null) {
 			item = createUser(definition);
+		}
 		else {
-			String prefix = definition.getValueAsString(Attribute.PRI_PREFIX);
+			EntityAttribute prefixAttr = beaUtils.getEntityAttribute(productCode, definitionCode, PRI_PREFIX, false);
+			if(prefixAttr == null) {
+				throw new DefinitionException("No prefix set for the def: " + definitionCode);
+			}
+			String prefix = prefixAttr.getValueString();
 			if (StringUtils.isBlank(prefix))
-				throw new DefinitionException("No prefix set for the def: " + definition.getCode());
+				throw new DefinitionException("No prefix set for the def: " + definitionCode);
 
 			if (StringUtils.isBlank(code))
 				code = prefix + "_" + UUID.randomUUID().toString().substring(0, 32).toUpperCase();
@@ -555,16 +535,17 @@ public class BaseEntityUtils {
 				name = definition.getName();
 
 			item = new BaseEntity(code.toUpperCase(), name);
-			item.setRealm(definition.getRealm());
+			item.setRealm(productCode);
+			item.addAttribute(new EntityAttribute());
 		}
 
 		// save to DB and cache
 		updateBaseEntity(item);
 
-		List<EntityAttribute> atts = definition.findPrefixEntityAttributes(Prefix.ATT);
+		List<EntityAttribute> atts = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(productCode, definitionCode, Prefix.ATT);
 		for (EntityAttribute ea : atts) {
 			String attrCode = ea.getAttributeCode().substring("ATT_".length());
-			Attribute attribute = cm.getAttribute(definition.getRealm(), attrCode);
+			Attribute attribute = cm.getAttribute(productCode, attrCode);
 
 			if (attribute == null) {
 				log.warn("No Attribute found for def attr " + attrCode);
@@ -584,7 +565,7 @@ public class BaseEntityUtils {
 			if (mandatory == null) {
 				mandatory = false;
 				log.warn("**** DEF attribute ATT_" + attrCode + " has no mandatory boolean set in "
-						+ definition.getCode());
+						+ definitionCode);
 			}
 			// Only process mandatory attributes, or defaults
 			if (mandatory || defaultVal != null) {
@@ -596,7 +577,7 @@ public class BaseEntityUtils {
 		}
 
 		Attribute linkDef = cm.getAttribute(Attribute.LNK_DEF);
-		item.addAnswer(new Answer(item, item, linkDef, "[\"" + definition.getCode() + "\"]"));
+		item.addAnswer(new Answer(item, item, linkDef, "[\"" + definitionCode + "\"]"));
 
 		// author of the BE
 		Attribute lnkAuthorAttr = cm.getAttribute(Attribute.LNK_AUTHOR);

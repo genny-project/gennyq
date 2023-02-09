@@ -106,19 +106,20 @@ public class RoleManager extends Manager {
 	public BaseEntity setChildren(String productCode, BaseEntity targetRole, String... childrenCodes) {
 		if (targetRole == null)
 			throw new NullParameterException("targetRole");
-		Optional<EntityAttribute> optChildren = targetRole.findEntityAttribute(lnkChildAttribute.get(productCode));
+		EntityAttribute children = beaUtils.getEntityAttribute(productCode, targetRole.getCode(), lnkChildAttribute.get(productCode).getCode());
 
 		String codeString = CommonUtils.getArrayString(childrenCodes);
 
 		// add/edit LNK_CHILDREN
-		if(!optChildren.isPresent()) {
-			targetRole.addAttribute(lnkChildAttribute.get(productCode), 1.0, codeString);
+		if(children == null) {
+			EntityAttribute addedAttribute = targetRole.addAttribute(lnkChildAttribute.get(productCode), 1.0, codeString);
+			beaUtils.updateEntityAttribute(addedAttribute);
 		} else {
-			EntityAttribute childrenEA = optChildren.get();
-			childrenEA.setValue(codeString);
+			children.setValue(codeString);
+			beaUtils.updateEntityAttribute(children);
 		}
 
-		// TODO: Keep an eye on this becasue it may have just broken
+		// TODO: Keep an eye on this because it may have just broken
 		beUtils.updateBaseEntity(targetRole);
 		return targetRole;
 	}
@@ -250,11 +251,10 @@ public class RoleManager extends Manager {
 	 */
 	public BaseEntity inheritRole(String productCode, BaseEntity role, final BaseEntity parentRole) {
 		BaseEntity ret = role;
-		List<EntityAttribute> perms = parentRole.findPrefixEntityAttributes(Prefix.CAP);
+		List<EntityAttribute> perms = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(parentRole.getRealm(), parentRole.getCode(), Prefix.CAP);
 		for (EntityAttribute permissionEA : perms) {
-			Attribute permission = permissionEA.getAttribute();
 			List<CapabilityNode> capabilities = CapabilitiesManager.deserializeCapArray(permissionEA.getValue());
-			ret = capManager.addCapabilityToBaseEntity(productCode, ret, permission.getCode(), capabilities);
+			ret = capManager.addCapabilityToBaseEntity(productCode, ret, permissionEA.getAttributeCode(), capabilities);
 
 			beUtils.updateBaseEntity(ret);
 		}
@@ -316,7 +316,7 @@ public class RoleManager extends Manager {
 		EntityAttribute baseEntityAttribute = beaUtils.getEntityAttribute(target.getRealm(), target.getCode(),Attribute.LNK_ROLE);
 		// Create it
 		if (baseEntityAttribute == null) {
-			target.addAttribute(lnkRoleAttribute.get(target.getRealm()), 1.0, "[" + role.getCode() + "]");
+			baseEntityAttribute = target.addAttribute(lnkRoleAttribute.get(target.getRealm()), 1.0, "[" + role.getCode() + "]");
 			beUtils.updateBaseEntity(target);
 			beaUtils.updateEntityAttribute(baseEntityAttribute);
 			return target;

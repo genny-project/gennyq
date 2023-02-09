@@ -1,25 +1,18 @@
 package life.genny.qwandaq.data;
 
-import java.io.InputStream;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-
-import javax.annotation.PostConstruct;
-import javax.enterprise.context.ApplicationScoped;
-
 import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import life.genny.qwandaq.serialization.attribute.AttributeInitializerImpl;
 import life.genny.qwandaq.serialization.attribute.AttributeKeyInitializerImpl;
+import life.genny.qwandaq.serialization.baseentity.BaseEntityInitializerImpl;
+import life.genny.qwandaq.serialization.baseentity.BaseEntityKeyInitializerImpl;
+import life.genny.qwandaq.serialization.common.CoreEntityKey;
 import life.genny.qwandaq.serialization.entityattribute.EntityAttributeInitializerImpl;
 import life.genny.qwandaq.serialization.entityattribute.EntityAttributeKeyInitializerImpl;
-import life.genny.qwandaq.serialization.entityentity.EntityEntityInitializerImpl;
-import life.genny.qwandaq.serialization.entityentity.EntityEntityKeyInitializerImpl;
+import life.genny.qwandaq.serialization.question.QuestionInitializerImpl;
+import life.genny.qwandaq.serialization.question.QuestionKeyInitializerImpl;
+import life.genny.qwandaq.serialization.questionquestion.QuestionQuestionInitializerImpl;
+import life.genny.qwandaq.serialization.questionquestion.QuestionQuestionKeyInitializerImpl;
 import org.infinispan.client.hotrod.DefaultTemplate;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
@@ -32,9 +25,10 @@ import org.infinispan.commons.util.Util;
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.jboss.logging.Logger;
 
-import life.genny.qwandaq.serialization.baseentity.BaseEntityInitializerImpl;
-import life.genny.qwandaq.serialization.baseentity.BaseEntityKeyInitializerImpl;
-import life.genny.qwandaq.serialization.common.CoreEntityKey;
+import javax.annotation.PostConstruct;
+import javax.enterprise.context.ApplicationScoped;
+import java.io.InputStream;
+import java.util.*;
 
 /**
  * A remote cache management class for accessing realm caches.
@@ -114,10 +108,14 @@ public class GennyCache {
 		serCtxInitList.add(attributeSCI);
 		SerializationContextInitializer attributeKeySCI = new AttributeKeyInitializerImpl();
 		serCtxInitList.add(attributeKeySCI);
-		SerializationContextInitializer entityEntitySCI = new EntityEntityInitializerImpl();
-		serCtxInitList.add(entityEntitySCI);
-		SerializationContextInitializer entityEntityKeySCI = new EntityEntityKeyInitializerImpl();
-		serCtxInitList.add(entityEntityKeySCI);
+		SerializationContextInitializer questionSCI = new QuestionInitializerImpl();
+		serCtxInitList.add(questionSCI);
+		SerializationContextInitializer questionKeySCI = new QuestionKeyInitializerImpl();
+		serCtxInitList.add(questionKeySCI);
+		SerializationContextInitializer questionQuestionSCI = new QuestionQuestionInitializerImpl();
+		serCtxInitList.add(questionQuestionSCI);
+		SerializationContextInitializer questionQuestionKeySCI = new QuestionQuestionKeyInitializerImpl();
+		serCtxInitList.add(questionQuestionKeySCI);
 		return serCtxInitList;
 	}
 

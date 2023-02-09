@@ -8,6 +8,8 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.utils.EntityAttributeUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.models.TimerData;
@@ -39,7 +41,7 @@ public class TimerEventService {
 	DatabaseUtils databaseUtils;
 
 	@Inject
-	BaseEntityUtils beUtils;
+	EntityAttributeUtils beaUtils;
 
 	@Inject
 	SearchUtils searchUtils;
@@ -77,14 +79,23 @@ public class TimerEventService {
 		if (timerEventBEs != null) {
 			for (BaseEntity timerEventBE : timerEventBEs) {
 
-				log.info("Processing TimerEvent " + timerEventBE.getCode());
+				String timerEventBECode = timerEventBE.getCode();
+				log.info("Processing TimerEvent " + timerEventBECode);
 				log.info(" PRI_MILESTONE : " + timerEventBE.getValue("PRI_MILESTONE"));
 				log.info(" PRI_ATTRIBUTECODE_VALUES : " + timerEventBE.getValue("PRI_ATTRIBUTECODE_VALUES"));
 				log.info(" PRI_MINUTES : " + timerEventBE.getValue("PRI_MINUTES", 0));
 				TimerEvent timerEvent = new TimerEvent();
 				timerEvent.setTimeStamp((long) timerEventBE.getValue("PRI_MINUTES", 0));
-				timerEvent.setUniqueCode(timerEventBE.getValueAsString("PRI_MILESTONE"));
-				timerEvent.setUpdatePairs(timerEventBE.getValueAsString("PRI_ATTRIBUTECODE_VALUES"));
+				EntityAttribute priMilestone = beaUtils.getEntityAttribute(productCode, timerEventBECode, "PRI_MILESTONE", false);
+				if (priMilestone != null) {
+					String milestoneValue = priMilestone.getValueString();
+					timerEvent.setUniqueCode(milestoneValue);
+				}
+				EntityAttribute priAttributeCodeValues = beaUtils.getEntityAttribute(productCode, timerEventBECode, "PRI_ATTRIBUTECODE_VALUES", false);
+				if (priAttributeCodeValues != null) {
+					String attributeCodeValues = priAttributeCodeValues.getValueString();
+					timerEvent.setUpdatePairs(attributeCodeValues);
+				}
 				timerData.add(timerEvent);
 			}
 		}

@@ -51,7 +51,7 @@ import life.genny.qwandaq.validation.Validation;
 /**
  * A utility class to assist in any Qwanda Engine Question
  * and Answer operations.
- * 
+ *
  * @author Jasper Robison
  */
 @ApplicationScoped
@@ -95,7 +95,7 @@ public class QwandaUtils {
 
 	/**
 	 * Cache an ask for a processId and questionCode combination.
-	 * 
+	 *
 	 * @param processData The processData to cache for
 	 * @param asks        ask to cache
 	 */
@@ -108,7 +108,7 @@ public class QwandaUtils {
 
 	/**
 	 * Fetch an ask from cache for a processId and questionCode combination.
-	 * 
+	 *
 	 * @param processData The processData to fetch for
 	 * @return
 	 */
@@ -195,9 +195,10 @@ public class QwandaUtils {
 				msg.add(attributeList);
 
 				if (!attributeList.isEmpty()) {
-					log.debug("Start AttributeID:"
-							+ attributeList.get(0).getId() + ", End AttributeID:"
-							+ attributeList.get(attributeList.size() - 1).getId());
+					Attribute startAttribute = attributeList.get(0);
+					log.debug("Product code" + startAttribute.getRealm() + "Start Attribute code:"
+							+ startAttribute.getCode() + ", End Attribute code:"
+							+ attributeList.get(attributeList.size() - 1).getCode());
 				}
 
 				cm.putObject(productCode, "ATTRIBUTES_P" + currentPage, msg);
@@ -252,8 +253,9 @@ public class QwandaUtils {
 		// find the question in the database
 		Question question;
 		try {
-			BaseEntity questionBE = beUtils.getBaseEntity(productCode, code);
-			question = questionUtils.getQuestionFromBaseEntity(questionBE, questionBE.getBaseEntityAttributes());
+			question = questionUtils.getQuestionFromQuestionCode(productCode, code);
+			Attribute attribute = cm.getAttribute(productCode, question.getAttributeCode());
+			question.setAttribute(attribute);
 		} catch (NoResultException e) {
 			throw new ItemNotFoundException(code, e);
 		}
@@ -302,34 +304,36 @@ public class QwandaUtils {
 			ask.setReadonly(true);
 			// fetch questionQuestions from the cache
 			List<QuestionQuestion> questionQuestions = cm.getQuestionQuestionsForParentQuestion(question);
+			if (questionQuestions.isEmpty()) {
+				log.debugf("No child questions found for the question: [%s,%s]", question.getRealm(), question.getCode());
+			} else {
+				// recursively operate on child questions
+				questionQuestions.forEach(questionQuestion -> {
+					log.debug("   [-] Found Child Question:  " + questionQuestion.getParentCode() + ":"
+							+ questionQuestion.getChildCode());
+					if (!questionQuestion.requirementsMet(capSet, requirementsConfig)) { // For now all caps are needed. I'll make this more comprehensive later
+						return;
+					}
+					Ask child = generateAskFromQuestionCode(questionQuestion.getChildCode(), source, target, capSet, requirementsConfig);
 
-			// recursively operate on child questions
-			for (QuestionQuestion questionQuestion : questionQuestions) {
+					// Do not include PRI_SUBMIT
+					if (Attribute.PRI_SUBMIT.equals(child.getQuestion().getAttribute().getCode())) {
+						return;
+					}
 
-				log.debug("   [-] Found Child Question:  " + questionQuestion.getParentCode() + ":"
-						+ questionQuestion.getChildCode());
-				if(!questionQuestion.requirementsMet(capSet, requirementsConfig)) { // For now all caps are needed. I'll make this more comprehensive later
-					continue;
-				}
-				Ask child = generateAskFromQuestionCode(questionQuestion.getChildCode(), source, target, capSet, requirementsConfig);
+					// set boolean fields
+					child.setMandatory(questionQuestion.getMandatory());
+					child.setDisabled(questionQuestion.getDisabled());
+					child.setHidden(questionQuestion.getHidden());
+					child.setDisabled(questionQuestion.getDisabled());
+					child.setReadonly(questionQuestion.getReadonly());
 
-				// Do not include PRI_SUBMIT
-				if (Attribute.PRI_SUBMIT.equals(child.getQuestion().getAttribute().getCode())) {
-					continue;
-				}
-
-				// set boolean fields
-				child.setMandatory(questionQuestion.getMandatory());
-				child.setDisabled(questionQuestion.getDisabled());
-				child.setHidden(questionQuestion.getHidden());
-				child.setDisabled(questionQuestion.getDisabled());
-				child.setReadonly(questionQuestion.getReadonly());
-
-				// override with QuestionQuestion icon if exists
-				if (questionQuestion.getIcon() != null) {
-					child.getQuestion().setIcon(questionQuestion.getIcon());
-				}
-				ask.add(child);
+					// override with QuestionQuestion icon if exists
+					if (questionQuestion.getIcon() != null) {
+						child.getQuestion().setIcon(questionQuestion.getIcon());
+					}
+					ask.add(child);
+				});
 			}
 		} else {
 			ask.setReadonly(question.getReadonly());
@@ -424,9 +428,9 @@ public class QwandaUtils {
 	 */
 	public Map<String, Ask> updateDependentAsks(BaseEntity target, Definition definition, Map<String, Ask> flatMapAsks) {
 
-		List<life.genny.qwandaq.attribute.EntityAttribute> dependentAsks = definition.findPrefixEntityAttributes(Prefix.DEP);
+		List<EntityAttribute> dependentAsks = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(definition.getRealm(), definition.getCode(), Prefix.DEP);
 
-		for (life.genny.qwandaq.attribute.EntityAttribute dep : dependentAsks) {
+		for (EntityAttribute dep : dependentAsks) {
 			String attributeCode = StringUtils.removeStart(dep.getAttributeCode(), Prefix.DEP);
 			Ask targetAsk = flatMapAsks.get(attributeCode);
 			if (targetAsk == null)
@@ -449,7 +453,7 @@ public class QwandaUtils {
 	 * @param baseEntity The BaseEntity to check against
 	 * @return Boolean
 	 */
-	public static Boolean mandatoryFieldsAreAnswered(Map<String, Ask> map, BaseEntity baseEntity) {
+	public Boolean mandatoryFieldsAreAnswered(Map<String, Ask> map, BaseEntity baseEntity) {
 
 		// find all the mandatory booleans
 		Boolean answered = true;
@@ -464,19 +468,22 @@ public class QwandaUtils {
 
 			Boolean mandatory = ask.getMandatory();
 			Boolean readonly = ask.getReadonly();
+			EntityAttribute valueAttribute = beaUtils.getEntityAttribute(baseEntity.getRealm(), baseEntity.getCode(), attributeCode);
+			if (valueAttribute != null) {
+				String value = valueAttribute.getValueString();
+				baseEntity.getValueAsString(attributeCode);
 
-			String value = baseEntity.getValueAsString(attributeCode);
+				// if any are blank, mandatory and non-readonly, then task is not complete
+				if ((mandatory && !readonly) && StringUtils.isBlank(value))
+					answered = false;
 
-			// if any are blank, mandatory and non-readonly, then task is not complete
-			if ((mandatory && !readonly) && StringUtils.isBlank(value))
+				String resultLine = (mandatory ? "[M]" : "[O]") + " : " + attributeCode + " : " + value;
+				log.debug("===> " + resultLine);
+			} else {
 				answered = false;
-
-			String resultLine = (mandatory ? "[M]" : "[O]") + " : " + attributeCode + " : " + value;
-			log.debug("===> " + resultLine);
+			}
 		}
-
 		log.debug("Mandatory fields are " + (answered ? "ALL" : "not") + " complete");
-
 		return answered;
 	}
 
@@ -503,7 +510,7 @@ public class QwandaUtils {
 
 	/**
 	 * Fill the flat set of asks using recursion.
-	 * 
+	 *
 	 * @param set The set to fill
 	 * @param ask The ask to traverse
 	 * @return The filled set
@@ -534,7 +541,7 @@ public class QwandaUtils {
 
 	/**
 	 * Save process data to cache.
-	 * 
+	 *
 	 * @param processData The data to save
 	 */
 	public void storeProcessData(ProcessData processData) {
@@ -548,7 +555,7 @@ public class QwandaUtils {
 
 	/**
 	 * clear process data from cache.
-	 * 
+	 *
 	 * @param processId The id of the data to clear
 	 */
 	public void clearProcessData(String processId) {
@@ -562,7 +569,7 @@ public class QwandaUtils {
 
 	/**
 	 * Fetch process data from cache.
-	 * 
+	 *
 	 * @param processId The id of the data to fetch
 	 * @return The saved data
 	 */
@@ -599,23 +606,19 @@ public class QwandaUtils {
 
 			// check for existing attribute in target
 			EntityAttribute ea = beaUtils.getEntityAttribute(productCode, targetCode, code);
+			Attribute attribute = cm.getAttribute(productCode, code);
 			if(ea == null) {
 				// otherwise create new attribute
-				Attribute attribute = cm.getAttribute(productCode, code);
 				ea = new EntityAttribute(processEntity, attribute, 1.0, null);
-			}
-
-			Attribute attribute = ea.getAttribute();
-			if (attribute == null) {
-				throw new ItemNotFoundException("Embedded Attribute not found in EntityAttribute: " + productCode + "," + targetCode + "," + code);
 			}
 			String className = attribute.getDataType().getClassName();
 			Object value = ea.getValue();
 
-			if (value == null && className.contains("Boolean") || className.contains("bool")) 
+			if (value == null && className.contains("Boolean") || className.contains("bool"))
 				ea.setValue(false);
 
-			processEntity.addAttribute(ea.getAttribute(), ea.getWeight(), ea.getValue());
+			processEntity.addAttribute(attribute, ea.getWeight(), ea.getValue());
+			beaUtils.updateEntityAttribute(ea);
 		}
 
 		// now apply all incoming answers
@@ -739,7 +742,8 @@ public class QwandaUtils {
 					continue;
 				}
 				// update the baseentity
-				target.addAnswer(answer);
+				EntityAttribute newEntityAttribute = new EntityAttribute(target, attribute, answer.getWeight(), answer.getValue());
+				beaUtils.updateEntityAttribute(newEntityAttribute);
 				String value = target.getValueAsString(answer.getAttributeCode());
 				log.debug("Value Saved -> " + answer.getAttributeCode() + " = " + value);
 			}
@@ -786,14 +790,15 @@ public class QwandaUtils {
 		entityMessage.setToken(userToken.getToken());
 		entityMessage.setReplace(true);
 
+		List<EntityAttribute> entityAttributes = beaUtils.getAllEntityAttributesForBaseEntity(definition);
 		// create a child ask for every valid attribute
-		for (Map.Entry<String, EntityAttribute> entry : definition.getBaseEntityAttributesMap().entrySet()) {
-			String key = entry.getKey();
-			if (!key.startsWith(Prefix.ATT)) {
-				continue;
+		entityAttributes.forEach(entityAttribute -> {
+			String attributeCode = entityAttribute.getAttributeCode();
+			if (!attributeCode.startsWith(Prefix.ATT)) {
+				return;
 			}
-			String attributeCode = StringUtils.removeStart(key, Prefix.ATT);
-			Attribute attribute = cm.getAttribute(baseEntity.getRealm(), attributeCode);
+			String strippedAttributeCode = StringUtils.removeStart(attributeCode, Prefix.ATT);
+			Attribute attribute = cm.getAttribute(baseEntity.getRealm(), strippedAttributeCode);
 
 			String questionCode = Prefix.QUE
 					+ StringUtils.removeStart(StringUtils.removeStart(attribute.getCode(),
@@ -803,7 +808,7 @@ public class QwandaUtils {
 			Ask childAsk = new Ask(childQues, sourceCode, targetCode);
 
 			childAsks.add(childAsk);
-		}
+		});
 
 		// set child asks
 		ask.setChildAsks(childAsks);
@@ -838,15 +843,17 @@ public class QwandaUtils {
 	public Boolean isDuplicate(Definition definition, Answer answer, BaseEntity... targets) {
 
 		// Check if attribute code exists as a UNQ for the DEF
-		List<life.genny.qwandaq.attribute.EntityAttribute> uniques = definition.findPrefixEntityAttributes("UNQ");
+		String productCode = definition.getRealm();
+		String definitionCode = definition.getCode();
+		List<EntityAttribute> uniques = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(productCode, definitionCode, "UNQ");
 		log.info("Found " + uniques.size() + " UNQ attributes");
 
-		String prefix = definition.getValueAsString(Attribute.PRI_PREFIX);
+		String prefix = beaUtils.getEntityAttribute(productCode, definitionCode, Attribute.PRI_PREFIX).getValueString();
 
 		for (life.genny.qwandaq.attribute.EntityAttribute entityAttribute : uniques) {
 			// fetch list of unique code combo
 			List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(definition,
-					entityAttribute.getAttribute().getCode());
+					entityAttribute.getAttributeCode());
 
 			// skip if no value found
 			if (codes == null)
@@ -873,11 +880,12 @@ public class QwandaUtils {
 				if (value == null) {
 					// get the first value in array of target
 					for (BaseEntity target : targets) {
-
-						log.info("TARGET = " + target.getCode() + ", EMAIL = " + target.getValueAsString(Attribute.PRI_EMAIL));
-
-						if (target.containsEntityAttribute(code)) {
-							value = target.getValueAsString(code);
+						String targetCode = target.getCode();
+						String targetEmail = beaUtils.getEntityAttribute(productCode, targetCode, Attribute.PRI_EMAIL, false).getValueString();
+						log.info("TARGET = " + targetCode + ", EMAIL = " + targetEmail);
+						EntityAttribute valueAttribute = beaUtils.getEntityAttribute(productCode, targetCode, code, false);
+						if (valueAttribute != null) {
+							value = valueAttribute.getValueString();
 							if (value.isEmpty())
 								value = null;
 							if (value != null)
@@ -911,7 +919,7 @@ public class QwandaUtils {
 
 	/**
 	 * Send a baseentity with a feedback message to be displayed.
-	 * 
+	 *
 	 * @param parentCode    The parentCode of the question group
 	 * @param questionCode  The questionCode of the bad answer
 	 * @param attributeCode The attributeCode of the bad answer
@@ -938,25 +946,9 @@ public class QwandaUtils {
 	}
 
 	/**
-	 * Return attribute relied on base entity object and attribute code
-	 * 
-	 * @param baseEntity    Base entity
-	 * @param attributeCode Attribute code
-	 * @return Return attribute object
-	 */
-	public Attribute getAttributeByBaseEntityAndCode(BaseEntity baseEntity, String attributeCode) {
-		EntityAttribute baseEA = (EntityAttribute) beaUtils.getEntityAttribute(baseEntity.getRealm(), baseEntity.getCode(), attributeCode).toSerializableCoreEntity();
-		if (baseEA != null) {
-			return baseEA.getAttribute();
-		}
-		Attribute attribute = cm.getAttribute(attributeCode);
-		return attribute;
-	}
-
-	/**
 	 * Check if all validations are met for an attribute and value.
-	 * 
-	 * 
+	 *
+	 *
 	 * @param attribute The Attribute of the answer
 	 * @param value     The value to check
 	 * @return Boolean representing whether the validation conditions have been met

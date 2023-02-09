@@ -135,7 +135,7 @@ public class CapabilitiesManager extends Manager {
 	 * @return
 	 */
 	public CapabilitySet getEntityCapabilities(final BaseEntity target) {
-		Set<EntityAttribute> capabilities = new HashSet<>(target.findPrefixEntityAttributes(Prefix.CAP));
+		Set<EntityAttribute> capabilities = new HashSet<>(beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(target.getRealm(), target.getCode(), Prefix.CAP));
 		debug("		- " + target.getCode() + "(" + capabilities.size() + " capabilities)");
 		if(capabilities.isEmpty()) {
 			return new CapabilitySet(target);
@@ -169,8 +169,8 @@ public class CapabilitiesManager extends Manager {
 			throw new NullParameterException("target");
 		}
 
-		target.addAttribute(capability, 0.0, getModeString(nodes));
-		cm.putObject(productCode, target.getCode() + ":" + capability.getCode(), getModeString(nodes));
+		EntityAttribute addedAttribute = target.addAttribute(capability, 0.0, getModeString(nodes));
+		beaUtils.updateEntityAttribute(addedAttribute);
 		beUtils.updateBaseEntity(target);
 	}
 
@@ -185,9 +185,8 @@ public class CapabilitiesManager extends Manager {
 			throw new NullParameterException("target");
 		}
 
-		target.addAttribute(capability, 0.0, getModeString(modeList));
-		cm.putObject(productCode, target.getCode() + ":" + capability.getCode(),
-				modeList.toArray(new CapabilityNode[0]));
+		EntityAttribute addedAttribute = target.addAttribute(capability, 0.0, getModeString(modeList));
+		beaUtils.updateEntityAttribute(addedAttribute);
 		beUtils.updateBaseEntity(target);
 	}
 

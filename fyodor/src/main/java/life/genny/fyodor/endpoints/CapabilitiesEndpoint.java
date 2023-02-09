@@ -124,10 +124,8 @@ public class CapabilitiesEndpoint {
         life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntitySerializable = questionUtils.getSerializableBaseEntityFromQuestion((Question) filterableQuestion);
         BaseEntityKey key = new BaseEntityKey(productCode, questionCode);
         cm.saveEntity(CacheManager.CACHE_NAME_BASEENTITY, key, baseEntitySerializable.toPersistableCoreEntity());
-        List<life.genny.qwandaq.serialization.entityattribute.EntityAttribute> baseEntityAttributes = questionUtils.getSerializableBaseEntityAttributesFromQuestion((Question) filterableQuestion);
-        baseEntityAttributes.forEach(baseEntityAttribute -> {
-            beaUtils.updateEntityAttribute((EntityAttribute) baseEntityAttribute.toPersistableCoreEntity());
-        });
+        List<EntityAttribute> baseEntityAttributes = questionUtils.getSerializableBaseEntityAttributesFromQuestion((Question) filterableQuestion);
+        baseEntityAttributes.forEach(baseEntityAttribute -> beaUtils.updateEntityAttribute(baseEntityAttribute));
         return Response.status(Status.OK).build();
     }
 
@@ -155,10 +153,8 @@ public class CapabilitiesEndpoint {
         String beCode = baseEntitySerializable.getCode();
         BaseEntityKey key = new BaseEntityKey(productCode, beCode);
         cm.saveEntity(CacheManager.CACHE_NAME_BASEENTITY, key, baseEntitySerializable.toPersistableCoreEntity());
-        List<life.genny.qwandaq.serialization.entityattribute.EntityAttribute> baseEntityAttributes = questionUtils.getSerializableBaseEntityAttributesFromQuestion((Question) filterableQuestion);
-        baseEntityAttributes.forEach(baseEntityAttribute -> {
-            beaUtils.updateEntityAttribute((EntityAttribute) baseEntityAttribute.toPersistableCoreEntity());
-        });
+        List<EntityAttribute> baseEntityAttributes = questionUtils.getSerializableBaseEntityAttributesFromQuestion((Question) filterableQuestion);
+        baseEntityAttributes.forEach(baseEntityAttribute -> beaUtils.updateEntityAttribute(baseEntityAttribute));
         return Response.status(Status.OK).build();
     }
 }

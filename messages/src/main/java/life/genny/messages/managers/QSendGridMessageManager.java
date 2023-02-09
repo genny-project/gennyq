@@ -13,10 +13,12 @@ import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.utils.CommonUtils;
+import life.genny.qwandaq.utils.EntityAttributeUtils;
 import life.genny.qwandaq.utils.TimeUtils;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -27,6 +29,9 @@ import java.util.Map;
 
 @ApplicationScoped
 public final class QSendGridMessageManager extends QMessageProvider {
+
+	@Inject
+	EntityAttributeUtils beaUtils;
 
 	private static final Logger log = Logger.getLogger(QSendGridMessageManager.class);
 
@@ -56,7 +61,7 @@ public final class QSendGridMessageManager extends QMessageProvider {
 
 		// test data
 		log.debug("Showing what is in recipient BE, code=" + recipientBe.getCode());
-		for (EntityAttribute ea : recipientBe.getBaseEntityAttributes()) {
+		for (EntityAttribute ea : beaUtils.getAllEntityAttributesForBaseEntity(recipientBe)) {
 			log.debug("attributeCode=" + ea.getAttributeCode() + ", value=" + ea.getObjectAsString());
 		}
 
@@ -77,9 +82,11 @@ public final class QSendGridMessageManager extends QMessageProvider {
 		String templateId = templateBe.getValue("PRI_SENDGRID_ID", null);
 		String subject = templateBe.getValue("PRI_SUBJECT", null);
 
-		String sendGridEmailSender = projectBe.getValueAsString("ENV_SENDGRID_EMAIL_SENDER");
-		String sendGridEmailNameSender = projectBe.getValueAsString("ENV_SENDGRID_EMAIL_NAME_SENDER");
-		String sendGridApiKey = projectBe.getValueAsString("ENV_SENDGRID_API_KEY");
+		String productCode = projectBe.getRealm();
+		String projectBeCode = projectBe.getCode();
+		String sendGridEmailSender = beaUtils.getEntityAttribute(productCode, projectBeCode, "ENV_SENDGRID_EMAIL_SENDER", false).getValueString();
+		String sendGridEmailNameSender = beaUtils.getEntityAttribute(productCode, projectBeCode, "ENV_SENDGRID_EMAIL_NAME_SENDER", false).getValueString();
+		String sendGridApiKey = beaUtils.getEntityAttribute(productCode, projectBeCode, "ENV_SENDGRID_API_KEY", false).getValueString();
 		log.info("The name for email sender "+ sendGridEmailNameSender);
 
 		// Build a general data map from context BEs
@@ -98,7 +105,7 @@ public final class QSendGridMessageManager extends QMessageProvider {
 				log.info("Processing key as BASEENTITY: " + entry.getKey());
 				BaseEntity be = (BaseEntity) value;
 				HashMap<String, String> deepReplacementMap = new HashMap<>();
-				for (EntityAttribute ea : be.getBaseEntityAttributes()) {
+				for (EntityAttribute ea : beaUtils.getAllEntityAttributesForBaseEntity(be)) {
 
 					String attrCode = ea.getAttributeCode();
 					if (attrCode.startsWith("LNK") || attrCode.startsWith("PRI")) {

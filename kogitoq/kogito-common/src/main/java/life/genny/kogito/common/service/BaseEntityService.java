@@ -7,6 +7,7 @@ import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.exception.runtime.DebugException;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.managers.CacheManager;
@@ -104,9 +105,14 @@ public class BaseEntityService {
 		Definition definition = beUtils.getDefinition(definitionCode);
 
 		// use entity create function and save to db
-		String defaultName = StringUtils.capitalize(definition.getCode().substring(4));
-		BaseEntity entity = beUtils.create(definition, defaultName,
-				definition.getValueAsString("PRI_PREFIX") + "_" + processId.toUpperCase());
+		String defCode = definition.getCode();
+		String defaultName = StringUtils.capitalize(defCode.substring(4));
+		EntityAttribute prefixAttr = beaUtils.getEntityAttribute(definition.getRealm(), defCode, Attribute.PRI_PREFIX, false);
+		if (prefixAttr == null) {
+			throw new ItemNotFoundException(definition.getRealm(), defCode, Attribute.PRI_PREFIX);
+		}
+		String prefixValue = prefixAttr.getValueString();
+		BaseEntity entity = beUtils.create(definition, defaultName, prefixValue + "_" + processId.toUpperCase());
 		log.info("BaseEntity Created: " + entity.getCode());
 
 		entity.setStatus(status);
@@ -220,13 +226,9 @@ public class BaseEntityService {
 		BaseEntity entity = beUtils.getBaseEntity(entityCode);
 
 		// iterate our stored process updates and create an answer
-		for (EntityAttribute ea : processEntity.getBaseEntityAttributes()) {
-
-			if (ea.getAttribute() == null) {
-				log.debug("Attribute is null, fetching " + ea.getAttributeCode());
-				Attribute attribute = cm.getAttribute(ea.getAttributeCode());
-				ea.setAttribute(attribute);
-			}
+		for (EntityAttribute ea : beaUtils.getAllEntityAttributesForBaseEntity(processEntity)) {
+			Attribute attribute = cm.getAttribute(ea.getAttributeCode());
+			ea.setAttribute(attribute);
 			ea.setBaseEntityCode(entity.getCode());
 			entity.addAttribute(ea);
 		}

@@ -44,10 +44,13 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.converter.CapabilityConverter;
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.entity.HBaseEntity;
 import life.genny.qwandaq.intf.ICapabilityHiddenFilterable;
+import life.genny.qwandaq.serialization.CoreEntitySerializable;
+import life.genny.qwandaq.serialization.entityattribute.EntityAttribute;
 import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -87,7 +90,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 @RegisterForReflection
 @Cacheable
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class HEntityAttribute implements java.io.Serializable, Comparable<Object>, ICapabilityHiddenFilterable {
+public class HEntityAttribute implements CoreEntityPersistable, Comparable<Object>, ICapabilityHiddenFilterable {
 
 	private static final Logger log = Logger.getLogger(HEntityAttribute.class);
 
@@ -1380,5 +1383,32 @@ public class HEntityAttribute implements java.io.Serializable, Comparable<Object
 		this.capabilityRequirements = requirements;
 	}
 
+	@Override
+	public CoreEntitySerializable toSerializableCoreEntity() {
+		EntityAttribute serializableEntityAttribute = new EntityAttribute();
+		serializableEntityAttribute.setRealm(getRealm());
+		serializableEntityAttribute.setBaseEntityCode(getBaseEntityCode());
+		serializableEntityAttribute.setAttributeCode(getAttributeCode());
+		serializableEntityAttribute.setCreated(getCreated());
+		serializableEntityAttribute.setReadonly(getReadonly());
+		serializableEntityAttribute.setUpdated(getUpdated());
+		serializableEntityAttribute.setValueBoolean(getValueBoolean());
+		serializableEntityAttribute.setValueDate(getValueDate());
+		serializableEntityAttribute.setValueDateTime(getValueDateTime());
+		serializableEntityAttribute.setValueDouble(getValueDouble());
+		serializableEntityAttribute.setValueInteger(getValueInteger());
+		serializableEntityAttribute.setValueLong(getValueLong());
+		serializableEntityAttribute.setMoney(getValueMoney());
+		serializableEntityAttribute.setValueString(getValueString());
+		serializableEntityAttribute.setUpdated(getUpdated());
+		serializableEntityAttribute.setWeight(getWeight());
+		serializableEntityAttribute.setInferred(getInferred());
+		serializableEntityAttribute.setPrivacyFlag(getPrivacyFlag());
+		serializableEntityAttribute.setConfirmationFlag(getConfirmationFlag());
+		serializableEntityAttribute.setAttributeId(getAttribute().getId());
+		serializableEntityAttribute.setBaseEntityId(getBaseEntity().getId());
+		serializableEntityAttribute.setCapreqs(CapabilityConverter.convertToDBColumn(getCapabilityRequirements()));
+		return serializableEntityAttribute;
+	}
 }
 

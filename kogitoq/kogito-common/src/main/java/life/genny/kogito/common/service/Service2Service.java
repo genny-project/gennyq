@@ -37,6 +37,9 @@ public class Service2Service {
 	Jsonb jsonb = JsonbBuilder.create();
 
 	@Inject
+	KeycloakUtils keycloakUtils;
+
+	@Inject
 	UserToken userToken;
 
 	@Inject
@@ -68,7 +71,7 @@ public class Service2Service {
 			BaseEntity project = beUtils.getBaseEntity(userBE.getRealm());
 			log.debug("Fetching impersonated token for " + userBE.getCode() + " in " + project.getCode());
 
-			String userTokenStr = KeycloakUtils.getImpersonatedToken(userBE, serviceToken, project);
+			String userTokenStr = keycloakUtils.getImpersonatedToken(userBE, serviceToken, project);
 			userToken = new UserToken(userTokenStr);
 			//log.debug("generated userToken " + userToken);
 			data.setToken(userToken.getToken());

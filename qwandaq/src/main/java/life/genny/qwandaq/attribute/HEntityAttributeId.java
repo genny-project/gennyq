@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.HBaseEntity;
+import org.apache.commons.lang3.builder.EqualsBuilder;
 
 import javax.json.bind.annotation.JsonbTransient;
 import javax.persistence.Embeddable;
@@ -17,9 +18,9 @@ public class HEntityAttributeId implements java.io.Serializable {
 
 	@ManyToOne()
 	// @JsonBackReference(value="entityAttribute")
-	@JsonManagedReference(value = "entityAttribute")
-	@JsonIgnoreProperties("baseEntityAttributes")
-	@JsonbTransient
+        @JsonManagedReference(value = "entityAttribute")
+        @JsonIgnoreProperties("baseEntityAttributes")
+        @JsonbTransient
 	public HBaseEntity baseEntity;
 
 	@ManyToOne
@@ -90,17 +91,10 @@ public class HEntityAttributeId implements java.io.Serializable {
 		if (getClass() != obj.getClass())
 			return false;
 		HEntityAttributeId other = (HEntityAttributeId) obj;
-		if (attribute == null) {
-			if (other.attribute != null)
-				return false;
-		} else if (!attribute.equals(other.attribute))
-			return false;
-		if (baseEntity == null) {
-			if (other.baseEntity != null)
-				return false;
-		} else if (!baseEntity.equals(other.baseEntity))
-			return false;
-		return true;
+		EqualsBuilder equalsBuilder = new EqualsBuilder();
+		equalsBuilder.append(baseEntity, other.baseEntity);
+		equalsBuilder.append(attribute, other.attribute);
+		return equalsBuilder.isEquals();
 	}
 
 }

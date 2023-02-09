@@ -28,6 +28,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import javax.json.bind.annotation.JsonbTransient;
 import javax.persistence.Transient;
 
+import life.genny.qwandaq.converter.CapabilityConverter;
+import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import org.hibernate.annotations.Type;
 import org.jboss.logging.Logger;
 
@@ -66,7 +68,7 @@ import life.genny.qwandaq.intf.ICapabilityHiddenFilterable;
  */
 
 @RegisterForReflection
-public class Question extends CodedEntity implements ICapabilityHiddenFilterable {
+public class Question extends CodedEntity implements CoreEntityPersistable, ICapabilityHiddenFilterable {
 
 	private static final Logger log = Logger.getLogger(Question.class);
 
@@ -155,6 +157,8 @@ public class Question extends CodedEntity implements ICapabilityHiddenFilterable
 	private String helper = "";
 
 	private String icon;
+
+	private Long attributeId;
 
 	/**
 	 * @return String
@@ -365,6 +369,14 @@ public class Question extends CodedEntity implements ICapabilityHiddenFilterable
         this.childQuestions = new HashSet<QuestionQuestion>(childQuestions);
     }
 
+	public Long getAttributeId() {
+		return attributeId;
+	}
+
+	public void setAttributeId(Long attributeId) {
+		this.attributeId = attributeId;
+	}
+
 	/**
 	 * removeChildQuestion This removes a child Question from the question group.
 	 * For efficiency we assume the child question exists
@@ -500,5 +512,29 @@ public class Question extends CodedEntity implements ICapabilityHiddenFilterable
 
 	public void setChildQuestionCodes(Set<String> childQuestionCodes) {
 		this.childQuestionCodes = childQuestionCodes;
+	}
+
+	@Override
+	public CoreEntitySerializable toSerializableCoreEntity() {
+		life.genny.qwandaq.serialization.question.Question question = new life.genny.qwandaq.serialization.question.Question();
+		question.setCode(getCode());
+		question.setCreated(getCreated());
+		// question.setDtype();
+		question.setId(getId());
+		question.setName(getName());
+		question.setRealm(getRealm());
+		question.setStatus(getStatus().ordinal());
+		question.setUpdated(getUpdated());
+		question.setAttributeCode(getAttributeCode());
+		question.setDirections(getDirections());
+		question.setHelper(getHelper());
+		question.setHtml(getHtml());
+		question.setIcon(getIcon());
+		question.setMandatory(getMandatory());
+		question.setOneshot(getOneshot());
+		question.setPlaceholder(getPlaceholder());
+		question.setReadonly(getReadonly());
+		question.setCapreqs(CapabilityConverter.convertToDBColumn(getCapabilityRequirements()));
+		return question;
 	}
 }

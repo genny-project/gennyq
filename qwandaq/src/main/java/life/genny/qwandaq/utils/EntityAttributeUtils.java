@@ -2,10 +2,14 @@ package life.genny.qwandaq.utils;
 
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.managers.CacheManager;
+import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
+import life.genny.qwandaq.serialization.common.CoreEntityKey;
 import life.genny.qwandaq.serialization.entityattribute.EntityAttributeKey;
 import org.jboss.logging.Logger;
+import org.jetbrains.annotations.NotNull;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -111,6 +115,27 @@ public class EntityAttributeUtils {
 		return baseEntityAttributes;
     }
 
+	/**
+	 * Fetch a list of {@link EntityAttribute} from the cache using a realm:baseEntityCode.
+	 *
+	 * @param baseEntity The baseEntity to use
+	 * @return The corresponding list of all EntityAttributes, or empty list if not found.
+	 */
+	public List<EntityAttribute> getAllEntityAttributesForBaseEntity(BaseEntity baseEntity) {
+		return getAllEntityAttributesForBaseEntity(baseEntity, false);
+	}
+
+	/**
+	 * Fetch a list of {@link EntityAttribute} from the cache using a realm:baseEntityCode.
+	 *
+	 * @param baseEntity The baseEntity to use
+	 * @param embedAttribute Whether attribute needs to be fetched and embedded in the base entity attribute
+	 * @return The corresponding list of all EntityAttributes, or empty list if not found.
+	 */
+	public List<EntityAttribute> getAllEntityAttributesForBaseEntity(BaseEntity baseEntity, boolean embedAttribute) {
+		return getAllEntityAttributesForBaseEntity(baseEntity.getRealm(), baseEntity.getCode(), embedAttribute);
+	}
+
     /**
 	 * Fetch a list of {@link EntityAttribute} from the cache using a realm:baseEntityCode.
 	 *
@@ -119,7 +144,7 @@ public class EntityAttributeUtils {
 	 * @return The corresponding list of all EntityAttributes, or empty list if not found.
 	 */
     public List<EntityAttribute> getAllEntityAttributesForBaseEntity(String productCode, String baseEntityCode) {
-        return getAllEntityAttributesForBaseEntity(productCode, baseEntityCode, true);
+        return getAllEntityAttributesForBaseEntity(productCode, baseEntityCode, false);
     }
 
 	/**
@@ -127,23 +152,46 @@ public class EntityAttributeUtils {
 	 *
 	 * @param productCode The productCode to use
 	 * @param baseEntityCode        The BaseEntity code of the BaseEntityAttributes to fetch
+	 * @param embedAttribute Whether attribute needs to be fetched and embedded in the base entity attributes
 	 * @return The corresponding list of all EntityAttributes, or empty list if not found.
 	 */
 	public List<EntityAttribute> getAllEntityAttributesForBaseEntity(String productCode, String baseEntityCode, boolean embedAttribute) {
-		List<EntityAttribute> baseEntityAttributes = new LinkedList<>();
-		cm.getAllBaseEntityAttributesForBaseEntity(productCode, baseEntityCode).stream()
+		List<EntityAttribute> entityAttributes = cm.getAllBaseEntityAttributesForBaseEntity(productCode, baseEntityCode);
+		if(!embedAttribute) {
+			return entityAttributes;
+		}
+		return embedAttributesInEntityAttributes(entityAttributes);
+	}
+
+	@NotNull
+	public List<EntityAttribute> embedAttributesInEntityAttributes(List<EntityAttribute> entityAttributes) {
+		List<EntityAttribute> entityAttributesWithEmbeddedAttributes = new LinkedList<>();
+		entityAttributes.stream()
 				.forEach((ea) -> {
-					if(embedAttribute) {
-						Attribute attribute = cm.getAttribute(productCode, ea.getAttributeCode());
-						if (attribute == null) {
-							log.debugf("Attribute not found for BaseEntityAttribute [%s:%s:%s]", productCode, baseEntityCode, ea.getAttributeCode());
-							throw new ItemNotFoundException(productCode, ea.getAttributeCode());
-						}
-						log.debugf("Attribute embedded into BaseEntityAttribute [%s:%s:%s]", productCode, baseEntityCode, ea.getAttributeCode());
-						ea.setAttribute(attribute);
+					String productCode = ea.getRealm();
+					String baseEntityCode = ea.getBaseEntityCode();
+					Attribute attribute = cm.getAttribute(productCode, ea.getAttributeCode());
+					if (attribute == null) {
+						log.debugf("Attribute not found for BaseEntityAttribute [%s:%s:%s]", productCode, baseEntityCode, ea.getAttributeCode());
+						throw new ItemNotFoundException(productCode, ea.getAttributeCode());
 					}
-					baseEntityAttributes.add(ea);
+					log.debugf("Attribute embedded into BaseEntityAttribute [%s:%s:%s]", productCode, baseEntityCode, ea.getAttributeCode());
+					ea.setAttribute(attribute);
 				});
-		return baseEntityAttributes;
+		return entityAttributesWithEmbeddedAttributes;
+	}
+
+	/**
+	 * Get a list of {@link EntityAttribute}s to from cache for a BaseEntity.
+	 *
+	 * @param productCode - Product Code / Cache to retrieve from
+	 * @param baseEntityCode - Base Entity code to use
+	 * @param attributeCodePrefix - Attribute Code Prefix to use
+	 * @return a list of base entities with matching prefixes
+	 *
+	 * See Also: {@link BaseEntityKey}, {@link CoreEntityKey#fromKey}, {@link CacheManager#getEntitiesByPrefix}
+	 */
+	public List<EntityAttribute> getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(String productCode, String baseEntityCode, String attributeCodePrefix) {
+		return cm.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(productCode, baseEntityCode, attributeCodePrefix);
 	}
 }

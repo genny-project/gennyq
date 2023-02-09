@@ -2,14 +2,12 @@ package life.genny.kogito.common.service;
 
 import life.genny.qwandaq.constants.FilterConst;
 import life.genny.qwandaq.datatype.DataType;
+import life.genny.qwandaq.entity.search.trait.Ord;
+import life.genny.qwandaq.entity.search.trait.Sort;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.message.*;
 import life.genny.qwandaq.models.SavedSearch;
-import life.genny.qwandaq.utils.FilterUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
-import life.genny.qwandaq.utils.SearchUtils;
-import life.genny.qwandaq.utils.KafkaUtils;
-import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.*;
 import org.jboss.logging.Logger;
 
 import javax.inject.Inject;
@@ -56,7 +54,7 @@ public class FilterService {
     BaseEntityUtils beUtils;
 
     @Inject
-    QwandaUtils qwandaUtils;
+    EntityAttributeUtils beaUtils;
 
     @Inject
     SearchService search;
@@ -607,12 +605,9 @@ public class FilterService {
 
         try {
             msg.setToken(userToken.getToken());
-
-            List<BaseEntity> bases = searchUtils.searchBaseEntitys(search);
-            List<BaseEntity> basesSorted = bases.stream().sorted(Comparator.comparing(BaseEntity::getId).reversed())
-                    .collect(Collectors.toList());
-
-            msg.setItems(basesSorted);
+            search.add(new Sort(Attribute.PRI_CREATED, Ord.DESC));
+            List<BaseEntity> baseEntities = searchUtils.searchBaseEntitys(search);
+            msg.setItems(baseEntities);
             msg.setParentCode(group);
             msg.setQuestionCode(code);
             msg.setLinkCode(lnkCode);
@@ -670,7 +665,7 @@ public class FilterService {
      */
     public void sendPartialPCM(String pcmCode,String loc,String queValCode) {
         BaseEntity pcm = beUtils.getBaseEntity(pcmCode);
-        EntityAttribute ea = pcm.getBaseEntityAttributesMap().get(loc);
+        EntityAttribute ea = beaUtils.getEntityAttribute(pcm.getRealm(), pcmCode, loc);
         if (ea != null) {
             ea.setValue(queValCode);
             ea.setValueString(queValCode);
@@ -680,7 +675,7 @@ public class FilterService {
 
     public void sendFilterDetailsByPcm(String pcmCode,String queCode,String attCode,String value) {
         BaseEntity base = beUtils.getBaseEntity(pcmCode);
-        EntityAttribute ea = base.getBaseEntityAttributesMap().get(PCM.location(1));
+        EntityAttribute ea = beaUtils.getEntityAttribute(base.getRealm(), pcmCode, PCM.location(1));
         if (ea != null) {
             ea.setValue(attCode);
             ea.setValueString(attCode);

@@ -24,6 +24,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
@@ -52,7 +54,11 @@ import life.genny.qwandaq.models.ServiceToken;
  * @author Adam Crow
  * @author Jasper Robison
  */
+@ApplicationScoped
 public class KeycloakUtils {
+
+    @Inject
+    EntityAttributeUtils beaUtils;
 
 	private static Logger log = Logger.getLogger(KeycloakUtils.class);
 
@@ -154,7 +160,7 @@ public class KeycloakUtils {
      * @param project    the project to use to fetch the token
      * @return String
      */
-    public static String getImpersonatedToken(BaseEntity userBE, GennyToken gennyToken, BaseEntity project) {
+    public String getImpersonatedToken(BaseEntity userBE, GennyToken gennyToken, BaseEntity project) {
 
         String realm = gennyToken.getRealm();
         String token = gennyToken.getToken();
@@ -189,7 +195,8 @@ public class KeycloakUtils {
         }
 
         // fetch keycloak json from project entity
-        String keycloakJson = project.getValueAsString("ENV_KEYCLOAK_JSON");
+        String projectCode = project.getCode();
+        String keycloakJson = beaUtils.getEntityAttribute(realm, projectCode, "ENV_KEYCLOAK_JSON", false).getValueString();
         JsonReader reader = Json.createReader(new StringReader(keycloakJson));
         String secret = reader.readObject().getJsonObject("credentials").getString("secret");
         reader.close();

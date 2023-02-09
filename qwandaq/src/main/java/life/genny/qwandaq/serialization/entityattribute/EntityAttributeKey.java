@@ -1,5 +1,6 @@
 package life.genny.qwandaq.serialization.entityattribute;
 
+import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.serialization.common.CoreEntityKey;
 
 public class EntityAttributeKey implements CoreEntityKey {
@@ -71,5 +72,19 @@ public class EntityAttributeKey implements CoreEntityKey {
 	@Override
 	public String getEntityCode() {
 		return baseEntityCode + getDelimiter() + attributeCode;
+	}
+
+	@Override
+	public int hashCode() {
+		return getKeyString().hashCode();
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		if(!(other instanceof EntityAttributeKey)) {
+			return false;
+		}
+		EntityAttributeKey otherEA = (EntityAttributeKey) other;
+		return getKeyString().equals(otherEA.getKeyString());
 	}
 }

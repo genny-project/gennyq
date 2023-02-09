@@ -58,13 +58,12 @@ public class MergeUtils {
 	EntityAttributeUtils beaUtils;
 
 	public void mergeBaseEntity(BaseEntity baseEntity, Map<String, Object> contexts) {
-
-		baseEntity.getBaseEntityAttributes().stream().forEach(ea -> {
+		beaUtils.getAllEntityAttributesForBaseEntity(baseEntity).forEach(ea -> {
 			if (ea.getValueString() == null)
 				return;
-
 			String value = merge(ea.getValueString(), contexts);
 			ea.setValueString(value);
+			beaUtils.updateEntityAttribute(ea);
 		});
 	}
     

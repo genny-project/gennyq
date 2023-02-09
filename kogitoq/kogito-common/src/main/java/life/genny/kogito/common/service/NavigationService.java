@@ -14,6 +14,8 @@ import javax.json.JsonObjectBuilder;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import life.genny.qwandaq.constants.Prefix;
+import life.genny.qwandaq.utils.*;
 import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.utils.KogitoUtils;
@@ -29,11 +31,6 @@ import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.managers.capabilities.role.RoleManager;
 import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.CommonUtils;
-import life.genny.qwandaq.utils.KafkaUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
-import life.genny.qwandaq.utils.SearchUtils;
 
 @ApplicationScoped
 public class NavigationService {
@@ -50,6 +47,9 @@ public class NavigationService {
 
 	@Inject
 	BaseEntityUtils beUtils;
+
+	@Inject
+	EntityAttributeUtils beaUtils;
 
 	@Inject
 	SearchService searchService;
@@ -191,9 +191,12 @@ public class NavigationService {
 		// firstly, check question code
 		try {
 			BaseEntity target = beUtils.getBaseEntity(defCode);
-
-			defaultRedirectCode = target.getValueAsString("DFT_PRI_DEFAULT_REDIRECT");
-			log.info("Actioning redirect for question: " + target.getCode() + " : " + defaultRedirectCode);
+			String targetCode = target.getCode();
+			EntityAttribute priDefaultRedirect = beaUtils.getEntityAttribute(target.getRealm(), targetCode, "DFT_PRI_DEFAULT_REDIRECT", false);
+			if (priDefaultRedirect != null) {
+				defaultRedirectCode = priDefaultRedirect.getValueString();
+			}
+			log.info("Actioning redirect for question: " + targetCode + " : " + defaultRedirectCode);
 		} catch (Exception ex) {
 			log.error(ex);
 		}
@@ -222,14 +225,14 @@ public class NavigationService {
 		String defCode = "";
 		try {
 			BaseEntity user = beUtils.getUserBaseEntity();
-			List<EntityAttribute> priIsAttributes = user.findPrefixEntityAttributes(PRI_IS_PREFIX);
+			List<EntityAttribute> priIsAttributes = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(user.getRealm(), user.getCode(), PRI_IS_PREFIX);
 			if (priIsAttributes.size() > 0) {
 				EntityAttribute attr = priIsAttributes.get(0);
 				defCode = "DEF_" + attr.getAttributeCode().replaceFirst(PRI_IS_PREFIX, "");
 			}
 
 			BaseEntity target = beUtils.getBaseEntity(defCode);
-			redirectCode = target.getValueAsString("DFT_PRI_DEFAULT_REDIRECT");
+			redirectCode = beaUtils.getEntityAttribute(target.getRealm(), defCode, "DFT_PRI_DEFAULT_REDIRECT", false).getValueString();
 		} catch (Exception ex) {
 			log.error(ex);
 		}

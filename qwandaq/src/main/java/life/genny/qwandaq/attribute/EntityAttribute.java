@@ -27,6 +27,7 @@ import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlTransient;
 
 import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.converter.CapabilityConverter;
 import life.genny.qwandaq.datatype.DataType;
 import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -146,9 +147,19 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 
 	private Attribute attribute;
 
+	private Long baseEntityId;
+
+	private Long attributeId;
+
 	private Set<Capability> capabilityRequirements;
 
 	public EntityAttribute() {
+	}
+
+	public EntityAttribute(BaseEntity baseEntity, Attribute attribute) {
+		this.realm = baseEntity.getRealm();
+		setBaseEntity(baseEntity);
+		setAttribute(attribute);
 	}
 
 	/**
@@ -159,7 +170,8 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 	 */
 	public EntityAttribute(BaseEntity baseEntity, Attribute attribute, Double weight, final Object value) {
 		autocreateCreated();
-		this.baseEntityCode = baseEntity.getCode();
+		this.realm = baseEntity.getRealm();
+		setBaseEntity(baseEntity);
 		setAttribute(attribute);
 		if (weight == null) {
 			weight = 0.0;
@@ -170,7 +182,12 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 		}
 	}
 
-    @JsonbTransient
+	public void setBaseEntity(BaseEntity baseEntity) {
+		setBaseEntityCode(baseEntity.getCode());
+		setBaseEntityId(baseEntity.getId());
+	}
+
+	@JsonbTransient
     @JsonIgnore
     public Set<Capability> getCapabilityRequirements() {
 		return this.capabilityRequirements;
@@ -492,6 +509,22 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 		this.feedback = feedback;
 	}
 
+	public Long getBaseEntityId() {
+		return baseEntityId;
+	}
+
+	public void setBaseEntityId(Long baseEntityId) {
+		this.baseEntityId = baseEntityId;
+	}
+
+	public Long getAttributeId() {
+		return attributeId;
+	}
+
+	public void setAttributeId(Long attributeId) {
+		this.attributeId = attributeId;
+	}
+
 	public void autocreateUpdate() {
 
 		if (getValueString() != null) {
@@ -544,8 +577,9 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 
 	public void setAttribute(Attribute attribute) {
 		this.attribute = attribute;
-		this.attributeCode = attribute.getCode();
-		this.attributeName = attribute.getName();
+		setAttributeId(attribute.getId());
+		setAttributeCode(attribute.getCode());
+		setAttributeName(attribute.getName());
 	}
 
 	/**
@@ -1207,8 +1241,11 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 		bea.setValueString(getValueString());
 		bea.setUpdated(getUpdated());
 		bea.setWeight(getWeight());
+		bea.setAttributeId(getAttributeId());
+		bea.setBaseEntityId(getBaseEntityId());
 		// bea.setIcon(geticon);
 		bea.setConfirmationFlag(getConfirmationFlag());
+		bea.setCapreqs(CapabilityConverter.convertToDBColumn(getCapabilityRequirements()));
 		return bea;
 	}
 
@@ -1246,6 +1283,9 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 		clone.setUpdated(getUpdated());
 		clone.setWeight(getWeight());
 		clone.setConfirmationFlag(getConfirmationFlag());
+		clone.setAttributeId(getAttributeId());
+		clone.setBaseEntityId(getBaseEntityId());
+		clone.setCapabilityRequirements(getCapabilityRequirements());
 		return clone;
 	}
 
@@ -1270,6 +1310,7 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 		hEntityAttribute.setInferred(getInferred());
 		hEntityAttribute.setPrivacyFlag(getPrivacyFlag());
 		hEntityAttribute.setConfirmationFlag(getConfirmationFlag());
+		hEntityAttribute.setCapabilityRequirements(getCapabilityRequirements());
 		return hEntityAttribute;
 	}
 }

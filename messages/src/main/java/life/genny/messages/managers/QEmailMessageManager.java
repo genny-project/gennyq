@@ -7,11 +7,13 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.GennySettings;
+import life.genny.qwandaq.utils.EntityAttributeUtils;
 import life.genny.qwandaq.utils.TimeUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import javax.json.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -22,6 +24,9 @@ import java.util.Map;
 
 @ApplicationScoped
 public final class QEmailMessageManager extends QMessageProvider {
+
+	@Inject
+	EntityAttributeUtils beaUtils;
 
 	private static final Logger log = Logger.getLogger(QEmailMessageManager.class);
 
@@ -50,7 +55,7 @@ public final class QEmailMessageManager extends QMessageProvider {
 
 		// test data
 		log.debug("Showing what is in recipient BE, code=" + recipientBe.getCode());
-		for (EntityAttribute ea : recipientBe.getBaseEntityAttributes()) {
+		for (EntityAttribute ea : beaUtils.getAllEntityAttributesForBaseEntity(recipientBe)) {
 			log.debug("attributeCode=" + ea.getAttributeCode() + ", value=" + ea.getObjectAsString());
 		}
 
@@ -71,11 +76,12 @@ public final class QEmailMessageManager extends QMessageProvider {
 
 		String subject = templateBe.getValue("PRI_SUBJECT", null);
 		String body = templateBe.getValue("PRI_BODY", null);
-
-		String emailSender = projectBe.getValueAsString("ENV_SENDGRID_EMAIL_SENDER");
-		String emailNameSender = projectBe.getValueAsString("ENV_SENDGRID_EMAIL_NAME_SENDER");
-		String emailApiKey = projectBe.getValueAsString("ENV_SENDGRID_API_KEY");
-		String apiPath = projectBe.getValueAsString("ENV_SENDGRID_API_PATH");
+		String productCode = projectBe.getRealm();
+		String projectBeCode = projectBe.getCode();
+		String emailSender = beaUtils.getEntityAttribute(productCode, projectBeCode, "ENV_SENDGRID_EMAIL_SENDER", false).getValueString();
+		String emailNameSender = beaUtils.getEntityAttribute(productCode, projectBeCode, "ENV_SENDGRID_EMAIL_NAME_SENDER", false).getValueString();
+		String emailApiKey = beaUtils.getEntityAttribute(productCode, projectBeCode, "ENV_SENDGRID_API_KEY", false).getValueString();
+		String apiPath = beaUtils.getEntityAttribute(productCode, projectBeCode, "ENV_SENDGRID_API_PATH", false).getValueString();
 
 		log.info("The name for email sender -> " + emailSender);
 		log.info("The apiPath for API -> " + apiPath);
@@ -93,7 +99,7 @@ public final class QEmailMessageManager extends QMessageProvider {
 				log.info("Processing key as BASEENTITY: " + entry.getKey());
 				BaseEntity be = (BaseEntity) value;
 				HashMap<String, String> deepReplacementMap = new HashMap<>();
-				for (EntityAttribute ea : be.getBaseEntityAttributes()) {
+				for (EntityAttribute ea : beaUtils.getAllEntityAttributesForBaseEntity(be)) {
 
 					String attrCode = ea.getAttributeCode();
 					if (attrCode.startsWith("LNK") || attrCode.startsWith("PRI")) {

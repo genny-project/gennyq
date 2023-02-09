@@ -23,7 +23,6 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -32,17 +31,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import javax.json.bind.annotation.JsonbTransient;
-import javax.persistence.Cacheable;
-import javax.persistence.CascadeType;
-import javax.persistence.DiscriminatorColumn;
-import javax.persistence.DiscriminatorType;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Index;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
-import javax.persistence.Transient;
-import javax.persistence.UniqueConstraint;
+import javax.persistence.*;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -128,17 +117,6 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 			@org.hibernate.annotations.Filter(name = "filterAttribute2", condition = "attributeCode =:attributeCode")
 	})
 	private Set<HEntityAttribute> baseEntityAttributes = new HashSet<HEntityAttribute>(0);
-
-	@XmlTransient
-	@OneToMany(fetch = FetchType.EAGER, mappedBy = "pk.source")
-	@JsonBackReference(value = "entityEntity")
-	// @Cascade({ CascadeType.MERGE, CascadeType.REMOVE })
-	/* Stores the links of HBaseEntity to another HBaseEntity */
-	private Set<HEntityEntity> links = new LinkedHashSet<>();
-
-	@Transient
-	@JsonbTransient
-	private Set<EntityQuestion> questions = new HashSet<EntityQuestion>(0);
 
 	/*
 	 * @JsonIgnore
@@ -249,56 +227,6 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	}
 
 	/**
-	 * @return the links
-	 */
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	// @JsonbTransient
-	public Set<HEntityEntity> getLinks() {
-		return links;
-	}
-
-	/**
-	 * Sets the Links of the HBaseEntity with another HBaseEntity
-	 *
-	 * @param links the links to set
-	 */
-	public void setLinks(final Set<HEntityEntity> links) {
-		this.links = links;
-	}
-
-	/**
-	 * @param links the links to set
-	 */
-	public void setLinks(final List<HEntityEntity> links) {
-		this.links.addAll(links);
-	}
-
-	/**
-	 * @return the questions
-	 */
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public Set<EntityQuestion> getQuestions() {
-		return this.questions;
-	}
-
-	/**
-	 * Sets the Questions of the HBaseEntity with another HBaseEntity
-	 *
-	 * @param questions the questions to set
-	 */
-	public void setQuestions(final Set<EntityQuestion> questions) {
-		this.questions = questions;
-	}
-
-	/**
-	 * @param questions the questions to set
-	 */
-	@JsonbTransient
-	public void setQuestions(final List<EntityQuestion> questions) {
-		this.questions.addAll(questions);
-	}
-
-	/**
 	 * getDefaultCodePrefix This method is expected to be overridden in specialised
 	 * child classes.
 	 *
@@ -323,41 +251,6 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 		}
 		// Check if this code exists in the baseEntityAttributes
 		if (getBaseEntityAttributes().parallelStream().anyMatch(ti -> ti.getAttributeCode().equals(attributeCode))) {
-			ret = true;
-		}
-		return ret;
-	}
-
-	/**
-	 * containsLink This checks if an attribute link code is linked to the
-	 * baseEntity.
-	 *
-	 * @param linkAttributeCode the linkAttributeCode to check
-	 * @return boolean
-	 */
-	public boolean containsLink(final String linkAttributeCode) {
-		boolean ret = false;
-
-		// Check if this code exists in the baseEntityAttributes
-		if (getLinks().parallelStream().anyMatch(ti -> ti.getPk().getAttribute().getCode().equals(linkAttributeCode))) {
-			ret = true;
-		}
-		return ret;
-	}
-
-	/**
-	 * containsTarget This checks if another baseEntity is linked to the baseEntity.
-	 *
-	 * @param targetCode        the targetCode to check
-	 * @param linkAttributeCode the linkAttributeCode to check
-	 * @return boolean
-	 */
-	public boolean containsTarget(final String targetCode, final String linkAttributeCode) {
-		boolean ret = false;
-
-		// Check if this code exists in the baseEntityAttributes
-		if (getLinks().parallelStream().anyMatch(ti -> (ti.getLink().getAttributeCode().equals(linkAttributeCode)
-				&& (ti.getLink().getTargetCode().equals(targetCode))))) {
 			ret = true;
 		}
 		return ret;
@@ -551,50 +444,6 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 		}
 
 		return removed;
-	}
-
-	/**
-	 * addTarget This links this baseEntity to a target HBaseEntity and associated
-	 * weight,value to the baseEntity. It auto creates the HEntityEntity object and
-	 * sets itself to be the source. For efficiency we assume the link does not
-	 * already exist
-	 *
-	 * @param target        the target to add
-	 * @param linkAttribute the attribute link
-	 * @param weight        the weight of the target
-	 * @return HEntityEntity
-	 * @throws BadDataException if the target could not be added
-	 */
-	public HEntityEntity addTarget(final HBaseEntity target, final Attribute linkAttribute, final Double weight)
-			throws BadDataException {
-		return addTarget(target, linkAttribute, weight, null);
-	}
-
-	/**
-	 * addTarget This links this baseEntity to a target HBaseEntity and associated
-	 * weight,value to the baseEntity. It auto creates the HEntityEntity object and
-	 * sets itself to be the source. For efficiency we assume the link does not
-	 * already exist
-	 *
-	 * @param target        the target to add
-	 * @param linkAttribute the attribute link
-	 * @param weight        the weight of the target
-	 * @param value         the value of the target
-	 * @return HEntityEntity
-	 * @throws BadDataException if the target could not be added
-	 */
-	public HEntityEntity addTarget(final HBaseEntity target, final Attribute linkAttribute, final Double weight,
-								  final Object value) throws BadDataException {
-		if (target == null)
-			throw new BadDataException("missing Target Entity");
-		if (linkAttribute == null)
-			throw new BadDataException("missing Link Attribute");
-		if (weight == null)
-			throw new BadDataException("missing weight");
-
-		final HEntityEntity entityEntity = new HEntityEntity(this, target, linkAttribute.toHAttribute(), value, weight);
-		getLinks().add(entityEntity);
-		return entityEntity;
 	}
 
 	/**

@@ -14,6 +14,7 @@ import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.SavedSearch;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.DatabaseUtils;
+import life.genny.qwandaq.utils.EntityAttributeUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
@@ -45,6 +46,9 @@ public class FilterGroupService {
 
     @Inject
     BaseEntityUtils beUtils;
+
+    @Inject
+    EntityAttributeUtils beaUtils;
 
     @Inject
     QwandaUtils qwandaUtils;
@@ -503,7 +507,7 @@ public class FilterGroupService {
      */
     public void saveSearch(String nameOrName) {
         Map<String,SavedSearch> params = getParamsFromCache();
-        BaseEntity base = saveBaseEntity(nameOrName,params);
+        saveBaseEntity(nameOrName,params);
 
         filterService.sendListSavedSearches(Question.QUE_SAVED_SEARCH_SELECT_GRP, Question.QUE_SAVED_SEARCH_SELECT,
                 Attribute.PRI_NAME,FilterConst.VALUE);
@@ -526,7 +530,8 @@ public class FilterGroupService {
             // create the main base entity
             String attCode = Attribute.LNK_SAVED_SEARCHES;
             Attribute attr = new Attribute(PRI_PREFIX, attCode, DataTypeStr);
-            defBE.addAttribute(attr, 1.0, Prefix.SBE);
+            EntityAttribute addedAttribute = defBE.addAttribute(attr, 1.0, Prefix.SBE);
+            beaUtils.updateEntityAttribute(addedAttribute);
             if(nameOrCode.startsWith(SearchEntity.SBE_SAVED_SEARCH)) {
                 baseEntity = beUtils.getBaseEntity(userToken.getProductCode(), nameOrCode);
             } else {
@@ -539,14 +544,16 @@ public class FilterGroupService {
             List<String> listUUID = getListUUID(prefix,params.entrySet().size());
             String strLnkArr = convertLnkArrayToString(listUUID);
 
-            baseEntity.addAttribute(attrFound, 1.0, strLnkArr);
+            addedAttribute = baseEntity.addAttribute(attrFound, 1.0, strLnkArr);
+            beaUtils.updateEntityAttribute(addedAttribute);
             beUtils.updateBaseEntity(baseEntity);
 
             // create child base entities
             Attribute childAttr = new Attribute(PRI_PREFIX, attCode, DataTypeStr);
             Definition childDefBE = new Definition(prefix,prefix);
             childDefBE.setRealm(user.getProductCode());
-            childDefBE.addAttribute(childAttr, 1.0, prefix);
+            addedAttribute = childDefBE.addAttribute(childAttr, 1.0, prefix);
+            beaUtils.updateEntityAttribute(addedAttribute);
 
             //create other base entities based on the main base entity
             int index = 0;
@@ -555,7 +562,8 @@ public class FilterGroupService {
 
                 BaseEntity childBase = beUtils.create(childDefBE, nameOrCode, childBaseCode);
                 String childVal = jsonb.toJson(entry.getValue());
-                childBase.addAttribute(attrFound, 1.0,childVal);
+                addedAttribute = childBase.addAttribute(attrFound, 1.0,childVal);
+                beaUtils.updateEntityAttribute(addedAttribute);
                 beUtils.updateBaseEntity(childBase);
                 index++;
             }
@@ -681,7 +689,7 @@ public class FilterGroupService {
      * @return String value of base entity by attribute code
      */
     public String getValueStringByAttCode(BaseEntity base, String attCode) {
-        EntityAttribute ea = base.getBaseEntityAttributesMap().get(attCode);
+        EntityAttribute ea = beaUtils.getEntityAttribute(base.getRealm(), base.getCode(), attCode);
         return ea != null ? ea.getValueString() : StringUtils.EMPTY;
     }
 

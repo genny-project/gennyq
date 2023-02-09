@@ -2,7 +2,6 @@ package life.genny.fyodor.models;
 
 import life.genny.qwandaq.attribute.HEntityAttribute;
 import life.genny.qwandaq.entity.HBaseEntity;
-import life.genny.qwandaq.entity.HEntityEntity;
 import life.genny.qwandaq.entity.search.SearchEntity;
 
 import javax.json.bind.annotation.JsonbTransient;
@@ -20,7 +19,6 @@ public class TolstoysCauldron {
 	private SearchEntity searchEntity;
 
 	private Root<HBaseEntity> root;
-	private Root<HEntityEntity> link;
 
 	private Map<String, Join<HBaseEntity, HEntityAttribute>> joinMap = new HashMap<>();
 	private Map<String, Subquery<HBaseEntity>> subqueryMap = new HashMap<>();
@@ -49,14 +47,6 @@ public class TolstoysCauldron {
 
 	public void setRoot(Root<HBaseEntity> root) {
 		this.root = root;
-	}
-
-	public Root<HEntityEntity> getLink() {
-		return link;
-	}
-
-	public void setLink(Root<HEntityEntity> link) {
-		this.link = link;
 	}
 
 	public Map<String, Join<HBaseEntity, HEntityAttribute>> getJoinMap() {

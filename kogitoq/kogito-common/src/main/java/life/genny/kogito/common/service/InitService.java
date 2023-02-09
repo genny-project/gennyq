@@ -89,18 +89,11 @@ public class InitService {
 	 * Send All attributes for the productCode.
 	 */
 	public void sendAllAttributes() {
-
 		log.info("Sending Attributes for " + userToken.getProductCode());
 		String productCode = userToken.getProductCode();
-
 		QDataAttributeMessage msg = new QDataAttributeMessage();
-		Collection<Attribute> allAttributes = cm.getAllAttributes(productCode);
-		log.infof("$$$$$$$$$$ Hoping to have read ALL attributes... here's the size: %s", allAttributes.size());
-		Collection<Attribute> attributes = allAttributes.stream()
-			// Filter capability attributes
-			.filter((attribute) -> !attribute.getCode().startsWith(Prefix.CAP))
-			.collect(Collectors.toList());
-		log.infof("$$$$$$$$$$ Here's the size of filtered attributes: %s", attributes.size());
+		Collection<Attribute> attributes = cm.getAttributes(productCode, Prefix.CAP);
+		log.infof("$$$$$$$$$$ Read these many matching attributes: %s", attributes.size());
 		msg.setItems(attributes);
 		// set token and send
 		msg.setToken(userToken.getToken());

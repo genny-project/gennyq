@@ -14,6 +14,8 @@ import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.utils.*;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
@@ -36,11 +38,6 @@ import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.DefUtils;
-import life.genny.qwandaq.utils.KafkaUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
-import life.genny.qwandaq.utils.SearchUtils;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
 
@@ -72,6 +69,9 @@ public class InternalConsumer {
 
 	@Inject
 	BaseEntityUtils beUtils;
+
+	@Inject
+	EntityAttributeUtils beaUtils;
 
 	@Inject
 	CapabilitiesManager capMan;
@@ -181,11 +181,16 @@ public class InternalConsumer {
 		log.info("DROPDOWN :Loaded " + msg.getItems().size() + " baseentitys");
 
 		for (BaseEntity item : msg.getItems()) {
-			String logStr = String.format("DROPDOWN : item: %s ===== %s", item.getCode(),
-					item.getValueAsString(Attribute.PRI_NAME));
-
-			if (item.getValueAsString(Attribute.PRI_NAME) == null)
+			String name = null;
+			String itemCode = item.getCode();
+			EntityAttribute nameAttribute = beaUtils.getEntityAttribute(productCode, itemCode, Attribute.PRI_NAME, false);
+			if (nameAttribute != null) {
+				name = nameAttribute.getValueString();
+			}
+			String logStr = String.format("DROPDOWN : item: %s ===== %s", itemCode, name);
+			if (StringUtils.isEmpty(name)) {
 				log.warn(logStr);
+			}
 			else
 				log.info(logStr);
 		}

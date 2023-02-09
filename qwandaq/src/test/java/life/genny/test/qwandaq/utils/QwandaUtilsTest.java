@@ -4,6 +4,7 @@ import java.util.*;
 
 import javax.inject.Inject;
 
+import life.genny.qwandaq.utils.EntityAttributeUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -119,7 +120,7 @@ public class QwandaUtilsTest extends BaseTestCase {
 
 		new JUnitTester<BaseEntity, Boolean>()
 				.setTest((input) -> {
-					return Expected(QwandaUtils.mandatoryFieldsAreAnswered(map, input.input));
+					return Expected(qwandaUtils.mandatoryFieldsAreAnswered(map, input.input));
 				})
 
 				.createTest("Answered Case")

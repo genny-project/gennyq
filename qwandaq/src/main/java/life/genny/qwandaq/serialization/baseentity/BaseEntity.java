@@ -40,9 +40,12 @@ public class BaseEntity implements CoreEntitySerializable {
 	@ProtoField(8)
 	private Integer status;
 
+	@ProtoField(9)
+	private String capreqs;
+
 	@ProtoFactory
 	public BaseEntity(String dtype, Long id, LocalDateTime created, String name, String realm, LocalDateTime updated,
-			String code, Integer status) {
+			String code, Integer status, String capreqs) {
 		super();
 		this.dtype = dtype;
 		this.id = id;
@@ -52,6 +55,7 @@ public class BaseEntity implements CoreEntitySerializable {
 		this.updated = updated;
 		this.code = code;
 		this.status = status;
+		this.capreqs = capreqs;
 	}
 
 	public BaseEntity() {
@@ -121,6 +125,14 @@ public class BaseEntity implements CoreEntitySerializable {
 		this.status = status;
 	}
 
+	public String getCapreqs() {
+		return capreqs;
+	}
+
+	public void setCapreqs(String capreqs) {
+		this.capreqs = capreqs;
+	}
+
 	@Override
 	public CoreEntityPersistable toPersistableCoreEntity() {
 		life.genny.qwandaq.entity.BaseEntity baseEntity = new life.genny.qwandaq.entity.BaseEntity();
@@ -132,6 +144,7 @@ public class BaseEntity implements CoreEntitySerializable {
 		baseEntity.setRealm(getRealm());
 		baseEntity.setStatus(EEntityStatus.valueOf(getStatus()));
 		baseEntity.setUpdated(getUpdated());
+		baseEntity.setCapabilityRequirements();
 		return baseEntity;
 	}
 

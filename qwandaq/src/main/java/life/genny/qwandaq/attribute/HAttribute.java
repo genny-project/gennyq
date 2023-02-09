@@ -23,7 +23,7 @@ package life.genny.qwandaq.attribute;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.CodedEntity;
 import life.genny.qwandaq.datatype.DataType;
-import life.genny.qwandaq.utils.CommonUtils;
+import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 
 import javax.persistence.*;
@@ -289,36 +289,18 @@ public class HAttribute extends CodedEntity {
 	 * @return true if all fields are the same. False if one is different
 	 */
 	public boolean equals(HAttribute other, boolean checkId) {
-		boolean sameDesc = CommonUtils.compare(description, other.description);
-		if (!sameDesc)
-			return false;
-
-		boolean samePrivacy = (defaultPrivacyFlag == other.defaultPrivacyFlag);
-		if (!samePrivacy)
-			return false;
-
-		boolean sameDTT = CommonUtils.compare(dataType, other.dataType);
-		if (!sameDTT)
-			return false;
-
-		boolean sameHelp = CommonUtils.compare(help, other.help);
-		if (!sameHelp)
-			return false;
-
-		boolean samePlaceholder = CommonUtils.compare(placeholder, other.placeholder);
-		if (!samePlaceholder)
-			return false;
-
-		boolean sameDefault = CommonUtils.compare(defaultValue, other.defaultValue);
-		if (!sameDefault)
-			return false;
-
-		boolean sameIcon = CommonUtils.compare(icon, other.icon);
-		if (!sameIcon)
-			return false;
-
-		// Check the id if necessary
-		return checkId ? (other.getId() == getId()) : true;
+		EqualsBuilder equalsBuilder = new EqualsBuilder();
+		equalsBuilder.append(description, other.description);
+		equalsBuilder.append(defaultPrivacyFlag, other.defaultPrivacyFlag);
+		equalsBuilder.append(dataType, other.dataType);
+		equalsBuilder.append(help, other.help);
+		equalsBuilder.append(placeholder, other.placeholder);
+		equalsBuilder.append(defaultValue, other.defaultValue);
+		equalsBuilder.append(icon, other.icon);
+		if(checkId) {
+			equalsBuilder.append(getId(), other.getId());
+		}
+		return equalsBuilder.isEquals();
 	}
 
 	public Attribute toAttribute() {

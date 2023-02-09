@@ -25,6 +25,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.converter.CapabilityConverter;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.handler.AttributeMinIOHandler;
 import org.apache.commons.lang3.time.DateUtils;
@@ -92,6 +93,9 @@ public class EntityAttribute implements CoreEntitySerializable {
 
 	@Transient
 	private Attribute attribute;
+
+	@Transient
+	private String capreqs;
 
 	public EntityAttribute() {
 	}
@@ -336,6 +340,14 @@ public class EntityAttribute implements CoreEntitySerializable {
 		this.attribute = attribute;
 	}
 
+	public String getCapreqs() {
+		return capreqs;
+	}
+
+	public void setCapreqs(String capreqs) {
+		this.capreqs = capreqs;
+	}
+
 	@Override
 	public CoreEntityPersistable toPersistableCoreEntity() {
 		life.genny.qwandaq.attribute.EntityAttribute ea = new life.genny.qwandaq.attribute.EntityAttribute();
@@ -359,6 +371,7 @@ public class EntityAttribute implements CoreEntitySerializable {
 		ea.setWeight(getWeight());
 		// bea.setIcon(geticon);
 		ea.setConfirmationFlag(getConfirmationFlag());
+		ea.setCapabilityRequirements(CapabilityConverter.convertToEA(getCapreqs()));
 		return ea;
 	}
 

@@ -1,6 +1,4 @@
-package life.genny.qwandaq.serialization.entityentity;
-
-import java.io.UncheckedIOException;
+package life.genny.qwandaq.serialization.question;
 
 import life.genny.qwandaq.constants.GennyConstants;
 import org.infinispan.protostream.FileDescriptorSource;
@@ -8,11 +6,13 @@ import org.infinispan.protostream.SerializationContext;
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.protostream.impl.ResourceUtils;
 
-public class EntityEntityKeyInitializerImpl implements SerializationContextInitializer {
+import java.io.UncheckedIOException;
+
+public class QuestionKeyInitializerImpl implements SerializationContextInitializer {
 
 	@Override
 	public String getProtoFileName() {
-		return "entity_entity-persistence.proto";
+		return "question-persistence.proto";
 	}
 
 	@Override
@@ -28,7 +28,7 @@ public class EntityEntityKeyInitializerImpl implements SerializationContextIniti
 
 	@Override
 	public void registerMarshallers(SerializationContext serCtx) {
-		serCtx.registerMarshaller(new EntityEntityKeyMessageMarshaller());
+		serCtx.registerMarshaller(new QuestionKeyMessageMarshaller());
 	}
 
 }

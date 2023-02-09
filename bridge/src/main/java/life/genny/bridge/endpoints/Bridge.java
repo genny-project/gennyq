@@ -5,7 +5,9 @@ import io.vertx.core.json.JsonObject;
 import life.genny.bridge.blacklisting.BlackListInfo;
 import life.genny.bridge.model.InitColors;
 import life.genny.bridge.model.InitProperties;
+import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QDataB2BMessage;
 import life.genny.qwandaq.models.AttributeCodeValueString;
@@ -13,6 +15,7 @@ import life.genny.qwandaq.models.GennyItem;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CommonUtils;
+import life.genny.qwandaq.utils.EntityAttributeUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
@@ -45,11 +48,16 @@ import java.util.stream.Collectors;
 public class Bridge {
 
     private static final Logger log = Logger.getLogger(Bridge.class);
+    public static final String PRI_COLOR_PRIMARY = "PRI_COLOR_PRIMARY";
+    public static final String PRI_COLOR_SECONDARY = "PRI_COLOR_SECONDARY";
 
     static Jsonb jsonb = JsonbBuilder.create();
 
     @Inject
     BaseEntityUtils beUtils;
+
+    @Inject
+    EntityAttributeUtils beaUtils;
 
     @Inject
     UserToken userToken;
@@ -99,15 +107,24 @@ public class Bridge {
             // init clientId
             String cid = props.determineClientId(url);
             log.info("cid = " + cid + ", url:" + url);
-            BaseEntity project = beUtils.getBaseEntity(cid, "PRJ_" + cid.toUpperCase());
+            String baseEntityCode = "PRJ_" + cid.toUpperCase();
+            BaseEntity project = beUtils.getBaseEntity(cid, baseEntityCode);
             if ("internmatch".equals(cid)) {
                 cid = "alyson";
             }
             props.setClientId(cid);
 
             // init colours
-            String primary = project.getValueAsString("PRI_COLOR_PRIMARY");
-            String secondary = project.getValueAsString("PRI_COLOR_SECONDARY");
+            EntityAttribute primaryEA = beaUtils.getEntityAttribute(cid, baseEntityCode, PRI_COLOR_PRIMARY);
+            if (primaryEA == null) {
+                throw new ItemNotFoundException("BaseEntityAttribute for primary color not found!");
+            }
+            String primary = primaryEA.getValueString();
+            EntityAttribute secondaryEA = beaUtils.getEntityAttribute(cid, baseEntityCode, PRI_COLOR_SECONDARY);
+            if (secondaryEA == null) {
+                throw new ItemNotFoundException("BaseEntityAttribute for secondary color not found!");
+            }
+            String secondary = secondaryEA.getValueString();
             props.setColors(new InitColors(primary, secondary));
 
             log.info("props=[" + props + "]");

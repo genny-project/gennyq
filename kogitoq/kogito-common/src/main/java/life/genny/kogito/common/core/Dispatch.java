@@ -18,6 +18,7 @@ import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import life.genny.qwandaq.utils.*;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
@@ -41,11 +42,6 @@ import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.KafkaUtils;
-import life.genny.qwandaq.utils.MergeUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
-import life.genny.qwandaq.utils.SearchUtils;
 
 /**
  * Dispatch
@@ -73,6 +69,8 @@ public class Dispatch {
 	@Inject
 	BaseEntityUtils beUtils;
 	@Inject
+	EntityAttributeUtils beaUtils;
+	@Inject
 	SearchUtils search;
 	@Inject
 	KogitoUtils kogitoUtils;
@@ -90,10 +88,11 @@ public class Dispatch {
 	 */
 	public QBulkMessage build(ProcessData processData) {
 		// fetch source and target entities
+		String productCode = userToken.getProductCode();
 		String sourceCode = processData.getSourceCode();
 		String targetCode = processData.getTargetCode();
-		BaseEntity source = beUtils.getBaseEntity(sourceCode);
-		BaseEntity target = beUtils.getBaseEntity(targetCode);
+		BaseEntity source = beUtils.getBaseEntity(productCode, sourceCode, true);
+		BaseEntity target = beUtils.getBaseEntity(productCode, targetCode, true);
 		CapabilitySet userCapabilities = capMan.getUserCapabilities(target);
 
 		PCM pcm = beUtils.getPCM(processData.getPcmCode());
@@ -185,7 +184,7 @@ public class Dispatch {
 		}
 		// check mandatory fields
 		// TODO: change to use flatMap
-		Boolean answered = QwandaUtils.mandatoryFieldsAreAnswered(flatMapOfAsks, processEntity);
+		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(flatMapOfAsks, processEntity);
 		// pre-send ask updates
 		Definition definition = beUtils.getDefinition(processData.getDefinitionCode());
 		qwandaUtils.updateDependentAsks(processEntity, definition, flatMapOfAsks);
@@ -234,35 +233,40 @@ public class Dispatch {
 		// check capability requirements are met
 		CapabilitySet userCapabilities = capMan.getUserCapabilities(source);
 		log.info("userCaps = " + userCapabilities);
+		String pcmCode = pcm.getCode();
 		if (!pcm.requirementsMet(userCapabilities)) {
-			log.warn("User " + source.getCode() + " Capability requirements not met for pcm: " + pcm.getCode());
+			log.warn("User " + source.getCode() + " Capability requirements not met for pcm: " + pcmCode);
 			return;
 		}
-		log.debug("Traversing " + pcm.getCode());
+		log.debug("Traversing " + pcmCode);
 
 		// use pcm target if one is specified
-		String targetCode = pcm.getTargetCode();
-		if (targetCode != null && !targetCode.equals(target.getCode())) {
-			// merge targetCode
-			Map<String, Object> ctxMap = new HashMap<>();
-			ctxMap.put("TARGET", target);
-			targetCode = mergeUtils.merge(targetCode, ctxMap);
-			// update targetCode so it does not re-trigger merging
-			pcm.setTargetCode(targetCode);
-			// providing a null parent & location since it is already set in the parent
-			JsonObject payload = Json.createObjectBuilder()
-					.add("sourceCode", source.getCode())
-					.add("targetCode", targetCode)
-					.add("pcmCode", pcm.getCode())
-					.build();
-			kogitoUtils.triggerWorkflow(GADAQ, "processQuestions", payload);
-			return;
+		String productCode = pcm.getRealm();
+		EntityAttribute targetAttribute = beaUtils.getEntityAttribute(productCode, pcmCode, Attribute.PRI_TARGET_CODE, false);
+		if (targetAttribute != null) {
+			String targetCode = targetAttribute.getValueString();
+			if (!StringUtils.isEmpty(targetCode) && !targetCode.equals(target.getCode())) {
+				// merge targetCode
+				Map<String, Object> ctxMap = new HashMap<>();
+				ctxMap.put("TARGET", target);
+				targetCode = mergeUtils.merge(targetCode, ctxMap);
+				// update targetCode so it does not re-trigger merging
+				pcm.setTargetCode(targetCode);
+				// providing a null parent & location since it is already set in the parent
+				JsonObject payload = Json.createObjectBuilder()
+						.add("sourceCode", source.getCode())
+						.add("targetCode", targetCode)
+						.add("pcmCode", pcmCode)
+						.build();
+				kogitoUtils.triggerWorkflow(GADAQ, "processQuestions", payload);
+				return;
+			}
 		}
 
 		// add pcm for sending
 		msg.add(pcm);
 		// iterate locations
-		List<EntityAttribute> locations = pcm.findPrefixEntityAttributes(Prefix.LOCATION);
+		List<EntityAttribute> locations = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(productCode, pcmCode, Prefix.LOCATION);
 		for (EntityAttribute entityAttribute : locations) {
 			// recursively check PCM fields
 			String value = entityAttribute.getAsString();
@@ -276,13 +280,18 @@ public class Dispatch {
 		}
 
 		// check for a question code
-		String questionCode = pcm.getValueAsString(Attribute.PRI_QUESTION_CODE);
-		if (questionCode == null) {
-			log.warn("Question Code is null for " + pcm.getCode());
-		} else if (!Question.QUE_EVENTS.equals(questionCode)) {
-			// add ask to bulk message
-			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target, userCapabilities, new ReqConfig());
-			msg.add(ask);
+		EntityAttribute questionAttribute = beaUtils.getEntityAttribute(productCode, pcmCode, Attribute.PRI_QUESTION_CODE, false);
+		if (questionAttribute == null) {
+			log.warn("Question attribute is null for " + pcmCode);
+		} else {
+			String questionCode = questionAttribute.getValueString();
+			if (questionCode == null) {
+				log.warn("Question Code is null for " + pcmCode);
+			} else if (!Question.QUE_EVENTS.equals(questionCode)) {
+				// add ask to bulk message
+				Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target, userCapabilities, new ReqConfig());
+				msg.add(ask);
+			}
 		}
 	}
 
@@ -460,13 +469,15 @@ public class Dispatch {
 
 		Map<String, Object> contexts = new HashMap<>();
 		contexts.put("USER_CODE", beUtils.getUserBaseEntity());
-
 		Attribute priName = cm.getAttribute(Attribute.PRI_NAME);
 
 		baseEntities.stream().forEach(entity -> {
-			if (!entity.getBaseEntityAttributesMap().containsKey(Attribute.PRI_NAME))
-				entity.addAttribute(new EntityAttribute(entity, priName, 1.0, entity.getName()));
-
+			EntityAttribute ea = beaUtils.getEntityAttribute(entity.getRealm(), entity.getCode(), Attribute.PRI_NAME);
+			if (ea == null) {
+				ea = new EntityAttribute(entity, priName, 1.0, entity.getName());
+				beaUtils.updateEntityAttribute(ea);
+			}
+			entity.addAttribute(ea);
 			mergeUtils.mergeBaseEntity(entity, contexts);
 		});
 
