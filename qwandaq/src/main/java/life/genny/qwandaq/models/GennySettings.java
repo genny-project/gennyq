@@ -34,7 +34,7 @@ public class GennySettings {
 	 * */
 	private static final String getConfig(String env, String fallback, boolean alert) 
 		throws IllegalStateException {
-		String value = CommonUtils.getSystemEnv(env, alert);
+		String value = CommonUtils.getSystemEnv(env, alert && fallback == null);
 		if(StringUtils.isBlank(value)) {
 			if(fallback != null) {
 				log.warn("Using fallback for " + env + ": " + fallback);
