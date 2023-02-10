@@ -471,7 +471,6 @@ public class QwandaUtils {
 			EntityAttribute valueAttribute = beaUtils.getEntityAttribute(baseEntity.getRealm(), baseEntity.getCode(), attributeCode);
 			if (valueAttribute != null) {
 				String value = valueAttribute.getValueString();
-				baseEntity.getValueAsString(attributeCode);
 
 				// if any are blank, mandatory and non-readonly, then task is not complete
 				if ((mandatory && !readonly) && StringUtils.isBlank(value))
@@ -744,8 +743,6 @@ public class QwandaUtils {
 				// update the baseentity
 				EntityAttribute newEntityAttribute = new EntityAttribute(target, attribute, answer.getWeight(), answer.getValue());
 				beaUtils.updateEntityAttribute(newEntityAttribute);
-				String value = target.getValueAsString(answer.getAttributeCode());
-				log.debug("Value Saved -> " + answer.getAttributeCode() + " = " + value);
 			}
 			// update target in the cache and DB
 			beUtils.updateBaseEntity(target);
@@ -790,9 +787,8 @@ public class QwandaUtils {
 		entityMessage.setToken(userToken.getToken());
 		entityMessage.setReplace(true);
 
-		List<EntityAttribute> entityAttributes = beaUtils.getAllEntityAttributesForBaseEntity(definition);
 		// create a child ask for every valid attribute
-		entityAttributes.forEach(entityAttribute -> {
+		definition.getBaseEntityAttributes().forEach(entityAttribute -> {
 			String attributeCode = entityAttribute.getAttributeCode();
 			if (!attributeCode.startsWith(Prefix.ATT)) {
 				return;

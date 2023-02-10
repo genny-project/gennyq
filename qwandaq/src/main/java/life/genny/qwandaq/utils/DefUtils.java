@@ -76,6 +76,7 @@ public class DefUtils {
 	 * @return BaseEntity The corresponding definition {@link BaseEntity}
 	 */
 	public Definition getDEF(final BaseEntity entity) {
+		entity.setBaseEntityAttributes(beaUtils.getAllEntityAttributesForBaseEntity(entity));
 
 		if (entity == null)
 			throw new NullParameterException("entity");

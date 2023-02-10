@@ -126,7 +126,7 @@ public class NavigationService {
 	public void sendSummary() {
 		// fetch user's linked summary
 		BaseEntity user = beUtils.getUserBaseEntity();
-		BaseEntity summary = beUtils.getBaseEntityFromLinkAttribute(user, Attribute.LNK_SUMMARY);
+		BaseEntity summary = beUtils.getBaseEntityFromLinkAttribute(user, Attribute.LNK_SUMMARY, true);
 		if (summary == null) {
 			throw new ItemNotFoundException("LNK_SUMMARY for " + user.getCode());
 		}

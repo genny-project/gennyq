@@ -94,7 +94,7 @@ public class BaseEntityUtils {
 	 * @return
 	 */
 	public PCM getPCM(String code) {
-		return PCM.from(getBaseEntity(code));
+		return PCM.from(getBaseEntity(code, true));
 	}
 
 	/**
@@ -105,7 +105,7 @@ public class BaseEntityUtils {
 	 * @return
 	 */
 	public Definition getDefinition(String code) {
-		BaseEntity baseEntity = getBaseEntity(code);
+		BaseEntity baseEntity = getBaseEntity(code, true);
 		Definition definition = Definition.from(baseEntity);
 		definition.setBaseEntityAttributes(beaUtils.getAllEntityAttributesForBaseEntity(baseEntity));
 		return definition;
@@ -120,6 +120,17 @@ public class BaseEntityUtils {
 	 */
 	public BaseEntity getBaseEntity(String code) {
 		return getBaseEntity(userToken.getProductCode(), code); // watch out for no userToken
+	}
+
+	/**
+	 * Get a base entity using a code, but throw an
+	 * ItemNotFoundException if the entity does not exist.
+	 *
+	 * @param code The code of the entity to fetch
+	 * @return The BaseEntity
+	 */
+	public BaseEntity getBaseEntity(String code, boolean bundleAttributes) {
+		return getBaseEntity(userToken.getProductCode(), code, bundleAttributes); // watch out for no userToken
 	}
 
 	/**
@@ -154,15 +165,12 @@ public class BaseEntityUtils {
 		if (bundleAttributes) {
 			List<EntityAttribute> entityAttributesForBaseEntity = beaUtils.getAllEntityAttributesForBaseEntity(productCode, code);
 			if(entityAttributesForBaseEntity.isEmpty()) {
-				log.errorf("No BaseEntityAttributes found for base entity [%s:%s]", productCode, code);
-				throw new ItemNotFoundException();
+				log.infof("No BaseEntityAttributes found for base entity [%s:%s]", productCode, code);
+				//throw new ItemNotFoundException();
 			} else {
 				log.debugf("%s BaseEntityAttributes found for base entity [%s:%s]. Setting them to BE...", entityAttributesForBaseEntity.size(), productCode, code);
 			}
 			baseEntity.setBaseEntityAttributes(entityAttributesForBaseEntity);
-			for(EntityAttribute entityAttribute : beaUtils.getAllEntityAttributesForBaseEntity(baseEntity)) {
-				log.debugf("BaseEntityAttribute found in base entity [%s:%s:%s].", entityAttribute.getRealm(), entityAttribute.getBaseEntityCode(), entityAttribute.getAttributeCode());
-			}
 			log.debugf("Added %s BaseEntityAttributes to BE [%s:%s]", baseEntity.getBaseEntityAttributesMap().size(), baseEntity.getRealm(), baseEntity.getCode());
 		}
 		return baseEntity;
@@ -215,9 +223,20 @@ public class BaseEntityUtils {
 	 * @return The BaseEntity with code stored in the attribute
 	 */
 	public BaseEntity getBaseEntityFromLinkAttribute(BaseEntity baseEntity, String attributeCode) {
+		return getBaseEntityFromLinkAttribute(baseEntity, attributeCode, false);
+	}
+
+	/**
+	 * Get the BaseEntity that is linked with a specific attribute.
+	 *
+	 * @param baseEntity    The targeted BaseEntity
+	 * @param attributeCode The attribute storing the data
+	 * @return The BaseEntity with code stored in the attribute
+	 */
+	public BaseEntity getBaseEntityFromLinkAttribute(BaseEntity baseEntity, String attributeCode, boolean bundleAttributes) {
 		String newBaseEntityCode = CommonUtils.cleanUpAttributeValue(getStringValueOfAttribute(baseEntity, attributeCode));
 		try {
-			return getBaseEntity(newBaseEntityCode);
+			return getBaseEntity(newBaseEntityCode, bundleAttributes);
 		} catch (ItemNotFoundException e) {
 			log.error(ANSIColour.RED + "Could not find entity: " + newBaseEntityCode + ANSIColour.RESET);
 			return null;
@@ -536,7 +555,7 @@ public class BaseEntityUtils {
 
 			item = new BaseEntity(code.toUpperCase(), name);
 			item.setRealm(productCode);
-			item.addAttribute(new EntityAttribute());
+			//item.addAttribute(new EntityAttribute());
 		}
 
 		// save to DB and cache

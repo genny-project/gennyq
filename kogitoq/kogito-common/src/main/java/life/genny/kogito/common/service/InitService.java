@@ -92,7 +92,7 @@ public class InitService {
 		log.info("Sending Attributes for " + userToken.getProductCode());
 		String productCode = userToken.getProductCode();
 		QDataAttributeMessage msg = new QDataAttributeMessage();
-		Collection<Attribute> attributes = cm.getAttributes(productCode, Prefix.CAP);
+		Collection<Attribute> attributes = cm.getAttributes(productCode);
 		log.infof("$$$$$$$$$$ Read these many matching attributes: %s", attributes.size());
 		msg.setItems(attributes);
 		// set token and send

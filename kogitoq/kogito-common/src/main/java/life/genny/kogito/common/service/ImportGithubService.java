@@ -72,7 +72,7 @@ public class ImportGithubService {
 			e.printStackTrace();
 		}
 		log.info("bes = " + bes.size());
-		Definition dotDef = Definition.from(beUtils.getBaseEntity(realm, "DEF_DOCUMENT_TEMPLATE"));
+		Definition dotDef = Definition.from(beUtils.getBaseEntity(realm, "DEF_DOCUMENT_TEMPLATE", true));
 		dotDef.setBaseEntityAttributes(beaUtils.getAllEntityAttributesForBaseEntity(realm, "DEF_DOCUMENT_TEMPLATE"));
 		for (BaseEntity be : bes) {
 			if (be != null) {

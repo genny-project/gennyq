@@ -43,12 +43,13 @@ public class PCM extends BaseEntity {
 	}
 
 	public static PCM from(BaseEntity entity) {
-
 		PCM pcm = new PCM(entity.getCode(), entity.getName());
 		pcm.setRealm(entity.getRealm());
-		pcm.setRealm(entity.getRealm());
+		pcm.setStatus(entity.getStatus());
+		pcm.setIndex(entity.getIndex());
+		pcm.setCreated(entity.getCreated());
+		pcm.setUpdated(entity.getUpdated());
 		pcm.setBaseEntityAttributes(entity.getBaseEntityAttributes());
-
 		return pcm;
 	}
 
