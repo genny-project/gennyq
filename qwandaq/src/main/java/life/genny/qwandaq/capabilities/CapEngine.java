@@ -59,6 +59,7 @@ class CapEngine {
 	BaseEntityUtils beUtils;
 
 	/**
+     * @deprecated (Marked as deprecated to show use cases in code. This is going to be moved to somewhere where it can be cached with User Session)
 	 * Return a Set of Capabilities based on a BaseEntity's LNK_ROLE and its own set
 	 * of capabilities
 	 * 
@@ -128,14 +129,14 @@ class CapEngine {
 	 */
 	private CapabilitySet getOnlyEntityCapabilities(final BaseEntity target) {
 		Set<EntityAttribute> capabilities = new HashSet<>(target.findPrefixEntityAttributes(Prefix.CAP_));
-		log.debug("		- " + target.getCode() + "(" + capabilities.size() + " capabilities)");
+		log.debug("\t - " + target.getCode() + "(" + capabilities.size() + " capabilities)");
 		if(capabilities.isEmpty()) {
 			return new CapabilitySet(target);
 		}
 		CapabilitySet cSet = new CapabilitySet(target);
 		cSet.addAll(capabilities.stream()
 			.map((EntityAttribute ea) -> {
-				log.trace("	[!] " + ea.getAttributeCode() + " = " + ea.getValueString());
+				log.trace("\t[!] " + ea.getAttributeCode() + " = " + ea.getValueString());
 				return Capability.getFromEA(ea);
 			})
 			.collect(Collectors.toSet()));

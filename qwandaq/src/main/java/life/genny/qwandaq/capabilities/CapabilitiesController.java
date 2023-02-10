@@ -61,6 +61,7 @@ public class CapabilitiesController {
     private boolean persistOnEachUpdate = true;
 
     /**
+     * @deprecated (Marked as deprecated to show use cases in code. This is going to be moved to somewhere where it can be cached with User Session)
      * <p>Get a {@link CapabilitySet} of user capabilities. This will retrieve all Capabilities from a user 
      * {@link BaseEntity BaseEntity's} roles and then all capabilities saved directly against the user and put them in
      * one object containing a {@link HashSet HashSet}<{@link Capability}> and a direct link to the user {@link BaseEntity}
@@ -77,6 +78,7 @@ public class CapabilitiesController {
     }
 
     /**
+     * @deprecated (Marked as deprecated to show use cases in code. This is going to be moved to somewhere where it can be cached with User Session)
      * <p>Get a {@link CapabilitySet} of a {@link BaseEntity BaseEntity's} capabilities. This BaseEntity should
      *  be a PER BaseEntity or an ROL BaseEntity. This will retrieve all Capabilities from a user 
      * {@link BaseEntity BaseEntity's} roles and then all capabilities saved directly against the user and put them in
@@ -121,7 +123,7 @@ public class CapabilitiesController {
     public BaseEntity addCapability(String productCode, BaseEntity targetBe, Attribute capabilityAttribute,
             final CapabilityNode... nodes) {
 
-        // exceptions thrown in here
+        // exceptions thrown in here, don't need to handle/null check
         engine.addCapability(productCode, targetBe, capabilityAttribute, persistOnEachUpdate, nodes);
         return targetBe;
     }
@@ -158,11 +160,6 @@ public class CapabilitiesController {
         Attribute attribute = qwandaUtils.getAttribute(productCode, cleanCapabilityCode);
         return addCapability(productCode, targetBe, attribute, modes);
     }
-
-    // remove capability
-    // update capability
-
-    // getters
 
 	/**
 	 * Generate a capability map from a 2D string of attributes
@@ -215,12 +212,21 @@ public class CapabilitiesController {
     
     // Getters and Setters
     /**
-     * Set whether or not calls to {@link CapEngine#addCapability addCapability} should persist each time it is called
+     * Set whether or not calls to {@link CapabilitiesController#addCapability addCapability} should persist each time it is called
      * Useful for Role Building. This is turned off when using {@link RoleBuilder} and reset to its previous state afterwards
-     * @param shouldPersist whether or not to persist at the end of each call to {@link CapEngine#addCapability addCapability}
+     * @param shouldPersist whether or not to persist at the end of each call to {@link CapabilitiesController#addCapability addCapability}
      */
     public void doPersist(boolean shouldPersist) {
         this.persistOnEachUpdate = shouldPersist;
+    }
+
+    /**
+     * <p>Check whether or not calls to {@link CapabilitiesController#addCapability addCapability} should persist each time it is called.</p>
+     * <p>Default: <b>true</b></p>
+     * @return whether or not the Controller will persist on each call
+     */
+    public boolean willPersist() {
+        return this.persistOnEachUpdate;
     }
 
     CapEngine getEngine() {
@@ -243,6 +249,7 @@ public class CapabilitiesController {
      * 
      * @param modeString
      * @return
+     * @deprecated
      */
     @Deprecated
     public static Set<CapabilityNode> deserializeCapSet(String modeString) {
@@ -256,7 +263,6 @@ public class CapabilitiesController {
      * @param modeString
      * @return
      */
-    @Deprecated
     public static List<CapabilityNode> deserializeCapArray(String modeString) {
         return CommonUtils.getListFromString(modeString, CapabilityNode::parseNode);
     }

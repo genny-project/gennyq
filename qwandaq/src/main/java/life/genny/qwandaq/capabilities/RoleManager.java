@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -43,18 +44,18 @@ public class RoleManager {
 	@Inject
 	Logger log;
 
-	private final static AttributeProductDecorator lnkRoleAttribute = new AttributeProductDecorator(
+	private static final AttributeProductDecorator lnkRoleAttribute = new AttributeProductDecorator(
 		new Attribute(Attribute.LNK_ROLE, "Role Link", new DataType(String.class))
 	);
 	
-	private final static AttributeProductDecorator lnkChildAttribute = new AttributeProductDecorator(
+	private static final AttributeProductDecorator lnkChildAttribute = new AttributeProductDecorator(
 		new Attribute(Attribute.LNK_CHILDREN, "Child Roles Link", new DataType(String.class))
 	);
 
 	@Inject
 	CapabilitiesController controller;
 
-	public RoleManager() {}
+	public RoleManager() {/* json constructor */}
     
 	/**
 	 * Attach a role to a person base entity
@@ -162,7 +163,9 @@ public class RoleManager {
 			childrenEA.setValue(codeString);
 		}
 
-		beUtils.updateBaseEntity(targetRole);
+		// same persistence rules as addCapability
+		if(controller.willPersist())
+			beUtils.updateBaseEntity(targetRole);
 		return targetRole;
 	}
 
@@ -244,11 +247,10 @@ public class RoleManager {
 		Map<String, Set<String>> descendantCodeMap = new HashMap<>();
 		Map<BaseEntity, Set<BaseEntity>> descendantMap = getDescendants(role);
 
-		for(BaseEntity descendantRole : descendantMap.keySet()) {
-			descendantCodeMap.put(descendantRole.getCode(), 
-				descendantMap.get(descendantRole).stream()
-								.map((BaseEntity child) -> child.getCode())
-								.collect(Collectors.toSet()));
+		for(Entry<BaseEntity, Set<BaseEntity>> descendantRole : descendantMap.entrySet()) {
+			descendantCodeMap.put(descendantRole.getKey().getCode(), descendantRole.getValue().stream()
+																		.map(BaseEntity::getCode)
+																		.collect(Collectors.toSet()));
 		}
 
 		return descendantCodeMap;
@@ -291,12 +293,15 @@ public class RoleManager {
 	public BaseEntity inheritRole(String productCode, BaseEntity role, final BaseEntity parentRole) {
 		BaseEntity ret = role;
 		List<EntityAttribute> perms = parentRole.findPrefixEntityAttributes(Prefix.CAP_);
+
 		for (EntityAttribute permissionEA : perms) {
 			Attribute permission = permissionEA.getAttribute();
 			List<CapabilityNode> capabilities = CapabilitiesController.deserializeCapArray(permissionEA.getValue());
 			ret = controller.addCapability(productCode, ret, permission.getCode(), capabilities);
 
-			beUtils.updateBaseEntity(ret);
+			// Same persistence rules as CapabilitiesController#addCapability
+			if(controller.willPersist())
+				beUtils.updateBaseEntity(ret);
 		}
 
 		return ret;
@@ -370,7 +375,7 @@ public class RoleManager {
 		List<String> roles = beUtils.getBaseEntityCodeArrayFromLinkAttribute(personBaseEntity, Attribute.LNK_ROLE);
 
 		if (roles == null || roles.isEmpty())
-			return new ArrayList<String>();// throw new RoleException(String.format("No roles found for base entity: ", personBaseEntity.getCode()));
+			return new ArrayList<>();
 		return roles;
 	}
 

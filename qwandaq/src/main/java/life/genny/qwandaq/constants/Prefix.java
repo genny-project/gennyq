@@ -7,6 +7,8 @@ public class Prefix {
 	// A Standardised length for working with prefixes
 	public static final int LENGTH = 4;
 
+	private Prefix() {/* constants class */}
+
 	// core
 	public static final String QUE_ = "QUE_";
 	public static final String QBE_ = "QBE_";
@@ -51,6 +53,5 @@ public class Prefix {
 	// Table
 	public static final String QUE_TABLE_ = "QUE_TABLE_";
 	public static final String FIELD_ = "FIELD_";
-
 }
 

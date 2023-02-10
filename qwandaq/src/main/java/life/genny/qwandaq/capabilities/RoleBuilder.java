@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.jboss.logging.Logger;
 
@@ -15,13 +16,15 @@ import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
+import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CommonUtils;
 
 public class RoleBuilder {
     private static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
     
-    private final CapabilitiesController controller;
-    private final RoleManager roleMan;
+    private CapabilitiesController controller;
+    private RoleManager roleMan;
+    private BaseEntityUtils beUtils;
 
     private final BaseEntity targetRole;
     
@@ -44,11 +47,20 @@ public class RoleBuilder {
     private String redirectCode;
 
     public RoleBuilder(String roleCode, String roleName, String productCode) {
-        this.controller = CommonUtils.getArcInstance(CapabilitiesController.class); //Arc.container().select(CapEngine.class).get();
-        this.roleMan = controller.getRoleManager();
+        initCDI();
 
         this.productCode = productCode;
         targetRole = roleMan.createRole(productCode, roleCode, roleName);
+    }
+
+    /**
+     * This is a non-cdi class that needs to make use of cdi beans. New instances of it
+     * get created on the fly as necessary, so it is hard to find a scope for it
+     */
+    private void initCDI() {
+        this.controller = CommonUtils.getArcInstance(CapabilitiesController.class);
+        this.roleMan = controller.getRoleManager();
+        this.beUtils = CommonUtils.getArcInstance(BaseEntityUtils.class);
     }
 
     /**
@@ -101,23 +113,32 @@ public class RoleBuilder {
         if(capabilityMap == null) {
             throw new RoleException("Capability Map not set. Try using setCapabilityMap(Map<String, Attribute> capabilityMap) before building.");
         }
+        boolean controllerPersistState = controller.willPersist();
+        controller.doPersist(false);
 
         // Redirect
         roleMan.setRoleRedirect(productCode, targetRole, redirectCode);
 
         // Capabilities
-        for(String capabilityCode : roleCapabilities.keySet()) {
-            controller.addCapability(productCode, targetRole, fetch(capabilityCode), roleCapabilities.get(capabilityCode));
+        for(Entry<String, CapabilityNode[]> capabilityEntry : roleCapabilities.entrySet()) {
+            String code = capabilityEntry.getKey();
+            CapabilityNode[] nodes = capabilityEntry.getValue();
+            controller.addCapability(productCode, targetRole, fetch(code), nodes);
         }
-        
+
         // Role inherits
         for(BaseEntity parentRole : this.inheritedRoles) {
             roleMan.inheritRole(productCode, targetRole, parentRole);
         }
-
+        
         // Children
         roleMan.setChildren(productCode, targetRole, childrenCodes.toArray(new String[0]));
 
+        // We aren't persisting on each call to addCapability, so persist
+        // going to experiment with persisting once here
+        beUtils.updateBaseEntity(targetRole);
+
+        controller.doPersist(controllerPersistState);
         return targetRole;
     }
 

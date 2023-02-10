@@ -22,7 +22,6 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-import javax.persistence.EntityManagerFactory;
 import javax.persistence.NoResultException;
 
 import org.apache.commons.lang3.StringUtils;
@@ -496,7 +495,7 @@ public class BaseEntityUtils {
 	 * @return The created BaseEntity
 	 */
 	public BaseEntity create(final Definition definition, String name, String code) {
-
+		
 		if (definition == null)
 			throw new NullParameterException("definition");
 		if (code != null && code.charAt(3) != '_')
