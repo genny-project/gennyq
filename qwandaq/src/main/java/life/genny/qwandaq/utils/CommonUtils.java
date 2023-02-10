@@ -13,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import io.quarkus.arc.Arc;
+import life.genny.qwandaq.exception.runtime.config.MissingEnvironmentVariableException;
 import life.genny.qwandaq.exception.runtime.entity.GennyPrefixException;
 import life.genny.qwandaq.utils.callbacks.FIGetObjectCallback;
 import life.genny.qwandaq.utils.callbacks.FIGetStringCallBack;
@@ -137,7 +138,7 @@ public class CommonUtils {
         if(result == null && alert) {
             String msg = "Could not find System Environment Variable: " + env;
             if(alert) {
-                log.error(msg);
+                throw new MissingEnvironmentVariableException(msg);
             } else {
                 log.warn(msg);
             }
@@ -420,7 +421,7 @@ public class CommonUtils {
         // no entries array == no entries to remove
         if(entries == null)
             return StringUtils.isBlank(array) ? STR_ARRAY_EMPTY : array;
-
+        
         // return new array if there is no array
         if(StringUtils.isBlank(array)) {
             return STR_ARRAY_EMPTY;

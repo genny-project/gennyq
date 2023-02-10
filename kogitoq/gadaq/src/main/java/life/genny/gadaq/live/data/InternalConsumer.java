@@ -1,6 +1,10 @@
 package life.genny.gadaq.live.data;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.invoke.MethodHandles;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -11,15 +15,13 @@ import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-
-import life.genny.gadaq.cache.SearchCaching;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
-
 import io.quarkus.runtime.StartupEvent;
 import io.smallrye.reactive.messaging.annotations.Blocking;
 import life.genny.gadaq.route.Events;
+import life.genny.kogito.common.kafka.KogitoServiceConsumerIntf;
 import life.genny.kogito.common.service.SearchService;
 import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.Answer;
@@ -37,7 +39,7 @@ import life.genny.serviceq.intf.GennyScopeInit;
 import life.genny.gadaq.search.FilterGroupService;
 
 @ApplicationScoped
-public class InternalConsumer {
+public class InternalConsumer implements KogitoServiceConsumerIntf {
 
 	static Jsonb jsonb = JsonbBuilder.create();
 
@@ -46,18 +48,18 @@ public class InternalConsumer {
 
 	@Inject
 	GennyScopeInit scope;
+
 	@Inject
 	Service service;
+
 	@Inject
 	UserToken userToken;
 
 	@Inject
 	KogitoUtils kogitoUtils;
-	@Inject
-	SearchService search;
 
 	@Inject
-	SearchCaching searchCaching;
+	SearchService search;
 
 	@Inject
 	SearchUtils searchUtils;
@@ -77,9 +79,8 @@ public class InternalConsumer {
 	 * @param ev The startup event
 	 */
 	void onStart(@Observes StartupEvent ev) {
-
+		KogitoServiceConsumerIntf.initialiseProtobufs();
 		service.fullServiceInit();
-		searchCaching.saveToCache();
 	}
 
 	/**

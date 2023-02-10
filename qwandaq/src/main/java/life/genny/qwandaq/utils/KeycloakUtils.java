@@ -359,7 +359,7 @@ public class KeycloakUtils {
 
         String username = UUID.randomUUID().toString().substring(0, 18);
         String email = username + "@gmail.com";
-        String defaultPassword = "password1";
+        String defaultPassword = GennySettings.dummyUserPassword();
 
         String json = "{ " + "\"username\" : \"" + username + "\"," + "\"email\" : \"" + email + "\" , "
                 + "\"enabled\" : true, " + "\"emailVerified\" : true, " + "\"firstName\" : \"" + username + "\", "

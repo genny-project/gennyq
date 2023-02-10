@@ -10,6 +10,7 @@ import java.util.Optional;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import life.genny.qwandaq.constants.FilterConst;
 import org.jboss.logging.Logger;
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -108,6 +109,11 @@ public class SearchService extends KogitoService {
 	 */
 	public void sendNameSearch(String code, String nameWildcard) {
 		log.info("Sending Name Search :: " + code);
+		// get sbe code from cache if code is empty
+		if(code.isEmpty()) {
+			String cachedCode = FilterConst.LAST_SBE_TABLE + ":" + userToken.getUserCode();
+			code = CacheUtils.getObject(userToken.getProductCode(),cachedCode,String.class);
+		}
 		// find in cache
 		SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(),
 				code, SearchEntity.class);

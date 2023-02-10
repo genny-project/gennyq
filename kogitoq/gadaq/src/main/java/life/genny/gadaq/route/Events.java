@@ -91,9 +91,10 @@ public class Events {
             return;
         }
 
-        // If the event is a Dropdown then leave it for DropKick
-        if ("DD".equals(msg.getEvent_type()))
-            return;
+
+		// If the event is a Dropdown then leave it for DropKick
+		if ("DD".equals(msg.getEvent_type()))
+			return;
 
         // auth init
         if (AUTH_INIT.equals(code)) {
