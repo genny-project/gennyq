@@ -14,6 +14,7 @@ import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
@@ -21,6 +22,7 @@ import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.CommonUtils;
+import life.genny.qwandaq.utils.DefUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,6 +39,9 @@ public class RoleManager {
 
 	@Inject
 	UserToken userToken;
+
+	@Inject
+	DefUtils defUtils;
 
 	@Inject
 	BaseEntityUtils beUtils;
@@ -133,9 +138,8 @@ public class RoleManager {
 		try {
 			role = beUtils.getBaseEntity(productCode, roleCode);
 		} catch(ItemNotFoundException e) {
-			role = new BaseEntity(roleCode, roleName);
-			role.setRealm(productCode);
-			beUtils.updateBaseEntity(role);
+			Definition defRole = defUtils.getDEF(Definition.DEF_ROLE);
+			role = beUtils.create(defRole, roleCode, roleName);
 		}
 		
 		return role;

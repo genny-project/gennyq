@@ -25,10 +25,13 @@ public class Definition extends BaseEntity {
 	// core
 	public static final String DEF_COMMON = "DEF_COMMON";
 	public static final String DEF_PROJECT = "DEF_PROJECT";
-	public static final String DEF_PERSON = "DEF_PERSON";
 	public static final String DEF_COMPANY = "DEF_COMPANY";
-	public static final String DEF_USER = "DEF_USER";
 	public static final String DEF_MESSAGE = "DEF_MESSAGE";
+
+	// people
+	public static final String DEF_PERSON = "DEF_PERSON";
+	public static final String DEF_USER = "DEF_USER";
+	public static final String DEF_ROLE = "DEF_ROLE";
 
 	public Definition(String code, String name) {
 		super(code, name);
