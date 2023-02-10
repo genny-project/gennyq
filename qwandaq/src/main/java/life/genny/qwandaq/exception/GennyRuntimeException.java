@@ -19,6 +19,10 @@ public abstract class GennyRuntimeException extends RuntimeException implements 
         super();
     }
 
+    public GennyRuntimeException(Throwable cause) {
+        super(cause);
+    }
+
 	public GennyRuntimeException(String message) {
 		super(message);
 	}

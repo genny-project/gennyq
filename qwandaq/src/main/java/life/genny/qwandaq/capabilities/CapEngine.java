@@ -22,21 +22,26 @@ import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
 
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
+import life.genny.qwandaq.exception.runtime.entity.BaseEntityException;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
+import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 
 /*
- * A non-static utility class for managing roles and capabilities.
+ * An Engine Class that is accessed solely through {@link CapabilitiesController}
  * 
  * @author Jasper Robison
  * @author Bryn Meachem
  */
 @ApplicationScoped
 class CapEngine {
+
+	static final String[] CAPABILITY_BEARING_ENTITY_PREFIXES = {Prefix.PER_, Prefix.ROL_};
 
 	@Inject
 	UserToken userToken;
@@ -63,6 +68,9 @@ class CapEngine {
 	 */
 	@Deprecated(forRemoval = false)
 	CapabilitySet getEntityCapabilities(BaseEntity target) {
+		if(!CommonUtils.isInArray(CAPABILITY_BEARING_ENTITY_PREFIXES, target.getPrefix())) {
+			throw new BadDataException("Target BaseEntity does not have an accepted prefix for capabilities: " + target);
+		}
 		// this is a necessary log, since we are trying to minimize how often this
 		// function is called
 		// it is good to see how often it comes up
@@ -138,13 +146,18 @@ class CapEngine {
 	 * Add a capability to a BaseEntity.
 	 * 
 	 * @param productCode The product code
-	 * @param target      The target entity
-	 * @param code        The capability code
-	 * @param nodes       The nodes to set
+	 * @param target      The target entity (must be a PER or ROL)
+	 * @param capability        The capability to add to the role
+	 * @param nodes       The {@link CapabilityNode CapabilityNodes} to set 
+	 * @param persist Whether or not to persist in this call, or at the end of role building. Useful for speed/decluttering 
+	 * 				  logs by reducing repeat persists when role building
+	 * 
+     * @throws {@link NullParameterException} if the {@link BaseEntity targetBe} or {@link Attribute capabilityAttribute} is missing
+     * @throws {@link BaseEntityException} if the {@link BaseEntity#getCode() targetBe's code} is not in the 
+    *                                       {@link CapEngine#CAPABILITY_BEARING_ENTITY_PREFIXES Accepted Capability Bearing Prefixes}
 	 */
-	void addCapability(String productCode, BaseEntity target, final Attribute capability,
+	void addCapability(String productCode, BaseEntity target, final Attribute capability, boolean persist,
 			final CapabilityNode... nodes) {
-		// Update base entity
 		if (capability == null) {
 			throw new NullParameterException("capability");
 		}
@@ -152,6 +165,11 @@ class CapEngine {
 		if (target == null) {
 			throw new NullParameterException("target");
 		}
+
+		if(!CommonUtils.isInArray(CAPABILITY_BEARING_ENTITY_PREFIXES, target.getPrefix()))
+			throw new BaseEntityException(target, 
+				"Incorrect BaseEntity Type (Prefix) when adding a capability to target BaseEntity " + 
+				"\nAccepted Prefixes (any of): " + CAPABILITY_BEARING_ENTITY_PREFIXES);
     
 		// Check the user token has required capabilities
 		// if (!shouldOverride()) {
@@ -160,8 +178,10 @@ class CapEngine {
 		// 	return targetBe;
 		// }
 
+		// Update base entity
 		target.addEntityAttribute(capability, 0.0, false, CapabilitiesController.getModeString(nodes));
-		beUtils.updateBaseEntity(target);
+		if(persist)
+			beUtils.updateBaseEntity(target);
 	}
 
 	Attribute createCapability(final String productCode, final String rawCapabilityCode, final String name,
@@ -186,7 +206,13 @@ class CapEngine {
 	BaseEntity removeCapabilityFromBaseEntity(String productCode, BaseEntity targetBe, String capabilityCode) {
 		capabilityCode = CapabilitiesController.cleanCapabilityCode(capabilityCode);
 		Attribute attr = qwandaUtils.getAttribute(productCode, capabilityCode);
-		return removeCapabilityFromBaseEntity(productCode, targetBe, attr);
+		try {
+			return removeCapabilityFromBaseEntity(productCode, targetBe, attr);
+		} catch (ItemNotFoundException e) {
+			// Here we know more information about the attribute we are trying to fetch
+			// so we can add more to the exception
+			throw new ItemNotFoundException(productCode, capabilityCode, e);
+		}
 	}
 
 	BaseEntity removeCapabilityFromBaseEntity(String productCode, BaseEntity targetBe, Attribute capabilityAttribute) {

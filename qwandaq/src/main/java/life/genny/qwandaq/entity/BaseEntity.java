@@ -1219,6 +1219,14 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 		return getCode().startsWith(Prefix.PER_);
 	}
 
+	@JsonbTransient
+	/**
+	 * @return this BaseEntity's {@link Prefix}
+	 */
+	public String getPrefix() {
+		return this.getCode().substring(0, Prefix.LENGTH);
+	}
+
 	/**
 	 * Copy across all metadata about this base entity to another base entity of variable type
 	 * @param other

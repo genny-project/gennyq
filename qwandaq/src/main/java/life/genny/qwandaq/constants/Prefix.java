@@ -4,6 +4,8 @@ package life.genny.qwandaq.constants;
  * Prefix
  */
 public class Prefix {
+	// A Standardised length for working with prefixes
+	public static final int LENGTH = 4;
 
 	// core
 	public static final String QUE_ = "QUE_";

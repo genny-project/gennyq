@@ -7,11 +7,20 @@ import life.genny.qwandaq.exception.GennyRuntimeException;
  */
 public class BadDataException extends GennyRuntimeException {
 
-	public BadDataException() {
-		super();
+	public BadDataException(String message, Throwable cause) {
+		super(message, cause);
+	}
+	
+	public BadDataException(Throwable cause) {
+		super(cause);
 	}
 
 	public BadDataException(String message) {
 		super(message);
 	}
+
+	public BadDataException() {
+		super();
+	}
+
 }
