@@ -13,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import io.quarkus.arc.Arc;
+import life.genny.qwandaq.exception.runtime.config.MissingEnvironmentVariableException;
 import life.genny.qwandaq.exception.runtime.entity.GennyPrefixException;
 import life.genny.qwandaq.utils.callbacks.FIGetObjectCallback;
 import life.genny.qwandaq.utils.callbacks.FIGetStringCallBack;
@@ -129,18 +130,18 @@ public class CommonUtils {
     /**
      * A method to retrieve a system environment variable, and optionally log it if it is missing (default, do log)
      * @param env Env to retrieve
-     * @param alert whether or not to log if it is missing or not (default: true)
+     * @param alert whether or not to throw an excpetion or just log if it is missing or not (default: true)
      * @return the value of the environment variable, or null if it cannot be found
      */
     public static String getSystemEnv(String env, boolean alert) {
         String result = System.getenv(env);
+        
+        String msg = "Could not find System Environment Variable: " + env;
+
         if(result == null && alert) {
-            String msg = "Could not find System Environment Variable: " + env;
-            if(alert) {
-                log.error(msg);
-            } else {
-                log.warn(msg);
-            }
+            throw new MissingEnvironmentVariableException(msg);
+        } else {
+            log.warn(msg);
         }
 
         return result;
@@ -420,7 +421,7 @@ public class CommonUtils {
         // no entries array == no entries to remove
         if(entries == null)
             return StringUtils.isBlank(array) ? STR_ARRAY_EMPTY : array;
-
+        
         // return new array if there is no array
         if(StringUtils.isBlank(array)) {
             return STR_ARRAY_EMPTY;
