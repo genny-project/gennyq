@@ -136,12 +136,10 @@ public class CommonUtils {
     public static String getSystemEnv(String env, boolean alert) {
         String result = System.getenv(env);
         
-        String msg = "Could not find System Environment Variable: " + env;
-
         if(result == null && alert) {
-            throw new MissingEnvironmentVariableException(msg);
+            throw new MissingEnvironmentVariableException(env);
         } else {
-            log.warn(msg);
+            log.warn("Could not find System Environment Variable: " + env);
         }
 
         return result;
