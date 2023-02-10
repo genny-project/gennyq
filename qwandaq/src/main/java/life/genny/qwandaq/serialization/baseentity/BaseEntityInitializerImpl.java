@@ -6,17 +6,18 @@ import org.infinispan.protostream.FileDescriptorSource;
 import org.infinispan.protostream.SerializationContext;
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.protostream.impl.ResourceUtils;
+import life.genny.qwandaq.constants.GennyConstants;
 
 public class BaseEntityInitializerImpl implements SerializationContextInitializer {
 
 	@Override
 	public String getProtoFileName() {
-		return "/life/genny/qwandaq/serialization/protos/baseentity.proto";
+		return "baseentity.proto";
 	}
 
 	@Override
 	public String getProtoFile() throws UncheckedIOException {
-		return ResourceUtils.getResourceAsString(getClass(), getProtoFileName());
+		return ResourceUtils.getResourceAsString(getClass(), GennyConstants.PATH_TO_PROTOS + getProtoFileName());
 	}
 
 	@Override

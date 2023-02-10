@@ -13,7 +13,6 @@ import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.service.TaskService;
 import life.genny.qwandaq.Answer;
-import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.graphql.ProcessData;
@@ -25,6 +24,7 @@ import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.entity.PCM;
+import life.genny.qwandaq.utils.FilterUtils;
 
 /**
  * ProcessAnswers
@@ -48,12 +48,20 @@ public class ProcessAnswers {
 
 	@Inject TaskService taskService;
 
+	@Inject
+	FilterUtils filter;
+
 	/**
 	 * @param answer
 	 * @param processData
 	 * @return
 	 */
 	public Boolean isValid(Answer answer, ProcessData processData) {
+		// filter valid
+		if(filter.validFilter(answer.getAttributeCode())) {
+			log.info("Filter Attribute !!!");
+			return false;
+		}
 
 		// ensure targetCode is correct
 		if (!answer.getTargetCode().equals(processData.getProcessEntityCode())) {

@@ -674,7 +674,7 @@ public class DatabaseUtils {
 			return true;
 
 		}
-
+		
 		return false;
 	}
 

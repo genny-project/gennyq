@@ -1,7 +1,7 @@
 package life.genny.qwandaq.utils;
 
 import static life.genny.qwandaq.attribute.Attribute.PRI_CODE;
-
+import static life.genny.qwandaq.entity.search.SearchEntity.SBE_COUNT_UNIQUE_PAIRS;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -151,17 +151,30 @@ public class QwandaUtils {
 	}
 
 	/**
-	 * Get an attribute from the cache.
+	 * Get an attribute from the cache. If it is missing, system will check the database and
+	 * repopulate the cache with it if it exists
 	 *
 	 * @param attributeCode the code of the attribute to get
 	 * @param productCode   the product code
 	 * @return Attribute
 	 */
 	public Attribute getAttribute(final String productCode, final String attributeCode) {
-		Attribute attribute = CacheUtils.getObject(productCode, attributeCode, Attribute.class);
-		if (attribute == null)
-			throw new ItemNotFoundException(productCode, attributeCode);
-		return attribute;
+		Attribute cachedAttribute = CacheUtils.getObject(productCode, attributeCode, Attribute.class);
+		if (cachedAttribute == null) {
+			// Need to catch NoResultException from findAttributeByCode
+			try {
+				cachedAttribute = databaseUtils.findAttributeByCode(productCode, attributeCode);
+				CacheUtils.putObject(productCode, attributeCode, cachedAttribute);
+			} catch(NoResultException e) {
+				/* opting to load a single attribute instead of all the attributes here
+				 * Reloading all attributes would be good because of the clean sweep, 
+				 * however it will save time if we passively load attributes as they show up missing
+				 */
+				throw new ItemNotFoundException(productCode, attributeCode);
+			}
+		}
+		
+		return cachedAttribute;
 	}
 
 	/**
@@ -927,7 +940,7 @@ public class QwandaUtils {
 			if (codes == null)
 				continue;
 
-			SearchEntity searchEntity = new SearchEntity("SBE_COUNT_UNIQUE_PAIRS", "Count Unique Pairs")
+			SearchEntity searchEntity = new SearchEntity(SBE_COUNT_UNIQUE_PAIRS, "Count Unique Pairs")
 					.add(new Filter(PRI_CODE, Operator.LIKE, prefix + "_%"))
 					.setPageStart(0)
 					.setPageSize(1);

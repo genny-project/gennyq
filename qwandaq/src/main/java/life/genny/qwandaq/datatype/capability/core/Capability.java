@@ -27,7 +27,6 @@ import life.genny.qwandaq.utils.CommonUtils;
 @JsonbTypeAdapter(CapabilityAdapter.class)
 @RegisterForReflection
 public class Capability implements Serializable {
-    
     public String code;
 
     public Set<CapabilityNode> nodes;
@@ -143,6 +142,7 @@ public class Capability implements Serializable {
             .build();
     }
 
+    @Override
     public String toString() {
         return new StringBuilder(this.code)
             .append(" = ")
