@@ -1,5 +1,6 @@
 package life.genny.messages.managers;
 
+import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.utils.MergeUtils;
@@ -41,7 +42,8 @@ public final class QSlackMessageManager extends QMessageProvider {
         }
         log.info("Project is " + projectBe.getCode());
 
-        String targetUrl = target.getValue("PRI_URL", null);
+        EntityAttribute targetUrlAttribute = beaUtils.getEntityAttribute(projectBe.getRealm(), projectBe.getCode(), "PRI_URL");
+        String targetUrl = targetUrlAttribute != null ? targetUrlAttribute.getValueString() : null;
         if (targetUrl == null) {
             log.error(ANSIColour.RED + "targetUrl is NULL" + ANSIColour.RESET);
             return;
@@ -51,7 +53,8 @@ public final class QSlackMessageManager extends QMessageProvider {
         if (contextMap.containsKey("BODY")) {
             body = (String) contextMap.get("BODY");
         } else {
-            body = templateBe.getValue("PRI_BODY", null);
+            EntityAttribute bodyAttribute = beaUtils.getEntityAttribute(templateBe.getRealm(), templateBe.getCode(), "PRI_BODY");
+            body = bodyAttribute != null ? bodyAttribute.getValueString() : null;
         }
         if (body == null) {
             log.error(ANSIColour.RED + "Body is NULL" + ANSIColour.RESET);

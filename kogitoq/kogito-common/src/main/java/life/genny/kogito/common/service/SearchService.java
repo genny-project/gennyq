@@ -70,16 +70,7 @@ public class SearchService {
 	 */
 	public void sendBuckets() {
 		String userCode = userToken.getUserCode();
-
-		JsonObject payload = Json.createObjectBuilder()
-				.add("sourceCode", userCode)
-				.add("targetCode", userCode)
-				.add("pcmCode", PCM_PROCESS)
-				.add("parent", PCM_CONTENT)
-				.add("location", PCM.location(1))
-				.build();
-
-		kogitoUtils.triggerWorkflow(GADAQ, "processQuestions", payload);
+		tasks.dispatch(userCode, userCode, PCM_PROCESS, PCM_CONTENT, "PRI_LOC1");
 	}
 
 	/**
@@ -89,19 +80,16 @@ public class SearchService {
 	 */
 	public void sendTable(String code) {
 
-		code = StringUtils.replaceOnce(code, Prefix.QUE, Prefix.PCM);
-		log.info("Sending Table :: " + code);
+		// trim TREE_ITEM_ from code if present
+		code = StringUtils.replaceOnce(code, "_TREE_ITEM_", "_");
+		String searchCode = StringUtils.replaceOnce(code, Prefix.QUE, Prefix.SBE);
+		log.info("Sending Table :: " + searchCode);
 
+		// send pcm with correct template code
 		String userCode = userToken.getUserCode();
-		JsonObject payload = Json.createObjectBuilder()
-				.add("sourceCode", userCode)
-				.add("targetCode", userCode)
-				.add("pcmCode", code)
-				.add("parent", PCM_CONTENT)
-				.add("location", PCM.location(1))
-				.build();
-
-		kogitoUtils.triggerWorkflow(GADAQ, "processQuestions", payload);
+		PCM pcm = beUtils.getPCM(PCM.PCM_TABLE);
+		pcm.setLocation(1, searchCode);
+		tasks.dispatch(userCode, userCode, pcm, PCM_CONTENT, PCM.location(1));
 	}
 
 	/**
@@ -121,16 +109,7 @@ public class SearchService {
 
 		// send pcm with correct info
 		String userCode = userToken.getUserCode();
-
-		JsonObject payload = Json.createObjectBuilder()
-				.add("sourceCode", userCode)
-				.add("targetCode", targetCode)
-				.add("pcmCode", pcmCode)
-				.add("parent", PCM_CONTENT)
-				.add("location", PCM.location(1))
-				.build();
-
-		kogitoUtils.triggerWorkflow(GADAQ, "processQuestions", payload);
+		tasks.dispatch(userCode, targetCode, pcmCode, PCM_CONTENT, PCM.location(1));
 	}
 
 	/**
@@ -141,12 +120,10 @@ public class SearchService {
 	 */
 	public void sendNameSearch(String code, String nameWildcard) {
 		log.info("Sending Name Search :: " + code);
-		// find in cache
 		SearchEntity searchEntity = cm.getObject(userToken.getProductCode(),
 				code, SearchEntity.class);
 		// TODO: remove this char from alyson
 		nameWildcard = StringUtils.removeStart(nameWildcard, "!");
-		// add filter on name and resend search
 		searchEntity.add(new Filter(PRI_NAME, Operator.LIKE, "%"+nameWildcard+"%"));
 		searchUtils.searchTable(searchEntity);
 	}
@@ -181,25 +158,25 @@ public class SearchService {
 	 *
 	 * @param code
 	 */
-	public void handleSearchSort(String code) {
+	public void handleSearchSort(String entityCode, Sort sort) {
 		// fetch from the cache
-		String sessionCode = searchUtils.sessionSearchCode(code);
+		String sessionCode = searchUtils.sessionSearchCode(entityCode);
 		SearchEntity searchEntity = cm.getObject(userToken.getProductCode(), "LAST-SEARCH:" + sessionCode, SearchEntity.class);
 		if (searchEntity == null) {
-			searchEntity = cm.getObject(userToken.getProductCode(), code, SearchEntity.class);
+			searchEntity = cm.getObject(userToken.getProductCode(), entityCode, SearchEntity.class);
 			searchEntity.setCode(sessionCode);
 		}
 		// find the sort
-		Optional<Sort> sortOpt = searchEntity.getTrait(Sort.class, code);
-		Sort sort;
+		Optional<Sort> sortOpt = searchEntity.getTrait(Sort.class, sort.getCode());
+		Sort searchSort;
 		if(!sortOpt.isPresent()) {
-			log.warn("Sort missing in SEntity: " + code + ". Adding..");
-			sort = new Sort(code, Ord.ASC);
+			log.warn("Sort missing in SEntity: " + entityCode + ". Adding..");
 			searchEntity.add(sort);
+			searchSort = sort;
 		} else {
-			sort = sortOpt.get();
-			sort.flipOrd();
+			searchSort = sortOpt.get();
 		}
+		searchSort.flipOrd();
 		// send updated search
 		searchUtils.searchTable(searchEntity);
 	}

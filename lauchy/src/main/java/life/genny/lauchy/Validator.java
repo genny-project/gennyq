@@ -133,11 +133,6 @@ public class Validator {
 
 		String attributeCode = answer.getAttributeCode();
 
-		// name search
-		if (Attribute.PRI_SEARCH_TEXT.equals(attributeCode)) {
-			return true;
-		}
-
 		// check that user is the source of message
 		if (!(userToken.getUserCode()).equals(answer.getSourceCode()))
 			return blacklist(String.format("UserCode %s does not match answer source %s", userToken.getUserCode(), answer.getSourceCode()));

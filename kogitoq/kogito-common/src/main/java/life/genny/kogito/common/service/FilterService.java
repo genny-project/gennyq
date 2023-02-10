@@ -864,6 +864,7 @@ public class FilterService {
      * @return Process data
      */
     public ProcessData  buildProcessData() {
+        PCM pcm = beUtils.getPCM(PCM.PCM_PROCESS);
 
         // construct
         ProcessData processData = new ProcessData();
@@ -879,7 +880,7 @@ public class FilterService {
         BaseEntity target = beUtils.getBaseEntity(userToken.getUserCode());
 
         // build and send data
-        QBulkMessage msg = dispatch.build(processData);
+        QBulkMessage msg = dispatch.build(processData, pcm);
         msg.add(target);
         dispatch.sendData(msg);
 

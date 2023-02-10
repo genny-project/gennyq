@@ -16,6 +16,7 @@ import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.serialization.common.CoreEntityKey;
 import life.genny.qwandaq.serialization.entityattribute.EntityAttributeKey;
 import life.genny.qwandaq.serialization.question.QuestionKey;
+import life.genny.qwandaq.serialization.questionquestion.QuestionQuestionKey;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.QuestionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -393,6 +394,26 @@ public class CacheManager {
 	}
 
 	/**
+	 * @param question
+	 * @return The question object to be saved
+	 */
+	public QuestionQuestion saveQuestionQuestion(QuestionQuestion questionQuestion) {
+		QuestionQuestionKey questionKey = new QuestionQuestionKey(questionQuestion.getRealm(), questionQuestion.getParentCode(), questionQuestion.getChildCode());
+		RemoteCache<CoreEntityKey, CoreEntityPersistable> remoteCache = cache.getRemoteCacheForEntity(CACHE_NAME_QUESTIONQUESTION);
+		return (QuestionQuestion) remoteCache.put(questionKey, questionQuestion);
+	}
+
+	/**
+	 * @param question
+	 * @return The question object to be saved
+	 */
+	public Question saveQuestion(Question question) {
+		QuestionKey questionKey = new QuestionKey(question.getRealm(), question.getCode());
+		RemoteCache<CoreEntityKey, CoreEntityPersistable> remoteCache = cache.getRemoteCacheForEntity(CACHE_NAME_QUESTION);
+		return (Question) remoteCache.put(questionKey, question);
+	}
+
+	/**
 	 * @param productCode
 	 * @param questionCode
 	 * @return The question object corresponding to the passed productCode:questionCode
@@ -455,7 +476,7 @@ public class CacheManager {
 	/**
 	 * @param question
 	 */
-	public void saveQuestion(Question question) {
+	public void saveQuestionAsBE(Question question) {
 		life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntity = questionUtils.getSerializableBaseEntityFromQuestion(question);
 		BaseEntityKey bek = new BaseEntityKey(baseEntity.getRealm(), baseEntity.getCode());
 		cache.putEntityIntoCache(CACHE_NAME_BASEENTITY, bek, baseEntity);
@@ -469,7 +490,7 @@ public class CacheManager {
 	/**
 	 * @param questionQuestion
 	 */
-	public void saveQuestionQuestion(QuestionQuestion questionQuestion) {
+	public void saveQuestionQuestionAsBE(QuestionQuestion questionQuestion) {
 		life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntity = questionUtils.getSerializableBaseEntityFromQuestionQuestion(questionQuestion);
 		BaseEntityKey bek = new BaseEntityKey(baseEntity.getRealm(), baseEntity.getCode());
 		cache.putEntityIntoCache(CACHE_NAME_BASEENTITY, bek, baseEntity);

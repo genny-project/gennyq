@@ -4,6 +4,7 @@ package life.genny.messages.managers;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.EntityAttributeUtils;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -18,6 +19,9 @@ public abstract sealed class QMessageProvider
 
     @Inject
     BaseEntityUtils beUtils;
+
+    @Inject
+    EntityAttributeUtils beaUtils;
 
     @Inject
     protected UserToken userToken;

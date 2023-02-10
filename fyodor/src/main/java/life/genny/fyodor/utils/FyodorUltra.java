@@ -28,6 +28,7 @@ import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
+import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.entity.*;
 import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.attribute.EntityAttribute;
@@ -77,6 +78,9 @@ public class FyodorUltra {
 
 	@Inject
 	EntityAttributeUtils beaUtils;
+
+	@Inject
+	MergeUtils mergeUtils;
 
 	@Inject
 	CapHandler capHandler;
@@ -142,21 +146,18 @@ public class FyodorUltra {
 		log.debug("Applying capabilities...");
 		log.debug("SearchEntity: " + jsonb.toJson(searchEntity));
 		// apply capabilities to traits
-		capHandler.refineSearchFromCapabilities(searchEntity);
+		capHandler.refineFiltersFromCapabilities(searchEntity);
+		capHandler.refineSortsFromCapabilities(searchEntity);
+		capHandler.refineColumnsFromCapabilities(searchEntity);
+		capHandler.refineActionsFromCapabilities(searchEntity);
 
-		if (!CapHandler.hasSecureToken(userToken)) {
-			log.info("Mail merging!");
+		if (!GennyConstants.PER_SERVICE.equals(userToken.getUserCode())) {
 			Map<String, Object> ctxMap = new HashMap<>();
-			ctxMap.put("USER_CODE", beUtils.getUserBaseEntity().getCode());
-			List<ClauseContainer> filters = searchEntity.getClauseContainers();
-			filters.stream()
-				.filter(f -> f.getFilter() != null && f.getFilter().getC() == String.class)
-				.peek(f -> log.info(f.getFilter().getValue()))
-				.forEach(f -> {
-					log.info("Attempting to merge on " + f.getFilter().getValue());
-					// TODO: Make MergeUtils better
-					if("USER_CODE".equals(f.getFilter().getValue()))
-						f.getFilter().setValue(ctxMap.get("USER_CODE"));
+			ctxMap.put("USER", beUtils.getUserBaseEntity());
+
+			searchEntity.getTraits(Filter.class).stream()
+					.filter(f -> f.getC() == String.class).forEach(f -> {
+						f.setValue(mergeUtils.wordMerge((String) f.getValue(), ctxMap));
 			});
 		}
 
@@ -247,9 +248,6 @@ public class FyodorUltra {
 		searchEntity.getClauseContainers().stream().forEach(cont -> {
 			cauldron.add(findClausePredicate(cauldron, cont));
 		});
-
-		// link search
-		cauldron.getPredicates().addAll(findLinkPredicates(query, cauldron, searchEntity));
 
 		// handle wildcard search
 		String wildcard = searchEntity.getWildcard();
@@ -421,53 +419,6 @@ public class FyodorUltra {
 	}
 
 	/**
-	 * Find predicates for a link related fields.
-	 * 
-	 * @param root
-	 * @param cauldron
-	 * @param searchEntity
-	 */
-	public List<Predicate> findLinkPredicates(CriteriaQuery<?> query, TolstoysCauldron cauldron,
-			SearchEntity searchEntity) {
-
-		String sourceCode = searchEntity.getSourceCode();
-		String targetCode = searchEntity.getTargetCode();
-		String linkCode = searchEntity.getLinkCode();
-		String linkValue = searchEntity.getLinkValue();
-
-		List<Predicate> predicates = new ArrayList<>();
-
-		if (sourceCode == null && targetCode == null && linkCode == null && linkValue == null)
-			return predicates;
-
-		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-		Root<HBaseEntity> root = cauldron.getRoot();
-		/*Root<HEntityEntity> entityEntity = query.from(HEntityEntity.class);
-		cauldron.setLink(entityEntity);
-
-		// Only look in targetCode if both are null
-		if (sourceCode == null && targetCode == null) {
-			predicates.add(cb.equal(entityEntity.get("link").get("targetCode"), root.get("code")));
-		} else if (sourceCode != null) {
-			predicates.add(cb.and(
-					cb.equal(entityEntity.get("link").get("sourceCode"), sourceCode),
-					cb.equal(root.get("code"), entityEntity.get("link").get("targetCode"))));
-		} else if (targetCode != null) {
-			predicates.add(cb.and(
-					cb.equal(entityEntity.get("link").get("targetCode"), targetCode),
-					cb.equal(root.get("code"), entityEntity.get("link").get("sourceCode"))));
-		}
-
-		if (linkCode != null) {
-			predicates.add(cb.equal(entityEntity.get("link").get("attributeCode"), linkCode));
-		}
-		if (linkValue != null)
-			predicates.add(cb.equal(entityEntity.get("link").get("linkValue"), linkValue));*/
-
-		return predicates;
-	}
-
-	/**
 	 * Return a clean entity code to use in query for valueString containing a
 	 * single entity code array.
 	 * 
@@ -500,7 +451,7 @@ public class FyodorUltra {
 		Root<HBaseEntity> root = cauldron.getRoot();
 
 		Join<HBaseEntity, HEntityAttribute> join = root.join("baseEntityAttributes", JoinType.LEFT);
-		join.on(cb.equal(root.get("code"), join.get("baseEntityCode")));
+		join.on(cb.equal(root.get("id"), join.get("pk").get("baseEntity").get("id")));
 		cauldron.getJoinMap().put("WILDCARD", join);
 
 		return cb.like(join.get("valueString"), "%" + wildcard + "%");
@@ -645,8 +596,7 @@ public class FyodorUltra {
 		// add to map if not already there
 		if (!cauldron.getJoinMap().containsKey(code)) {
 			Join<HBaseEntity, HEntityAttribute> join = cauldron.getRoot().join("baseEntityAttributes", JoinType.LEFT);
-			join.on(cb.equal(join.get("attributeCode"), code));
-			join.on(cb.equal(join.get("realm"), cauldron.getSearchEntity().getRealm()));
+			join.on(cb.equal(join.get("pk").get("attribute").get("code"), code));
 			cauldron.getJoinMap().put(code, join);
 		}
 

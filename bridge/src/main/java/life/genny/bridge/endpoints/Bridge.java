@@ -30,10 +30,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.*;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -230,7 +227,7 @@ public class Bridge {
 
         log.warn("Getting all blacklisted records");
 
-        return blackList.getBlackListedUUIDs().stream().map(UUID::toString).collect(Collectors.toSet());
+        return blackList.getBlackListedUUIDs().stream().map(d -> d.toString()).collect(Collectors.toSet());
     }
 
     /**
@@ -246,7 +243,7 @@ public class Bridge {
 
         log.warn("Getting all blacklisted records");
 
-        return blackList.getBlackListedUUIDs().stream().map(UUID::toString).collect(Collectors.toSet());
+        return blackList.getBlackListedUUIDs().stream().map(d -> d.toString()).collect(Collectors.toSet());
     }
 
     /**
@@ -269,8 +266,10 @@ public class Bridge {
         GennyItem gennyItem = new GennyItem();
         MultivaluedMap<String, String> paramMap = uriInfo.getQueryParameters();
 
-        for (String key : paramMap.keySet()) {
-            key = key.trim();
+        Iterator<String> it = paramMap.keySet().iterator();
+
+        while (it.hasNext()) {
+            String key = it.next();
             String value = paramMap.getFirst(key); // assume a single key
             value = value.trim();
 
@@ -311,8 +310,6 @@ public class Bridge {
         dataMsg.setToken(userToken.getToken());
         dataMsg.setAliasCode("STATELESS");
 
-        // Jsonb jsonb = JsonbBuilder.create();
-        // String dataMsgJson = jsonb.toJson(dataMsg);
         String dataMsgJsonStr = jsonb.toJson(dataMsg);
         String jti = userToken.getJTI();
         log.info("B2B sending!!! " + jti + " json=" + dataMsgJsonStr);
@@ -342,7 +339,6 @@ public class Bridge {
 
         log.info("B2B POST received..");
 
-        // Jsonb jsonb = JsonbBuilder.create();
         dataMsg.setToken(userToken.getToken());
         dataMsg.setAliasCode("STATELESS");
 

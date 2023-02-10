@@ -124,25 +124,16 @@ public class NavigationService {
 	 * Send a user's dashboard summary
 	 */
 	public void sendSummary() {
-		// fetch user's linked summary
+
 		BaseEntity user = beUtils.getUserBaseEntity();
 		BaseEntity summary = beUtils.getBaseEntityFromLinkAttribute(user, Attribute.LNK_SUMMARY, true);
 		if (summary == null) {
 			throw new ItemNotFoundException("LNK_SUMMARY for " + user.getCode());
 		}
 		PCM pcm = PCM.from(summary);
-		String userCode = userToken.getUserCode();
 
 		log.infof("Dispatching Summary %s for user %s", user.getCode(), pcm.getCode());
-		JsonObject payload = Json.createObjectBuilder()
-				.add("sourceCode", userCode)
-				.add("targetCode", userCode)
-				.add("pcmCode", pcm.getCode())
-				.add("parent", PCM_CONTENT)
-				.add("location", PCM.location(1))
-				.build();
-
-		kogitoUtils.triggerWorkflow(GADAQ, "processQuestions", payload);
+		tasks.dispatch(user.getCode(), user.getCode(), pcm, PCM_CONTENT, "PRI_LOC1");
 	}
 
 	/**

@@ -81,21 +81,19 @@ public class TimerEventService {
 
 				String timerEventBECode = timerEventBE.getCode();
 				log.info("Processing TimerEvent " + timerEventBECode);
-				log.info(" PRI_MILESTONE : " + timerEventBE.getValue("PRI_MILESTONE"));
-				log.info(" PRI_ATTRIBUTECODE_VALUES : " + timerEventBE.getValue("PRI_ATTRIBUTECODE_VALUES"));
-				log.info(" PRI_MINUTES : " + timerEventBE.getValue("PRI_MINUTES", 0));
+				EntityAttribute milestoneAttribute = beaUtils.getEntityAttribute(productCode, timerEventBE.getCode(), "PRI_MILESTONE");
+				String milestoneValue = milestoneAttribute != null ? milestoneAttribute.getValueString() : null;
+				log.info(" PRI_MILESTONE : " + milestoneValue);
+				EntityAttribute attributeCodeValues = beaUtils.getEntityAttribute(productCode, timerEventBE.getCode(), "PRI_ATTRIBUTECODE_VALUES");
+				String updatePairs = attributeCodeValues != null ? attributeCodeValues.getValueString() : null;
+				log.info(" PRI_ATTRIBUTECODE_VALUES : " + attributeCodeValues);
+				EntityAttribute priMinutes = beaUtils.getEntityAttribute(productCode, timerEventBE.getCode(), "PRI_MINUTES");
+				Integer priMinutesVal = priMinutes != null ? priMinutes.getValueInteger() : 0;
+				log.info(" PRI_MINUTES : " + priMinutesVal);
 				TimerEvent timerEvent = new TimerEvent();
-				timerEvent.setTimeStamp((long) timerEventBE.getValue("PRI_MINUTES", 0));
-				EntityAttribute priMilestone = beaUtils.getEntityAttribute(productCode, timerEventBECode, "PRI_MILESTONE", false);
-				if (priMilestone != null) {
-					String milestoneValue = priMilestone.getValueString();
-					timerEvent.setUniqueCode(milestoneValue);
-				}
-				EntityAttribute priAttributeCodeValues = beaUtils.getEntityAttribute(productCode, timerEventBECode, "PRI_ATTRIBUTECODE_VALUES", false);
-				if (priAttributeCodeValues != null) {
-					String attributeCodeValues = priAttributeCodeValues.getValueString();
-					timerEvent.setUpdatePairs(attributeCodeValues);
-				}
+				timerEvent.setTimeStamp((long) priMinutesVal);
+				timerEvent.setUniqueCode(milestoneValue);
+				timerEvent.setUpdatePairs(updatePairs);
 				timerData.add(timerEvent);
 			}
 		}

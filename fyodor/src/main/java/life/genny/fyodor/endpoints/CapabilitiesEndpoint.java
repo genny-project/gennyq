@@ -121,11 +121,7 @@ public class CapabilitiesEndpoint {
         }
         
         dbUtils.updateCapabilityRequirements(productCode, filterableQuestion, capabilityRequirements);
-        life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntitySerializable = questionUtils.getSerializableBaseEntityFromQuestion((Question) filterableQuestion);
-        BaseEntityKey key = new BaseEntityKey(productCode, questionCode);
-        cm.saveEntity(CacheManager.CACHE_NAME_BASEENTITY, key, baseEntitySerializable.toPersistableCoreEntity());
-        List<EntityAttribute> baseEntityAttributes = questionUtils.getSerializableBaseEntityAttributesFromQuestion((Question) filterableQuestion);
-        baseEntityAttributes.forEach(baseEntityAttribute -> beaUtils.updateEntityAttribute(baseEntityAttribute));
+        cm.saveQuestion((Question) filterableQuestion);
         return Response.status(Status.OK).build();
     }
 
@@ -149,12 +145,7 @@ public class CapabilitiesEndpoint {
         }
         
         dbUtils.updateCapabilityRequirements(productCode, filterableQuestion, capabilityRequirements);
-        life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntitySerializable = questionUtils.getSerializableBaseEntityFromQuestionQuestion((QuestionQuestion) filterableQuestion);
-        String beCode = baseEntitySerializable.getCode();
-        BaseEntityKey key = new BaseEntityKey(productCode, beCode);
-        cm.saveEntity(CacheManager.CACHE_NAME_BASEENTITY, key, baseEntitySerializable.toPersistableCoreEntity());
-        List<EntityAttribute> baseEntityAttributes = questionUtils.getSerializableBaseEntityAttributesFromQuestion((Question) filterableQuestion);
-        baseEntityAttributes.forEach(baseEntityAttribute -> beaUtils.updateEntityAttribute(baseEntityAttribute));
+        cm.saveQuestionQuestion((QuestionQuestion) filterableQuestion);
         return Response.status(Status.OK).build();
     }
 }

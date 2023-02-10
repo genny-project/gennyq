@@ -146,31 +146,4 @@ public class InternalConsumer {
 		Instant end = Instant.now();
 		log.trace("Duration = " + Duration.between(start, end).toMillis() + "ms");
 	}
-
-	@Incoming("data")
-	@Blocking
-	public void getEventData(String event) {
-		// init scope and process msg
-		Instant start = Instant.now();
-
-		log.info("Received Event : " + SecurityUtils.obfuscate(event));
-
-		QDataAnswerMessage msg = null;
-		try {
-			msg = jsonb.fromJson(event, QDataAnswerMessage.class);
-		} catch (Exception e) {
-			log.error("Cannot parse this event! " + event);
-			e.printStackTrace();
-			return;
-		}
-
-		scope.init(event);
-		if (filter.isValidEvent(msg)) {
-			filter.handleDataEvents(msg);
-		}
-		scope.destroy();
-
-		Instant end = Instant.now();
-		log.info("Duration = " + Duration.between(start, end).toMillis() + "ms");
-	}
 }

@@ -80,17 +80,15 @@ public class Entities {
 
 		String productCode = userToken.getProductCode();
 		BaseEntityKey beKey = new BaseEntityKey(productCode, code);
-		log.info("$$$$$$$$$$$$$$$$     reading entity from cache..");
 		BaseEntity entity = (BaseEntity) cm.getEntity(CacheManager.CACHE_NAME_BASEENTITY, beKey);
 		if (entity != null) {
-			log.info("$$$$$$$$$$$$$$$$    entity in cache.. returning...  ");
+			log.debug("Entity in cache.. returning...  ");
 		} else {
 			entity = databaseUtils.findBaseEntityByCode(userToken.getProductCode(), code);
 			if (entity != null) {
 				// Entity found in DB but not cache. Add it to cache..
-				log.info("$$$$$$$$$$$$$$$$    entity not in cache, but in DB.. adding to cache...  ");
+				log.debug("Entity not in cache, but in DB.. adding to cache...  ");
 				cm.saveEntity(CacheManager.CACHE_NAME_BASEENTITY, beKey, entity);
-				log.info("$$$$$$$$$$$$$$$$    entity not in cache, but in DB.. added to cache...  ");
 			} else {
 				log.error(getBaseEntityNotFoundLog(userToken.getProductCode(), code));
 			}
