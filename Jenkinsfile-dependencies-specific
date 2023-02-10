@@ -1,0 +1,52 @@
+pipeline {
+    agent any
+    tools {
+        jdk 'JDK17'
+    }
+    options {
+        ansiColor('xterm')
+    }
+    stages {
+        stage('Add Config files') {
+            steps {
+                configFileProvider([configFile(fileId: '53b50115-91ad-42e2-88e3-07a292f05b14', targetLocation: 'ports')]) {
+                    sh ". ./ports"
+                }
+            }
+        }
+        stage("Clone") {
+            steps {
+                git branch: "${BRANCH}",
+                    url: 'https://github.com/genny-project/gennyq'
+            }
+        }
+        stage("Ports") {
+          steps {
+            configFileProvider([configFile(fileId: '53b50115-91ad-42e2-88e3-07a292f05b14', targetLocation: 'ports')]) {
+                sh ". ./ports"
+            }
+          }
+        }
+
+	// Break these out into 3 stages so we can leverage the pipeline GUI to
+	// see if a build fails, in which service did it fail instead of
+	// having to check the logs on a stage
+        stage("Build Qwandaq") {
+            steps {
+                  sh "./build.sh qwandaq"
+            }
+        }
+	stage("Build Kogito-Common") {
+            steps {
+	          sh "./build.sh kogito-common"
+            }
+	}
+
+	stage("Build Serviceq") {
+            steps {
+	          sh "./build.sh serviceq"
+            }
+	}
+    }
+}
+
