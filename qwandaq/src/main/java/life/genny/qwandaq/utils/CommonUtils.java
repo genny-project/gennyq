@@ -130,18 +130,18 @@ public class CommonUtils {
     /**
      * A method to retrieve a system environment variable, and optionally log it if it is missing (default, do log)
      * @param env Env to retrieve
-     * @param alert whether or not to log if it is missing or not (default: true)
+     * @param alert whether or not to throw an excpetion or just log if it is missing or not (default: true)
      * @return the value of the environment variable, or null if it cannot be found
      */
     public static String getSystemEnv(String env, boolean alert) {
         String result = System.getenv(env);
+        
+        String msg = "Could not find System Environment Variable: " + env;
+
         if(result == null && alert) {
-            String msg = "Could not find System Environment Variable: " + env;
-            if(alert) {
-                throw new MissingEnvironmentVariableException(msg);
-            } else {
-                log.warn(msg);
-            }
+            throw new MissingEnvironmentVariableException(msg);
+        } else {
+            log.warn(msg);
         }
 
         return result;
