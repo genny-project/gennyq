@@ -30,6 +30,7 @@ import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.CommonUtils;
+import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 
 /*
@@ -57,6 +58,9 @@ class CapEngine {
 
 	@Inject
 	BaseEntityUtils beUtils;
+
+	@Inject
+	DatabaseUtils dbUtils;
 
 	/**
      * @deprecated (Marked as deprecated to show use cases in code. This is going to be moved to somewhere where it can be cached with User Session)
@@ -185,30 +189,43 @@ class CapEngine {
 			beUtils.updateBaseEntity(target);
 	}
 
-	Attribute createCapability(final String productCode, final String rawCapabilityCode, final String name,
-			boolean cleanedCode) {
-		String cleanCapabilityCode = cleanedCode ? rawCapabilityCode : CapabilitiesController.cleanCapabilityCode(rawCapabilityCode);
+	Attribute createCapability(final String productCode, final String capabilityCode, final String name) {
+		
 		Attribute attribute = null;
 		try {
-			attribute = qwandaUtils.getAttribute(productCode, cleanCapabilityCode);
+			attribute = qwandaUtils.getAttribute(productCode, capabilityCode);
 		} catch (ItemNotFoundException e) {
-			log.debug("Could not find Attribute: " + cleanCapabilityCode + ". Creating new Capability");
+			log.debug("Could not find Attribute: " + capabilityCode + ". Creating new Capability");
 		}
 
 		if (attribute == null) {
-			log.trace("Creating Capability : " + cleanCapabilityCode + " : " + name);
-			attribute = new Attribute(cleanCapabilityCode, name, new DataType(String.class));
+			log.trace("Creating Capability : " + capabilityCode + " : " + name);
+			attribute = new Attribute(capabilityCode, name, new DataType(String.class));
 			qwandaUtils.saveAttribute(productCode, attribute);
 		}
 
 		return attribute;
 	}
 
-	BaseEntity removeCapabilityFromBaseEntity(String productCode, BaseEntity targetBe, String capabilityCode) {
+    BaseEntity deleteCapability(String productCode, BaseEntity targetBe, String capabilityCode) {
+		if(targetBe == null)
+			throw new NullParameterException("targetBe");
+		log.debug("Removing Capability: " + capabilityCode + " from Entity: " + targetBe.getCode());
+		// only update database if remove operation finds something to remove
+        if(targetBe.removeAttribute(capabilityCode)) {
+			dbUtils.deleteEntityAttribute(productCode, targetBe.getCode(), capabilityCode);
+		} else {
+			log.debug("[!] Entity: " + targetBe.getCode() + " did not have capability: " + capabilityCode);
+		}
+		
+		return targetBe;
+    }
+
+	BaseEntity resetCapability(String productCode, BaseEntity targetBe, String capabilityCode) {
 		capabilityCode = CapabilitiesController.cleanCapabilityCode(capabilityCode);
 		Attribute attr = qwandaUtils.getAttribute(productCode, capabilityCode);
 		try {
-			return removeCapabilityFromBaseEntity(productCode, targetBe, attr);
+			return resetCapability(productCode, targetBe, attr);
 		} catch (ItemNotFoundException e) {
 			// Here we know more information about the attribute we are trying to fetch
 			// so we can add more to the exception
@@ -216,7 +233,7 @@ class CapEngine {
 		}
 	}
 
-	BaseEntity removeCapabilityFromBaseEntity(String productCode, BaseEntity targetBe, Attribute capabilityAttribute) {
+	BaseEntity resetCapability(String productCode, BaseEntity targetBe, Attribute capabilityAttribute) {
 		if (capabilityAttribute == null) {
 			throw new ItemNotFoundException(productCode, "Capability Attribute");
 		}
@@ -228,7 +245,7 @@ class CapEngine {
 		return targetBe;
 	}
 
-	boolean shouldOverride() {
+	private boolean shouldOverride() {
 		// allow keycloak admin and devcs to do anything
 		return (userToken.hasRole("service", "admin", "dev") || ("service".equals(userToken.getUsername())));
 	}

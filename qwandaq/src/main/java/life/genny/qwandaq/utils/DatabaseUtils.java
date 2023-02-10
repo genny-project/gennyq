@@ -13,6 +13,8 @@ import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.intf.ICapabilityFilterable;
 import life.genny.qwandaq.validation.Validation;
+
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 
@@ -623,15 +625,57 @@ public class DatabaseUtils {
 		log.info("Successfully deleted QuestionQuestion " + sourceCode + ":" + targetCode + " in realm " + realm);
 	}
 
+	/**
+	 * Delete an {@link EntityAttribute} from a {@link BaseEntity}
+	 * @param realm - realm/product the EntityAttribute is located in
+	 * @param baseEntityCode - the code of the BaseEntity the EntityAttribute is linked to
+	 * @param attributeCode - the code of the {@link Attribute} the EntityAttribute is linked to
+	 */
+	@Transactional
+	public void deleteEntityAttribute(String realm, String baseEntityCode, String attributeCode) {
+		log.info("Deleting EntityAttribute " + baseEntityCode + ":" + attributeCode + " in realm " + realm + ".");
+		entityManager.createQuery("DELETE EntityAttribute WHERE realm=:realmStr AND baseEntityCode=:baseEntityCode AND attributeCode=:attributeCode")
+				.setParameter("realmStr", realm)
+				.setParameter("baseEntityCode", baseEntityCode)
+				.setParameter("attributeCode", attributeCode)
+				.executeUpdate();
+	}
+
+	/**
+	 * Delete all {@link EntityAttribute EntityAttributes} from a {@link BaseEntity}
+	 * @param realm - realm/product the EntityAttributes are located in
+	 * @param baseEntityCode - the code of the BaseEntity the EntityAttributes are linked to
+	 */
+	@Transactional
+	public void deleteAllEntityAttributes(String realm, String baseEntityCode) {
+		log.info("Deleting ALL EntityAttributes for BaseEntity " + baseEntityCode + " in realm " + realm + ".");
+		entityManager.createQuery("DELETE EntityAttribute WHERE realm=:realmStr AND baseEntityCode=:baseEntityCode")
+				.setParameter("realmStr", realm)
+				.setParameter("baseEntityCode", baseEntityCode)
+				.executeUpdate();
+
+	}
+
 	public void setEntityManager(EntityManager entityManager) {
 		this.entityManager = entityManager;
 	}
 
 
 	/**
-	 * @param filterable
-	 * @param capabilityRequirements
-	 * @return
+	 * <p>Update the Capability Requirements for a given {@link ICapabilityFilterable filterable}</p>
+	 * <p>Current Filterables:</p>
+	 * <ul>
+	 * 	<li>{@link BaseEntity}</li>
+	 *  <li>{@link EntityAttribute}</li>
+	 *  <li>{@link Attribute}</li>
+	 *  <li>{@link QuestionQuestion}</li>
+	 *  <li>{@link Question}</li>
+	 * </ul>
+	 * @param filterable - filterable to update
+	 * @param capabilityRequirements - zero or more {@link Capability Capabilitys} to set as the requirements to access the filterable
+	 * @return whether or not an attempt to save the filterable was made
+	 * 
+	 * @see {@link ICapabilityFilterable#requirementsMetImpl}
 	 */
 	@Transactional
 	public boolean updateCapabilityRequirements(String realm, ICapabilityFilterable filterable, Capability... capabilityRequirements) {
@@ -654,7 +698,6 @@ public class DatabaseUtils {
 		if(filterable instanceof QuestionQuestion) {
 			QuestionQuestion qq = (QuestionQuestion)filterable;
 			log.info("Attaching Capability Requirements: " + CommonUtils.getArrayString(capabilityRequirements) + " to QuestionQuestion: " + realm + ":" + qq.getSourceCode() + ":" + qq.getTargetCode());
-			// TODO: Potentially update sub questions
 			saveQuestionQuestion(qq);
 			return true;
 		}
@@ -675,6 +718,7 @@ public class DatabaseUtils {
 
 		}
 		
+		log.error("Unhandled/Unsaveable Filterable Type: " + filterable.getClass().getSimpleName());
 		return false;
 	}
 
@@ -683,12 +727,12 @@ public class DatabaseUtils {
 	 * @param tableObject - object to retrieve table name of
 	 * @return the SQL Table name
 	 */
-	public String getTableName(Object tableObject) {
+	public Table getTable(Object tableObject) {
 		Class<?> clazz = tableObject.getClass();
 		Table table = clazz.getAnnotation(Table.class);
 		if(table == null)
 			throw new BadDataException("Class: " + clazz + " is not annotated with javax.persistence.Table!");
-		return table.name();
+		return table;
 	}
 
 	/**
@@ -698,10 +742,11 @@ public class DatabaseUtils {
 	 */
 	public String getHQLTableName(Object tableObject) {
 		Class<?> clazz = tableObject.getClass();
-		Table table = clazz.getAnnotation(Table.class);
-		if(table == null)
-			throw new BadDataException("Class: " + clazz + " is not annotated with javax.persistence.Table!");
-		return clazz.getSimpleName();
+		// table exists so there is a corresponding HQLTable here
+		if(getTable(tableObject) != null)
+			return clazz.getSimpleName();
+		else
+			return null;
 	}
 
 	/**
@@ -712,24 +757,8 @@ public class DatabaseUtils {
 	 */
 	@Transactional
 	public void deleteBaseEntityAndAttribute(String realm, String code) {
-
-		try {
-			log.info("Deleting baseEntity attribute  " + code);
-			entityManager.createQuery("DELETE EntityAttribute WHERE realm=:realm AND baseEntityCode=:baseCode")
-					.setParameter("realm", realm)
-					.setParameter("baseCode", code)
-					.executeUpdate();
-
-			log.info("Deleting baseEntity " + code);
-
-			entityManager.createQuery("DELETE BaseEntity WHERE realm=:realmStr AND code=:code")
-					.setParameter("realmStr", realm)
-					.setParameter("code", code)
-					.executeUpdate();
-
-			log.info("Successfully deleted BaseEntity " + code + " in realm " + realm);
-		} catch (Exception ex) {
-			log.error(ex);
-		}
+		log.info("Deleting BaseEntity "  + code + " and ALL of its EntityAttributes in realm " + realm + ".");
+		deleteAllEntityAttributes(realm, code);
+		deleteBaseEntity(realm, code);
 	}
 }

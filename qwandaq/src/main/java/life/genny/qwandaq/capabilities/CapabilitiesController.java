@@ -102,8 +102,9 @@ public class CapabilitiesController {
      * @param name - the name (brief description of the capability)
      * @return - the new saved Capability Attribute
      */
-    public Attribute createCapability(final String productCode, final String capabilityCode, final String name) {
-        return engine.createCapability(productCode, capabilityCode, name, false);
+    public Attribute createCapability(final String productCode, String capabilityCode, final String name) {
+        capabilityCode = cleanCapabilityCode(capabilityCode);
+        return engine.createCapability(productCode, capabilityCode, name);
     }
 
     /**
@@ -145,20 +146,38 @@ public class CapabilitiesController {
         return targetBe;
     }
 
-    public BaseEntity addCapability(String productCode, BaseEntity targetBe, String rawCapabilityCode,
+    public BaseEntity addCapability(String productCode, BaseEntity targetBe, String capabilityCode,
             final CapabilityNode... modes) {
         // Ensure the capability is well defined
-        String cleanCapabilityCode = CapabilitiesController.cleanCapabilityCode(rawCapabilityCode);
+        capabilityCode = CapabilitiesController.cleanCapabilityCode(capabilityCode);
+        Attribute attribute = qwandaUtils.getAttribute(productCode, capabilityCode);
+        return addCapability(productCode, targetBe, attribute, modes);
+    }
+
+    public BaseEntity addCapability(String productCode, BaseEntity targetBe, String capabilityCode,
+            final Collection<CapabilityNode> modes) {
+        // Ensure the capability is well defined
+        String cleanCapabilityCode = CapabilitiesController.cleanCapabilityCode(capabilityCode);
         Attribute attribute = qwandaUtils.getAttribute(productCode, cleanCapabilityCode);
         return addCapability(productCode, targetBe, attribute, modes);
     }
 
-    public BaseEntity addCapability(String productCode, BaseEntity targetBe, String rawCapabilityCode,
-            final Collection<CapabilityNode> modes) {
-        // Ensure the capability is well defined
-        String cleanCapabilityCode = CapabilitiesController.cleanCapabilityCode(rawCapabilityCode);
-        Attribute attribute = qwandaUtils.getAttribute(productCode, cleanCapabilityCode);
-        return addCapability(productCode, targetBe, attribute, modes);
+    public BaseEntity deleteCapability(String productCode, BaseEntity targetBe, String capabilityCode) {
+        capabilityCode = cleanCapabilityCode(capabilityCode);
+        return engine.deleteCapability(productCode, targetBe, capabilityCode);
+    }
+
+    public BaseEntity deleteCapability(String productCode, BaseEntity targetBe, Attribute capabilityAttribute) {
+        return deleteCapability(productCode, targetBe, capabilityAttribute);
+    }
+
+    public BaseEntity resetCapability(String productCode, BaseEntity targetBe, String capabilityCode) {
+        capabilityCode = cleanCapabilityCode(capabilityCode);
+        return engine.resetCapability(productCode, targetBe, capabilityCode);
+    }
+    
+    public BaseEntity resetCapability(String productCode, BaseEntity targetBe, Attribute capabilityAttribute) {
+        return engine.resetCapability(productCode, targetBe, capabilityAttribute);
     }
 
 	/**

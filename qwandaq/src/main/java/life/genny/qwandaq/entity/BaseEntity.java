@@ -538,8 +538,8 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 	 * @param attributeCode the code of the Attribute to remove
 	 * @return Boolean
 	 */
-	public Boolean removeAttribute(final String attributeCode) {
-		Boolean removed = false;
+	public boolean removeAttribute(final String attributeCode) {
+		boolean removed = false;
 
 		Iterator<EntityAttribute> i = this.baseEntityAttributes.iterator();
 		while (i.hasNext()) {
