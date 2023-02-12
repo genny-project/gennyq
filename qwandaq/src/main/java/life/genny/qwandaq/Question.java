@@ -28,6 +28,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import javax.json.bind.annotation.JsonbTransient;
 import javax.persistence.Transient;
 
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.converter.CapabilityConverter;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import org.hibernate.annotations.Type;
@@ -125,11 +126,6 @@ public class Question extends CodedEntity implements CoreEntityPersistable, ICap
 	public static final String QUE_TABLE_NEXT_BTN="QUE_TABLE_NEXT_BTN";
     public static final String QUE_TABLE_PREVIOUS_BTN="QUE_TABLE_PREVIOUS_BTN";
 
-	/*
-	@XmlTransient
-	@OneToMany(fetch = FetchType.EAGER, mappedBy = "pk.source", cascade = CascadeType.MERGE)
-	@JsonManagedReference(value = "questionQuestion")
-	*/
 	@JsonbTransient
 	private Set<QuestionQuestion> childQuestions = new HashSet<>(0);
 
@@ -192,6 +188,58 @@ public class Question extends CodedEntity implements CoreEntityPersistable, ICap
 		this(code, name);
 		this.attribute = attribute;
 		this.attributeCode = attribute.getCode();
+	}
+
+	public Question(final String code, final String name, final Attribute attribute, final String placeholder) {
+		this(code, name, attribute, false, name, placeholder);
+	}
+
+	public Question(final String code, final String name, final Attribute attribute, final Boolean mandatory) {
+		this(code, name, attribute, mandatory, name);
+	}
+
+	public Question(final String code, final String name, final Attribute attribute, final Boolean mandatory,
+					final String html) {
+		this(code, name, attribute, mandatory, html, null);
+	}
+
+	/**
+	 * Constructor.
+	 *
+	 * @param code        The unique code for this Question
+	 * @param name        The human readable summary name
+	 * @param attribute   The associated attribute
+	 * @param mandatory   the mandatory status of the Question
+	 * @param html        the html of the Question
+	 * @param placeholder The placeholder text
+	 */
+	public Question(final String code, final String name, final Attribute attribute, final Boolean mandatory,
+					final String html, final String placeholder) {
+		super(code, name);
+		if (attribute == null) {
+			throw new InvalidParameterException("Attribute must not be null");
+		}
+		this.mandatory = mandatory;
+		this.html = html;
+		this.placeholder = placeholder;
+	}
+
+	/**
+	 * Constructor.
+	 *
+	 * @param code           The unique code for this Question
+	 * @param name           The human readable summary name
+	 * @param childQuestions The associated child Questions in this question Group
+	 */
+	public Question(final String code, final String name, final List<Question> childQuestions) {
+		super(code, name);
+		if (childQuestions == null) {
+			throw new InvalidParameterException("QuestionList must not be null");
+		}
+		this.attribute = null;
+		this.attributeCode = Attribute.QQQ_QUESTION_GROUP;
+
+		initialiseChildQuestions(childQuestions);
 	}
 
 	/**
@@ -286,6 +334,15 @@ public class Question extends CodedEntity implements CoreEntityPersistable, ICap
 	}
 
 	/**
+	 * getDefaultCodePrefix This method is overrides the Base class
+	 *
+	 * @return the default Code prefix for this class.
+	 */
+	static public String getDefaultCodePrefix() {
+		return Prefix.QUE;
+	}
+
+	/**
 	 * @return the html
 	 */
 	public String getHtml() {
@@ -368,6 +425,74 @@ public class Question extends CodedEntity implements CoreEntityPersistable, ICap
 	public void setChildQuestions(ArrayList<QuestionQuestion> childQuestions) {
         this.childQuestions = new HashSet<QuestionQuestion>(childQuestions);
     }
+
+	/**
+	 *
+	 * addChildQuestion This adds an child Question with default weight of 0.0 to
+	 * the question. It auto creates the QuestionQuestion object. For efficiency we
+	 * assume the child question link does not exist
+	 *
+	 * @param qq the QuestionQuestion used to add a child Question
+	 * @throws BadDataException if something is missing
+	 */
+	public void addChildQuestion(final QuestionQuestion qq) throws BadDataException {
+		if (qq == null)
+			throw new BadDataException("missing Question");
+
+		addChildQuestion(qq.getChildCode(), qq.getWeight(), qq.getMandatory());
+	}
+
+	/**
+	 * addChildQuestion This adds an child question and associated weight to the
+	 * question group. It auto creates the QuestionQuestion object. For efficiency
+	 * we assume the question link does not already exist
+	 *
+	 * @param childQuestionCode the code of the child Question to add
+	 * @throws BadDataException if something is missing
+	 */
+	public void addChildQuestion(final String childQuestionCode) throws BadDataException {
+
+		addChildQuestion(childQuestionCode, 1.0);
+	}
+
+	/**
+	 * addChildQuestion This adds a child question and associated weight to the
+	 * question group with no mandatory. It auto creates the QuestionQuestion
+	 * object. For efficiency we assume the question link does not already exist
+	 *
+	 * @param childQuestionCode the code of the child Question to add
+	 * @param weight            the weight
+	 * @throws BadDataException if something is missing
+	 */
+	public void addChildQuestion(final String childQuestionCode, final Double weight) throws BadDataException {
+		addChildQuestion(childQuestionCode, weight, false);
+	}
+
+	/**
+	 * addChildQuestion This adds a child question and associated weight and
+	 * mandatory setting to the question group. It auto creates the QuestionQuestion
+	 * object. For efficiency we assume the question link does not already exist
+	 *
+	 * @param childQuestionCode the code of the child question to add
+	 * @param weight            the weight
+	 * @param mandatory         the mandatory status
+	 * @return QuestionQuestion
+	 * @throws BadDataException if something is missing
+	 */
+	public QuestionQuestion addChildQuestion(final String childQuestionCode, final Double weight,
+											 final Boolean mandatory) throws BadDataException {
+		if (childQuestionCode == null)
+			throw new BadDataException("missing Question");
+		if (weight == null)
+			throw new BadDataException("missing weight");
+		if (mandatory == null)
+			throw new BadDataException("missing mandatory setting");
+
+		log.trace("[" + this.getRealm() + "] Adding childQuestion..." + childQuestionCode + " to " + this.getCode());
+		final QuestionQuestion questionLink = new QuestionQuestion(this, childQuestionCode, weight, mandatory);
+		getChildQuestions().add(questionLink);
+		return questionLink;
+	}
 
 	public Long getAttributeId() {
 		return attributeId;

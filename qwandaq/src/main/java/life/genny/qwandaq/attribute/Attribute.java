@@ -63,15 +63,6 @@ import java.time.ZoneOffset;
 
 @XmlRootElement
 @XmlAccessorType(value = XmlAccessType.FIELD)
-
-/*@Table(name = "attribute", indexes = {
-		@Index(columnList = "code", name = "code_idx"),
-		@Index(columnList = "realm", name = "code_idx")
-}, uniqueConstraints = @UniqueConstraint(columnNames = { "code", "realm" }))
-@Entity
-@DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
-@Cacheable
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)*/
 @RegisterForReflection
 public class Attribute extends CodedEntity implements CoreEntityPersistable {
 

@@ -35,6 +35,10 @@ public class QuestionQuestion implements CoreEntityPersistable, Comparable<Objec
 
 	private Long version = 1L;
 
+	// If this is set to true then attribute needs to be set to readonly after value
+	// set.
+	private Boolean oneshot = false;
+
 	private Boolean mandatory = false;
 
 	private Boolean disabled = false;
@@ -44,6 +48,12 @@ public class QuestionQuestion implements CoreEntityPersistable, Comparable<Objec
 	private Boolean readonly = false;
 
 	private String realm;
+
+	private Boolean formTrigger;
+
+	private Boolean createOnTrigger;
+
+	private String dependency;
 
 	private String icon;
 
@@ -69,6 +79,105 @@ public class QuestionQuestion implements CoreEntityPersistable, Comparable<Objec
 		this.setParentCode(source.getCode());
 		this.setChildCode(target.getCode());
 		setWeight(weight);
+	}
+
+	/**
+	 * Constructor.
+	 *
+	 * @param source
+	 *                   the source baseEntity
+	 * @param targetCode
+	 *                   the target code of the entity that is linked to
+	 * @param weight
+	 *                   the associated weight
+	 * @param mandatory
+	 *                   Is the question mandatory
+	 * @param disabled
+	 *                   Is the question read only
+	 * @param readonly
+	 *                   Is the question readonly
+	 * @param hidden
+	 *                   Is the question hidden * @param Weight
+	 *                   the weighted importance of this attribute (relative to the
+	 *                   other
+	 *                   attributes)
+	 */
+	public QuestionQuestion(final Question source, final String targetCode, Double weight, boolean mandatory,
+							boolean disabled, boolean hidden, boolean readonly) {
+		autocreateCreated();
+		setParentCode(source.getCode());
+		setChildCode(targetCode);
+		setMandatory(mandatory);
+		setDisabled(disabled);
+		setHidden(hidden);
+		setReadonly(readonly);
+		if (weight == null) {
+			// This permits ease of adding attributes and hides attribute from scoring.
+			weight = 0.0;
+		}
+		setWeight(weight);
+	}
+
+	/**
+	 * Constructor.
+	 *
+	 * @param source
+	 *                   the source baseEntity
+	 * @param targetCode
+	 *                   the target code of the entity that is linked to
+	 * @param weight
+	 *                   the weighted importance of this attribute (relative to the
+	 *                   other
+	 *                   attributes)
+	 * @param mandatory
+	 *                   Is the question mandatory
+	 * @param disabled
+	 *                   Is the question read only
+	 * @param hidden
+	 *                   Is the question hidden
+	 */
+	public QuestionQuestion(final Question source, final String targetCode, Double weight, boolean mandatory,
+							boolean disabled, boolean hidden) {
+		this(source, targetCode, weight, mandatory, disabled, hidden, false);
+	}
+
+	/**
+	 * Constructor.
+	 *
+	 * @param source
+	 *                   the source baseEntity
+	 * @param targetCode
+	 *                   the target code of the entity that is linked to
+	 * @param weight
+	 *                   the weighted importance of this attribute (relative to the
+	 *                   other
+	 *                   attributes)
+	 * @param mandatory
+	 *                   Is the question mandatory
+	 * @param disabled
+	 *                   Is the question read only
+	 */
+	public QuestionQuestion(final Question source, final String targetCode, Double weight, boolean mandatory,
+							boolean disabled) {
+		this(source, targetCode, weight, mandatory, disabled, false);
+	}
+
+	/**
+	 * Constructor.
+	 *
+	 * @param source
+	 *                   the source baseEntity
+	 * @param targetCode
+	 *                   the target code of the entity that is linked to
+	 * @param weight
+	 *                   the weighted importance of this attribute (relative to the
+	 *                   other
+	 *                   attributes)
+	 * @param mandatory
+	 *                   The mandatory status of this QuestionQuestion
+	 */
+	public QuestionQuestion(final Question source, final String targetCode, Double weight, boolean mandatory) {
+		this(source, targetCode, weight, mandatory, false);
 	}
 
 	public void setParentCode(String parentCode) {
@@ -160,6 +269,28 @@ public class QuestionQuestion implements CoreEntityPersistable, Comparable<Objec
 	public void setMandatory(Boolean mandatory) {
 		this.mandatory = mandatory;
 	}
+
+	/**
+	 * @return the oneshot
+	 */
+	public Boolean getOneshot() {
+		return oneshot;
+	}
+
+	/**
+	 * @return the oneshot
+	 */
+	public Boolean isOneshot() {
+		return getOneshot();
+	}
+
+	/**
+	 * @param oneshot , if true then attribute must be set to readonly
+	 */
+	public void setOneshot(Boolean oneshot) {
+		this.oneshot = oneshot;
+	}
+
 
 	/**
 	 * @return the disabled

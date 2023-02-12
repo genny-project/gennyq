@@ -44,4 +44,22 @@ public class Definition extends BaseEntity {
 		definition.setBaseEntityAttributes(entity.getBaseEntityAttributes());
 		return definition;
 	}
+
+	public void setAllowedAttribute(String attributeCode, Boolean mandatory) {
+		setValue(Prefix.ATT.concat(attributeCode), mandatory);
+	}
+
+	@JsonbTransient
+	public List<EntityAttribute> getAllowedAttributes() {
+		return findPrefixEntityAttributes(Prefix.ATT);
+	}
+
+	public void setDefaultValue(String attributeCode, Object value) {
+		setValue(Prefix.DFT.concat(attributeCode), value);
+	}
+
+	@JsonbTransient
+	public List<EntityAttribute> getDefaultValues() {
+		return findPrefixEntityAttributes(Prefix.DFT);
+	}
 }

@@ -87,18 +87,15 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 	/**
 	 * Store the Boolean value of the attribute for the baseEntity
 	 */
-	//@Column
 	private Boolean valueBoolean;
 	/**
 	 * Store the Integer value of the attribute for the baseEntity
 	 */
-	//@Column
 	private Integer valueInteger;
 
 	/**
 	 * Store the Long value of the attribute for the baseEntity
 	 */
-	//@Column
 	private Long valueLong;
 
 	/**
@@ -121,7 +118,6 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 	 */
 	private String valueString;
 
-	//@Column(name = "money", length = 128)
 	@Convert(converter = MoneyConverter.class)
 	Money valueMoney;
 
@@ -174,7 +170,7 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 		setBaseEntity(baseEntity);
 		setAttribute(attribute);
 		if (weight == null) {
-			weight = 0.0;
+			weight = 0.0; // This permits ease of adding attributes and hides attribute from scoring.
 		}
 		setWeight(weight);
 		if (value != null) {

@@ -17,6 +17,7 @@
 package life.genny.qwandaq.entity;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import javax.json.bind.annotation.JsonbTransient;
 import javax.persistence.Transient;
@@ -67,6 +68,7 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 
 	private static final Logger log = Logger.getLogger(BaseEntity.class);
 
+	private static final String DEFAULT_CODE_PREFIX = "BAS_";
 	public static final String PRI_NAME = "PRI_NAME";
 	public static final String PRI_IMAGE_URL = "PRI_IMAGE_URL";
 	public static final String PRI_PHONE = "PRI_PHONE";
@@ -76,6 +78,9 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 	private Map<String, EntityAttribute> baseEntityAttributes = new HashMap<>(0);
 
 	private transient Set<AnswerLink> answers = new HashSet<AnswerLink>(0);
+
+	@Transient
+	private Boolean fromCache = false;
 
 	private Set<Capability> capabilityRequirements;
 
@@ -380,6 +385,53 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 	}
 
 	/**
+	 * Merge a BaseEntity.
+	 *
+	 * @param entity the entity to merge
+	 * @return Set
+	 */
+	@Transient
+	@JsonIgnore
+	@JsonbTransient
+	public Set<EntityAttribute> merge(final BaseEntity entity) {
+		final Set<EntityAttribute> changes = new HashSet<>();
+
+		// go through the attributes in the entity and check if already existing , if so
+		// then check the
+		// value and override, else add new attribute
+
+		for (final EntityAttribute ea : entity.getBaseEntityAttributes()) {
+			final Attribute attribute = ea.getAttribute();
+			if (this.containsEntityAttribute(attribute.getCode())) {
+				// check for update value
+				final Object oldValue = this.getValue(attribute);
+				final Object newValue = this.getValue(ea);
+				if (newValue != null) {
+					if (!newValue.equals(oldValue)) {
+						// override the old value // TODO allow versioning
+						try {
+							this.setValue(attribute, this.getValue(ea), ea.getValueDouble());
+						} catch (BadDataException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+				}
+			} else {
+				// add this new entityAttribute
+				try {
+					addAttribute(ea);
+					changes.add(ea);
+				} catch (final BadDataException e) {
+					// TODO - log error and continue
+				}
+			}
+		}
+
+		return changes;
+	}
+
+	/**
 	 * @param <T>       The Type to return
 	 * @param attribute
 	 * @return T
@@ -662,6 +714,68 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 	}
 
 	/**
+	 * @return the fromCache
+	 */
+	public Boolean getFromCache() {
+		return fromCache;
+	}
+
+	/**
+	 * @return Boolean
+	 */
+	public Boolean isFromCache() {
+		return getFromCache();
+	}
+
+	/**
+	 * @param fromCache the fromCache to set
+	 */
+	public void setFromCache(Boolean fromCache) {
+		this.fromCache = fromCache;
+	}
+
+	/**
+	 * @return String[]
+	 */
+	@Transient
+	@JsonbTransient
+	public String[] getPushCodes() {
+		return getPushCodes(new String[0]);
+	}
+
+	/**
+	 * @param initialCodes the initialCodes to set
+	 * @return String[]
+	 */
+	@Transient
+	@JsonbTransient
+	public String[] getPushCodes(String... initialCodes) {
+		// go through all the links
+		Set<String> codes = new HashSet<>();
+		codes.addAll(new HashSet<>(Arrays.asList(initialCodes)));
+		if ((this.baseEntityAttributes != null) && (!this.baseEntityAttributes.isEmpty())) {
+			for (EntityAttribute ea : getBaseEntityAttributes()) {
+				// if (ea.getAttributeCode().startsWith("LNK_")) {
+				String value = ea.getValueString();
+				if (value != null) {
+					if (value.startsWith("[") && !value.equals("[]")) {
+						value = value.substring(2, value.length() - 2);
+					}
+					if (value.startsWith("PER") || (value.startsWith("CPY"))) {
+						codes.add(value);
+					}
+				}
+			}
+			// }
+			if (this.getCode().startsWith("PER") || (this.getCode().startsWith("CPY"))) {
+				codes.add(this.getCode());
+			}
+		}
+
+		return codes.toArray(new String[0]);
+	}
+
+	/**
 	 * Force private
 	 *
 	 * @param attributeCode the code of the attribute to force
@@ -723,6 +837,30 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 		baseEntitySerializable.setUpdated(getUpdated());
 		baseEntitySerializable.setCapreqs(CapabilityConverter.convertToDBColumn(getCapabilityRequirements()));
 		return baseEntitySerializable;
+	}
+
+	/**
+	 * @param prefix the prefix to set
+	 * @return Optional&lt;EntityAttribute&gt;
+	 */
+	@Transient
+	@JsonbTransient
+	public Optional<EntityAttribute> getHighestEA(final String prefix) {
+		// go through all the EA
+		Optional<EntityAttribute> highest = Optional.empty();
+		Double weight = -1000.0;
+
+		if ((this.baseEntityAttributes != null) && (!this.baseEntityAttributes.isEmpty())) {
+			for (EntityAttribute ea : getBaseEntityAttributes()) {
+				if (ea.getAttributeCode().startsWith(prefix)) {
+					if (ea.getWeight() > weight) {
+						highest = Optional.of(ea);
+						weight = ea.getWeight();
+					}
+				}
+			}
+		}
+		return highest;
 	}
 
 	@Override

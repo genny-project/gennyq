@@ -59,6 +59,14 @@ import javax.validation.constraints.Size;
 @RegisterForReflection
 public abstract class CodedEntity extends CoreEntity {
 
+	/**
+	 *
+	 */
+	private static final long serialVersionUID = 1L;
+
+	/**
+	 * Stores logger object.
+	 */
 	private static final Logger log = Logger.getLogger(CodedEntity.class);
 
 	static public final String REGEX_CODE = "[A-Z]{3}\\_[A-Z0-9\\.\\-\\@\\_]*";
@@ -83,6 +91,9 @@ public abstract class CodedEntity extends CoreEntity {
 	@Enumerated(EnumType.ORDINAL)
 	private EEntityStatus status = EEntityStatus.ACTIVE;
 
+	/**
+	 * Constructor.
+	 */
 	protected CodedEntity() {
 		super();
 	}
@@ -115,7 +126,7 @@ public abstract class CodedEntity extends CoreEntity {
 		if (code == null) {
 			log.error("Null Code passed. Will result in error if saved");
 		} else {
-			this.code = code;//.toUpperCase();
+			this.code = code.toUpperCase();
 		}
 	}
 
@@ -162,9 +173,8 @@ public abstract class CodedEntity extends CoreEntity {
 			EqualsBuilder eb = new EqualsBuilder();
 			eb.append(code, that.getCode());
 			return eb.isEquals();
-		} else {
-			return false;
 		}
+		return false;
 	}
 
 	/**

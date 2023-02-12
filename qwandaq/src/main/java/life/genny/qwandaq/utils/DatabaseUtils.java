@@ -378,22 +378,6 @@ public class DatabaseUtils {
 	}
 
 	/**
-	 * Find the parent links.
-	 * 
-	 * @param realm      Realm to query
-	 * @param targetCode Code of the target entity
-	 * @return A list of Links
-	 */
-	public List<Link> findParentLinks(String realm, String targetCode) {
-
-		return entityManager.createQuery("SELECT ee.link FROM HEntityEntity ee"
-				+ " where ee.pk.targetCode=:targetCode and ee.pk.source.realm=:realmStr", Link.class)
-				.setParameter("targetCode", targetCode)
-				.setParameter("realmStr", realm)
-				.getResultList();
-	}
-
-	/**
 	 * Save a {@link Validation} to the database.
 	 * 
 	 * @param validation A {@link Validation} object to save

@@ -612,6 +612,10 @@ public class GennyToken implements Serializable {
 
 			map = mapper.readValue(json, typeRef);
 
+		} catch (final JsonGenerationException e) {
+			e.printStackTrace();
+		} catch (final JsonMappingException e) {
+			e.printStackTrace();
 		} catch (final IOException e) {
 			e.printStackTrace();
 		}

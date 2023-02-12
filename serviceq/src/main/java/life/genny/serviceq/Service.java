@@ -169,6 +169,22 @@ public class Service {
 	}
 
 	/**
+	 * Initialize BaseEntity Definitions for each allowed productCode.
+	 */
+	public void initDefinitions() {
+
+		// null check the allowed codes
+		String[] allowedProducts = serviceToken.getAllowedProducts();
+		if (allowedProducts == null) {
+			log.error("You must set up the PRODUCT_CODES environment variable!");
+		}
+
+		for (String productCode : allowedProducts) {
+			defUtils.initializeDefPrefixs(productCode);
+		}
+	}
+
+	/**
 	 * log the service confiduration details.
 	 */
 	public void showConfiguration() {
@@ -204,6 +220,12 @@ public class Service {
 		initToken();
 		initCache();
 		initKafka();
+		// attempt to stop topology producers from failing on startup
+		if (!hasTopology) {
+			initAttributes();
+		}
+		initDefinitions();
+
 		initialised = true;
 		log.info("[@] Service Initialised!");
 	}

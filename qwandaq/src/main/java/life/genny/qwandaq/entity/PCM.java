@@ -89,6 +89,10 @@ public class PCM extends BaseEntity {
 		return getValueAsString(Attribute.PRI_LOC + index);
 	}
 
+	public List<EntityAttribute> getLocations() {
+		return findPrefixEntityAttributes(Attribute.PRI_LOC);
+	}
+
 	public void setTemplateCode(String code) {
 		addStringAttribute(Attribute.PRI_TEMPLATE_CODE, "Template Code", code);
 	}
