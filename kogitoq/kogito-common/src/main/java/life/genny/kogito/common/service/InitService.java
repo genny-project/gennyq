@@ -64,6 +64,9 @@ public class InitService {
 	@Inject
 	private CapabilitiesManager capMan;
 
+	@Inject
+	CacheManager cacheManager;
+
 	/**
 	 * Send the Project BaseEntity.
 	 */
@@ -107,10 +110,10 @@ public class InitService {
 
 		for (int currentPage = 0; currentPage < TOTAL_PAGES + 1; currentPage++) {
 
-			QDataAttributeMessage msg = CacheUtils.getObject(productCode,
+			QDataAttributeMessage msg = cacheManager.getObject(productCode,
 					"ATTRIBUTES_P" + currentPage, QDataAttributeMessage.class);
 
-			Collection<Attribute> attributes = Arrays.asList(msg.getItems()).stream()
+			Collection<Attribute> attributes = msg.getItems().stream()
 					// Filter capability attributes
 					.filter((attribute) -> !attribute.getCode().startsWith(Prefix.CAP))
 					.collect(Collectors.toList());
@@ -174,7 +177,7 @@ public class InitService {
 						log.info("Passed Capabilities check: " + CommonUtils.getArrayString(question.getCapabilityRequirements()));
 					}
 
-					Ask ask = qwandaUtils.generateAskFromQuestion(question, user, userCapabilities);
+					Ask ask = qwandaUtils.generateAskFromQuestion(question, user, user, userCapabilities, new ReqConfig());
 					if (ask == null) {
 						log.warn("(" + pcm.getCode() + " :: " + pcm.getName() + ") No asks found for " + question.getCode());
 					}

@@ -69,6 +69,9 @@ public class DefUtils {
 	@Inject
 	MergeUtils mergeUtils;
 
+	@Inject
+	CacheManager cacheManager;
+
 	public DefUtils() {
 	}
 
@@ -114,7 +117,7 @@ public class DefUtils {
 
 			log.info("(" + productCode + ") Saving Prefix for " + def.getCode());
 			defPrefixMap.get(productCode).put(prefix, code);
-			CacheUtils.putObject(productCode, def.getCode() + ":PREFIX", prefix);
+			cacheManager.putObject(productCode, def.getCode() + ":PREFIX", prefix);
 		}
 	}
 
