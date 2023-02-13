@@ -37,6 +37,7 @@ import life.genny.qwandaq.utils.SecurityUtils;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
 import life.genny.gadaq.search.FilterGroupService;
+import life.genny.gadaq.cache.SearchCaching;
 
 @ApplicationScoped
 public class InternalConsumer implements KogitoServiceConsumerIntf {
@@ -73,6 +74,9 @@ public class InternalConsumer implements KogitoServiceConsumerIntf {
 	@Inject
 	FilterGroupService filter;
 
+	@Inject
+	SearchCaching searchCaching;
+
 	/**
 	 * Execute on start up.
 	 *
@@ -81,6 +85,7 @@ public class InternalConsumer implements KogitoServiceConsumerIntf {
 	void onStart(@Observes StartupEvent ev) {
 		KogitoServiceConsumerIntf.initialiseProtobufs();
 		service.fullServiceInit();
+		searchCaching.saveToCache();
 	}
 
 	/**
