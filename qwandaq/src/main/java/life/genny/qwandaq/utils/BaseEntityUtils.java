@@ -121,7 +121,6 @@ public class BaseEntityUtils {
 	 * @return The BaseEntity
 	 */
 	public BaseEntity getBaseEntity(String code) {
-		System.out.println("code: "+ code);
 		BaseEntity baseEntity = getBaseEntity(userToken.getProductCode(), code);
 		return baseEntity;
 	}
