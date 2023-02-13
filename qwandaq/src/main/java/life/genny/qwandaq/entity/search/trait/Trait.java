@@ -28,10 +28,6 @@ public abstract class Trait implements ICapabilityFilterable, Serializable {
 		this.name = name;
 	}
 
-	public static <T extends Trait> Decorator<T> decorator(T trait) {
-		return new Decorator<T>(trait);
-	}
-
 	public String getCode() {
 		return code;
 	}
@@ -88,23 +84,5 @@ public abstract class Trait implements ICapabilityFilterable, Serializable {
 			.append(", name=")
 			.append(this.getName())
 			.toString();
-	}
-
-	public static class Decorator<T extends Trait> {
-		private final T trait;
-
-		public Decorator(T trait) {
-			this.trait = trait;
-		}
-
-		public Decorator<T> addCapabilityRequirement(Capability c) {
-			trait.addCapabilityRequirement(c);
-			return this;
-		}
-
-		public T build() {
-			return trait;
-		}
-
 	}
 }
