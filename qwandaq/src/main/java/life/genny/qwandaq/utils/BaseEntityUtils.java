@@ -62,6 +62,8 @@ public class BaseEntityUtils {
 
 	@Inject
 	EntityAttributeUtils beaUtils;
+
+	@Inject
 	QwandaUtils qwandaUtils;
 
 	public BaseEntityUtils() { 
