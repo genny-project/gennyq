@@ -139,7 +139,7 @@ public class RoleManager {
 			role = beUtils.getBaseEntity(productCode, roleCode);
 		} catch(ItemNotFoundException e) {
 			Definition defRole = defUtils.getDEF(Definition.DEF_ROLE);
-			role = beUtils.create(defRole, roleCode, roleName);
+			role = beUtils.create(defRole, roleName, roleCode);
 		}
 		
 		return role;
