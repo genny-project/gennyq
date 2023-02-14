@@ -36,11 +36,14 @@ public class FilterConst {
     public static final String ACTIVE="ACTIVE";
 
     /** Filter Category **/
-    public static final String DATETIME = "DATETIME";
+    public static final String DTT_DATETIME = "DTT_DATETIME";
+    public static final String DTT_DATE = "DTT_DATE";
     public static final String SELECT = "SELECT";
     public static final String COUNTRY = "COUNTRY";
+    public static final String YES_NO = "YES_NO";
     public static final String SEPARATOR = ";";
 
     public static final String ISCODE = "isCode";
+    public static final String BOOLEAN = "BOOLEAN";
 
 }

@@ -105,6 +105,7 @@ public class Question extends CodedEntity implements CoreEntityPersistable, ICap
 	public static final String QUE_FILTER_OPTION = "QUE_FILTER_OPTION";
 	public static final String QUE_FILTER_VALUE_TEXT = "QUE_FILTER_VALUE_TEXT";
 	public static final String QUE_FILTER_VALUE_COUNTRY = "QUE_FILTER_VALUE_COUNTRY";
+	public static final String QUE_FILTER_VALUE_DATE = "QUE_FILTER_VALUE_DATE";
 	public static final String QUE_FILTER_VALUE_DATETIME = "QUE_FILTER_VALUE_DATETIME";
 	public static final String QUE_ADD_FILTER_SBE_GRP = "QUE_ADD_FILTER_SBE_GRP";
 	public static final String QUE_SAVED_SEARCH_SELECT_GRP = "QUE_SAVED_SEARCH_SELECT_GRP";
@@ -123,8 +124,9 @@ public class Question extends CodedEntity implements CoreEntityPersistable, ICap
 	public static final String QUE_TABLE_FILTER_GRP = "QUE_TABLE_FILTER_GRP";
 	public static final String QUE_SELECT_INTERN = "QUE_SELECT_INTERN";
 	public static final String QUE_TABLE_LAZY_LOAD = "QUE_TABLE_LAZY_LOAD";
-	public static final String QUE_TABLE_NEXT_BTN="QUE_TABLE_NEXT_BTN";
-    public static final String QUE_TABLE_PREVIOUS_BTN="QUE_TABLE_PREVIOUS_BTN";
+	public static final String QUE_TABLE_NEXT_BTN = "QUE_TABLE_NEXT_BTN";
+	public static final String QUE_TABLE_PREVIOUS_BTN = "QUE_TABLE_PREVIOUS_BTN";
+	public static final String QUE_FILTER_VALUE_BOOLEAN = "QUE_FILTER_VALUE_BOOLEAN";
 
 	@JsonbTransient
 	private Set<QuestionQuestion> childQuestions = new HashSet<>(0);
@@ -339,7 +341,7 @@ public class Question extends CodedEntity implements CoreEntityPersistable, ICap
 	 * @return the default Code prefix for this class.
 	 */
 	static public String getDefaultCodePrefix() {
-		return Prefix.QUE;
+		return Prefix.QUE_;
 	}
 
 	/**

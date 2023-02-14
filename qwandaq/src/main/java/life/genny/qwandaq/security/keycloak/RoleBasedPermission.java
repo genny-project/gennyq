@@ -3,8 +3,8 @@ package life.genny.qwandaq.security.keycloak;
 import life.genny.qwandaq.models.GennyToken;
 import org.jboss.logging.Logger;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.inject.Singleton;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import java.util.Arrays;
@@ -16,7 +16,7 @@ import java.util.Arrays;
  * @author    hello@gada.io
  *
  */
-@Singleton
+@ApplicationScoped
 public class RoleBasedPermission {
 
     static final Logger LOG = Logger.getLogger(RoleBasedPermission.class);

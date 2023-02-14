@@ -1,0 +1,59 @@
+pipeline {
+    agent any
+    tools {
+        jdk 'JDK17'
+    }
+    options {
+        ansiColor('xterm')
+    }
+    stages {
+        stage('Java version') {
+            steps {
+                sh 'java --version'
+            }
+        }
+        stage('Add Config files') {
+            steps {
+                configFileProvider([configFile(fileId: '53b50115-91ad-42e2-88e3-07a292f05b14', targetLocation: 'ports')]) {
+                    sh ". ./ports"
+                }
+            }
+        }
+        stage("Clone") {
+            steps {
+                git branch: "${BRANCH}",
+                    url: 'https://github.com/genny-project/gennyq'
+            }
+        }
+        stage("Ports") {
+          steps {
+            configFileProvider([configFile(fileId: '53b50115-91ad-42e2-88e3-07a292f05b14', targetLocation: 'ports')]) {
+                sh ". ./ports"
+            }
+          }
+        }
+        stage("Build Dependencies") {
+            steps {
+              script {
+                if(env.BUILD_DEPENDENCIES) {
+                  echo "Building qwandaq"
+                  sh "./build.sh qwandaq serviceq kogito-common"
+                }
+              }
+            }
+        }
+        stage("Build Service") {
+            steps {
+                sh "./build-docker-branch.sh ${TAG} ${MICROSERVICE}"
+            }
+        }
+        stage("Push Docker Images") {
+            steps {
+                echo "Tagging as ${TAG}"
+                sh "docker push gennyproject/${MICROSERVICE}:${TAG}"  
+                sh "docker push gennyproject/${MICROSERVICE}:latest"  
+            }
+        }
+    }
+}
+

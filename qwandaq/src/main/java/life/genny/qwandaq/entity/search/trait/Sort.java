@@ -9,7 +9,7 @@ import life.genny.qwandaq.constants.Prefix;
 @RegisterForReflection
 public class Sort extends Trait {
 
-	public static final String PREFIX = Prefix.SRT;
+	public static final String PREFIX = Prefix.SRT_;
 
 	private Ord order;
 

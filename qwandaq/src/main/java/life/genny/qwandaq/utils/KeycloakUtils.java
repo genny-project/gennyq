@@ -34,13 +34,13 @@ import javax.json.bind.JsonbBuilder;
 import javax.net.ssl.HttpsURLConnection;
 import javax.ws.rs.core.Response;
 
+import life.genny.qwandaq.constants.Prefix;
+import life.genny.qwandaq.entity.BaseEntity;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 import org.keycloak.representations.account.UserRepresentation;
 import org.keycloak.util.JsonSerialization;
 
-import life.genny.qwandaq.constants.Prefix;
-import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.KeycloakException;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.GennySettings;
@@ -229,7 +229,7 @@ public class KeycloakUtils {
         String keycloakUrl = serviceToken.getKeycloakUrl().replace(":-1", "");
 
         // grab uuid to fetch token
-        String uuid = userCode.substring(Prefix.PER.length()).toLowerCase();
+        String uuid = userCode.substring(Prefix.PER_.length()).toLowerCase();
 
         // setup param map
         HashMap<String, String> params = new HashMap<>();
@@ -255,6 +255,7 @@ public class KeycloakUtils {
      */
     public static String fetchOIDCToken(String keycloakUrl, String realm, Map<String, String> params) {
         log.info("Keycloak Realm is " + realm);
+
         String uri = keycloakUrl + "/realms/" + realm + "/protocol/openid-connect/token";
         log.info("Fetching OIDC Token from " + uri);
 
@@ -367,7 +368,7 @@ public class KeycloakUtils {
 
         String username = UUID.randomUUID().toString().substring(0, 18);
         String email = username + "@gmail.com";
-        String defaultPassword = "password1";
+        String defaultPassword = GennySettings.dummyUserPassword();
 
         String json = "{ " + "\"username\" : \"" + username + "\"," + "\"email\" : \"" + email + "\" , "
                 + "\"enabled\" : true, " + "\"emailVerified\" : true, " + "\"firstName\" : \"" + username + "\", "

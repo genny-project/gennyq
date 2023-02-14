@@ -2,16 +2,20 @@ package life.genny.qwandaq.utils;
 
 import java.net.http.HttpResponse;
 import java.util.List;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.ws.rs.core.Response;
+
 import org.jboss.logging.Logger;
 import life.genny.qwandaq.Ask;
+import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.search.SearchEntity;
+import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.managers.CacheManager;
@@ -37,6 +41,9 @@ public class SearchUtils {
 
 	@Inject
 	Logger log;
+
+	@Inject
+	QwandaUtils qwandaUtils;
 
 	@Inject
 	BaseEntityUtils beUtils;
@@ -175,7 +182,7 @@ public class SearchUtils {
 	 */
 	public void searchTable(String code) {
 
-		if (!code.startsWith(Prefix.SBE))
+		if (!code.startsWith(Prefix.SBE_))
 			throw new DebugException("Code " + code + " does not represent a SearchEntity");
 
 		log.debug("Performing Table Search: " + code);

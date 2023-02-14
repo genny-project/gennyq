@@ -7,6 +7,7 @@ import javax.persistence.NoResultException;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.utils.EntityAttributeUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.constants.Prefix;
@@ -31,6 +32,9 @@ import java.util.stream.Collectors;
 
 @ApplicationScoped
 public class RoleManager extends Manager {
+
+	@Inject
+	Logger log;
 
 	private final static AttributeProductDecorator lnkRoleAttribute = new AttributeProductDecorator(
 		new Attribute(Attribute.LNK_ROLE, "Role Link", new DataType(String.class))
@@ -165,7 +169,7 @@ public class RoleManager extends Manager {
 		
 		EntityAttribute entityAttribute = beaUtils.getEntityAttribute(targetRole.getRealm(), targetRole.getCode(), Attribute.LNK_CHILDREN);
 		if(entityAttribute == null) {
-			warn("No editable children found for: " + targetRole.getCode());
+			log.warn("No editable children found for: " + targetRole.getCode());
 			return new ArrayList<String>();
 		}
 		String roleCodes = entityAttribute.getValueString();
@@ -186,7 +190,7 @@ public class RoleManager extends Manager {
 		return getChildrenCodes(targetRole).stream().map((String beCode) -> {
 			BaseEntity be = beUtils.getBaseEntity(beCode);
 			if(be == null) {
-				error("Could not find Role: " + beCode);
+				log.error("Could not find Role: " + beCode);
 			}
 
 			return be;
@@ -251,7 +255,7 @@ public class RoleManager extends Manager {
 	 */
 	public BaseEntity inheritRole(String productCode, BaseEntity role, final BaseEntity parentRole) {
 		BaseEntity ret = role;
-		List<EntityAttribute> perms = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(parentRole.getRealm(), parentRole.getCode(), Prefix.CAP);
+		List<EntityAttribute> perms = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(parentRole.getRealm(), parentRole.getCode(), Prefix.CAP_);
 		for (EntityAttribute permissionEA : perms) {
 			List<CapabilityNode> capabilities = CapabilitiesManager.deserializeCapArray(permissionEA.getValue());
 			ret = capManager.addCapabilityToBaseEntity(productCode, ret, permissionEA.getAttributeCode(), capabilities);
@@ -281,7 +285,7 @@ public class RoleManager extends Manager {
 				// return first found redirect
 				return getRoleRedirectCode(role);
 			} catch (RoleException e) {
-				debug(e.getMessage());
+				log.debug(e.getMessage());
 			}
 		}
 
@@ -363,7 +367,7 @@ public class RoleManager extends Manager {
 		return roles.stream().map((String roleCode) -> {
 			BaseEntity be = beUtils.getBaseEntity(roleCode);
 			if(be == null) {
-				error("Could not find role: " + roleCode);
+				log.error("Could not find role: " + roleCode);
 			}
 			return be;
 		}).filter((BaseEntity roleBe) -> (roleBe != null)).collect(Collectors.toList());
@@ -371,8 +375,8 @@ public class RoleManager extends Manager {
 
 	public static String cleanRoleCode(final String rawRoleCode) {
 		String cleanRoleCode = rawRoleCode.toUpperCase();
-		if (!cleanRoleCode.startsWith(Prefix.ROL)) {
-			cleanRoleCode = Prefix.ROL + cleanRoleCode;
+		if (!cleanRoleCode.startsWith(Prefix.ROL_)) {
+			cleanRoleCode = Prefix.ROL_ + cleanRoleCode;
 		}
 
 		return cleanRoleCode;

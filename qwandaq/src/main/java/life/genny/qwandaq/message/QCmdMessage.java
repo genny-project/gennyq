@@ -1,12 +1,5 @@
 package life.genny.qwandaq.message;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import life.genny.qwandaq.ContextList;
-
-import javax.persistence.Embedded;
-import javax.validation.Valid;
-
 public class QCmdMessage extends QMessage {
 
 	private static final String MESSAGE_TYPE = "CMD_MSG";
@@ -18,10 +11,6 @@ public class QCmdMessage extends QMessage {
 	private Boolean send;
 	
 	private String cache;
-
-	@Valid
-	@JsonInclude(Include.NON_NULL)
-	private ContextList contextList;
 
 	public QCmdMessage(String cmd_type, String code) {
 
@@ -104,20 +93,6 @@ public class QCmdMessage extends QMessage {
 	 */
 	public void setCache(String cache) {
 		this.cache = cache;
-	}
-
-	/**
-	 * @return ContextList
-	 */
-	public ContextList getContextList() {
-		return contextList;
-	}
-
-	/**
-	 * @param contextList the contextList to set
-	 */
-	public void setContextList(final ContextList contextList) {
-		this.contextList = contextList;
 	}
 
 }

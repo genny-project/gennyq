@@ -7,6 +7,7 @@ import org.infinispan.protostream.FileDescriptorSource;
 import org.infinispan.protostream.SerializationContext;
 import org.infinispan.protostream.SerializationContextInitializer;
 import org.infinispan.protostream.impl.ResourceUtils;
+import life.genny.qwandaq.constants.GennyConstants;
 
 public class BaseEntityInitializerImpl implements SerializationContextInitializer {
 

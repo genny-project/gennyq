@@ -131,6 +131,7 @@ public class CapabilityNode {
 			offset = 1;
 			negate = true;
 		}
+
 		capMode = CapabilityMode.getByIdentifier(capabilityString.charAt(offset));
 		permMode = PermissionMode.getByIdentifier(capabilityString.charAt(offset + 2));
 

@@ -1,38 +1,31 @@
 package life.genny.kogito.common.service;
 
-import java.lang.invoke.MethodHandles;
 import java.util.List;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
 
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.models.ServiceToken;
+import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.EntityAttributeUtils;
+import life.genny.qwandaq.utils.SearchUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.models.TimerData;
 import life.genny.kogito.common.models.TimerEvent;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Column;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
-import life.genny.qwandaq.models.ServiceToken;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.DatabaseUtils;
-import life.genny.qwandaq.utils.SearchUtils;
 
 @ApplicationScoped
-public class TimerEventService {
+public class TimerEventService extends KogitoService {
 
-	private static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
-
-	Jsonb jsonb = JsonbBuilder.create();
+	@Inject
+	Logger log;
 
 	@Inject
 	ServiceToken serviceToken;

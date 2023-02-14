@@ -16,6 +16,7 @@ import life.genny.qwandaq.intf.ICapabilityFilterable;
 import life.genny.qwandaq.validation.Validation;
 import org.jboss.logging.Logger;
 
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
@@ -27,6 +28,7 @@ import javax.persistence.Table;
 import javax.transaction.Transactional;
 import java.util.LinkedList;
 import java.util.List;
+
 
 /*
  * A utility class used for standard read and write 
@@ -100,7 +102,7 @@ public class DatabaseUtils {
 	public Long countAttributes(String realm) {
 
 		return (Long) entityManager
-				.createQuery("SELECT count(1) FROM Attribute WHERE realm=:realmStr AND name not like 'App\\_%'")
+				.createQuery("SELECT count(1) FROM HAttribute WHERE realm=:realmStr AND name not like 'App\\_%'")
 				.setParameter("realmStr", realm)
 				.getResultList().get(0);
 	}
@@ -258,16 +260,16 @@ public class DatabaseUtils {
 	}
 
 	/**
-	 * Fetch an Attribute from the database using a realm and a code.
+	 * Fetch an HAttribute from the database using a realm and a code.
 	 * 
 	 * @param realm the realm to find in
 	 * @param code  the code to find by
-	 * @return Attribute
+	 * @return HAttribute
 	 */
 
-	public Attribute findAttributeByCode(String realm, String code) {
+	public HAttribute findAttributeByCode(String realm, String code) {
 		return entityManager
-				.createQuery("FROM Attribute WHERE realm=:realmStr AND code =:code", Attribute.class)
+				.createQuery("FROM HAttribute WHERE realm=:realmStr AND code =:code", HAttribute.class)
 				.setParameter("realmStr", realm)
 				.setParameter("code", code)
 				.getSingleResult();
@@ -403,16 +405,16 @@ public class DatabaseUtils {
 	}
 
 	/**
-	 * Save an {@link Attribute} to the database.
+	 * Save an {@link HAttribute} to the database.
 	 * 
-	 * @param attribute An {@link Attribute} object to save
+	 * @param attribute An {@link HAttribute} object to save
 	 */
 	@Transactional
 	public void saveAttribute(Attribute attribute) {
 
-		log.info("Saving Attribute " + attribute.getCode());
+		log.info("Saving HAttribute " + attribute.getCode());
 
-		Attribute existingAttribute = null;
+		HAttribute existingAttribute = null;
 		try {
 			existingAttribute = findAttributeByCode(attribute.getRealm(), attribute.getCode());
 		} catch (NoResultException e) {
@@ -424,7 +426,7 @@ public class DatabaseUtils {
 		} else {
 			entityManager.merge(attribute.toHAttribute());
 		}
-		log.info("Successfully saved Attribute " + attribute.getCode());
+		log.info("Successfully saved HAttribute " + attribute.getCode());
 	}
 
 	/**
@@ -455,11 +457,13 @@ public class DatabaseUtils {
 		}
 
 		if (existingEntity == null) {
-			log.debug("New BaseEntity being saved to DB -> " + entity.getCode());
+			log.debug("New BaseEntity being saved to DB -> " + entity.getCode() + " : " + entity.getName());
 			entityManager.persist(entity);
 		} else {
-			if (entity.getId() == null)
+			if (entity.getId() == null) {
+				log.warn("New entity did not have id. Assigning id of new entity as existing entity's id (" + existingEntity.getId() + ")");
 				entity.setId(existingEntity.getId());
+			}
 			entityManager.merge(entity);
 		}
 		log.debug("Successfully saved BaseEntity " + entity.getCode());
@@ -550,14 +554,14 @@ public class DatabaseUtils {
 	@Transactional
 	public void deleteAttribute(String realm, String code) {
 
-		log.info("Deleting Attribute " + code);
+		log.info("Deleting HAttribute " + code);
 
 		entityManager.createQuery("DELETE HAttribute WHERE realm=:realmStr AND code=:code")
 				.setParameter("realmStr", realm)
 				.setParameter("code", code)
 				.executeUpdate();
 
-		log.info("Successfully deleted Attribute " + code + " in realm " + realm);
+		log.info("Successfully deleted HAttribute " + code + " in realm " + realm);
 	}
 
 	/**
@@ -675,7 +679,7 @@ public class DatabaseUtils {
 			return true;
 
 		}
-
+		
 		return false;
 	}
 

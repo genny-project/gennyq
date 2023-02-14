@@ -1,5 +1,6 @@
 package life.genny.qwandaq.utils;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -12,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import io.quarkus.arc.Arc;
+import life.genny.qwandaq.exception.runtime.config.MissingEnvironmentVariableException;
 import life.genny.qwandaq.exception.runtime.entity.GennyPrefixException;
 import life.genny.qwandaq.utils.callbacks.FIGetObjectCallback;
 import life.genny.qwandaq.utils.callbacks.FIGetStringCallBack;
@@ -25,6 +27,8 @@ import life.genny.qwandaq.utils.callbacks.FILogCallback;
  */
 public class CommonUtils {
 	static final Logger log = Logger.getLogger(CommonUtils.class);
+
+    public static final String STR_ARRAY_EMPTY = "[]";
 
     /**
      * Normalize a String by forcing uppercase on first character and lowercase on the rest
@@ -63,6 +67,11 @@ public class CommonUtils {
     }
 
     public static <T>void printCollection(Collection<T> collection, FILogCallback logCallback, FIGetStringCallBack<T> logLine) {
+        if(collection == null) {
+            logCallback.log("Could not find collection");
+            new Exception("stack trace exception").printStackTrace();
+            return;
+        }
         for(T item : collection) {
             logCallback.log(logLine.getString(item));
         }
@@ -121,18 +130,18 @@ public class CommonUtils {
     /**
      * A method to retrieve a system environment variable, and optionally log it if it is missing (default, do log)
      * @param env Env to retrieve
-     * @param alert whether or not to log if it is missing or not (default: true)
+     * @param alert whether or not to throw an excpetion or just log if it is missing or not (default: true)
      * @return the value of the environment variable, or null if it cannot be found
      */
     public static String getSystemEnv(String env, boolean alert) {
         String result = System.getenv(env);
+        
+        String msg = "Could not find System Environment Variable: " + env;
+
         if(result == null && alert) {
-            String msg = "Could not find System Environment Variable: " + env;
-            if(alert) {
-                log.error(msg);
-            } else {
-                log.warn(msg);
-            }
+            throw new MissingEnvironmentVariableException(msg);
+        } else {
+            log.warn(msg);
         }
 
         return result;
@@ -206,8 +215,8 @@ public class CommonUtils {
      * @return a JSON style array of objects, where each item is the value returned from stringCallback
      */
     public static <T> String getArrayString(T[] array, FIGetStringCallBack<T> stringCallback) {
-        if(array == null) return "null";
-        if(array.length == 0) return "[]";
+        if(array == null) return null;
+        if(array.length == 0) return STR_ARRAY_EMPTY;
         
         StringBuilder result = new StringBuilder("[");
         int i;
@@ -239,8 +248,23 @@ public class CommonUtils {
         return instance;
     }
 
-    public static <T> T[] getArrayFromString(String arrayString, FIGetObjectCallback<T> objectCallback) {
-        return (T[])getListFromString(arrayString, objectCallback).toArray();
+    @SuppressWarnings("unchecked")
+    public static <T> T[] getArrayFromString(String arrayString, Class<T> type, FIGetObjectCallback<T> objectCallback) {
+        arrayString = arrayString.substring(1, arrayString.length() - 1).replaceAll("\"", "").strip();
+        
+
+		if(StringUtils.isBlank(arrayString))
+            return (T[])Array.newInstance(type, 0);
+
+        String components[] = arrayString.split(",");
+        T[] array = (T[])Array.newInstance(type, components.length);
+                
+        for(int i = 0; i < components.length; i++) {
+            String component = components[i];
+            array[i] = objectCallback.getObject(component);
+        }
+
+        return array;
     }
 
     /**
@@ -349,15 +373,24 @@ public class CommonUtils {
 		return str.substring(str.indexOf("_")+1);
 	}
 
+    public static String substitutePrefix(String code, String prefix) {
+        if(prefix.length() == 4) {
+            if(prefix.charAt(3) != '_') {
+                log.error("Could not substitute prefix: " + prefix + ". Prefix length is not 3 characters or 4 characters including an '_'");
+                return code;
+            }
 
-	// TODO: Going to elaborate on this more another time. Will allow for the extra _ character some constants have
-	public static String substitutePrefix(String code, String prefix) {
+            // ensure 3 character length after underscore check
+            prefix = prefix.substring(0, 3);
+        }
+
 		if(prefix.length() != 3) {
-			log.error("Could not substitute prefix: " + prefix + ". Prefix length is not 3 characters");
+			log.error("Could not substitute prefix: " + prefix + ". Prefix length is not 3 characters or 4 characters including an '_'");
 			return code;
 		}
-		code = prefix + code.substring(prefix.length());
-		return code;
+
+        // all prefixes are now 3 characters at this point. Yay
+		return prefix.concat(code.substring(3));
 	}
 
 	/**
@@ -387,11 +420,11 @@ public class CommonUtils {
     public static String removeFromStringArray(String array, String... entries) {
         // no entries array == no entries to remove
         if(entries == null)
-            return StringUtils.isBlank(array) ? "[]" : array;
-
+            return StringUtils.isBlank(array) ? STR_ARRAY_EMPTY : array;
+        
         // return new array if there is no array
         if(StringUtils.isBlank(array)) {
-            return "[]";
+            return STR_ARRAY_EMPTY;
         }
         
         StringBuilder sb = new StringBuilder(array);
@@ -399,7 +432,7 @@ public class CommonUtils {
             // ensure we're not trying to remove from empty array
             if(sb.charAt(0) == '[') {
                 if(sb.charAt(1) == ']')
-                    return "[]";
+                    return STR_ARRAY_EMPTY;
             }
 
             if(StringUtils.isBlank(entry))
@@ -438,7 +471,7 @@ public class CommonUtils {
     public static String addToStringArray(String array, String... entries) {
         // no entries array == no entries to add
         if(entries == null)
-            return StringUtils.isBlank(array) ? "[]" : array;
+            return StringUtils.isBlank(array) ? STR_ARRAY_EMPTY : array;
 
         // return the entries as an array if there is no array
         if(StringUtils.isBlank(array)) {

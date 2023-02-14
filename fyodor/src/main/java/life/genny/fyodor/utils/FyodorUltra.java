@@ -57,6 +57,10 @@ import life.genny.qwandaq.exception.runtime.QueryBuilderException;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.Page;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.CommonUtils;
+import life.genny.qwandaq.utils.MergeUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
 
 @ApplicationScoped
 public class FyodorUltra {
@@ -89,7 +93,7 @@ public class FyodorUltra {
 
 	/**
 	 * Fetch an array of BaseEntities using a SearchEntity.
-	 * 
+	 *
 	 * @param searchEntity
 	 * @return
 	 */
@@ -133,7 +137,7 @@ public class FyodorUltra {
 
 	/**
 	 * Fetch an array of BaseEntitiy codes using a SearchEntity.
-	 * 
+	 *
 	 * @param searchEntity
 	 * @return
 	 */
@@ -146,13 +150,10 @@ public class FyodorUltra {
 		log.debug("Applying capabilities...");
 		log.debug("SearchEntity: " + jsonb.toJson(searchEntity));
 		// apply capabilities to traits
-		capHandler.refineFiltersFromCapabilities(searchEntity);
-		capHandler.refineSortsFromCapabilities(searchEntity);
-		capHandler.refineColumnsFromCapabilities(searchEntity);
-		capHandler.refineActionsFromCapabilities(searchEntity);
-
-		if (!GennyConstants.PER_SERVICE.equals(userToken.getUserCode())) {
+		capHandler.refineSearchFromCapabilities(searchEntity);
+		if (!CapHandler.hasSecureToken(userToken)) {
 			Map<String, Object> ctxMap = new HashMap<>();
+			ctxMap.put("SOURCE", beUtils.getUserBaseEntity());
 			ctxMap.put("USER", beUtils.getUserBaseEntity());
 
 			searchEntity.getTraits(Filter.class).stream()
@@ -230,7 +231,7 @@ public class FyodorUltra {
 
 	/**
 	 * Use a cauldron to build a search query from a CriteriaQuery base.
-	 * 
+	 *
 	 * @param query
 	 * @param baseEntity
 	 * @param searchEntity
@@ -257,7 +258,7 @@ public class FyodorUltra {
 		// find orders
 		List<Order> orders = new ArrayList<>();
 		searchEntity.getTraits(Sort.class).stream().forEach(sort -> {
-			orders.add(findSortPredicate(cauldron, sort));
+			cauldron.add(findSortPredicate(cauldron, sort));
 		});
 
 		// ensure realms are correct
@@ -275,7 +276,7 @@ public class FyodorUltra {
 
 	/**
 	 * Find predicates for a clause.
-	 * 
+	 *
 	 * @param cauldron
 	 * @param clauseContainer
 	 * @return
@@ -308,7 +309,7 @@ public class FyodorUltra {
 
 	/**
 	 * Find a predicate of a filter.
-	 * 
+	 *
 	 * @param baseEntity
 	 * @param cauldron
 	 * @param filter
@@ -329,6 +330,10 @@ public class FyodorUltra {
 		CriteriaBuilder cb = entityManager.getCriteriaBuilder();
 
 		return switch (operator) {
+			// use locate to find the expression within the value
+			// if locate returns 0, expression is not found
+			case IN -> cb.notEqual(cb.locate(cb.literal(String.class.cast(value)), (Expression<String>)expression), 0);
+			case NOT_IN -> cb.equal(cb.locate(cb.literal(String.class.cast(value)), (Expression<String>)expression), 0);
 			case LIKE -> cb.like((Expression<String>) expression, (String) value);
 			case NOT_LIKE -> cb.notLike((Expression<String>) expression, (String) value);
 			case CONTAINS -> cb.like((Expression<String>) expression, "%\"" + (String) value + "\"%");
@@ -348,10 +353,10 @@ public class FyodorUltra {
 	/**
 	 * Find a predicate of a DateTime type filter.
 	 * <br>
-	 * This method requires that the the incoming stringified 
-	 * chrono unit is in the most standard format, effectively 
+	 * This method requires that the the incoming stringified
+	 * chrono unit is in the most standard format, effectively
 	 * toString.
-	 * 
+	 *
 	 * @param baseEntity
 	 * @param cauldron
 	 * @param filter
@@ -421,7 +426,7 @@ public class FyodorUltra {
 	/**
 	 * Return a clean entity code to use in query for valueString containing a
 	 * single entity code array.
-	 * 
+	 *
 	 * @param root
 	 * @return
 	 */
@@ -439,7 +444,7 @@ public class FyodorUltra {
 
 	/**
 	 * Find a predicate for a wildcard filter.
-	 * 
+	 *
 	 * @param root
 	 * @param cauldron
 	 * @param wildcard
@@ -459,7 +464,7 @@ public class FyodorUltra {
 
 	/**
 	 * Find a search order for a sort.
-	 * 
+	 *
 	 * @param baseEntity
 	 * @param cauldron
 	 * @param sort
@@ -497,7 +502,7 @@ public class FyodorUltra {
 
 	/**
 	 * Find the expression for an attribute code.
-	 * 
+	 *
 	 * @param cauldron
 	 * @param code
 	 * @return
@@ -553,7 +558,7 @@ public class FyodorUltra {
 	/**
 	 * Create a select case to use in status check. When used, this instructs the
 	 * search to select a status' ordinal so that number comparison can be done.
-	 * 
+	 *
 	 * @param root
 	 * @return
 	 */
@@ -573,7 +578,7 @@ public class FyodorUltra {
 
 	/**
 	 * Check if a class is of DateTime type
-	 * 
+	 *
 	 * @param c
 	 * @return
 	 */
@@ -584,7 +589,7 @@ public class FyodorUltra {
 	/**
 	 * Get an existing join for an attribute code, or create if not existing
 	 * already.
-	 * 
+	 *
 	 * @param cb
 	 * @param code
 	 * @return
@@ -620,7 +625,7 @@ public class FyodorUltra {
 
 	/**
 	 * Get an entity value of an associated column code.
-	 * 
+	 *
 	 * @param entity
 	 * @param code
 	 * @return
@@ -644,7 +649,7 @@ public class FyodorUltra {
 	/**
 	 * Recursively search an entity using an associated column code and return the
 	 * value.
-	 * 
+	 *
 	 * @param entity
 	 * @param code
 	 * @return
@@ -662,9 +667,10 @@ public class FyodorUltra {
 		// recursion
 		if (array.length > 1) {
 			entity = beUtils.getBaseEntityFromLinkAttribute(entity, attributeCode);
-			if(entity != null) {
-				return getRecursiveColumnLink(entity, code);
-			} else return null;
+			if (entity == null) {
+				return null;
+			}
+			return getRecursiveColumnLink(entity, code);
 		}
 
 		// find value
@@ -675,10 +681,10 @@ public class FyodorUltra {
 			value = entity.getCode();
 		} else {
 			EntityAttribute entityAttribute = beaUtils.getEntityAttribute(entity.getRealm(), entity.getCode(), attributeCode);
-			if (entityAttribute != null)
-				value = entityAttribute.getValueString();
-			else
+			if (entityAttribute == null) {
 				return null;
+			}
+			value = entityAttribute.getAsString();
 		}
 
 		// create answer

@@ -11,7 +11,14 @@ import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 
+import life.genny.qwandaq.Question;
+import life.genny.qwandaq.QuestionQuestion;
+import life.genny.qwandaq.attribute.HEntityAttribute;
+import life.genny.qwandaq.entity.HBaseEntity;
+import life.genny.qwandaq.intf.ICapabilityFilterable;
+import life.genny.qwandaq.utils.*;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.attribute.Attribute;
@@ -29,25 +36,30 @@ import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.managers.Manager;
 import life.genny.qwandaq.managers.capabilities.role.RoleManager;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.CommonUtils;
-import life.genny.qwandaq.utils.DebugTimer;
 
 /*
  * A non-static utility class for managing roles and capabilities.
  * 
- * @author Adam Crow
  * @author Jasper Robison
  * @author Bryn Meachem
  */
 @ApplicationScoped
 public class CapabilitiesManager extends Manager {
-	protected static final Logger log = Logger.getLogger(CapabilitiesManager.class);
+
+	@Inject
+	Logger log;
 
 	@Inject
 	private RoleManager roleMan;
 
 	@Inject
 	CacheManager cm;
+
+	@Inject
+	BaseEntityUtils beUtils;
+
+	@Inject
+	QuestionUtils questionUtils;
 
 	public CapabilitiesManager() {
 		super();
@@ -72,13 +84,13 @@ public class CapabilitiesManager extends Manager {
 // this is a necessary log, since we are trying to minimize how often this
 		// function is called
 		// it is good to see how often it comes up
-		debug("[!][!] Generating new User Capabilities for " + userToken.getUserCode());
+		log.debug("[!][!] Generating new User Capabilities for " + userToken.getUserCode());
 
 		List<BaseEntity> roles = roleMan.getRoles(target);
 		CapabilitySet capabilities;
 		
 		if(!roles.isEmpty()) {
-			debug("User Roles:");
+			log.debug("User Roles:");
 			
 			BaseEntity role = roles.get(0);
 			capabilities = getEntityCapabilities(role);
@@ -129,21 +141,20 @@ public class CapabilitiesManager extends Manager {
 
 	/**
 	 * Get a single entity's capabilities (excluding roles)
-	 * 
-	 * @param productCode
+	 *
 	 * @param target
 	 * @return
 	 */
 	public CapabilitySet getEntityCapabilities(final BaseEntity target) {
-		Set<EntityAttribute> capabilities = new HashSet<>(beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(target.getRealm(), target.getCode(), Prefix.CAP));
-		debug("		- " + target.getCode() + "(" + capabilities.size() + " capabilities)");
+		Set<EntityAttribute> capabilities = new HashSet<>(beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(target.getRealm(), target.getCode(), Prefix.CAP_));
+		log.debug("		- " + target.getCode() + "(" + capabilities.size() + " capabilities)");
 		if(capabilities.isEmpty()) {
 			return new CapabilitySet(target);
 		}
 		CapabilitySet cSet = new CapabilitySet(target);
 		cSet.addAll(capabilities.stream()
 			.map((EntityAttribute ea) -> {
-				trace("	[!] " + ea.getAttributeCode() + " = " + ea.getValueString());
+				log.trace("	[!] " + ea.getAttributeCode() + " = " + ea.getValueString());
 				return Capability.getFromEA(ea);
 			})
 			.collect(Collectors.toSet()));
@@ -155,7 +166,7 @@ public class CapabilitiesManager extends Manager {
 	 * 
 	 * @param productCode The product code
 	 * @param target      The target entity
-	 * @param code        The capability code
+	 * @param capability        The capability attribute
 	 * @param nodes       The nodes to set
 	 */
 	private void updateCapability(String productCode, BaseEntity target, final Attribute capability,
@@ -221,11 +232,11 @@ public class CapabilitiesManager extends Manager {
 		}
 
 		// Check the user token has required capabilities
-		if (!shouldOverride()) {
-			log.error(userToken.getUserCode() + " is NOT ALLOWED TO ADD CAP: " + capabilityAttribute.getCode()
-					+ " TO BASE ENTITITY: " + targetBe.getCode());
-			return targetBe;
-		}
+		// if (!shouldOverride()) {
+		// 	log.error(userToken.getUserCode() + " is NOT ALLOWED TO ADD CAP: " + capabilityAttribute.getCode()
+		// 			+ " TO BASE ENTITITY: " + targetBe.getCode());
+		// 	return targetBe;
+		// }
 
 		// ===== Old capability check ===
 		// if (!hasCapability(cleanCapabilityCode, true, modes)) {
@@ -239,6 +250,24 @@ public class CapabilitiesManager extends Manager {
 		return targetBe;
 	}
 
+	public BaseEntity removeCapabilityFromBaseEntity(String productCode, BaseEntity targetBe, String capabilityCode) {
+		capabilityCode = cleanCapabilityCode(capabilityCode);
+		Attribute attr = qwandaUtils.getAttribute(productCode, capabilityCode);
+		return removeCapabilityFromBaseEntity(productCode, targetBe, attr);
+	}
+
+	public BaseEntity removeCapabilityFromBaseEntity(String productCode, BaseEntity targetBe, Attribute capabilityAttribute) {
+		if (capabilityAttribute == null) {
+			throw new ItemNotFoundException(productCode, "Capability Attribute");
+		}
+
+
+		targetBe.addAttribute(capabilityAttribute, 0.0, "[]");
+		cm.putObject(productCode, targetBe.getCode() + ":" + capabilityAttribute.getCode(), "[]");
+		beUtils.updateBaseEntity(targetBe);
+		return targetBe;
+	}
+
 	public BaseEntity addCapabilityToBaseEntity(String productCode, BaseEntity targetBe, Attribute capabilityAttribute,
 			final List<CapabilityNode> modes) {
 		if (capabilityAttribute == null) {
@@ -246,11 +275,11 @@ public class CapabilitiesManager extends Manager {
 		}
 
 		// Check the user token has required capabilities
-		if (!shouldOverride()) {
-			log.error(userToken.getUserCode() + " is NOT ALLOWED TO ADD CAP: " + capabilityAttribute.getCode()
-					+ " TO BASE ENTITITY: " + targetBe.getCode());
-			return targetBe;
-		}
+		// if (!shouldOverride()) {
+		// 	log.error(userToken.getUserCode() + " is NOT ALLOWED TO ADD CAP: " + capabilityAttribute.getCode()
+		// 			+ " TO BASE ENTITITY: " + targetBe.getCode());
+		// 	return targetBe;
+		// }
 
 		// ===== Old capability check ===
 		// if (!hasCapability(cleanCapabilityCode, true, modes)) {
@@ -322,8 +351,8 @@ public class CapabilitiesManager extends Manager {
 	 */
 	public static String cleanCapabilityCode(final String rawCapabilityCode) {
 		String cleanCapabilityCode = rawCapabilityCode.toUpperCase();
-		if (!cleanCapabilityCode.startsWith(Prefix.CAP)) {
-			cleanCapabilityCode = Prefix.CAP + cleanCapabilityCode;
+		if (!cleanCapabilityCode.startsWith(Prefix.CAP_)) {
+			cleanCapabilityCode = Prefix.CAP_ + cleanCapabilityCode;
 		}
 
 		return cleanCapabilityCode;
@@ -358,7 +387,7 @@ public class CapabilitiesManager extends Manager {
 	/**
 	 * Serialize an array of {@link CapabilityNode}s to a string
 	 * 
-	 * @param modes
+	 * @param capabilities
 	 * @return
 	 */
 	public static String getModeString(CapabilityNode... capabilities) {
@@ -377,5 +406,50 @@ public class CapabilitiesManager extends Manager {
 	// For use in builder patterns
 	public RoleManager getRoleManager() {
 		return roleMan;
+	}
+
+	/**
+	 * @param filterable
+	 * @param capabilityRequirements
+	 * @return
+	 */
+	public boolean updateCapabilityRequirements(String realm, ICapabilityFilterable filterable, Capability... capabilityRequirements) {
+		if(capabilityRequirements == null) {
+			log.error("Attempted to set Capability Requirements to null. Call updateCapabilityRequirements(filterable) instead of updateCapabilityRequirements(filterable, null)");
+			throw new NullParameterException("capabilityRequirements");
+		}
+
+		filterable.setCapabilityRequirements(capabilityRequirements);
+
+		// TODO: Turn this into a sustainable solution
+
+		if(filterable instanceof HBaseEntity) {
+			HBaseEntity be = (HBaseEntity)filterable;
+			log.info("Attaching Capability Requirements: " + CommonUtils.getArrayString(capabilityRequirements) + " to BaseEntity: " + realm + ":" + be.getCode());
+			beUtils.updateBaseEntity(be.toBaseEntity());
+			return true;
+		}
+
+		if(filterable instanceof QuestionQuestion) {
+			QuestionQuestion qq = (QuestionQuestion)filterable;
+			log.info("Attaching Capability Requirements: " + CommonUtils.getArrayString(capabilityRequirements) + " to QuestionQuestion: " + realm + ":" + qq.getParentCode() + ":" + qq.getChildCode());
+			// TODO: Potentially update sub questions
+			return questionUtils.saveQuestionQuestion(qq);
+		}
+
+		if(filterable instanceof Question) {
+			Question q = (Question)filterable;
+			log.info("Attaching Capability Requirements: " + CommonUtils.getArrayString(capabilityRequirements) + " to Question: " + realm + ":" + q.getCode());
+			return questionUtils.saveQuestion(q);
+		}
+
+		if(filterable instanceof HEntityAttribute) {
+			HEntityAttribute ea = (HEntityAttribute)filterable;
+			log.info("Attaching Capability Requirements: " + CommonUtils.getArrayString(capabilityRequirements) + " to EntityAttribute: " + realm + ":" + ea.getBaseEntityCode() + ":" + ea.getAttributeCode());
+			HBaseEntity be = ea.getBaseEntity();
+			beUtils.updateBaseEntity(be.toBaseEntity());
+			return true;
+		}
+		return false;
 	}
 }

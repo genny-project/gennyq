@@ -15,7 +15,6 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.errors.RevisionSyntaxException;
 import org.jboss.logging.Logger;
 
-import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.entity.BaseEntity;
@@ -23,11 +22,7 @@ import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.ServiceToken;
 
 @ApplicationScoped
-public class ImportGithubService {
-
-	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
-
-	static Jsonb jsonb = JsonbBuilder.create();
+public class ImportGithubService extends KogitoService {
 
 	@Inject
 	CacheManager cm;
@@ -46,6 +41,7 @@ public class ImportGithubService {
 
 	@Inject
 	DefUtils defUtils;
+	Logger log;
 
 	/**
 	 * Import github files

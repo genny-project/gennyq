@@ -14,11 +14,12 @@ import javax.json.JsonObjectBuilder;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.constants.Prefix;
+import life.genny.qwandaq.managers.capabilities.role.RoleManager;
 import life.genny.qwandaq.utils.*;
 import org.jboss.logging.Logger;
 
-import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
@@ -28,12 +29,13 @@ import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.response.GennyResponseException;
 import life.genny.qwandaq.kafka.KafkaTopic;
-import life.genny.qwandaq.managers.capabilities.role.RoleManager;
 import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.CommonUtils;
+import life.genny.qwandaq.utils.KafkaUtils;
 
 @ApplicationScoped
-public class NavigationService {
+public class NavigationService extends KogitoService {
 
 	private static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 
@@ -81,6 +83,7 @@ public class NavigationService {
 	 * @param code
 	 */
 	public void redirect(String code) {
+		log.info("^^^^^ Running redirect");
 		// route using code if specified
 		if (code != null) {
 			log.infof("Performing redirect with code %s", code);
@@ -124,16 +127,25 @@ public class NavigationService {
 	 * Send a user's dashboard summary
 	 */
 	public void sendSummary() {
-
+		// fetch user's linked summary
 		BaseEntity user = beUtils.getUserBaseEntity();
 		BaseEntity summary = beUtils.getBaseEntityFromLinkAttribute(user, Attribute.LNK_SUMMARY, true);
 		if (summary == null) {
 			throw new ItemNotFoundException("LNK_SUMMARY for " + user.getCode());
 		}
 		PCM pcm = PCM.from(summary);
+		String userCode = userToken.getUserCode();
 
 		log.infof("Dispatching Summary %s for user %s", user.getCode(), pcm.getCode());
-		tasks.dispatch(user.getCode(), user.getCode(), pcm, PCM_CONTENT, "PRI_LOC1");
+		JsonObject payload = Json.createObjectBuilder()
+				.add("sourceCode", userCode)
+				.add("targetCode", userCode)
+				.add("pcmCode", pcm.getCode())
+				.add("parent", PCM_CONTENT)
+				.add("location", PCM.location(1))
+				.build();
+
+		kogitoUtils.triggerWorkflow(GADAQ, "processQuestions", payload);
 	}
 
 	/**

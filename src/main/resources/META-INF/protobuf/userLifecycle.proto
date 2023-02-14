@@ -1,0 +1,29 @@
+syntax = "proto2"; 
+package life.genny.gadaq.userLifecycle; 
+import "kogito-index.proto";
+import "kogito-types.proto";
+option kogito_model = "UserLifecycle";
+option kogito_id = "userLifecycle";
+
+/* @Indexed */ 
+message UserExchange { 
+	option java_package = "life.genny.kogito.common.models";
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string token = 1; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional string userCode = 2; 
+}
+/* @Indexed */ 
+message UserLifecycle { 
+	option java_package = "life.genny.gadaq";
+	/* @Field(index = Index.YES, store = Store.YES) @SortableField */ 
+	optional string id = 1; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField
+ @VariableInfo(tags="input") */ 
+	optional string userCode = 2; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField
+ @VariableInfo(tags="") */ 
+	optional UserExchange userExchange = 3; 
+	/* @Field(index = Index.NO, store = Store.YES) @SortableField */ 
+	optional org.kie.kogito.index.model.KogitoMetadata metadata = 4; 
+}

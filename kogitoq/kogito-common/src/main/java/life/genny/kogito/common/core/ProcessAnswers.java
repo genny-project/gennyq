@@ -25,6 +25,8 @@ import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.entity.PCM;
+import life.genny.qwandaq.utils.FilterUtils;
 
 /**
  * ProcessAnswers
@@ -54,12 +56,20 @@ public class ProcessAnswers {
 	@Inject
 	QwandaUtils qwandaUtils;
 
+	@Inject
+	FilterUtils filter;
+
 	/**
 	 * @param answer
 	 * @param processData
 	 * @return
 	 */
 	public Boolean isValid(Answer answer, ProcessData processData) {
+		// filter valid
+		if(filter.validFilter(answer.getAttributeCode())) {
+			log.info("Filter Attribute !!!");
+			return false;
+		}
 
 		// ensure targetCode is correct
 		if (!answer.getTargetCode().equals(processData.getProcessEntityCode())) {
@@ -68,26 +78,35 @@ public class ProcessAnswers {
 		}
 
 		// check if the answer is valid for the target
-		Definition definition = beUtils.getDefinition(processData.getDefinitionCode());
-		if (!defUtils.answerValidForDEF(definition, answer)) {
-			log.error("Bad incoming answer... Not saving!");
-			return false;
+		for (String defCode : processData.getDefCodes()) {
+			Definition definition = beUtils.getDefinition(defCode);
+			if (!defUtils.answerValidForDEF(definition, answer)) {
+				log.error("Bad incoming answer... Not saving!");
+				return false;
+			}
 		}
 
 		return true;
 	}
 
 	/**
-	 * Check that uniqueness of BE  (if required) is satisifed .
+	 * Check that uniqueness of BE (if required) is satisifed .
 	 *
-	 * @param processBE. The target BE containing the answer data
-	 * @param defCode. The baseentity type code of the processBE
-	 * @param acceptSubmission. This is modified to reflect whether the submission is valid or not.
+	 * @param processBE.        The target BE containing the answer data
+	 * @param defCode.          The baseentity type code of the processBE
+	 * @param acceptSubmission. This is modified to reflect whether the submission
+	 *                          is valid or not.
 	 * @return Boolean representing whether uniqueness is satisifed
 	 */
 	public Boolean checkUniqueness(ProcessData processData) {
 
-		Definition definition = beUtils.getDefinition(processData.getDefinitionCode());
+		List<Definition> definitions = new ArrayList<>();
+		List<String> defCodes = processData.getDefCodes();
+		for (String defCode : defCodes) {
+			Definition definition = beUtils.getDefinition(defCode);
+			definitions.add(definition);
+		}
+
 		List<Answer> answers = processData.getAnswers();
 
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
@@ -99,17 +118,25 @@ public class ProcessAnswers {
 		if (answers.isEmpty())
 			return acceptSubmission;
 
-		Answer answer = answers.get(answers.size()-1);
-		String attributeCode = answer.getAttributeCode();
-
-		if (qwandaUtils.isDuplicate(definition, null, processEntity, originalTarget)) {
+		// TODO: Might review below in the future
+		if (qwandaUtils.isDuplicate(definitions, null, processEntity, originalTarget)) {
 			String feedback = "Error: This value already exists and must be unique.";
 
-			String parentCode = processData.getQuestionCode();
-			String questionCode = answer.getCode();
+			for(Definition definition : definitions){
+				for(Answer answer : answers) {
+					String attributeCode = answer.getAttributeCode();
 
-			qwandaUtils.sendAttributeErrorMessage(parentCode, questionCode, attributeCode, feedback);
-			acceptSubmission = false;
+					if (definition.findEntityAttribute("UNQ_" + attributeCode).isPresent()) {
+						String questionCode = answer.getCode();
+						PCM mainPcm = beUtils.getPCM(processData.getPcmCode());
+						PCM subPcm = beUtils.getPCM(mainPcm.getLocation(1));
+
+						qwandaUtils.sendAttributeErrorMessage(subPcm.getQuestionCode(), questionCode, attributeCode, feedback);
+						acceptSubmission = false;
+						return acceptSubmission;
+					}
+				}
+			}
 		}
 
 		return acceptSubmission;
@@ -117,12 +144,14 @@ public class ProcessAnswers {
 
 	/**
 	 * Save all answers gathered in the processBE.
-	 * @param targetCode The target of the answers
+	 * 
+	 * @param targetCode    The target of the answers
 	 * @param processBEJson The process entity that is storing the answer data
 	 */
 	public void saveAllAnswers(ProcessData processData) {
-
+		// save answers
 		String targetCode = processData.getTargetCode();
+		processData.getAnswers().forEach(a -> a.setTargetCode(targetCode));
 		processData.getAnswers().forEach(a -> a.setTargetCode(targetCode));
 		BaseEntity target = beUtils.getBaseEntity(targetCode);
 		// iterate our stored process updates and create an answer
@@ -164,13 +193,13 @@ public class ProcessAnswers {
 	/**
 	 * Clear completed or canceled process Cache Entries.
 	 *
-	 * @param productCode 
+	 * @param productCode
 	 * @param processBEcode
 	 * @return Boolean existed
 	 */
 	public Boolean clearProcessCacheEntries(String processId, String targetCode) {
 		qwandaUtils.clearProcessData(processId);
-		log.infof("Cleared caches for %s",processId);
+		log.infof("Cleared caches for %s", processId);
 		return true;
 	}
 

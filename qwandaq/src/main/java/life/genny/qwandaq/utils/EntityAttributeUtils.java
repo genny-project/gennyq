@@ -2,6 +2,7 @@ package life.genny.qwandaq.utils;
 
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.managers.CacheManager;
@@ -52,7 +53,7 @@ public class EntityAttributeUtils {
 	 */
     public EntityAttribute getEntityAttribute(String productCode, String baseEntityCode, String attributeCode, boolean embedAttribute) {
         EntityAttributeKey key = new EntityAttributeKey(productCode, baseEntityCode, attributeCode);
-        EntityAttribute entityAttribute = (EntityAttribute) cm.getPersistableEntity(CacheManager.CACHE_NAME_BASEENTITY_ATTRIBUTE, key);
+        EntityAttribute entityAttribute = (EntityAttribute) cm.getPersistableEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, key);
 		if (embedAttribute && entityAttribute != null) {
 			entityAttribute.setAttribute(cm.getAttribute(productCode, attributeCode));
 		}
@@ -80,7 +81,7 @@ public class EntityAttributeUtils {
 	 */
 	public boolean updateEntityAttribute(EntityAttribute baseEntityAttribute) {
 		EntityAttributeKey key = new EntityAttributeKey(baseEntityAttribute.getRealm(), baseEntityAttribute.getBaseEntityCode(), baseEntityAttribute.getAttributeCode());
-		return cm.saveEntity(CacheManager.CACHE_NAME_BASEENTITY_ATTRIBUTE, key, baseEntityAttribute);
+		return cm.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, key, baseEntityAttribute);
 	}
 
     /**

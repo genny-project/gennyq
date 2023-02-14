@@ -30,6 +30,7 @@ import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.gadaq.search.FilterGroupService;
 
 /**
@@ -57,8 +58,12 @@ public class Events {
 
 	@Inject
 	KogitoUtils kogitoUtils;
+
 	@Inject
 	GraphQLUtils gqlUtils;
+
+	@Inject
+	QwandaUtils qwandaUtils;
 
 	@Inject
 	NavigationService navigation;
@@ -96,6 +101,7 @@ public class Events {
 			return;
 		}
 
+
 		// If the event is a Dropdown then leave it for DropKick
 		if ("DD".equals(msg.getEvent_type()))
 			return;
@@ -106,45 +112,27 @@ public class Events {
 			return;
 		}
 
-		// submit
-		if (Question.QUE_SUBMIT.equals(code) || Question.QUE_NEXT.equals(code)) {
-			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "submit", "");
-			return;
-		}
-
-		// update
-		if (Question.QUE_UPDATE.equals(code)) {
-			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "update", "");
-			return;
-		}
-
-		// undo
-		if (Question.QUE_UNDO.equals(code)) {
-			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "undo", "");
-			return;
-		}
-
-		// redo
-		if (Question.QUE_REDO.equals(code)) {
-			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "redo", "");
-			return;
-		}
-
-		// undo
-		if (Question.QUE_PREVIOUS.equals(code)) {
-			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "previous", "");
+		// submit, next and update
+		if (Question.QUE_SUBMIT.equals(code) || Question.QUE_NEXT.equals(code) || Question.QUE_UPDATE.equals(code)) {
+			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "submit");
 			return;
 		}
 
 		// cancel
 		if (Question.QUE_CANCEL.equals(code)) {
-			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "cancel", "");
+			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "cancel");
 			return;
 		}
 
 		// reset
 		if (Question.QUE_RESET.equals(code)) {
-			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "reset", "");
+			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "reset");
+			return;
+		}
+
+		// previous
+		if (Question.QUE_PREVIOUS.equals(code)) {
+			kogitoUtils.sendSignal(SELF, "processQuestions", processId, "previous");
 			return;
 		}
 
@@ -190,58 +178,35 @@ public class Events {
 			return;
 		}
 
-		// test question
-		if (code.startsWith("TEST_QUE_")) {
-			JsonObject payload = Json.createObjectBuilder()
-					.add("questionCode", code.substring("TEST_".length()))
-					.add("userCode", userToken.getUserCode())
-					.add("sourceCode", userToken.getUserCode())
-					.add("targetCode", targetCode)
-					.build();
-			kogitoUtils.triggerWorkflow(SELF, "testQuestion", payload);
-			return;
-		}
-
 		// add item
 		if (code.startsWith(QUE_ADD_)) {
 			code = StringUtils.removeStart(code, QUE_ADD_);
-			String prefix = cm.getObject(userToken.getProductCode(), Prefix.DEF + code + ":PREFIX", String.class);
+			String prefix = cm.getObject(userToken.getProductCode(), Prefix.DEF_ + code + ":PREFIX", String.class);
 
-			if ("PER".equals(prefix)) {
-				JsonObject json = Json.createObjectBuilder()
-						.add("definitionCode", "DEF_".concat(code))
-						.add("sourceCode", userToken.getUserCode())
-						.build();
+			JsonObject json = Json.createObjectBuilder()
+				.add("definitionCode", Prefix.DEF_.concat(code))
+				.add("sourceCode", userToken.getUserCode())
+				.build();
 
-				kogitoUtils.triggerWorkflow(SELF, "personLifecycle", json);
-				return;
-			}else if ("MSG".equals(prefix)){
-				JsonObject json = Json.createObjectBuilder()
-						.add("definitionCode", "DEF_".concat(code))
-						.add("sourceCode", userToken.getUserCode())
-						.build();
-
-				kogitoUtils.triggerWorkflow(SELF, "messageLifecycle", json);
-				return;
+			// TODO: determine if DEF depends on DEF_USER
+			if (Prefix.PER_.equals(prefix)) {
+				kogitoUtils.triggerWorkflow(SELF, "userLifecycle", json);
 			}
+			
 		}
 
 		// edit item (TODO This needs to be moved into a timer based bpmn)
-		if (ACT_EDIT.equals(code) && parentCode.startsWith(Prefix.SBE)) {
+		if (ACT_EDIT.equals(code) && parentCode.startsWith(Prefix.SBE_)) {
 
 			if (parentCode.startsWith("SBE_")) {
 				JsonObject payload = Json.createObjectBuilder()
-						.add("questionCode", "QUE_BASEENTITY_GRP")
 						.add("userCode", userToken.getUserCode())
 						.add("sourceCode", userToken.getUserCode())
 						.add("targetCode", msg.getData().getTargetCode())
 						.build();
-				kogitoUtils.triggerWorkflow(SELF, "testQuestion", payload);
+				kogitoUtils.triggerWorkflow(SELF, "edit", payload);
 				return;
 			}
-
-			kogitoUtils.triggerWorkflow(SELF, "edit", "eventMessage", msg);
-			return;
 		}
 
 		/**

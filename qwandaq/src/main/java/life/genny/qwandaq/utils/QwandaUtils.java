@@ -1,29 +1,11 @@
 package life.genny.qwandaq.utils;
 
-import static life.genny.qwandaq.attribute.Attribute.PRI_CODE;
-
-import java.util.*;
-import java.util.function.Function;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import javax.persistence.NoResultException;
-
-import life.genny.qwandaq.attribute.EntityAttribute;
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.attribute.HAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
@@ -47,6 +29,23 @@ import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.validation.Validation;
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import javax.persistence.NoResultException;
+import java.util.*;
+import java.util.function.Function;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import static life.genny.qwandaq.attribute.Attribute.PRI_CODE;
+import static life.genny.qwandaq.entity.search.SearchEntity.SBE_COUNT_UNIQUE_PAIRS;
 
 /**
  * A utility class to assist in any Qwanda Engine Question
@@ -57,14 +56,15 @@ import life.genny.qwandaq.validation.Validation;
 @ApplicationScoped
 public class QwandaUtils {
 
-	public static final String[] ACCEPTED_PREFIXES = { Prefix.PRI, Prefix.LNK };
-	public static final String[] EXCLUDED_ATTRIBUTES = { Attribute.PRI_SUBMIT, Attribute.EVT_SUBMIT, Attribute.EVT_CANCEL, Attribute.EVT_NEXT };
+	public static final String[] ACCEPTED_PREFIXES = { Prefix.PRI_, Prefix.LNK_ };
+	public static final String[] EXCLUDED_ATTRIBUTES = { Attribute.PRI_SUBMIT, Attribute.EVT_SUBMIT,
+			Attribute.EVT_CANCEL, Attribute.EVT_NEXT };
 
 	public static String ASK_CACHE_KEY_FORMAT = "%s:ASKS";
 
 	static Jsonb jsonb = JsonbBuilder.create();
 
-	private static Logger log = Logger.getLogger(QwandaUtils.class);
+	static Logger log = Logger.getLogger(QwandaUtils.class);
 
 	@Inject
 	DatabaseUtils databaseUtils;
@@ -136,9 +136,30 @@ public class QwandaUtils {
 
 		cm.putObject(productCode, attribute.getCode(), attribute);
 		attribute.setRealm(productCode);
-		databaseUtils.saveAttribute(attribute);
+		cm.saveAttribute(attribute);
 
 		return cm.getObject(productCode, attribute.getCode(), HAttribute.class).toAttribute();
+	}
+
+	/**
+	 * Get an attribute from the cache
+	 *
+	 * @param attributeCode the code of the attribute to get
+	 * @return Attribute
+	 */
+	public Attribute getAttribute(final String attributeCode) {
+		return getAttribute(userToken.getProductCode(), attributeCode);
+	}
+
+	/**
+	 * Get an attribute from the cache.
+	 *
+	 * @param attributeCode the code of the attribute to get
+	 * @param productCode   the product code
+	 * @return Attribute
+	 */
+	public Attribute getAttribute(final String productCode, final String attributeCode) {
+		return cm.get(productCode, attributeCode);
 	}
 
 	/**
@@ -147,6 +168,10 @@ public class QwandaUtils {
 	 * @param productCode The product of the attributes to initialize
 	 */
 	public void loadAllAttributesIntoCache(String productCode) {
+		if (productCode == null)
+			throw new NullParameterException("productCode");
+		if (StringUtils.isBlank(productCode))
+			throw new DebugException("productCode is blank");
 		if (productCode == null)
 			throw new NullParameterException("productCode");
 		if (StringUtils.isBlank(productCode))
@@ -219,8 +244,8 @@ public class QwandaUtils {
 	 * @return
 	 */
 	public Attribute createButtonEvent(String code, final String name) {
-		if (!code.startsWith(Prefix.EVT))
-			code = Prefix.EVT.concat(code);
+		if (!code.startsWith(Prefix.EVT_))
+			code = Prefix.EVT_.concat(code);
 		code = code.toUpperCase();
 		DataType DTT_EVENT = cm.getAttribute(userToken.getProductCode(), Attribute.EVT_SUBMIT).getDataType();
 		return new Attribute(code, name.concat(" Event"), DTT_EVENT);
@@ -344,13 +369,16 @@ public class QwandaUtils {
 
 	/**
 	 * Recursively set the processId and target down through an ask tree.
+	 * Recursively set the processId and target down through an ask tree.
 	 *
 	 * @param ask       The ask to traverse
 	 * @param processId The processId to set
 	 * @param targetCode    The target code to set
+	 * @param targetCode    The target code to set
 	 */
 	public void recursivelySetInformation(Ask ask, String processId, String targetCode) {
 		ask.setProcessId(processId);
+		ask.setTargetCode(targetCode);
 		ask.setTargetCode(targetCode);
 		if (ask.getChildAsks() != null) {
 			for (Ask child : ask.getChildAsks()) {
@@ -366,6 +394,9 @@ public class QwandaUtils {
 	 * @return boolean
 	 */
 	public static boolean attributeCodeMeetsBasicRequirements(String code) {
+		if (code == null) {
+			throw new NullParameterException("code");
+		}
 		if (code == null) {
 			throw new NullParameterException("code");
 		}
@@ -412,7 +443,7 @@ public class QwandaUtils {
 	 */
 	public boolean hasDepsAnswered(BaseEntity target, String[] dependencies) {
 		for (String d : dependencies) {
-			if (target.getValue(d).isEmpty()) {
+			if (!target.getValue(d).isPresent()) {
 				return false;
 			}
 		}
@@ -428,10 +459,10 @@ public class QwandaUtils {
 	 */
 	public Map<String, Ask> updateDependentAsks(BaseEntity target, Definition definition, Map<String, Ask> flatMapAsks) {
 
-		List<EntityAttribute> dependentAsks = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(definition.getRealm(), definition.getCode(), Prefix.DEP);
+		List<EntityAttribute> dependentAsks = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(definition.getRealm(), definition.getCode(), Prefix.DEP_);
 
 		for (EntityAttribute dep : dependentAsks) {
-			String attributeCode = StringUtils.removeStart(dep.getAttributeCode(), Prefix.DEP);
+			String attributeCode = StringUtils.removeStart(dep.getAttributeCode(), Prefix.DEP_);
 			Ask targetAsk = flatMapAsks.get(attributeCode);
 			if (targetAsk == null)
 				continue;
@@ -449,41 +480,69 @@ public class QwandaUtils {
 	/**
 	 * Check if all Ask mandatory fields are answered for a BaseEntity.
 	 *
-	 * @param asks        The ask to check
+	 * @param asks       The ask to check
 	 * @param baseEntity The BaseEntity to check against
 	 * @return Boolean
 	 */
-	public Boolean mandatoryFieldsAreAnswered(Map<String, Ask> map, BaseEntity baseEntity) {
-
-		// find all the mandatory booleans
-		Boolean answered = true;
+	public static Boolean mandatoryFieldsAreAnswered(Map<String, Ask> map, BaseEntity baseEntity) {
+// find all the mandatory booleans
+		Boolean complete = true;
 
 		// iterate asks to see if mandatorys are answered
 		for (Ask ask : map.values()) {
 
-			String attributeCode = ask.getQuestion().getAttributeCode();
+			String attributeCode = ask.getQuestion().getAttribute().getCode();
 			if (!attributeCodeMeetsBasicRequirements(attributeCode)) {
 				continue;
 			}
 
-			Boolean mandatory = ask.getMandatory();
-			Boolean readonly = ask.getReadonly();
-			EntityAttribute valueAttribute = beaUtils.getEntityAttribute(baseEntity.getRealm(), baseEntity.getCode(), attributeCode);
-			if (valueAttribute != null) {
-				String value = valueAttribute.getValueString();
-
-				// if any are blank, mandatory and non-readonly, then task is not complete
-				if ((mandatory && !readonly) && StringUtils.isBlank(value))
-					answered = false;
-
-				String resultLine = (mandatory ? "[M]" : "[O]") + " : " + attributeCode + " : " + value;
-				log.debug("===> " + resultLine);
-			} else {
-				answered = false;
+			boolean readonly = ask.getReadonly();
+			if (readonly) {
+				continue;
 			}
+
+			boolean mandatory = ask.getMandatory();
+			String value = baseEntity.getValueAsString(attributeCode);
+
+			// if any are blank, mandatory and non-readonly, then task is not complete
+			Boolean answered = false;
+			if ((mandatory && !readonly)) {
+				answered = acceptableAnswer(value);
+
+				// not complete if any mandatories are not answered
+				if (!answered) {
+					complete = false;
+				}
+			}
+
+			String resultLine = (mandatory ? "[M]" : "[O]") + " : " + attributeCode + " : " + value;
+			log.debug("===> " + resultLine + " (" + answered + ")");
 		}
-		log.debug("Mandatory fields are " + (answered ? "ALL" : "not") + " complete");
-		return answered;
+
+		log.debug("Mandatory fields are " + (complete ? "ALL" : "not") + " complete");
+
+		return complete;
+	}
+
+	/**
+	 * Is an acceptable answer.
+	 * @param value
+	 * @return
+	 */
+	private static boolean acceptableAnswer(String value) {
+		if(value == null) {
+			return false;
+		}
+		// block whitespace
+		value = value.trim();
+		if(StringUtils.isBlank(value)) {
+			return false;
+		}
+		if("null".equalsIgnoreCase(value)) {
+			return false;
+		}
+
+		return true;
 	}
 
 	/**
@@ -768,17 +827,22 @@ public class QwandaUtils {
 	 * @return Ask
 	 */
 	public Ask generateAskGroupUsingBaseEntity(BaseEntity baseEntity) {
-
 		// grab def entity
 		Definition definition = defUtils.getDEF(baseEntity);
 
 		String sourceCode = userToken.getUserCode();
 		String targetCode = baseEntity.getCode();
 
+		String name = baseEntity.getName();
+		Optional<EntityAttribute> optName = baseEntity.findEntityAttribute(Attribute.PRI_NAME);
+		if(optName.isPresent() && !StringUtils.isBlank(optName.get().getValueString())) {
+			name = optName.get().getValueString();
+		}
+
 		// create GRP ask
 		Attribute questionAttribute = cm.getAttribute(Attribute.QQQ_QUESTION_GROUP);
 		Question question = new Question(Question.QUE_BASEENTITY_GRP,
-				"Edit " + targetCode + " : " + baseEntity.getName(),
+				"Edit " + baseEntity.getName() + " : " + name,
 				questionAttribute);
 		Ask ask = new Ask(question, sourceCode, targetCode);
 
@@ -790,15 +854,15 @@ public class QwandaUtils {
 		// create a child ask for every valid attribute
 		definition.getBaseEntityAttributes().forEach(entityAttribute -> {
 			String attributeCode = entityAttribute.getAttributeCode();
-			if (!attributeCode.startsWith(Prefix.ATT)) {
+			if (!attributeCode.startsWith(Prefix.ATT_)) {
 				return;
 			}
-			String strippedAttributeCode = StringUtils.removeStart(attributeCode, Prefix.ATT);
+			String strippedAttributeCode = StringUtils.removeStart(attributeCode, Prefix.ATT_);
 			Attribute attribute = cm.getAttribute(baseEntity.getRealm(), strippedAttributeCode);
 
-			String questionCode = Prefix.QUE
-					+ StringUtils.removeStart(StringUtils.removeStart(attribute.getCode(),
-					Prefix.PRI), Prefix.LNK);
+					String questionCode = Prefix.QUE_
+							+ StringUtils.removeStart(StringUtils.removeStart(attribute.getCode(),
+									Prefix.PRI_), Prefix.LNK_);
 
 			Question childQues = new Question(questionCode, attribute.getName(), attribute);
 			Ask childAsk = new Ask(childQues, sourceCode, targetCode);
@@ -831,9 +895,29 @@ public class QwandaUtils {
 
 	/**
 	 * Check if a baseentity satisfies a definitions uniqueness checks.
+	 * 
+	 * @param definition The definitions to check against
+	 * @param answer     An incoming answer
+	 * @param targets    The target entities to check, usually processEntity and
+	 *                   original target
+	 * @return Boolean
+	 */
+	public Boolean isDuplicate(List<Definition> definitions, Answer answer, BaseEntity... targets) {
+		for (Definition definition : definitions) {
+			if (isDuplicate(definition, answer, targets)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * Check if a baseentity satisfies a definitions uniqueness checks.
+	 * 
 	 * @param definition The definition to check against
-	 * @param answer An incoming answer
-	 * @param targets The target entities to check, usually processEntity and original target
+	 * @param answer     An incoming answer
+	 * @param targets    The target entities to check, usually processEntity and
+	 *                   original target
 	 * @return Boolean
 	 */
 	public Boolean isDuplicate(Definition definition, Answer answer, BaseEntity... targets) {
@@ -855,7 +939,7 @@ public class QwandaUtils {
 			if (codes == null)
 				continue;
 
-			SearchEntity searchEntity = new SearchEntity("SBE_COUNT_UNIQUE_PAIRS", "Count Unique Pairs")
+			SearchEntity searchEntity = new SearchEntity(SBE_COUNT_UNIQUE_PAIRS, "Count Unique Pairs")
 					.add(new Filter(PRI_CODE, Operator.LIKE, prefix + "_%"))
 					.setPageStart(0)
 					.setPageSize(1);
@@ -882,10 +966,11 @@ public class QwandaUtils {
 						EntityAttribute valueAttribute = beaUtils.getEntityAttribute(productCode, targetCode, code, false);
 						if (valueAttribute != null) {
 							value = valueAttribute.getValueString();
-							if (value.isEmpty())
+							if (value.isEmpty()) {
 								value = null;
-							if (value != null)
+							} else if (value != null) {
 								break;
+							}
 						}
 					}
 				}
@@ -909,7 +994,6 @@ public class QwandaUtils {
 			if (count != 0)
 				return true;
 		}
-
 		return false;
 	}
 
@@ -955,8 +1039,8 @@ public class QwandaUtils {
 
 		// check each validation against value
 		for (Validation validation : dataType.getValidationList()) {
-
 			String regex = validation.getRegex();
+			log.debug("Checking Validation: " + validation.getCode() + " = " + regex);
 			boolean regexOk = Pattern.compile(regex).matcher(value).matches();
 
 			if (!regexOk) {
@@ -964,7 +1048,7 @@ public class QwandaUtils {
 						+ validation.getErrormsg());
 				return false;
 			}
-
+			log.debug("	- regex passed");
 		}
 		return true;
 	}

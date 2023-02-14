@@ -1,7 +1,5 @@
 package life.genny.fyodor.endpoints;
 
-import java.util.List;
-
 import javax.inject.Inject;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
@@ -13,11 +11,12 @@ import life.genny.fyodor.utils.CapHandler;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.attribute.HEntityAttribute;
+import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.intf.ICapabilityFilterable;
 import life.genny.qwandaq.managers.CacheManager;
+import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.utils.EntityAttributeUtils;
@@ -45,6 +44,9 @@ public class CapabilitiesEndpoint {
 
     @Inject
     EntityAttributeUtils beaUtils;
+
+    @Inject
+    CapabilitiesManager capabilityUtils;
 
     @PUT
     @Path("/ea/{product}/{baseEntityCode}/{attributeCode}")
@@ -88,17 +90,17 @@ public class CapabilitiesEndpoint {
         if(!CapHandler.hasSecureToken(userToken))
             return Response.status(Status.FORBIDDEN).entity("Permission denied. User not Service user!").build();
 
-        ICapabilityFilterable filterableQuestion = dbUtils.findQuestionByCode(productCode, baseEntityCode);
+        ICapabilityFilterable filterableQuestion = questionUtils.getQuestionFromQuestionCode(productCode, baseEntityCode);
         if(filterableQuestion == null) {
             return Response
                 .status(Status.NOT_FOUND)
                 .entity("Could not find BaseEntity: " + baseEntityCode + " in product: " + productCode)
                 .build();
         }
-        
-        dbUtils.updateCapabilityRequirements(productCode, filterableQuestion, capabilityRequirements);
+
+        capabilityUtils.updateCapabilityRequirements(productCode, filterableQuestion, capabilityRequirements);
         BaseEntityKey key = new BaseEntityKey(productCode, baseEntityCode);
-        cm.saveEntity(CacheManager.CACHE_NAME_BASEENTITY, key, (BaseEntity) filterableQuestion);
+        cm.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, (BaseEntity) filterableQuestion);
         return Response.status(Status.OK).build();
     }
     
@@ -112,16 +114,16 @@ public class CapabilitiesEndpoint {
         if(!CapHandler.hasSecureToken(userToken))
             return Response.status(Status.FORBIDDEN).entity("Permission denied. User not Service user!").build();
 
-        ICapabilityFilterable filterableQuestion = dbUtils.findQuestionByCode(productCode, questionCode);
+        ICapabilityFilterable filterableQuestion = questionUtils.getQuestionFromQuestionCode(productCode, questionCode);
         if(filterableQuestion == null) {
             return Response
                 .status(Status.NOT_FOUND)
                 .entity("Could not find question: " + questionCode + " in product: " + productCode)
                 .build();
         }
-        
-        dbUtils.updateCapabilityRequirements(productCode, filterableQuestion, capabilityRequirements);
-        cm.saveQuestion((Question) filterableQuestion);
+
+        capabilityUtils.updateCapabilityRequirements(productCode, filterableQuestion, capabilityRequirements);
+        questionUtils.saveQuestion((Question) filterableQuestion);
         return Response.status(Status.OK).build();
     }
 
@@ -136,16 +138,16 @@ public class CapabilitiesEndpoint {
         if(!CapHandler.hasSecureToken(userToken))
             return Response.status(Status.FORBIDDEN).entity("Permission denied. User not Service user!").build();
 
-        ICapabilityFilterable filterableQuestion = dbUtils.findQuestionQuestionBySourceAndTarget(productCode, sourceCode, targetCode);
+        ICapabilityFilterable filterableQuestion = questionUtils.findQuestionQuestionBySourceAndTarget(productCode, sourceCode, targetCode);
         if(filterableQuestion == null) {
             return Response
                 .status(Status.NOT_FOUND)
                 .entity("Could not find QuestionQuestion: [" + sourceCode + "/" + targetCode + "] in product: " + productCode)
                 .build();
         }
-        
-        dbUtils.updateCapabilityRequirements(productCode, filterableQuestion, capabilityRequirements);
-        cm.saveQuestionQuestion((QuestionQuestion) filterableQuestion);
+
+        capabilityUtils.updateCapabilityRequirements(productCode, filterableQuestion, capabilityRequirements);
+        questionUtils.saveQuestionQuestion((QuestionQuestion) filterableQuestion);
         return Response.status(Status.OK).build();
     }
 }

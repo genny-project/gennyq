@@ -86,7 +86,7 @@ public class DefUtils {
 
 		SearchEntity searchEntity = new SearchEntity(SBE_DEF, "DEF check")
 				.add(new Sort(Attribute.PRI_NAME, Ord.ASC))
-				.add(new Filter(Attribute.PRI_CODE, Operator.STARTS_WITH, Prefix.DEF))
+				.add(new Filter(Attribute.PRI_CODE, Operator.STARTS_WITH, Prefix.DEF_))
 				.setPageStart(0)
 				.setPageSize(10000);
 
@@ -134,7 +134,7 @@ public class DefUtils {
 			throw new NullParameterException("entity");
 
 		// save processing time on particular entities
-		if (entity.getCode().startsWith(Prefix.DEF))
+		if (entity.getCode().startsWith(Prefix.DEF_))
 			return Definition.from(entity);
 
 		List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(entity, Attribute.LNK_DEF);
@@ -183,6 +183,19 @@ public class DefUtils {
 	}
 
 	/**
+	 * Find the corresponding definition for a given {@link BaseEntity} code.
+	 *
+	 * @param baseEntityCode The {@link BaseEntity} code to check
+	 * @return BaseEntity The corresponding definition {@link BaseEntity}
+	 */
+	public Definition getDEF(final String baseEntityCode) {
+		if(baseEntityCode == null)
+			throw new NullParameterException(baseEntityCode);
+		BaseEntity target = beUtils.getBaseEntity(baseEntityCode);
+		return getDEF(target);
+	}
+
+	/**
 	 * A function to determine the whether or not an attribute is allowed to be
 	 * saved to a {@link BaseEntity}.
 	 *
@@ -204,8 +217,8 @@ public class DefUtils {
 	 * A function to determine the whether or not an attribute is allowed to be
 	 * saved to a {@link BaseEntity}
 	 *
-	 * @param definition  the defBE to check with
-	 * @param answer the answer to check
+	 * @param definition the defBE to check with
+	 * @param answer     the answer to check
 	 * @return Boolean
 	 */
 	public Boolean answerValidForDEF(Definition definition, Answer answer) {
@@ -219,15 +232,15 @@ public class DefUtils {
 		String attributeCode = answer.getAttributeCode();
 
 		// allow if it is Capability saved to a Role
-		if (targetCode.startsWith(Prefix.ROL) && attributeCode.startsWith(Prefix.PRM)) {
+		if (targetCode.startsWith(Prefix.ROL_) && attributeCode.startsWith(Prefix.PRM_)) {
 			return true;
-		} else if (targetCode.startsWith(Prefix.SBE) && (attributeCode.startsWith(Prefix.COL) 
-						|| attributeCode.startsWith(Prefix.SRT) || attributeCode.startsWith(Prefix.ACT))) {
+		} else if (targetCode.startsWith(Prefix.SBE_) && (attributeCode.startsWith(Prefix.COL_)
+				|| attributeCode.startsWith(Prefix.SRT_) || attributeCode.startsWith(Prefix.ACT_))) {
 			return true;
 		}
 
 		// just make use of the faster attribute lookup
-		if (!definition.containsEntityAttribute(Prefix.ATT + attributeCode)) {
+		if (!definition.containsEntityAttribute(Prefix.ATT_ + attributeCode)) {
 			log.error(ANSIColour.RED + "Invalid attribute " + attributeCode + " for " + answer.getTargetCode()
 					+ " with def= " + definition.getCode() + ANSIColour.RESET);
 			return false;
@@ -259,16 +272,16 @@ public class DefUtils {
 			throw new NullParameterException("attribute");
 
 		// allow if it is Capability saved to a Role
-		if (defBE.getCode().equals("DEF_ROLE") && attribute.getCode().startsWith(Prefix.PRM)) {
+		if (defBE.getCode().equals("DEF_ROLE") && attribute.getCode().startsWith(Prefix.PRM_)) {
 			return true;
 		} else if (defBE.getCode().equals("DEF_SEARCH")
-				&& (attribute.getCode().startsWith(Prefix.COL) 
-				|| attribute.getCode().startsWith(Prefix.SRT) || attribute.getCode().startsWith(Prefix.ACT))) {
+				&& (attribute.getCode().startsWith(Prefix.COL_) 
+				|| attribute.getCode().startsWith(Prefix.SRT_) || attribute.getCode().startsWith(Prefix.ACT_))) {
 			return true;
 		}
 
 		// just make use of the faster attribute lookup
-		if (!defBE.containsEntityAttribute(Prefix.ATT.concat(attribute.getCode()))) {
+		if (!defBE.containsEntityAttribute(Prefix.ATT_.concat(attribute.getCode()))) {
 			log.error(ANSIColour.RED + "Invalid attribute " + attribute.getCode() + " for "
 					+ defBE.getCode() + ANSIColour.RESET);
 			return false;

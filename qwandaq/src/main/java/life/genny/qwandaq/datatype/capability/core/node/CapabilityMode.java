@@ -8,8 +8,7 @@ import java.util.Map;
  * @author Bryn Meachem
  */
 public enum CapabilityMode {
-    // Priority to be determined by .ordinal()
-    VIEW('V'),
+    VIEW('V'), 
     EDIT('E'),
     ADD('A'),
     DELETE('D');
@@ -18,7 +17,7 @@ public enum CapabilityMode {
      * Cached map to speed up identifier lookup
      * 
      */
-    private static Map<Character, CapabilityMode> idMap = new HashMap<>(values().length);
+    private static final Map<Character, CapabilityMode> idMap = new HashMap<>(values().length);
 
     static {
         for(CapabilityMode value : values()) {

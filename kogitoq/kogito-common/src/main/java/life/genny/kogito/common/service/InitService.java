@@ -1,10 +1,20 @@
 package life.genny.kogito.common.service;
 
+import java.util.*;
+
+import java.util.stream.Collectors;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+
+import org.jboss.logging.Logger;
+
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
+import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.search.SearchEntity;
@@ -25,9 +35,6 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -37,11 +44,7 @@ import java.util.stream.Collectors;
  * @author Jasper Robison
  */
 @ApplicationScoped
-public class InitService {
-
-	private static final Logger log = Logger.getLogger(InitService.class);
-
-	Jsonb jsonb = JsonbBuilder.create();
+public class InitService extends KogitoService {
 
 	@Inject
 	private CacheManager cm;
@@ -59,13 +62,13 @@ public class InitService {
 	private SearchUtils searchUtils;
 
 	@Inject
-	private CacheUtils cacheUtils;
-
-	@Inject
 	private CapabilitiesManager capMan;
 
 	@Inject
 	CacheManager cacheManager;
+
+	@Inject
+	Logger log;
 
 	/**
 	 * Send the Project BaseEntity.
@@ -106,24 +109,45 @@ public class InitService {
 		log.info("Sending Attributes for " + userToken.getProductCode());
 		String productCode = userToken.getProductCode();
 
-		Integer TOTAL_PAGES = cacheUtils.getObject(productCode, "ATTRIBUTE_PAGES", Integer.class);
+		Collection<Attribute> allAttributes = cacheManager.getAttributes(productCode);
 
-		for (int currentPage = 0; currentPage < TOTAL_PAGES + 1; currentPage++) {
-
-			QDataAttributeMessage msg = cacheManager.getObject(productCode,
-					"ATTRIBUTES_P" + currentPage, QDataAttributeMessage.class);
-
-			Collection<Attribute> attributes = msg.getItems().stream()
-					// Filter capability attributes
-					.filter((attribute) -> !attribute.getCode().startsWith(Prefix.CAP))
-					.collect(Collectors.toList());
-
-			msg.setItems(attributes);
-			// set token and send
-			msg.setToken(userToken.getToken());
-			msg.setAliasCode("ATTRIBUTE_MESSAGE_" + (currentPage + 1) + "_OF_" + (TOTAL_PAGES + 1));
-			KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
+		int BATCH_SIZE = 500;
+		int count = 0;
+		int batchNum = 1;
+		int totalAttributesCount = allAttributes.size();
+		int totalBatches = totalAttributesCount / BATCH_SIZE;
+		if (totalAttributesCount % BATCH_SIZE != 0) {
+			totalBatches++;
 		}
+		log.infof("%s Attribute(s) to be sent in %s batch(es).", totalAttributesCount, totalBatches);
+		List<Attribute> attributesBatch = new LinkedList<>();
+		for(Attribute attribute : allAttributes) {
+			if (attribute.getCode().startsWith(Prefix.CAP_)) {
+				continue;
+			}
+			attributesBatch.add(attribute);
+			count++;
+			if (count == BATCH_SIZE) {
+				dispatchAttributesToKafka(attributesBatch, batchNum, totalBatches);
+				attributesBatch.clear();
+				count = 0;
+				batchNum++;
+			}
+		}
+		// Dispatch the last batch, if any
+		if (!attributesBatch.isEmpty()) {
+			dispatchAttributesToKafka(attributesBatch, batchNum, totalBatches);
+		}
+	}
+
+	private void dispatchAttributesToKafka(List<Attribute> attributesBatch, int batchNum, int totalBatches) {
+		QDataAttributeMessage msg = new QDataAttributeMessage();
+		msg.add(attributesBatch);
+		msg.setItems(attributesBatch);
+		// set token and send
+		msg.setToken(userToken.getToken());
+		msg.setAliasCode("ATTRIBUTE_MESSAGE_BATCH_" + batchNum + "_OF_" + totalBatches);
+		KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
 	}
 
 	/**

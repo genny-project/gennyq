@@ -30,18 +30,20 @@ import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.FilterUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 
 @ApplicationScoped
 public class Validator {
-    @Inject
-    private Logger log;
 
 	private Jsonb jsonb = JsonbBuilder.create();
 
 	@ConfigProperty(name = "genny.enable.blacklist", defaultValue = "true")
 	private Boolean enableBlacklist;
+
+	@Inject
+	Logger log;
 
 	@Inject
 	UserToken userToken;
@@ -58,7 +60,10 @@ public class Validator {
 	@Inject
 	EntityAttributeUtils beaUtils;
 
-    /**
+	@Inject
+	FilterUtils filter;
+
+	/**
 	 * @param data
 	 * @return
 	 */
@@ -68,20 +73,22 @@ public class Validator {
 		Set<Ask> asksToSend = new HashSet<>();
 
 		Arrays.stream(answers.getItems())
-				.filter(answer -> answer.getAttributeCode() != null && answer.getAttributeCode().startsWith(Prefix.LNK))
+				.filter(answer -> answer.getAttributeCode() != null && answer.getAttributeCode().startsWith(Prefix.LNK_))
 				.forEach(answer -> {
 					String processId = answer.getProcessId();
-					// TODO: Wondering if we can just get the processData from the first processId we get
+					// TODO: Wondering if we can just get the processData from the first processId
+					// we get
 					ProcessData processData = qwandaUtils.fetchProcessData(processId);
-					Set<Ask> asks = qwandaUtils.fetchAsks(processData);
+					if (processData != null) {
+						Set<Ask> asks = qwandaUtils.fetchAsks(processData);
+						Definition definition = beUtils.getDefinition(processData.getDefinitionCode());
+						BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
 
-					Definition definition = beUtils.getDefinition(processData.getDefinitionCode());
-					BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
+						Map<String, Ask> flatMapAsks = QwandaUtils.buildAskFlatMap(asks);
 
-					Map<String, Ask> flatMapAsks = QwandaUtils.buildAskFlatMap(asks);
-
-					qwandaUtils.updateDependentAsks(processEntity, definition, flatMapAsks);
-					asksToSend.addAll(asks);
+						qwandaUtils.updateDependentAsks(processEntity, definition, flatMapAsks);
+						asksToSend.addAll(asks);
+					}
 				});
 
 		QDataAskMessage msg = new QDataAskMessage(asksToSend);
@@ -94,7 +101,7 @@ public class Validator {
 
 	/**
 	 * Function for validating a data message.
-	 * 
+	 *
 	 * @param data the data to validate
 	 * @return Boolean representing whether the msg is valid
 	 */
@@ -122,7 +129,7 @@ public class Validator {
 
 	/**
 	 * Function for validating an asnwer.
-	 * 
+	 *
 	 * @param answer the answer to validate
 	 * @return Boolean representing whether the answer is valid
 	 */
@@ -133,6 +140,11 @@ public class Validator {
 
 		String attributeCode = answer.getAttributeCode();
 
+		// name search
+		if (Attribute.PRI_SEARCH_TEXT.equals(attributeCode)) {
+			return true;
+		}
+
 		// check that user is the source of message
 		if (!(userToken.getUserCode()).equals(answer.getSourceCode()))
 			return blacklist(String.format("UserCode %s does not match answer source %s", userToken.getUserCode(), answer.getSourceCode()));
@@ -142,6 +154,11 @@ public class Validator {
 		log.info("CHECK Integrity of processId [" + processId + "]");
 		if (StringUtils.isBlank(processId))
 			return blacklist("ProcessId is blank");
+
+		// check filter attributes
+		if (filter.validFilter(attributeCode)) {
+			return true;
+		}
 
 		// Check if inferredflag is set
 		if (answer.getInferred())
@@ -166,31 +183,24 @@ public class Validator {
 		if (!target.getCode().equals(answer.getTargetCode()))
 			return blacklist("TargetCode " + target.getCode() + " does not match answer target " + answer.getTargetCode());
 
-		Definition definition = beUtils.getDefinition(processData.getDefinitionCode());
-		log.infof("Definition %s found for target %s", definition.getCode(), answer.getTargetCode());
+		boolean notValidForAnyDefinition = false;
+		for (String code : processData.getDefCodes()) {
+			Definition definition = beUtils.getDefinition(code);
+			log.infof("Definition %s found for target %s", definition.getCode(), answer.getTargetCode());
 
-		BaseEntity originalTarget = beUtils.getBaseEntity(processData.getTargetCode());
-
-		EntityAttribute baseEntityAttribute = beaUtils.getEntityAttribute(definition.getRealm(), definition.getCode(), "UNQ_" + attributeCode);
-		if (baseEntityAttribute != null) {
-			if (qwandaUtils.isDuplicate(definition, answer, target, originalTarget)) {
-				log.error("Duplicate answer detected for target " + answer.getTargetCode());
-				String feedback = "Error: This value already exists and must be unique.";
-
-				String parentCode = processData.getQuestionCode();
-				String questionCode = answer.getCode();
-
-				qwandaUtils.sendAttributeErrorMessage(parentCode, questionCode, attributeCode, feedback);
-				return false;
+			// check attribute code is allowed by target DEF
+			if (!definition.containsEntityAttribute(Prefix.ATT_ + attributeCode)) {
+				log.warn("AttributeCode " + attributeCode + " not allowed for " + definition.getCode());
+				notValidForAnyDefinition = true;
 			}
 		}
 
-		// TODO: The attribute should be retrieved from askMessage
-		Attribute attribute = cm.getAttribute(attributeCode);
+		if (notValidForAnyDefinition) {
+			return blacklist("Attribute NOT Valid for any definition!");
+		}
 
-		// check attribute code is allowed by target DEF
-		if (!definition.containsEntityAttribute("ATT_" + attributeCode))
-			return blacklist("AttributeCode " + attributeCode + " not allowed for " + definition.getCode());
+		// TODO: The attribute should be retrieved from askMessage
+		Attribute attribute = qwandaUtils.getAttribute(attributeCode);
 
 		temporaryBucketSearchHandler(answer, target, attribute);
 
@@ -299,7 +309,7 @@ public class Validator {
 
 	/**
 	 * A Temporary handler for the bucket quick search.
-	 * 
+	 *
 	 * @param answer    The Answer to handle
 	 * @param target    The target entity
 	 * @param attribute The attribute used

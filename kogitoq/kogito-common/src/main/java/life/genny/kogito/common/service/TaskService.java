@@ -1,7 +1,17 @@
 package life.genny.kogito.common.service;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+
+import org.jboss.logging.Logger;
+
 import life.genny.kogito.common.core.Dispatch;
-import life.genny.kogito.common.core.ProcessAnswers;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.constants.Prefix;
@@ -10,49 +20,16 @@ import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.message.QBulkMessage;
-import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.*;
-import org.jboss.logging.Logger;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import java.lang.invoke.MethodHandles;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
+import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.kafka.KafkaTopic;
+import life.genny.qwandaq.message.QDataAskMessage;
+import life.genny.qwandaq.utils.KafkaUtils;
 
 @ApplicationScoped
-public class TaskService {
-
-	private static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
-
-	Jsonb jsonb = JsonbBuilder.create();
+public class TaskService extends KogitoService {
 
 	@Inject
-	UserToken userToken;
-
-	@Inject
-	QwandaUtils qwandaUtils;
-	@Inject
-	DatabaseUtils databaseUtils;
-	@Inject
-	BaseEntityUtils beUtils;
-	@Inject
-	DefUtils defUtils;
-	@Inject
-	SearchUtils search;
-
-	@Inject
-	NavigationService navigationService;
-
-	@Inject
-	Dispatch dispatch;
-	@Inject
-	ProcessAnswers processAnswers;
+	Logger log;
 
 	/**
 	 * @param processData
@@ -61,69 +38,7 @@ public class TaskService {
 		// check if task exists
 		log.info("Checking if task exists...");
 
-		// re-questions if it does
-	}
-
-	/**
-	 * Fetch PCM and dispatch a readonly PCM tree update.
-	 *
-	 * @param sourceCode
-	 * @param targetCode
-	 * @param pcmCode
-	 * @param parent
-	 * @param location
-	 */
-	public void dispatch(String sourceCode, String targetCode, String pcmCode, String parent, String location) {
-
-		if (pcmCode == null)
-			throw new NullParameterException("pcmCode");
-		PCM pcm = beUtils.getPCM(pcmCode);
-
-		dispatch(sourceCode, targetCode, pcm, parent, location);
-	}
-
-	/**
-	 * Dispatch a readonly PCM tree update.
-	 *
-	 * @param sourceCode
-	 * @param targetCode
-	 * @param pcm
-	 * @param parent
-	 * @param location
-	 */
-	public void dispatch(String sourceCode, String targetCode, PCM pcm, String parent, String location) {
-
-		if (sourceCode == null)
-			throw new NullParameterException("sourceCode");
-		if (targetCode == null)
-			throw new NullParameterException("targetCode");
-		if (pcm == null)
-			throw new NullParameterException("pcm");
-		/*
-		 * no need to check parent and location as they can sometimes be null
-		 */
-
-		// construct basic processData
-		ProcessData processData = new ProcessData();
-		processData.setSourceCode(sourceCode);
-		processData.setTargetCode(targetCode);
-
-		// pcm data
-		processData.setPcmCode(pcm.getCode());
-		processData.setParent(parent);
-		processData.setLocation(location);
-
-		// fetch target
-		BaseEntity target = beUtils.getBaseEntity(targetCode);
-
-		// build and send data
-		QBulkMessage msg = dispatch.build(processData, pcm);
-		msg.add(target);
-		dispatch.sendData(msg);
-
-		// send searches
-		for (String code : processData.getSearches())
-			search.searchTable(code);
+		// TODO: re-questions if it does
 	}
 
 	/**
@@ -141,9 +56,7 @@ public class TaskService {
 	 * @return
 	 */
 	public ProcessData dispatchTask(String sourceCode, String targetCode, String questionCode, String processId,
-			String pcmCode, String parent, String location, String buttonEvents) {
-		log.info("Dispatching...");
-
+									String pcmCode, String parent, String location, String buttonEvents) {
 		if (sourceCode == null) {
 			throw new NullParameterException("sourceCode");
 		}
@@ -164,16 +77,11 @@ public class TaskService {
 			location = PCM.location(1);
 		}
 
-		log.info("==========================================");
-		log.info("processId : " + processId);
-		log.info("questionCode : " + questionCode);
-		log.info("sourceCode : " + sourceCode);
-		log.info("targetCode : " + targetCode);
-		log.info("pcmCode : " + pcmCode);
-		log.info("parent : " + parent);
-		log.info("location : " + location);
-		log.info("buttonEvents : " + buttonEvents);
-		log.info("==========================================");
+		log.info("[ ========== ProcessId : " + processId + " ========== ]");
+		log.info("[  sourceCode : " + sourceCode + " || targetCode : " + targetCode + "  ]");
+		log.info("[  pcmCode : " + pcmCode + " || parent : " + parent + " || location : " + location + "  ]");
+		log.info("[  buttonEvents : " + buttonEvents + " || questionCode : " + questionCode + "  ]");
+		log.info("[ ================================================================== ]");
 
 		// init process data
 		ProcessData processData = new ProcessData();
@@ -190,7 +98,7 @@ public class TaskService {
 		processData.setProcessId(processId);
 		processData.setAnswers(new ArrayList<>());
 
-		String processEntityCode = String.format("QBE_%s", targetCode.substring(4));
+		String processEntityCode = Prefix.QBE_.concat(targetCode.substring(4));
 		processData.setProcessEntityCode(processEntityCode);
 
 		String userCode = userToken != null ? userToken.getUserCode() : null;
@@ -203,8 +111,8 @@ public class TaskService {
 		// update cached process data
 		qwandaUtils.storeProcessData(processData);
 
-		// dispatch data
-		if (!sourceCode.equals(userCode)) { // TODO: Not every task has a userCode
+		// TODO: Not every task has a userCode
+		if (!sourceCode.equals(userCode)) {
 			log.info("Task on hold: User is not source");
 			return processData;
 		}
@@ -212,31 +120,33 @@ public class TaskService {
 		// build data
 		QBulkMessage msg = dispatch.build(processData);
 		Set<Ask> asks = msg.getAsks();
-		Map<String, Ask> flatMapOfAsks = qwandaUtils.buildAskFlatMap(asks);
+		Map<String, Ask> flatMapOfAsks = QwandaUtils.buildAskFlatMap(asks);
 
 		// perform basic checks on attribute codes
 		processData.setAttributeCodes(
-			flatMapOfAsks.values().stream()
-					.map(ask -> ask.getQuestion().getAttributeCode())
-					.filter(code -> qwandaUtils.attributeCodeMeetsBasicRequirements(code))
-					.collect(Collectors.toList())
+				flatMapOfAsks.values().stream()
+						.map(ask -> ask.getQuestion().getAttribute().getCode())
+						.filter(code -> QwandaUtils.attributeCodeMeetsBasicRequirements(code))
+						.collect(Collectors.toList())
 		);
 		log.info("Current Scope Attributes: " + processData.getAttributeCodes());
 
+		boolean readonly = flatMapOfAsks.values().stream()
+				.allMatch(ask -> ask.getReadonly());
+
+		processData.setReadonly(readonly);
+
 		// handle non-readonly if necessary
-		if (dispatch.containsNonReadonly(flatMapOfAsks)) {
+		// use dispatch.containsNonReadonly(flatMapOfAsks) if this does not work
+		if (!readonly) {
 			BaseEntity processEntity = dispatch.handleNonReadonly(processData, asks, flatMapOfAsks, msg);
 			msg.add(processEntity);
 
 			qwandaUtils.storeProcessData(processData);
 			// only cache for non-readonly invocation
 			qwandaUtils.cacheAsks(processData, asks);
-
-			// handle initial dropdown selections
-			// TODO: change to use flatMap
-			for (Ask ask : asks)
-				dispatch.handleDropdownAttributes(ask, ask.getQuestion().getCode(), processEntity, msg);
-
+			// ProcessEntity essentially becomes our target
+			target = processEntity;
 		} else {
 			msg.add(target);
 		}
@@ -250,7 +160,7 @@ public class TaskService {
 		// send searches
 		for (String code : processData.getSearches()) {
 			log.debug("Sending search: " + code);
-			search.searchTable(code);
+			searchUtils.searchTable(code);
 		}
 
 		return processData;
@@ -269,13 +179,34 @@ public class TaskService {
 		if (!processAnswers.isValid(answer, processData))
 			return processData;
 
-		processData.getAnswers().add(answer);
+		// remove previous answers for this attribute
+		List<Answer> answers = processData.getAnswers();
+		for (int i = 0; i < answers.size();) {
+			Answer a = answers.get(i);
+			if (a.getAttributeCode().equals(answer.getAttributeCode())
+					&& a.getTargetCode().equals(answer.getTargetCode())) {
+				log.info("Found duplicate : " + a.getAttributeCode());
+				answers.remove(i);
+			} else {
+				i++;
+			}
+		}
+		// add new answer
+		answers.add(answer);
+		processData.setAnswers(answers);
 
 		Set<Ask> asks = qwandaUtils.fetchAsks(processData);
-		Map<String, Ask> flatMapOfAsks = qwandaUtils.buildAskFlatMap(asks);
+		Map<String, Ask> flatMapOfAsks = QwandaUtils.buildAskFlatMap(asks);
 
 		QBulkMessage msg = new QBulkMessage();
 		dispatch.handleNonReadonly(processData, asks, flatMapOfAsks, msg);
+
+		//check duplicate records
+		if (!processAnswers.checkUniqueness(processData)) {
+			disableButtons(processData);
+
+			return processData;
+		}
 
 		// send data to FE
 		dispatch.sendData(msg);
@@ -293,11 +224,11 @@ public class TaskService {
 	public Boolean submit(ProcessData processData) {
 		// construct bulk message
 		Set<Ask> asks = qwandaUtils.fetchAsks(processData);
-		Map<String, Ask> flatMapOfAsks = qwandaUtils.buildAskFlatMap(asks);
+		Map<String, Ask> flatMapOfAsks = QwandaUtils.buildAskFlatMap(asks);
 
 		// check mandatory fields
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
-		if (!qwandaUtils.mandatoryFieldsAreAnswered(flatMapOfAsks, processEntity))
+		if (!QwandaUtils.mandatoryFieldsAreAnswered(flatMapOfAsks, processEntity))
 			return false;
 
 		// check uniqueness in answers
@@ -338,4 +269,24 @@ public class TaskService {
 		navigationService.redirect();
 	}
 
+	/**
+	 * Disable buttons if it is not valid data
+	 * @param processData Process Data
+	 */
+	public void disableButtons(ProcessData processData) {
+		Set<Ask> asks = qwandaUtils.fetchAsks(processData);
+		Map<String, Ask> flatMapOfAsks = QwandaUtils.buildAskFlatMap(asks);
+
+		for (String event : Dispatch.BUTTON_EVENTS) {
+			Ask evt = flatMapOfAsks.get(event);
+			if (evt != null)
+				evt.setDisabled(true);
+		}
+
+		QDataAskMessage msg = new QDataAskMessage(asks);
+		msg.setReplace(true);
+		msg.setToken(userToken.getToken());
+
+		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
+	}
 }

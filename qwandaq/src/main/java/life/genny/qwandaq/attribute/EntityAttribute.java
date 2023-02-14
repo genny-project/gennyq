@@ -33,6 +33,7 @@ import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.time.DateUtils;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.javamoney.moneta.Money;
 import org.jboss.logging.Logger;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -643,6 +644,11 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 					+ this.attributeCode);
 			return;
 		}
+		if (this.getReadonly()) {
+			log.error("Trying to set the value of a readonly EntityAttribute! " + this.getBaseEntityCode() + ":"
+					+ this.attributeCode);
+			return;
+		}
 
 		if (attribute == null) {
 			setLoopValue(value);
@@ -792,7 +798,6 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 				}
 			}
 		}
-
 		// if the lock is set then 'Lock it in Eddie!'.
 		if (lock) {
 			this.setReadonly(true);
@@ -827,6 +832,11 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 	@XmlTransient
 	public <T> void setLoopValue(final Object value, final Boolean lock) {
 
+		if (this.getReadonly()) {
+			log.error("Trying to set the value of a readonly EntityAttribute! " + this.getBaseEntityCode() + ":"
+					+ this.attributeCode);
+			return;
+		}
 		if (this.getReadonly()) {
 			log.error("Trying to set the value of a readonly EntityAttribute! " + this.getBaseEntityCode() + ":"
 					+ this.attributeCode);
@@ -969,6 +979,23 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 	@JsonbTransient
 	public <T> T getLoopValue() {
 
+		if (getValueString() != null) {
+			return (T) getValueString();
+		} else if (getValueBoolean() != null) {
+			return (T) getValueBoolean();
+		} else if (getValueDateTime() != null) {
+			return (T) getValueDateTime();
+		} else if (getValueDouble() != null) {
+			return (T) getValueDouble();
+		} else if (getValueInteger() != null) {
+			return (T) getValueInteger();
+		} else if (getValueDate() != null) {
+			return (T) getValueDate();
+		} else if (getValueTime() != null) {
+			return (T) getValueTime();
+		} else if (getValueLong() != null) {
+			return (T) getValueLong();
+		}
 		if (getValueString() != null) {
 			return (T) getValueString();
 		} else if (getValueBoolean() != null) {
@@ -1251,8 +1278,6 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 	}
 
 	@Override
-    @JsonbTransient
-    @JsonIgnore
 	public void setCapabilityRequirements(Set<Capability> requirements) {
 		this.capabilityRequirements = requirements;
 	}

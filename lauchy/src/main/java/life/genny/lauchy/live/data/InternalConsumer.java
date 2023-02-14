@@ -1,5 +1,6 @@
 package life.genny.lauchy.live.data;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 
@@ -8,6 +9,7 @@ import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.StartupEvent;
+import io.smallrye.reactive.messaging.annotations.Blocking;
 import life.genny.lauchy.Validator;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.utils.KafkaUtils;
@@ -15,7 +17,12 @@ import life.genny.qwandaq.utils.SecurityUtils;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
 
+@ApplicationScoped
 public class InternalConsumer {
+
+	@ConfigProperty(name = "genny.enable.blacklist", defaultValue = "true")
+	Boolean enableBlacklist;
+
     @Inject
     Logger log;
 
@@ -24,25 +31,26 @@ public class InternalConsumer {
     
 	@Inject
 	Service service;
-    
-	@ConfigProperty(name = "genny.enable.blacklist", defaultValue = "true")
-	Boolean enableBlacklist;
 
     @Inject
     Validator validator;
 
 	void onStart(@Observes StartupEvent ev) {
 
-		if (service.showValues())
+		if (service.showValues()) {
 			log.info("Blacklist        :" + (enableBlacklist ? "ON" : "OFF"));
-		service.fullServiceInit(false);
+		}
+		service.fullServiceInit();
 		log.info("[*] Finished Lauchy Startup!");
 	}
     
+	// TODO: Test async filtering of data. (running beUtils.getBaseEntity(processData.getTargetCode()) in a threaded ctx
 	@Incoming("data")
-	public void filter(String data) {
-        scope.init(data);
+	@Blocking
+	public void getData(String data) {
+
         log.info("Received Message: ".concat(SecurityUtils.obfuscate(data)));
+        scope.init(data);
 
         if(!validator.validateData(data)) {
             log.error("Received message not valid!");
@@ -54,23 +62,5 @@ public class InternalConsumer {
         log.info("Forwarding valid message");
         KafkaUtils.writeMsg(KafkaTopic.VALID_DATA, data);
 	}
-	// @Produces
-	// public Topology buildTopology() {
 
-	// 	// Read the input Kafka topic into a KStream instance.
-	// 	StreamsBuilder builder = new StreamsBuilder();
-	// 	builder
-	// 			.stream("data", Consumed.with(Serdes.String(), Serdes.String()))
-	// 			.peek((k, v) -> scope.init(v))
-	// 			.peek((k, v) -> log.info("Received message: " + stripToken(v)))
-	// 			.filter((k, v) -> (v != null))
-	// 			.filter((k, v) -> validateData(v))
-	// 			.mapValues((k, v) -> handleDependentDropdowns(v))
-	// 			.peek((k, v) -> log.info("Forwarding valid message"))
-	// 			.to("valid_data", Produced.with(Serdes.String(), Serdes.String()));
-
-	// 	Topology top = builder.build();
-	// 	log.info("Constructed topology");
-	// 	return top;
-	// }
 }

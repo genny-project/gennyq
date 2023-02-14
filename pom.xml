@@ -24,7 +24,7 @@
 
 	<properties>
 		<!-- Quarkus Properties -->
-		<quarkus.platform.version>2.14.2.Final</quarkus.platform.version>
+		<quarkus.platform.version>2.15.0.Final</quarkus.platform.version>
 		<quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
 		<quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
 		<quarkus-plugin.version>${quarkus.platform.version}</quarkus-plugin.version>
@@ -59,7 +59,8 @@
 		<genny.version>${project.version}</genny.version>
 
 		<jackson.version>2.13.0</jackson.version>
-		<jandex.version>3.0.3</jandex.version>
+		<jandex.version>3.0.5</jandex.version>
+		<jandex-maven.version>1.2.3</jandex-maven.version>
 		<jjwt.version>0.7.0</jjwt.version>
 
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -134,12 +135,12 @@
 				<module>qwandaq</module>
 				<module>serviceq</module>
 				<module>kogitoq</module>
+				<module>fyodor</module>
 				<module>bridge</module>
 				<module>dropkick</module>
 				<module>lauchy</module>
 				<module>messages</module>
 				<module>shleemy</module>
-				<module>fyodor</module>
 			</modules>
 		</profile>
 		<!-- Native Profile -->
@@ -161,12 +162,12 @@
 				<module>qwandaq</module>
 				<module>serviceq</module>
 				<module>kogitoq</module>
+				<module>fyodor</module>
 				<module>bridge</module>
 				<module>dropkick</module>
 				<module>lauchy</module>
 				<module>messages</module>
 				<module>shleemy</module>
-				<module>fyodor</module>
 			</modules>
 		</profile>
 		<profile>

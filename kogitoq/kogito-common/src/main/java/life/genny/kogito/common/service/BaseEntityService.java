@@ -25,11 +25,7 @@ import javax.json.bind.JsonbBuilder;
 import java.util.Optional;
 
 @ApplicationScoped
-public class BaseEntityService {
-
-	private static final Logger log = Logger.getLogger(BaseEntityService.class);
-
-	Jsonb jsonb = JsonbBuilder.create();
+public class BaseEntityService extends KogitoService {
 
 	@Inject
 	ServiceToken serviceToken;
@@ -51,6 +47,7 @@ public class BaseEntityService {
 
 	@Inject
 	DefUtils defUtils;
+	Logger log;
 
 	/**
 	 * Send a message to perform an update of a persons summary
@@ -69,7 +66,7 @@ public class BaseEntityService {
 
 		if (definitionCode == null)
 			throw new NullParameterException("definitionCode");
-		if (!definitionCode.startsWith(Prefix.DEF))
+		if (!definitionCode.startsWith(Prefix.DEF_))
 			throw new DebugException("Invalid definitionCode: " + definitionCode);
 
 		// fetch the def baseentity
@@ -85,9 +82,17 @@ public class BaseEntityService {
 		return entity.getCode();
 	}
 
-	public String commission(String definitionCode, String processId) {
+	public void decommission(String code) {
 
-		return commission(definitionCode, processId, EEntityStatus.PENDING);
+		if (code == null)
+			throw new NullParameterException("code");
+
+		BaseEntity baseEntity = beUtils.getBaseEntity(code);
+		log.info("Decommissioning entity " + baseEntity.getCode());
+
+		// archive the entity
+		baseEntity.setStatus(EEntityStatus.ARCHIVED);
+		beUtils.updateBaseEntity(baseEntity);
 	}
 
 	public String commission(String definitionCode, String processId, EEntityStatus status) {
@@ -147,19 +152,6 @@ public class BaseEntityService {
 		beUtils.updateBaseEntity(baseEntity);
 	}
 
-	public void decommission(String code) {
-
-		if (code == null)
-			throw new NullParameterException("code");
-
-		BaseEntity baseEntity = beUtils.getBaseEntity(code);
-		log.info("Decommissioning entity " + baseEntity.getCode());
-
-		// archive the entity
-		baseEntity.setStatus(EEntityStatus.ARCHIVED);
-		beUtils.updateBaseEntity(baseEntity);
-	}
-
 	public void setActive(String entityCode) {
 
 		BaseEntity entity = beUtils.getBaseEntity(entityCode);
@@ -186,20 +178,9 @@ public class BaseEntityService {
 		return prefix.get();
 	}
 
-	public String getBaseEntityQuestionGroup(String targetCode) {
-
-		BaseEntity target = beUtils.getBaseEntity(targetCode);
-		BaseEntity definition = defUtils.getDEF(target);
-
-		if (definition == null) {
-			throw new NullParameterException("DEF:" + targetCode);
-		}
-
-		return CommonUtils.replacePrefix(definition.getCode(), "QUE");
-	}
-
 	/**
 	 * Update the email, firstname and lastname in keycloak
+	 * @param userCode the UserCode
 	 */
 	public void updateKeycloak(String userCode) {
 

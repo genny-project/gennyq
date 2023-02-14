@@ -40,6 +40,7 @@ import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.intf.ICapabilityFilterable;
+import life.genny.qwandaq.intf.ICapabilityHiddenFilterable;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 
 /**
@@ -61,7 +62,7 @@ import life.genny.qwandaq.serialization.CoreEntitySerializable;
  * @since 1.0
  */
 @RegisterForReflection
-public class BaseEntity extends CodedEntity implements ICapabilityFilterable, CoreEntityPersistable, BaseEntityIntf {
+public class BaseEntity extends CodedEntity implements CoreEntityPersistable, BaseEntityIntf, ICapabilityHiddenFilterable {
 
 	@Transient
 	private static final long serialVersionUID = 1L;
@@ -93,6 +94,16 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 
 	/**
 	 * Constructor.
+	 *
+	 * @param code the unique code of the core entity
+	 */
+	@ProtoFactory
+	public BaseEntity(final String code) {
+		super(code, code);
+	}
+
+	/**
+	 * Constructor.
 	 * 
 	 * @param code the unique code of the core entity
 	 * @param name the summary name of the core entity
@@ -102,15 +113,12 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 		super(code, name);
 	}
 
-	@JsonbTransient
-	@JsonIgnore
-	public Set<Capability> getCapabilityRequirements() {
+	@Override
+    public Set<Capability> getCapabilityRequirements() {
 		return this.capabilityRequirements;
 	}
 
 	@Override
-	@JsonbTransient
-	@JsonIgnore
 	public void setCapabilityRequirements(Set<Capability> requirements) {
 		this.capabilityRequirements = requirements;
 	}
@@ -362,26 +370,43 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 		}
 
 		// Update the EntityAttribute
-		Optional<EntityAttribute> ea = findEntityAttribute(answer.getAttributeCode());
-		if (ea.isPresent()) {
-			// modify
-			ea.get().setValue(answerLink.getValue());
-			ea.get().setInferred(answer.getInferred());
-			ea.get().setWeight(answer.getWeight());
-			ea.get().setRealm(getRealm());
-			ea.get().setBaseEntityCode(getCode());
-		} else {
-			Attribute attribute = new Attribute();
-			attribute.setCode(answer.getAttributeCode());
-			EntityAttribute newEA = new EntityAttribute(this, attribute, weight, answerLink.getValue());
-			newEA.setRealm(getRealm());
-			newEA.setBaseEntityCode(getCode());
-			newEA.setAttributeCode(answerLink.getAttributeCode());
-			newEA.setInferred(answerLink.getInferred());
-			this.baseEntityAttributes.put(answerLink.getAttributeCode(), newEA);
-		}
+		addEntityAttribute(answerLink.getAttribute(), weight, answer.getInferred(), answerLink.getValue());
 
 		return answerLink;
+	}
+
+	/**
+	 * Add or update an EntityAttribute for this base entity
+	 * @param attribute - attribute to attach to base entity
+	 * @param weight - weight of the entity attribute
+	 * @param inferred - whether or not the value of this EntityAttribute is inferred
+	 * @param value - the value of this EntityAttribute
+	 * @return - the new (or existing) EntityAttribute
+	 * 
+	 * @see {@link EntityAttribute}
+	 */
+	public EntityAttribute addEntityAttribute(Attribute attribute, double weight, boolean inferred, Object value) {
+
+		Optional<EntityAttribute> eaOpt = findEntityAttribute(attribute);
+		EntityAttribute ea;
+		if (eaOpt.isPresent()) {
+			ea = eaOpt.get();
+			// modify
+			ea.setValue(value);
+			ea.setInferred(inferred);
+			ea.setWeight(weight);
+			ea.setRealm(getRealm());
+			ea.setBaseEntityCode(getCode());
+		} else {
+			ea = new EntityAttribute(this, attribute, weight, value);
+			ea.setRealm(getRealm());
+			ea.setBaseEntityCode(getCode());
+			ea.setAttributeCode(attribute.getCode());
+			ea.setInferred(inferred);
+			this.baseEntityAttributes.put(attribute.getCode(), ea);
+		}
+
+		return ea;
 	}
 
 	/**
@@ -822,7 +847,7 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 
 	@JsonbTransient
 	public boolean isPerson() {
-		return getCode().startsWith(Prefix.PER);
+		return getCode().startsWith(Prefix.PER_);
 	}
 
 	@Override
@@ -904,5 +929,16 @@ public class BaseEntity extends CodedEntity implements ICapabilityFilterable, Co
 			}
 		}
 		return clone;
+	}
+
+	/**
+	 * Copy across all metadata about this base entity to another base entity of variable type
+	 * @param other
+	 */
+	public void decorate(BaseEntity other) {
+		other.setCapabilityRequirements(getCapabilityRequirements());
+		other.setRealm(getRealm());
+		other.setRealm(getRealm());
+		other.setBaseEntityAttributes(getBaseEntityAttributes());
 	}
 }

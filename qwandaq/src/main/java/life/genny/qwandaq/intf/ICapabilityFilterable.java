@@ -11,12 +11,15 @@ import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
+
 import life.genny.qwandaq.utils.CommonUtils;
+import life.genny.qwandaq.utils.callbacks.FILogCallback;
 
 public interface ICapabilityFilterable {
+    static Logger log = Logger.getLogger(ICapabilityFilterable.class);
 
     public static Logger getLogger() {
-        return Logger.getLogger(ICapabilityFilterable.class);
+        return log;
     }
     
     public Set<Capability> getCapabilityRequirements();
@@ -37,14 +40,13 @@ public interface ICapabilityFilterable {
 
     public static boolean requirementsMetImpl(CapabilitySet userCapabilities, Set<Capability> capabilityRequirements, ReqConfig requirementsConfig) {
         if(capabilityRequirements == null || capabilityRequirements.isEmpty()) {
-            getLogger().debug("No capabilityRequirements found!");
+            log.debug("No capabilityRequirements found!");
             return true;
         }
 
         boolean requiresAllCaps = requirementsConfig.needsAllCaps();
-        boolean requiresAllModes = requirementsConfig.needsAllNodes();
 
-        getLogger().debug("Testing Capability Config: " + requirementsConfig);
+        log.debug("Testing Capability Config: " + requirementsConfig);
 
         // TODO: Can optimize this into two separate loops if necessary, to save on
         // if checks
@@ -52,7 +54,7 @@ public interface ICapabilityFilterable {
             Optional<Capability> optCap = userCapabilities.parallelStream()
                 .filter(cap -> cap.code.equals(reqCap.code)).findFirst();
             if(!optCap.isPresent()) {
-                getLogger().warn("Could not find cap in user caps: " + reqCap.code);
+                log.warn("Could not find cap in user caps: " + reqCap.code);
                 return false;
             }
 
@@ -69,9 +71,9 @@ public interface ICapabilityFilterable {
 
             if(!passesCheck) {
                 if(requiresAllCaps) {
-                    getLogger().warn("Missing cap permissions " + reqCap);
-                    getLogger().info("User perms: " + cap);
-                    getLogger().info("ReqConfig: " + requirementsConfig);
+                    log.warn("Missing cap permissions " + reqCap);
+                    log.debug("User perms: " + cap);
+                    log.debug("ReqConfig: " + requirementsConfig);
                     return false;
                 }
             } else {
@@ -81,6 +83,31 @@ public interface ICapabilityFilterable {
         }
 
         return requiresAllCaps;
+    }
+
+    /**
+     * Print capability requirements (one per line) using log.debug
+     */
+    public default void printRequirements() {
+        printRequirements(log::debug);
+    }
+
+    /**
+     * Print capability requirements (one per line) using a given log function
+     * @param logLevel - log level / function to use (e.g log::debug or System.out::println)
+     */
+    public default void printRequirements(FILogCallback logLevel) {
+        if(getCapabilityRequirements() == null || getCapabilityRequirements().size() == 0) {
+            logLevel.log("No requirements found to print!");
+            return;
+        }
+        CommonUtils.printCollection(getCapabilityRequirements(), logLevel, (req) -> {
+            return new StringBuilder("  - ")
+                .append(req.code)
+                .append(" = ")
+                .append(CommonUtils.getArrayString(req.nodes))
+                .toString();
+        });
     }
 
 }

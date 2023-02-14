@@ -13,6 +13,8 @@ import life.genny.qwandaq.serialization.question.QuestionInitializerImpl;
 import life.genny.qwandaq.serialization.question.QuestionKeyInitializerImpl;
 import life.genny.qwandaq.serialization.questionquestion.QuestionQuestionInitializerImpl;
 import life.genny.qwandaq.serialization.questionquestion.QuestionQuestionKeyInitializerImpl;
+import life.genny.qwandaq.serialization.userstore.UserStoreInitializerImpl;
+import life.genny.qwandaq.serialization.userstore.UserStoreKeyInitializerImpl;
 import org.infinispan.client.hotrod.DefaultTemplate;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
@@ -116,6 +118,11 @@ public class GennyCache {
 		serCtxInitList.add(questionQuestionSCI);
 		SerializationContextInitializer questionQuestionKeySCI = new QuestionQuestionKeyInitializerImpl();
 		serCtxInitList.add(questionQuestionKeySCI);
+		SerializationContextInitializer userStoreSCI = new UserStoreInitializerImpl();
+		serCtxInitList.add(userStoreSCI);
+		SerializationContextInitializer userStoreKeySCI = new UserStoreKeyInitializerImpl();
+		serCtxInitList.add(userStoreKeySCI);
+
 		return serCtxInitList;
 	}
 
@@ -220,18 +227,6 @@ public class GennyCache {
 	 * @return The Entity
 	 */
 	public boolean putEntityIntoCache(String cacheName, CoreEntityKey key, CoreEntityPersistable value) {
-		return putEntityIntoCache(cacheName, key, value.toSerializableCoreEntity());
-	}
-
-	/**
-	 * Put a CoreEntity into the cache.
-	 *
-	 * @param cacheName The cache to get from
-	 * @param key The key to put the entity under
-	 * @param value The serializable entity
-	 * @return True if the entity is successfully inserted into cache, False otherwise
-	 */
-	public boolean putEntityIntoCache(String cacheName, CoreEntityKey key, CoreEntitySerializable value) {
 		if (remoteCacheManager == null) {
 			initRemoteCacheManager();
 		}
@@ -241,7 +236,7 @@ public class GennyCache {
 		}
 		try {
 			if(value != null) {
-				cache.put(key, value.toPersistableCoreEntity());
+				cache.put(key, value);
 			} else {
 				log.warn("[" + cacheName + "]: Value for " + key.getKeyString() + " is null, nothing to be added.");
 			}
@@ -253,5 +248,35 @@ public class GennyCache {
 		}
 		return true;
 	}
-}
 
+	/**
+	 * Put a CoreEntity into the cache.
+	 *
+	 * @param cacheName The cache to get from
+	 * @param key The key to put the entity under
+	 * @param value The serializable entity
+	 * @return True if the entity is successfully inserted into cache, False otherwise
+	 */
+	public boolean putEntityIntoCache(String cacheName, CoreEntityKey key, CoreEntitySerializable value) {
+		return putEntityIntoCache(cacheName, key, value.toPersistableCoreEntity());
+	}
+
+	/**
+	 * Remove CoreEntity from the cache.
+	 *
+	 * @param cacheName The cache to get from
+	 * @param key The key to the entity to remove
+	 * @return The removed persistable core entity
+	 */
+	public CoreEntityPersistable removeEntityFromCache(String cacheName, CoreEntityKey key) {
+		if (remoteCacheManager == null) {
+			initRemoteCacheManager();
+		}
+		RemoteCache<CoreEntityKey, CoreEntityPersistable> cache = getRemoteCacheForEntity(cacheName);
+		if (cache == null) {
+			throw new NullPointerException("Could not find a cache called " + cacheName);
+		}
+		return cache.remove(key);
+	}
+
+}

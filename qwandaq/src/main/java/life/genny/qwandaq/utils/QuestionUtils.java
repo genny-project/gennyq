@@ -2,11 +2,14 @@ package life.genny.qwandaq.utils;
 
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
+import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.intf.ICapabilityFilterable;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.serialization.baseentity.BaseEntity;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.serialization.question.QuestionKey;
+import life.genny.qwandaq.serialization.questionquestion.QuestionQuestionKey;
 import org.apache.commons.lang3.StringUtils;
 import org.javamoney.moneta.Money;
 import org.jboss.logging.Logger;
@@ -314,5 +317,20 @@ public class QuestionUtils {
                 default -> log.debug("Attribute not related to 'QuestionQuestion' entity, ignored.");
             }
         });
+    }
+
+    public boolean saveQuestion(Question question) {
+        QuestionKey key = new QuestionKey(question.getRealm(), question.getCode());
+        return cacheManager.saveEntity(GennyConstants.CACHE_NAME_QUESTION, key, question);
+    }
+
+    public boolean saveQuestionQuestion(QuestionQuestion questionQuestion) {
+        QuestionQuestionKey key = new QuestionQuestionKey(questionQuestion.getRealm(), questionQuestion.getParentCode(), questionQuestion.getChildCode());
+        return cacheManager.saveEntity(GennyConstants.CACHE_NAME_QUESTION, key, questionQuestion);
+    }
+
+    public QuestionQuestion findQuestionQuestionBySourceAndTarget(String productCode, String sourceCode, String targetCode) {
+        QuestionQuestionKey key = new QuestionQuestionKey(productCode, sourceCode, targetCode);
+        return (QuestionQuestion) cacheManager.getPersistableEntity(GennyConstants.CACHE_NAME_QUESTION, key);
     }
 }

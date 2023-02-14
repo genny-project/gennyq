@@ -1,10 +1,12 @@
 package life.genny.kogito.common.core;
 
 import static life.genny.kogito.common.utils.KogitoUtils.UseService.GADAQ;
+import static life.genny.kogito.common.utils.KogitoUtils.UseService.GADAQ;
 import static life.genny.qwandaq.entity.PCM.PCM_TREE;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -20,11 +22,13 @@ import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.service.TaskService;
 import life.genny.kogito.common.utils.KogitoUtils;
+import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
+import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
 import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
 import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.entity.BaseEntity;
@@ -109,7 +113,7 @@ public class Dispatch {
 		if (questionCode != null) {
 			// fetch question from DB
 			log.info("Generating asks -> " + questionCode + ":" + source.getCode() + ":" + target.getCode());
-			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, userCapabilities);
+			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target, userCapabilities, new ReqConfig());
 			msg.add(ask);
 		}
 		// generate events if specified
@@ -135,13 +139,16 @@ public class Dispatch {
 		}
 		// init if null to stop null pointers
 		if (processData.getAttributeCodes() == null) {
-			processData.setAttributeCodes(new ArrayList<String>());
+			processData.setAttributeCodes(new ArrayList<>());
 		}
 		if (processData.getSearches() == null) {
-			processData.setSearches(new ArrayList<String>());
+			processData.setSearches(new ArrayList<>());
 		}
+
+		String parent = processData.getParent();
+		String location = processData.getLocation();
 		// traverse pcm to build data
-		traversePCM(pcm, source, target, msg, processData);
+		traversePCM(userCapabilities, pcm, source, target, parent, location, msg, processData);
 		// update questionCode after traversing
 		if (questionCode != null)
 			pcm.setQuestionCode(questionCode);
@@ -153,12 +160,11 @@ public class Dispatch {
 		 * This occurs when triggering dispatch for a pcm
 		 * that requires a different target code.
 		 */
-		String parent = processData.getParent();
 		if (parent != null && !PCM_TREE.equals(parent)) {
 			PCM parentPCM = beUtils.getPCM(parent);
-			Integer location = PCM.findLocation(processData.getLocation());
-			log.debug("Updating " + parentPCM.getCode() + " : Location " + location + " -> " + processData.getPcmCode());
-			parentPCM.setLocation(location, processData.getPcmCode());
+			Integer loc = PCM.findLocation(location);
+			log.debug("Updating " + parentPCM.getCode() + " : Location " + loc + " -> " + processData.getPcmCode());
+			parentPCM.setLocation(loc, processData.getPcmCode());
 			msg.add(parentPCM);
 		}
 
@@ -194,15 +200,13 @@ public class Dispatch {
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
 		String code = processEntity.getCode();
 		String processId = processData.getProcessId();
-		for (Ask ask : flatMapOfAsks.values()) {
-			ask.setTargetCode(code);
-			ask.setProcessId(processId);
+
+		log.debug("Target will be: " + code);
+
+		// TODO: This should be done with the flat map, but it was causing issues
+		for (Ask ask : asks) {
+			qwandaUtils.recursivelySetInformation(ask, processId, code);
 		}
-
-		// TODO: This should not be necessary, but is
-		for (Ask ask : asks)
-			qwandaUtils.recursivelySetProcessId(ask, processId);
-
 		// check mandatory fields
 		// TODO: change to use flatMap
 		Boolean answered = qwandaUtils.mandatoryFieldsAreAnswered(flatMapOfAsks, processEntity);
@@ -216,7 +220,7 @@ public class Dispatch {
 				evt.setDisabled(!answered);
 		}
 		// this is ok since flatmap is referencing asks
-		msg.getAsks().addAll(asks);
+		msg.setAsks(asks);
 		// filter unwanted attributes
 		log.debug("ProcessEntity contains " + processEntity.getBaseEntityAttributesMap().size() + " attributes");
 
@@ -226,80 +230,108 @@ public class Dispatch {
 	/**
 	 * Fetch a PCM to traverse, looking for a non-readonly question.
 	 *
-	 * @param code
-	 * @param source
-	 * @param target
-	 * @param map
-	 * @param msg
-	 * @param processData
+	 * @param code The PCM code to begin traversing
+	 * @param source The source baseEntity
+	 * @param target The target baseEntity
+	 * @param msg The bulk message to store data
+	 * @param processData The ProcessData used to init the task
 	 */
-	public void traversePCM(String code, BaseEntity source, BaseEntity target,
-			QBulkMessage msg, ProcessData processData) {
+	public void traversePCM(CapabilitySet userCapabilities, String code, BaseEntity source, BaseEntity target, 
+			String parent, String location, QBulkMessage msg, ProcessData processData) {
 		// add pcm to bulk message
 		PCM pcm = beUtils.getPCM(code);
-		traversePCM(pcm, source, target, msg, processData);
+		traversePCM(userCapabilities, pcm, source, target, parent, location, msg, processData);
 	}
 
 	/**
 	 * Traverse a PCM looking for a non-readonly question.
-	 * 
-	 * @param pcm
-	 * @param source
-	 * @param target
-	 * @return
+	 *
+	 * @param pcm The PCM to Traverse
+	 * @param source The source baseEntity
+	 * @param target The target baseEntity
+	 * @param msg The bulk message to store data
+	 * @param processData The ProcessData used to init the task
 	 */
-	public void traversePCM(PCM pcm, BaseEntity source, BaseEntity target,
-			QBulkMessage msg, ProcessData processData) {
-		String pcmCode = pcm.getCode();
+	public void traversePCM(CapabilitySet userCapabilities, PCM pcm, BaseEntity source, BaseEntity target,
+							String parent, String location, QBulkMessage msg, ProcessData processData) {
+		// TODO: This is too many arguments
+
 		// check capability requirements are met
-		CapabilitySet userCapabilities = capMan.getUserCapabilities(target);
-		if(!pcm.requirementsMet(userCapabilities)) {
-			log.warn("User " + target.getCode() + " Capability requirements not met for pcm: " + pcmCode);
+		String pcmCode = pcm.getCode();
+		log.debug("Traversing " + pcmCode);
+		if (!pcm.requirementsMet(userCapabilities)) {
+			log.warn("User " + source.getCode() + " Capability requirements not met for pcm: " + pcmCode);
 			return;
 		}
-		log.debug("Traversing " + pcmCode);
 
-		// check for a question code
-		String questionCode = pcm.getValueAsString(Attribute.PRI_QUESTION_CODE);
-		if (questionCode != null) {
-			// use pcm target if one is specified
-			String targetCode = pcm.getTargetCode();
-			if (targetCode != null && !targetCode.equals(target.getCode())) {
-				// merge targetCode
-				Map<String, Object> ctxMap = new HashMap<>();
-				ctxMap.put("TARGET", target);
-				targetCode = mergeUtils.merge(targetCode, ctxMap);
-				// update targetCode so it does not re-trigger merging
-				pcm.setTargetCode(targetCode);
-				// providing a null parent & location since it is already set in the parent
-				JsonObject payload = Json.createObjectBuilder()
-						.add("sourceCode", source.getCode())
-						.add("targetCode", targetCode)
-						.add("pcmCode", pcmCode)
-						.build();
-				kogitoUtils.triggerWorkflow(GADAQ, "processQuestions", payload);
-				return;
-			} else if (!Question.QUE_EVENTS.equals(questionCode)) {
-				// add ask to bulk message
-				Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, userCapabilities);
-				msg.add(ask);
-			}
-		} else {
-			log.warn("Question Code is null for " + pcm.getCode());
+		// use pcm target if one is specified
+		String targetCode = pcm.getTargetCode();
+		if (targetCode != null && !targetCode.equals(target.getCode())) {
+			// merge targetCode
+			Map<String, Object> ctxMap = new HashMap<>();
+			ctxMap.put("TARGET", target);
+			targetCode = mergeUtils.merge(targetCode, ctxMap);
+			// update targetCode so it does not re-trigger merging
+			pcm.setTargetCode(targetCode);
+			log.debug("Parent = " + parent + ", location = " + location);
+			JsonObject payload = Json.createObjectBuilder()
+					.add("sourceCode", source.getCode())
+					.add("targetCode", targetCode)
+					.add("pcmCode", pcmCode)
+					.add("parent", parent)
+					.add("location", location)
+					.build();
+			kogitoUtils.triggerWorkflow(GADAQ, "processQuestions", payload);
+			return;
 		}
 
-		// add pcm for sending
-		msg.add(pcm);
 		// iterate locations
-		List<EntityAttribute> locations = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(productCode, pcmCode, Prefix.LOCATION);
+		List<EntityAttribute> locations = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(pcm.getRealm(), pcmCode, Prefix.PRI_LOC);
+
+		List<EntityAttribute> filteredLocations = new ArrayList<>(locations.size());
 		for (EntityAttribute entityAttribute : locations) {
+			if(!entityAttribute.requirementsMet(userCapabilities)) {
+				log.warn("capability requirements not met for location: " + entityAttribute.getAttributeCode() + " (" + entityAttribute.getValueString() + ")");
+				filteredLocations.add(entityAttribute);
+				continue;
+			}
+
+			log.debug("Passed Capabilities check for: " + entityAttribute.getBaseEntityCode() + ":" + entityAttribute.getAttributeCode());
+
 			// recursively check PCM fields
 			String value = entityAttribute.getAsString();
-			if (value.startsWith(Prefix.PCM)) {
-				traversePCM(value, source, target, msg, processData);
-			} else if (value.startsWith(Prefix.SBE)) {
+			if (value.startsWith(Prefix.PCM_)) {
+				parent = pcmCode;
+				location = entityAttribute.getAttributeCode();
+				traversePCM(userCapabilities, value, source, target, parent, location, msg, processData);
+			} else if (value.startsWith(Prefix.SBE_)) {
 				processData.getSearches().add(value);
 			}
+		}
+
+		// ensure these don't go out to frontend
+		for(EntityAttribute badlocation : filteredLocations) {
+			log.debug("Removing: " + badlocation.getAttributeCode() + " from " + badlocation.getBaseEntityCode());
+			pcm.getBaseEntityAttributes().removeIf(loc -> loc.getAttributeCode().equals(badlocation.getAttributeCode()));
+		}
+
+		msg.add(pcm);
+
+		// check for a question code
+		String questionCode = pcm.getQuestionCode();
+		if (questionCode == null) {
+			log.warn("Question Code is null for " + pcmCode + ". Checking ProcessData");
+			questionCode = processData.getQuestionCode();
+			if(questionCode == null) {
+				log.warn("Question Code not set in ProcessData either");
+			}
+		}
+
+		if (!Question.QUE_EVENTS.equals(questionCode) && !StringUtils.isBlank(questionCode)) {
+			// add ask to bulk message
+			log.info("PCM code = " + pcmCode + ", questionCode = " + pcm.getQuestionCode());
+			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target, userCapabilities, new ReqConfig());
+			msg.add(ask);
 		}
 	}
 
@@ -323,10 +355,10 @@ public class Dispatch {
 
 		// split events string by comma
 		for (String name : buttonEvents.split(",")) {
-			String code = name.toUpperCase();
+			String code = name.toUpperCase().replaceAll(" ", "_");
 			// create child and add to ask
 			Attribute attribute = qwandaUtils.createButtonEvent(code, name);
-			Question question = new Question(Prefix.QUE + code, name, attribute);
+			Question question = new Question(Prefix.QUE_ + code, name, attribute);
 			Ask child = new Ask(question, sourceCode, targetCode);
 			ask.add(child);
 		}
@@ -375,7 +407,7 @@ public class Dispatch {
 		}
 
 		// check for dropdown attribute
-		if (ask.getQuestion().getAttributeCode().startsWith(Prefix.LNK)) {
+		if (ask.getQuestion().getAttribute().getCode().startsWith(Prefix.LNK_)) {
 
 			// get list of value codes
 			List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(target,
@@ -392,15 +424,27 @@ public class Dispatch {
 	 * Collect the already selected entities for a dropdown
 	 * and add them to the bulk message.
 	 *
+	 * Collect the already selected entities for a dropdown
+	 * and add them to the bulk message.
+	 *
 	 * @param codes
 	 * @param msg
 	 */
 	public void collectSelections(List<String> codes, QBulkMessage msg) {
-
+		// we don't want to overwrite if the entity is already being sent
+		Set<String> existing = msg.getEntities().stream()
+				.map(e -> e.getCode())
+				.collect(Collectors.toSet());
 		// fetch entity for each and add to msg
 		for (String code : codes) {
-			BaseEntity be = beUtils.getBaseEntity(code);
-			msg.add(be);
+			if (existing.contains(code)) {
+				continue;
+			}
+
+			if(!code.isEmpty()) {
+				BaseEntity be = beUtils.getBaseEntity(code);
+				msg.add(be);
+			}
 		}
 	}
 
@@ -417,21 +461,55 @@ public class Dispatch {
 		Question question = ask.getQuestion();
 		Attribute attribute = question.getAttribute();
 
-		// trigger dropdown search in dropkick
-		JsonObject json = Json.createObjectBuilder()
-				.add("event_type", "DD")
-				.add("data", Json.createObjectBuilder()
-						.add("questionCode", question.getCode())
-						.add("sourceCode", ask.getSourceCode())
-						.add("targetCode", ask.getTargetCode())
-						.add("parentCode", parentCode)
-						.add("value", "")
-						.add("processId", ask.getProcessId()))
-				.add("attributeCode", attribute.getCode())
-				.add("token", userToken.getToken())
-				.build();
+		if (attribute.getCode().startsWith(Prefix.LNK_)) {
 
-		KafkaUtils.writeMsg(KafkaTopic.EVENTS, json.toString());
+			// check for already selected items
+			List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(target, attribute.getCode());
+			if (codes != null && !codes.isEmpty()) {
+
+				// grab selection baseentitys
+				QDataBaseEntityMessage selectionMsg = new QDataBaseEntityMessage();
+				for (String code : codes) {
+					if (StringUtils.isBlank(code)) {
+						continue;
+					}
+
+					BaseEntity selection = beUtils.getBaseEntity(code);
+
+					// Ensure only the PRI_NAME attribute exists in the selection
+					selection = beUtils.addNonLiteralAttributes(selection);
+					selection = beUtils.privacyFilter(selection,
+							Collections.singleton(Attribute.PRI_NAME));
+					selectionMsg.add(selection);
+				}
+
+				// send selections
+				if (selectionMsg.getItems() != null) {
+					selectionMsg.setToken(userToken.getToken());
+					selectionMsg.setReplace(true);
+					log.info("Sending selection items with " + selectionMsg.getItems().size() + " items");
+					KafkaUtils.writeMsg(KafkaTopic.WEBDATA, selectionMsg);
+				} else {
+					log.info("No selection items found for " + attribute.getCode());
+				}
+			}
+
+			// trigger dropdown search in dropkick
+			JsonObject json = Json.createObjectBuilder()
+					.add("event_type", "DD")
+					.add("data", Json.createObjectBuilder()
+							.add("questionCode", question.getCode())
+							.add("sourceCode", ask.getSourceCode())
+							.add("targetCode", ask.getTargetCode())
+							.add("parentCode", parentCode)
+							.add("value", "")
+							.add("processId", ask.getProcessId()))
+					.add("attributeCode", attribute.getCode())
+					.add("token", userToken.getToken())
+					.build();
+
+			KafkaUtils.writeMsg(KafkaTopic.EVENTS, json.toString());
+		}
 	}
 
 	/**
@@ -456,19 +534,16 @@ public class Dispatch {
 	public void sendBaseEntities(List<BaseEntity> baseEntities) {
 
 		Map<String, Object> contexts = new HashMap<>();
-		contexts.put("USER", beUtils.getUserBaseEntity());
+		contexts.put("USER_CODE", beUtils.getUserBaseEntity());
 
-		Attribute priName = cm.getAttribute(Attribute.PRI_NAME);
+		Attribute priName = qwandaUtils.getAttribute(Attribute.PRI_NAME);
 
-		baseEntities.stream().forEach(entity -> {
-			EntityAttribute ea = beaUtils.getEntityAttribute(entity.getRealm(), entity.getCode(), Attribute.PRI_NAME);
-			if (ea == null) {
-				ea = new EntityAttribute(entity, priName, 1.0, entity.getName());
-				beaUtils.updateEntityAttribute(ea);
-			}
-			entity.addAttribute(ea);
-			mergeUtils.mergeBaseEntity(entity, contexts);
-		});
+		baseEntities.stream()
+				.filter(b -> !b.getCode().startsWith(Prefix.QBE_))
+				.forEach(entity -> {
+					entity.addAttribute(new EntityAttribute(entity, priName, 1.0, entity.getName()));
+					mergeUtils.mergeBaseEntity(entity, contexts);
+				});
 
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(baseEntities);
 		msg.setReplace(true);

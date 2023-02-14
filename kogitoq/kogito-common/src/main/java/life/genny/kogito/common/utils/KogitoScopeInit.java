@@ -1,4 +1,4 @@
-package life.genny.kogito.common.service;
+package life.genny.kogito.common.utils;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -9,7 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import io.quarkus.arc.Arc;
-import life.genny.kogito.common.models.S2SData;
+import life.genny.kogito.common.models.TaskExchange;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -35,9 +35,6 @@ public class KogitoScopeInit {
 	@Inject
 	BaseEntityUtils beUtils;
 
-	@Inject
-	KogitoService kogitoService;
-
 	/**
 	 * Default Constructor.
 	 **/
@@ -50,7 +47,7 @@ public class KogitoScopeInit {
 	 *
 	 * @param data The consumed message from kafka
 	 **/
-	public void init(S2SData data) {
+	public void init(TaskExchange data) {
 		log.info("KogitoScopeInit init! " + data);
 		if (data == null) {
 			log.error("Null data received at Kogito Scope Init");
@@ -58,7 +55,6 @@ public class KogitoScopeInit {
 		}
 
 		Arc.container().requestContext().activate();
-		String productCode = data.getProductCode();
 
 		String userTokenStr = KeycloakUtils.getImpersonatedToken(serviceToken, data.getSourceCode());
 		if (StringUtils.isBlank(userTokenStr)) {
@@ -67,9 +63,6 @@ public class KogitoScopeInit {
 
 		data.setToken(userTokenStr);
 		try {
-
-			// init GennyToken from token string
-			// userToken = Arc.container().instance(UserToken.class);
 			userToken.init(userTokenStr);
 
 			log.debug("Token Initialized: " + userToken);
@@ -88,17 +81,5 @@ public class KogitoScopeInit {
 	 **/
 	public void destroy() {
 		Arc.container().requestContext().activate();
-	}
-
-	/**
-	 * Call a kogito api to delete a process.
-	 * 
-	 * @param workflowCode
-	 * @param processId
-	 */
-	public void deleteProcess(String workflowCode, String processId) {
-		log.info("Deleting process " + processId + " for workflow " + workflowCode);
-		kogitoService.deleteProcess(workflowCode, processId);
-
 	}
 }

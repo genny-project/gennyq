@@ -1016,7 +1016,7 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 
 	@JsonbTransient
 	public boolean isPerson() {
-		return getCode().startsWith(Prefix.PER);
+		return getCode().startsWith(Prefix.PER_);
 	}
 
 	@Override

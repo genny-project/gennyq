@@ -14,7 +14,8 @@ export GENNY_SERVICE_USERNAME=service
 export GENNY_KEYCLOAK_URL=https://keycloak.gada.io
 export GENNY_API_URL=${gennyhost}:8280
 export GENNY_KAFKA_URL=${gennyhost}:9092
-export GENNY_CLIENT_ID=kogito-console-quarkus
+#export GENNY_CLIENT_ID=kogito-console-quarkus
+export GENNY_CLIENT_ID=backend
 export GENNY_REALM=internmatch
 export GENNY_KOGITO_SERVICE_URL=${host}:${port}
 export GENNY_KOGITO_DATAINDEX_HTTP_URL=${gennyhost}:8582
@@ -39,7 +40,7 @@ export QUARKUS_OIDC_CLIENT_ID=${GENNY_CLIENT_ID}
 export QUARKUS_INFINISPAN_CLIENT_CLIENT_INTELLIGENCE=BASIC
 export INFINISPAN_CLIENT_HOTROD_SERVER_LIST=alyson.genny.life:11222
 export INFINISPAN_CLIENT_HOTROD_CLIENT_INTELLIGENCE=BASIC
-export FYODOR_SERVICE_API=http://alyson.genny.life:4242
+export FYODOR_SERVICE_API=http://alyson.genny.life:10070
 
 #export GENNY_MYSQL_FULL_URL=alyson.genny.life:3310/gennydb?zeroDateTimeBehavior=convertToNull&serverTimezone=UTC
 export FULL_MYSQL_URL=jdbc:mysql://alyson.genny.life:3310/gennydb?allowPublicKeyRetrieval=true&syscharacterEncoding=utf8mb4&useSSL=FALSE&serverTimezone=UTC&rewriteBatchedStatements=true
@@ -64,4 +65,3 @@ echo "jobservice $GENNY_KOGITO_JOBSERVICE_URL"
 echo "kogito service $GENNY_KOGITO_SERVICE_URL"
 
 ./mvnw clean  quarkus:dev -Ddebug=5480 -Dquarkus.http.port=${port} -DskipTests=true -Dinfinispan.client.hotrod.server_list=10.123.123.123:11222 -Dinfinispan.client.hotrod.client_intelligence=BASIC
-

@@ -18,7 +18,7 @@ public class SavedSearch {
     private String value;
     private String valueCode;
 
-    private boolean beingDate;
+    private String dataType = "String";
 
     public SavedSearch(){}
 
@@ -26,8 +26,9 @@ public class SavedSearch {
      * Constructor
      * @param attributeCode Attribute code
      * @param value Value
+     * @param dataType Data type
      */
-    public SavedSearch(String attributeCode,String value) {
+    public SavedSearch(String attributeCode,String value,String dataType) {
         this.code = attributeCode;
 
         String[] splitted = value.split(FilterConst.SEPARATOR);
@@ -35,16 +36,12 @@ public class SavedSearch {
         this.value = "";
 
         if(splitted.length == 2) {
-            this.operator = splitted[0].replaceFirst(Prefix.SEL,"");
-            this.value = splitted[1].replaceFirst(Prefix.SEL,"");
+            this.operator = splitted[0].replaceFirst(Prefix.SEL_,"");
+            this.value = splitted[1].replaceFirst(Prefix.SEL_,"");
         }
         this.column = getColumnName(attributeCode);
         this.valueCode = value;
-
-        this.beingDate = false;
-        if(this.column.contains(FilterConst.DATETIME)) {
-            this.beingDate = true;
-        }
+        this.dataType = dataType;
     }
 
     /**
@@ -139,22 +136,6 @@ public class SavedSearch {
     }
 
     /**
-     * Being date type
-     * @return being date type
-     */
-    public boolean isBeingDate() {
-        return beingDate;
-    }
-
-    /**
-     * Set date type
-     * @param beingDate Being date type
-     */
-    public void setBeingDate(boolean beingDate) {
-        this.beingDate = beingDate;
-    }
-
-    /**
      * Return the column name
      * @param value Value
      * @return Return the column name
@@ -162,13 +143,17 @@ public class SavedSearch {
     public String getColumnName(String value) {
         String fieldName = "";
         int priIndex = -1;
-        int fieldIndex = value.lastIndexOf(Prefix.FIELD);
+        int fieldIndex = value.lastIndexOf(Prefix.FIELD_);
+        int lnkIndex = value.lastIndexOf(Prefix.LNK_);
         if(fieldIndex > -1) {
-            priIndex = value.indexOf(Prefix.FIELD) + Prefix.FIELD.length();
+            priIndex = value.indexOf(Prefix.FIELD_) + Prefix.FIELD_.length();
             fieldName = value.substring(priIndex);
             return fieldName;
+        }else if(lnkIndex > -1) {
+            fieldName = value.substring(lnkIndex);
+            return fieldName;
         } else {
-            priIndex = value.lastIndexOf(Prefix.PRI);
+            priIndex = value.lastIndexOf(Prefix.PRI_);
         }
         if(priIndex > -1) {
             fieldName = value.substring(priIndex);
@@ -177,4 +162,11 @@ public class SavedSearch {
         return fieldName;
     }
 
+    public String getDataType() {
+        return dataType;
+    }
+
+    public void setDataType(String dataType) {
+        this.dataType = dataType;
+    }
 }

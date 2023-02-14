@@ -19,6 +19,9 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.QuestionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.annotations.jaxrs.PathParam;
@@ -64,6 +67,12 @@ public class Cache {
 
 	@Inject
 	DatabaseUtils databaseUtils;
+
+	@Inject
+	BaseEntityUtils beUtils;
+
+	@Inject
+	QuestionUtils questionUtils;
 
 	/**
 	 * Read an item from the cache and return in json status format.
@@ -186,7 +195,7 @@ public class Cache {
 			try {
 				log.info("Getting BE with code " + key);
 
-				BaseEntity baseEntity = databaseUtils.findBaseEntityByCode(productCode, key);
+				BaseEntity baseEntity = beUtils.getBaseEntity(productCode, key);
 
 				// BaseEntity baseEntity = (BaseEntity) cm.getEntity(CacheManager.CACHE_NAME_BASEENTITY,
 				// 		baseEntityKey);
@@ -199,7 +208,7 @@ public class Cache {
 			} catch (Exception e) {
 				// TODO: just to get something going..
 				log.warn("BaseEntity not found in cache, fetching from database");
-				BaseEntity be = databaseUtils.findBaseEntityByCode(productCode, key);
+				BaseEntity be = beUtils.getBaseEntity(productCode, key);
 
 				return Response.ok(jsonb.toJson(be)).build();
 			}
@@ -239,7 +248,7 @@ public class Cache {
 			if ((json == null) && (key.startsWith("QUE_"))) {
 				Question q;
 				try {
-					q = databaseUtils.findQuestionByCode(productCode, key);
+					q = questionUtils.getQuestionFromQuestionCode(productCode, key);
 				} catch (NoResultException e) {
 					throw new ItemNotFoundException(key, e);
 				}
@@ -279,7 +288,7 @@ public class Cache {
 			// It's a baseentity
 			BaseEntityKey baseEntityKey = new BaseEntityKey(productCode, key);
 			BaseEntity entity = jsonb.fromJson(value, BaseEntity.class);
-			cm.saveEntity(CacheManager.CACHE_NAME_BASEENTITY,
+			cm.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY,
 					baseEntityKey, entity);
 		} else {
 			cm.writeCache(productCode, key, value);
@@ -366,7 +375,7 @@ public class Cache {
 			// It's a baseentity
 			BaseEntityKey baseEntityKey = new BaseEntityKey(productCode, key);
 			BaseEntity entity = jsonb.fromJson(value, BaseEntity.class);
-			cm.saveEntity(CacheManager.CACHE_NAME_BASEENTITY, baseEntityKey, entity);
+			cm.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, baseEntityKey, entity);
 		} else {
 			cm.writeCache(productCode, key, value);
 		}

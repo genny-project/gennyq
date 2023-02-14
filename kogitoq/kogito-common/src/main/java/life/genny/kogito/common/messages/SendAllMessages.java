@@ -138,7 +138,7 @@ public class SendAllMessages extends MessageSendingStrategy {
             if (recipientLnkValue.startsWith(SELF)) { // The coreBE is the recipient
                 ctxMap.put(RECIPIENT, coreBE.getCode());
                 recipientBECode = coreBE.getCode();
-            } else if (recipientLnkValue.startsWith(Prefix.PER)) {
+            } else if (recipientLnkValue.startsWith(Prefix.PER_)) {
                 ctxMap.put(RECIPIENT, recipientLnkValue);
                 recipientBECode = recipientLnkValue;
             } else {
@@ -161,7 +161,7 @@ public class SendAllMessages extends MessageSendingStrategy {
             // check the various formats to get the senderBECode
             if (senderLnkValue.startsWith(USER)) { // The user is the sender
                 ctxMap.put(SENDER, userToken.getUserCode());
-            } else if (senderLnkValue.startsWith(Prefix.PER)) {
+            } else if (senderLnkValue.startsWith(Prefix.PER_)) {
                 ctxMap.put(SENDER, senderLnkValue);
             } else {
                 // check if it is a LNK path (of the coreBE)

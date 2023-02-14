@@ -1,0 +1,8 @@
+package life.genny.qwandaq.serialization.userstore;
+
+message UserStore {
+  optional string realm = 1;
+  optional string usercode = 2;
+  optional string jti_access = 3;
+  optional int64 last_active = 4;
+}

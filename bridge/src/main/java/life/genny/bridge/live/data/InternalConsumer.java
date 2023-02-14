@@ -7,6 +7,7 @@ import io.vertx.core.json.JsonObject;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
+
 import life.genny.bridge.model.grpc.Item;
 import life.genny.bridge.blacklisting.BlackListInfo;
 import life.genny.qwandaq.models.GennyToken;
@@ -125,13 +126,13 @@ public class InternalConsumer {
      */
     public void handleIncomingMessage(String arg) {
 
-        log.debug("Outgoing Payload = " + arg);
+		log.debug("Outgoing Payload = " + arg);
 
-        String incoming = arg;
-        if ("{}".equals(incoming)) {
-            log.warn("The payload sent from the webcmd producer is empty");
-            return;
-        }
+		String incoming = arg;
+		if ("{}".equals(incoming)) {
+			log.warn("The payload sent from the webcmd producer is empty");
+			return;
+		}
 
 		final JsonObject json = new JsonObject(incoming);
 		GennyToken gennyToken = new GennyToken(json.getString("token"));
@@ -153,6 +154,7 @@ public class InternalConsumer {
 		if (!incoming.contains("<body>Unauthorized</body>")) {
 			String sessionState = (String) gennyToken.getAdecodedTokenMap().get("session_state");
 			log.info("Publishing message to session " + sessionState);
+
 			KeycloakTokenPayload payload = KeycloakTokenPayload.decodeToken(json.getString("token"));
 			grpcService.send(payload.jti, Item.newBuilder().setBody(removeKeys(json).toString()).build());
 			bus.publish(sessionState, removeKeys(json));

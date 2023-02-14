@@ -1,205 +1,46 @@
 package life.genny.kogito.common.service;
 
 import life.genny.qwandaq.constants.FilterConst;
-import life.genny.qwandaq.datatype.DataType;
-import life.genny.qwandaq.entity.search.trait.Ord;
-import life.genny.qwandaq.entity.search.trait.Sort;
+import life.genny.qwandaq.entity.search.clause.Or;
 import life.genny.qwandaq.graphql.ProcessData;
-import life.genny.qwandaq.message.*;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.SavedSearch;
-import life.genny.qwandaq.utils.*;
+import life.genny.qwandaq.utils.KafkaUtils;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+
 import org.jboss.logging.Logger;
 
-import javax.inject.Inject;
-import javax.enterprise.context.ApplicationScoped;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import java.lang.invoke.MethodHandles;
-import java.util.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
-import java.util.stream.Collectors;
+import java.util.*;
 
 import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.entity.search.SearchEntity;
-import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.kafka.KafkaTopic;
-import life.genny.qwandaq.managers.CacheManager;
+import life.genny.qwandaq.message.QBulkMessage;
+import life.genny.qwandaq.message.QDataAskMessage;
+import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.constants.Prefix;
-import life.genny.kogito.common.core.Dispatch;
 
 @ApplicationScoped
-public class FilterService {
-    private static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
-    static Jsonb jsonb = JsonbBuilder.create();
+public class FilterService extends KogitoService {
 
     @Inject
-    UserToken userToken;
-
-	@Inject
-	CacheManager cm;
+    Logger log;
 
     @Inject
-    FilterUtils filterUtils;
-
-    @Inject
-    BaseEntityUtils beUtils;
-
-    @Inject
-    EntityAttributeUtils beaUtils;
-
-    @Inject
-    SearchService search;
-    @Inject
-    SearchUtils searchUtils;
-
-    @Inject
-    Dispatch dispatch;
-
-    /**
-     * Get the list of bucket codes with session id
-     * @param originBucketCodes List of bucket codes
-     * @return The list of bucket code with session id
-     */
-    public List<String> getBucketCodesBySearchEntity(List<String> originBucketCodes){
-        List<String> bucketCodes = new ArrayList<>();
-        originBucketCodes.stream().forEach(e -> {
-            SearchEntity searchEntity = cm.getObject(userToken.getProductCode(), e, SearchEntity.class);
-            String searchCode = searchEntity.getCode() + "_" + userToken.getJTI().toUpperCase();
-            bucketCodes.add(searchCode);
-        });
-
-        return bucketCodes;
-    }
-
-    /**
-     * Send search message to front-end
-     * @param searchBE Search base entity from cache
-     */
-    public void sendMessageBySearchEntity(SearchEntity searchBE) {
-        QSearchMessage searchBeMsg = new QSearchMessage(searchBE);
-        searchBeMsg.setToken(userToken.getToken());
-        KafkaUtils.writeMsg(KafkaTopic.SEARCH_EVENTS, searchBeMsg);
-    }
-
-    /**
-     * create new entity attribute by attribute code, name and value
-     * @param attrCode Attribute code
-     * @param attrName Attribute name
-     * @param value Attribute value
-     * @return return json object
-     */
-    public EntityAttribute createEntityAttributeBySortAndSearch(String attrCode, String attrName, Object value){
-        EntityAttribute ea = null;
-        try {
-            BaseEntity base = beUtils.getBaseEntity(attrCode);
-            Attribute attribute = cm.getAttribute(attrCode);
-            ea = new EntityAttribute(base, attribute, 1.0, attrCode);
-            if(!attrName.isEmpty()) {
-                ea.setAttributeName(attrName);
-            }
-            if(value instanceof String) {
-                ea.setValueString(value.toString());
-            }
-            if(value instanceof Integer) {
-                ea.setValueInteger((Integer) value);
-            }
-
-            base.addAttribute(ea);
-        } catch(Exception ex){
-            log.error(ex);
-        }
-        return ea;
-    }
-
-    /**
-     * Send a search PCM with the correct search code.
-     *
-     * @param pcmCode The code of pcm to send
-     * @param searchCode The code of the searhc to send
-     */
-    public void sendSearchPCM(String pcmCode, String searchCode) {
-
-        // update content
-        BaseEntity content = beUtils.getBaseEntity("PCM_CONTENT");
-        Attribute attribute = cm.getAttribute("PRI_LOC1");
-        EntityAttribute ea = new EntityAttribute(content, attribute, 1.0, pcmCode);
-        content.addAttribute(ea);
-
-        // update target pcm
-        BaseEntity pcm = beUtils.getBaseEntity(pcmCode);
-        ea = new EntityAttribute(pcm, attribute, 1.0, searchCode);
-        pcm.addAttribute(ea);
-
-        // send to alyson
-        QDataBaseEntityMessage msg = new QDataBaseEntityMessage(content);
-        msg.add(pcm);
-        msg.setToken(userToken.getToken());
-        msg.setReplace(true);
-        KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
-    }
-
-    /**
-     * Handle search text in bucket page
-     * @param code Message code
-     * @param name Message name
-     * @param value Search text
-     * @param targetCodes List of target codes
-     */
-    public void handleBucketSearch(String code, String name,String value, List<String> targetCodes) {
-        for(String targetCode : targetCodes) {
-            SearchEntity searchBE = cm.getObject(userToken.getProductCode(), targetCode, SearchEntity.class);
-            EntityAttribute ea = createEntityAttributeBySortAndSearch(code, name, value);
-
-            //remove searching text and filter
-            Filter searchText = new Filter(code, Operator.LIKE, value);
-
-            searchBE.remove(searchText);
-
-            //searching text
-            if (!name.isBlank()) {
-                searchBE.add(new Filter(code, Operator.LIKE, value));
-            }
-
-
-            cm.putObject(userToken.getProductCode(), targetCode, searchBE);
-
-            sendMessageBySearchEntity(searchBE);
-            sendSearchPCM(PCM.PCM_PROCESS, targetCode);
-        }
-    }
-
-    /**
-     * Handle quick search
-     * @param value Value
-     * @param targetCode Target code
-     */
-    public void handleQuickSearch(String value, String targetCode) {
-        String sessionCode = searchUtils.sessionSearchCode(targetCode);
-        String cachedKey = FilterConst.LAST_SEARCH + sessionCode;
-
-        SearchEntity searchBE = cm.getObject(userToken.getProductCode(), cachedKey, SearchEntity.class);
-
-        // searching text
-        String newValue = value.replaceFirst("!","");
-        Filter filter = new Filter(Attribute.PRI_NAME, Operator.LIKE, "%" + newValue + "%");
-        searchBE.remove(filter);
-        searchBE.add(filter);
-
-        cm.putObject(userToken.getProductCode(), cachedKey, searchBE);
-
-        String queCode =  targetCode.replaceFirst(Prefix.SBE,Prefix.QUE);
-        search.sendTable(queCode);
-
-    }
+    CacheManager cacheManager;
 
     /**
      * Handle quick search
@@ -207,28 +48,38 @@ public class FilterService {
      * @param coded being coded or not
      * @param targetCode Target code
      */
-    public void handleQuickSearchDropdown(String value,boolean coded,String targetCode) {
+    public void handleQuickSearchDropdown(String value,boolean coded,String targetCode,List<String> definitions) {
         String sessionCode = searchUtils.sessionSearchCode(targetCode);
         String cachedKey = FilterConst.LAST_SEARCH + sessionCode;
 
-        SearchEntity searchBE = cm.getObject(userToken.getProductCode(), cachedKey, SearchEntity.class);
-
+        SearchEntity searchBE = cacheManager.getObject(userToken.getProductCode(), cachedKey, SearchEntity.class);
         clearFilters(searchBE);
+
+        // add definitions
+        for(int i=0;i< definitions.size(); i++){
+            if(i== 0) {
+                searchBE.add(new Filter(Attribute.LNK_DEF, Operator.CONTAINS, definitions.get(i)));
+            } else {
+                searchBE.add(new Or(new Filter(Attribute.LNK_DEF, Operator.CONTAINS, definitions.get(i))));
+            }
+        }
 
         // searching by text or search by code
         Filter filter = null;
         String newValue = value.replaceFirst("!","");
+
         if(coded) {
             filter = new Filter(Attribute.PRI_CODE, Operator.EQUALS, value);
-        }else {
+        } else {
             filter = new Filter(Attribute.PRI_NAME, Operator.LIKE, "%" + newValue + "%");
         }
+
         searchBE.remove(filter);
         searchBE.add(filter);
 
-        cm.putObject(userToken.getProductCode(), cachedKey, searchBE);
+        cacheManager.putObject(userToken.getProductCode(), cachedKey, searchBE);
 
-        String queCode =  targetCode.replaceFirst(Prefix.SBE,Prefix.QUE);
+        String queCode =  targetCode.replaceFirst(Prefix.SBE_,Prefix.QUE_);
         search.sendTable(queCode);
     }
 
@@ -237,7 +88,7 @@ public class FilterService {
      * @param searchBE Search base entity
      */
     public void clearFilters(SearchEntity searchBE) {
-        List<ClauseContainer> cloneList = new ArrayList(searchBE.getClauseContainers());
+        List<ClauseContainer> cloneList = new ArrayList<ClauseContainer>(searchBE.getClauseContainers());
 
         for(ClauseContainer cc : cloneList) {
             searchBE.remove(cc.getFilter());
@@ -246,39 +97,11 @@ public class FilterService {
 
     /**
      * Send filter group and filter column for filter function
-     * @param sbeCode SBE code
-     * @param queGrp Question group code
      * @param questionCode Question code
-     * @param addedJti Adding JTI to search base entity
      */
-    public void sendFilterGroup(String sbeCode, String queGrp,String questionCode,boolean addedJti,String filterCode,
-                                Map<String, Map<String,String>> listFilterParams) {
+    public void sendAddFilterGroup(String questionCode) {
         try {
-            SearchEntity searchBE = cm.getObject(userToken.getProductCode(), sbeCode, SearchEntity.class);
-
-            if (searchBE != null) {
-                QDataBaseEntityMessage msgColumn = filterUtils.getFilterValuesByColum(searchBE);
-
-                msgColumn.setToken(userToken.getToken());
-                msgColumn.setReplace(true);
-                KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msgColumn);
-            }
-        }catch (Exception ex) {
-            log.error(ex);
-        }
-    }
-
-    /**
-     * Send filter group and filter column for filter function
-     * @param queGrp Question group code
-     * @param questionCode Question code
-     * @param filterCode Filter code
-     * @param listFilterParams Filter parameters
-     */
-    public void sendAddFilterGroup(String queGrp,String questionCode, String filterCode,
-                                   Map<String, Map<String,String>> listFilterParams) {
-        try {
-            Ask ask = filterUtils.getFilterGroup(questionCode, filterCode, listFilterParams);
+            Ask ask = filterUtils.getFilterGroup(questionCode);
             QDataAskMessage msgFilterGrp = new QDataAskMessage(ask);
             msgFilterGrp.setToken(userToken.getToken());
 
@@ -301,7 +124,7 @@ public class FilterService {
      */
     public void sendFilterColumns(String sbeCode) {
         try {
-            SearchEntity searchBE = cm.getObject(userToken.getProductCode(), sbeCode, SearchEntity.class);
+            SearchEntity searchBE = cacheManager.getObject(userToken.getProductCode(), sbeCode, SearchEntity.class);
 
             if (searchBE != null) {
                 QDataBaseEntityMessage msgColumn = filterUtils.getFilterValuesByColum(searchBE);
@@ -317,11 +140,11 @@ public class FilterService {
 
     /**
      * Send filter option
-     * @param questionCode Question Code
      * @param sbeCode Search Base Entiy Code
+     * @param dataType Data type
      */
-    public void sendFilterOption(String questionCode, String sbeCode) {
-        QDataBaseEntityMessage msg = filterUtils.getFilterOptionByCode(questionCode);
+    public void sendFilterOption(String sbeCode,String dataType) {
+        QDataBaseEntityMessage msg = filterUtils.getFilterOptionByCode(dataType);
         String sbeCodeJti =  filterUtils.getCleanSBECode(sbeCode);
 
         msg.setToken(userToken.getToken());
@@ -364,15 +187,26 @@ public class FilterService {
         String sessionCode = searchUtils.sessionSearchCode(sbeCode);
         String cachedKey = FilterConst.LAST_SEARCH + sessionCode;
 
-        SearchEntity searchBE = cm.getObject(userToken.getProductCode(), cachedKey, SearchEntity.class);
+        SearchEntity searchBE = cacheManager.getObject(userToken.getProductCode(), cachedKey, SearchEntity.class);
         excludeExtraFilterBySearchBE(searchBE);
+
+        // add definitions
+        List<String> definitions = getListDefinitionCodes(sbeCode);
+
+        for(int i=0;i< definitions.size(); i++){
+            if(i== 0) {
+                searchBE.add(new Filter(Attribute.LNK_DEF, Operator.CONTAINS, definitions.get(i)));
+            } else {
+                searchBE.add(new Or(new Filter(Attribute.LNK_DEF, Operator.CONTAINS, definitions.get(i))));
+            }
+        }
 
         // add conditions by filter parameters
         setFilterParams(searchBE,params);
 
-        cm.putObject(userToken.getProductCode(), cachedKey, searchBE);
+        cacheManager.putObject(userToken.getProductCode(), cachedKey, searchBE);
 
-        String queCode =  sbeCode.replaceFirst(Prefix.SBE,Prefix.QUE);
+        String queCode =  sbeCode.replaceFirst(Prefix.SBE_,Prefix.QUE_);
         search.sendTable(queCode);
     }
 
@@ -388,26 +222,6 @@ public class FilterService {
     }
 
     /**
-     * Get parameter value by key
-     * @param filterParams Filter Parameters
-     * @param key Parameter Key
-     */
-    public String getFilterParamValByKey(Map<String, String> filterParams, String key) {
-        String value = "";
-        if (filterParams == null)
-            return value;
-        if (filterParams.containsKey(key)) {
-            value = filterParams.get(key).toString();
-        }
-        String finalVal = value.replace("\"", "")
-                .replace("[", "").replace("]", "")
-                .replaceFirst(FilterConst.SEL_FILTER_COLUMN_FLC, "");
-
-        return finalVal;
-    }
-
-
-    /**
      * Add filer parameters to search base entity
      * @param searchBE Search base entity
      */
@@ -418,18 +232,26 @@ public class FilterService {
 
             Operator operator = getOperatorByVal(ss.getOperator());
             String value = ss.getValue();
+            // like operation
             if (operator.equals(Operator.LIKE)) {
                 value = "%" + value + "%";
             }
+            // equals operation to link attribute
+            if (operator.equals(Operator.EQUALS) && ss.getColumn().contains(Prefix.LNK_)) {
+                value = "[\"" + Prefix.SEL_ + value + "\"]";
+            }
 
-            boolean isDate = isDateTimeSelected(ss.getCode());
             Filter filter = null;
-
-            if (isDate) {
-                LocalDateTime dateTime = parseStringToDate(value);
-                filter = new Filter(ss.getColumn(), operator, dateTime);
+            if (ss.getDataType().equalsIgnoreCase(FilterConst.DTT_DATE)) {
+                LocalDate date = parseStringToDate(value);
+                filter = new Filter(ss.getColumn(),operator, date);
+            } else if (ss.getDataType().equalsIgnoreCase(FilterConst.DTT_DATETIME)) {
+                LocalDateTime dateTime = parseStringToDateTime(value);
+                filter = new Filter(ss.getColumn(),operator, dateTime);
+            } else if (ss.getDataType().contains(FilterConst.BOOLEAN)) {
+                filter = new Filter(ss.getColumn(),Boolean.valueOf(value));
             } else {
-                filter = new Filter(ss.getColumn(), operator, value);
+                filter = new Filter(ss.getColumn(),operator, value);
             }
 
             searchBE.remove(filter);
@@ -438,110 +260,33 @@ public class FilterService {
     }
 
     /**
-     * Send message to bucket page with filter data
-     * @param queGroup Question group
-     * @param queCode Question code
-     */
-    public void sendQuickSearch(String queGroup,String queCode,String attCode, String targetCode) {
-        Ask ask = new Ask();
-        ask.setName(queGroup);
-        Attribute attribute = new Attribute(Attribute.QQQ_QUESTION_GROUP,Attribute.QQQ_QUESTION_GROUP,new DataType());
-        Question question = new Question(queGroup,queGroup,attribute);
-        ask.setQuestion(question);
-
-        Ask childAsk = new Ask();
-        childAsk.setName(queCode);
-        childAsk.setQuestionCode(queCode);
-        Question childQuestion = new Question();
-        childQuestion.setAttributeCode(attCode);
-        childQuestion.setCode(queCode);
-        childAsk.setAttributeCode(attCode);
-
-        Attribute childAttr = cm.getAttribute(attCode);
-        childAttr.setCode(attCode);
-        childAttr.setName(attCode);
-        childQuestion.setAttribute(childAttr);
-
-        childAsk.setQuestion(childQuestion);
-        childAsk.setTargetCode(targetCode);
-
-        ask.add(childAsk);
-
-        QDataAskMessage msg = new QDataAskMessage(ask);
-        msg.setToken(userToken.getToken());
-        msg.setTargetCode(targetCode);
-        msg.setQuestionCode(queGroup);
-        msg.setMessage(queGroup);
-        msg.setReplace(true);
-        KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
-
-        sendQuickSearchItems(SearchEntity.SBE_DROPDOWN,queGroup,queCode,Attribute.PRI_NAME, "");
-    }
-
-    /**
-     * Send message to bucket page with filter data
-     * @param queGroup Question group
-     * @param queCode Question code
-     */
-    public void sendQuickSearchItems(String sbeCode, String queGroup,String queCode,String lnkCode, String lnkValue) {
-        SearchEntity searchEntity = filterUtils.getQuickOptions(sbeCode,lnkCode,lnkValue);
-        QDataBaseEntityMessage msg = getBaseItemsMsg(queGroup,queCode,lnkCode,lnkValue,searchEntity);
-        KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
-    }
-
-    /**
-     * Send command message type
-     * @param cmdType Cmd Type
-     * @param code Code
-     */
-    public void sendCmdMsgByCodeType(String cmdType, String code){
-        QCmdMessage msg = new QCmdMessage(cmdType,code);
-        msg.setToken(userToken.getToken());
-        msg.setSourceCode(cmdType);
-        msg.setTargetCode(code);
-        KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
-    }
-
-    /**
-     * Return the list of search entity code
-     * @param searchCode Search entity code
-     * @return the list of search entity code
-     */
-    public List<String> getBucketCodesBySBE(String searchCode) {
-        List<String> originBucketCodes = cm.getObject(userToken.getProductCode(), searchCode, List.class);
-        List<String>  bucketCodes = getBucketCodesBySearchEntity(originBucketCodes);
-
-        return bucketCodes;
-    }
-
-    /**
      * Get Search filter by filter value
      * @param filterVal Filter value
      * @return Get Search filter by filter value
      */
     public Operator getOperatorByVal(String filterVal){
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_GREATER_THAN.replaceFirst(Prefix.SEL,""))){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_GREATER_THAN.replaceFirst(Prefix.SEL_,""))){
             return Operator.GREATER_THAN;
         }
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_GREATER_THAN_OR_EQUAL_TO.replaceFirst(Prefix.SEL,""))){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_GREATER_THAN_OR_EQUAL_TO.replaceFirst(Prefix.SEL_,""))){
             return Operator.GREATER_THAN_OR_EQUAL;
         }
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_LESS_THAN.replaceFirst(Prefix.SEL,""))){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_LESS_THAN.replaceFirst(Prefix.SEL_,""))){
             return Operator.LESS_THAN;
         }
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_LESS_THAN_OR_EQUAL_TO.replaceFirst(Prefix.SEL,""))){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_LESS_THAN_OR_EQUAL_TO.replaceFirst(Prefix.SEL_,""))){
             return Operator.LESS_THAN_OR_EQUAL;
         }
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_EQUAL_TO.replaceFirst(Prefix.SEL,""))){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_EQUAL_TO.replaceFirst(Prefix.SEL_,""))){
             return Operator.EQUALS;
         }
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_NOT_EQUAL_TO.replaceFirst(Prefix.SEL,""))){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_NOT_EQUAL_TO.replaceFirst(Prefix.SEL_,""))){
             return Operator.NOT_EQUALS;
         }
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_LIKE.replaceFirst(Prefix.SEL,""))){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_LIKE.replaceFirst(Prefix.SEL_,""))){
             return Operator.LIKE;
         }
-        if(filterVal.equalsIgnoreCase(FilterConst.SEL_NOT_LIKE.replaceFirst(Prefix.SEL,""))){
+        if(filterVal.equalsIgnoreCase(FilterConst.SEL_NOT_LIKE.replaceFirst(Prefix.SEL_,""))){
             return Operator.NOT_LIKE;
         }
 
@@ -553,7 +298,7 @@ public class FilterService {
      * @param strDate Date String
      * @return Return local date time
      */
-    public LocalDateTime parseStringToDate(String strDate){
+    public LocalDateTime parseStringToDateTime(String strDate){
         LocalDateTime localDateTime = null;
         try {
             ZonedDateTime zdt = ZonedDateTime.parse(strDate);
@@ -566,27 +311,30 @@ public class FilterService {
     }
 
     /**
-     * Being whether date time is selected or not
-     * @param questionCode Question code
-     * @return Being whether date time is selected or not
+     * Parse string to local date time
+     * @param strDate Date String
+     * @return Return local date time
      */
-    public boolean isDateTimeSelected(String questionCode){
-        if(questionCode.contains(FilterConst.DATETIME)) return true;
-
-        return false;
+    public LocalDate parseStringToDate(String strDate){
+        LocalDate localDate = null;
+        try {
+            ZonedDateTime zdt = ZonedDateTime.parse(strDate);
+            localDate = zdt.toLocalDate();
+        }catch(Exception ex) {
+            log.info(ex);
+        }
+        return localDate;
     }
 
     /**
      * Send dropdown options data
      * @param group Question group code
      * @param code Question code
-     * @param lnkCode Link code
-     * @param lnkValue Link value
      */
-    public void sendListSavedSearches(String group,String code,String lnkCode,String lnkValue) {
+    public void sendListSavedSearches(String group,String code) {
         String sbeCode = SearchEntity.SBE_SAVED_SEARCH;
-        SearchEntity searchEntity = filterUtils.getListSavedSearch(sbeCode,lnkCode,lnkValue, true);
-        QDataBaseEntityMessage msg = getBaseItemsMsg(group,code,lnkCode,lnkValue,searchEntity);
+        SearchEntity searchEntity = filterUtils.getListSavedSearch(sbeCode,Attribute.PRI_NAME,FilterConst.VALUE);
+        QDataBaseEntityMessage msg = getBaseItemsMsg(group,code,Attribute.PRI_NAME,FilterConst.VALUE,searchEntity);
         KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
     }
 
@@ -604,10 +352,10 @@ public class FilterService {
         QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
 
         try {
+            List<BaseEntity> bases = searchUtils.searchBaseEntitys(search);
+
             msg.setToken(userToken.getToken());
-            search.add(new Sort(Attribute.PRI_CREATED, Ord.DESC));
-            List<BaseEntity> baseEntities = searchUtils.searchBaseEntitys(search);
-            msg.setItems(baseEntities);
+            msg.setItems(bases);
             msg.setParentCode(group);
             msg.setQuestionCode(code);
             msg.setLinkCode(lnkCode);
@@ -621,41 +369,6 @@ public class FilterService {
     }
 
     /**
-     * Return the list of dropdown items
-     * @param sbeCode Search base entity code
-     * @param lnkCode Link code
-     * @param lnkValue Link value
-     * @return The list of dropdown items
-     */
-    public List<BaseEntity> getListSavedSearches(String sbeCode,String lnkCode,String lnkValue) {
-        String sbeJti = getSearchBaseEntityCodeByJTI(SearchEntity.SBE_SAVED_SEARCH);
-        SearchEntity search = filterUtils.getListSavedSearch(sbeJti,lnkCode,lnkValue, true);
-        List<BaseEntity> bases = searchUtils.searchBaseEntitys(search);
-        return bases;
-    }
-
-    /**
-     * Return search base entity code with jti
-     *
-     * @param sbeCode Search Base entity
-     * @return Search base entity with jti
-     */
-    public String getSearchBaseEntityCodeByJTI(String sbeCode) {
-        String newSbeCode = filterUtils.getSearchBaseEntityCodeByJTI(sbeCode);
-        return newSbeCode;
-    }
-
-    /**
-     * Strip search base entity code without jti
-     *
-     * @param orgSbe Original search base entity code
-     * @return Search base entity code without jti
-     */
-    public String getCleanSBECode(String orgSbe) {
-        return filterUtils.getCleanSBECode(orgSbe);
-    }
-
-    /**
      * Send a partial PCM with the correct search code.
      *
      * @param pcmCode The code of pcm to send
@@ -664,23 +377,14 @@ public class FilterService {
      * @param queValCode Question value code
      */
     public void sendPartialPCM(String pcmCode,String loc,String queValCode) {
-        BaseEntity pcm = beUtils.getBaseEntity(pcmCode);
-        EntityAttribute ea = beaUtils.getEntityAttribute(pcm.getRealm(), pcmCode, loc);
-        if (ea != null) {
-            ea.setValue(queValCode);
-            ea.setValueString(queValCode);
+        BaseEntity pcm = beUtils.getBaseEntity(pcmCode, true);
+        for(EntityAttribute ea : pcm.getBaseEntityAttributes()) {
+            if(ea.getAttributeCode().equalsIgnoreCase(loc)) {
+                ea.setValue(queValCode);
+                ea.setValueString(queValCode);
+            }
         }
         sendBaseEntity(pcm);
-    }
-
-    public void sendFilterDetailsByPcm(String pcmCode,String queCode,String attCode,String value) {
-        BaseEntity base = beUtils.getBaseEntity(pcmCode);
-        EntityAttribute ea = beaUtils.getEntityAttribute(base.getRealm(), pcmCode, PCM.location(1));
-        if (ea != null) {
-            ea.setValue(attCode);
-            ea.setValueString(attCode);
-        }
-        sendBaseEntity(base);
     }
 
     /**
@@ -694,37 +398,24 @@ public class FilterService {
             String strJson = jsonb.toJson(param.getValue());
             SavedSearch ss = jsonb.fromJson(strJson, SavedSearch.class);
 
-            Attribute att= cm.getAttribute(ss.getColumn());
+            Attribute att= qwandaUtils.getAttribute(ss.getColumn());
             StringBuilder valBuild = new StringBuilder(ss.getColumn());
             valBuild.append(FilterConst.SEPARATOR+ss.getOperator());
             valBuild.append(FilterConst.SEPARATOR+ss.getValueCode());
 
             StringBuilder lblBuild = new StringBuilder(att.getName() + FilterConst.SEPARATOR);
-            lblBuild.append(ss.getOperator().replaceFirst(Prefix.SEL, "").replaceAll("_"," "));
-            lblBuild.append(FilterConst.SEPARATOR + ss.getValue().replaceFirst(Prefix.SEL, ""));
+            lblBuild.append(ss.getOperator().replaceFirst(Prefix.SEL_, "").replaceAll("_"," "));
+            lblBuild.append(FilterConst.SEPARATOR + ss.getValue().replaceFirst(Prefix.SEL_, ""));
 
             EntityAttribute ea = new EntityAttribute(base, att, 1.0, null);
             ea.setAttributeName(lblBuild.toString());
             ea.setValue(valBuild.toString());
             ea.setValueString(valBuild.toString());
 
-            base.addAttribute(ea);
+            base.getBaseEntityAttributes().add(ea);
         }
 
         sendBaseEntity(base,parentCode,queCode,false);
-    }
-
-    /**
-     * Send base entity
-     * @param baseEntity Base entity
-     */
-    public void sendBaseEntity(BaseEntity baseEntity,String parentCode,String queCode) {
-        QDataBaseEntityMessage msg = new QDataBaseEntityMessage(baseEntity);
-        msg.setToken(userToken.getToken());
-        msg.setParentCode(parentCode);
-        msg.setQuestionCode(queCode);
-        msg.setReplace(true);
-        KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
     }
 
     /**
@@ -751,59 +442,15 @@ public class FilterService {
         KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
     }
 
-
-    /**
-     * Send base entity
-     * @param baseEntities List of base entities
-     * @param parentCode Parent code
-     * @param queCode Question Code
-     * @param replaced Replaced message or not
-     */
-    public void sendBaseEntity(List<BaseEntity> baseEntities,String parentCode,String queCode,boolean replaced) {
-        QDataBaseEntityMessage msg = new QDataBaseEntityMessage();
-
-        msg.setToken(userToken.getToken());
-        msg.setParentCode(parentCode);
-        msg.setQuestionCode(queCode);
-
-        msg.setItems(baseEntities);
-        msg.setReplace(replaced);
-        KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
-    }
-
-    /**
-     * Send ask
-     * @param ask Ask
-     * @param queGrp question group
-     * @param replaced Replaced message
-     */
-    public void sendAsk(Ask ask,String queGrp, boolean replaced) {
-        QDataAskMessage msg = new QDataAskMessage(ask);
-
-        msg.setToken(userToken.getToken());
-        msg.setTargetCode(queGrp);
-        msg.setMessage(queGrp);
-        msg.setReplace(replaced);
-        KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
-    }
-
-    /**
-     * Return the link value code
-     * @param value Filter Value
-     * @return Return the link value code
-     */
-    public String getLinkValueCode(String value) {
-        return  filterUtils.getLinkValueCode(value);
-    }
-
     /**
      * Send dropdown options data
      * @param code Question code
      * @param lnkCode Link code
      * @param lnkValue Link value
      */
-    public void sendListQuickSearches(String queGrp, String code,String sbeCode,String lnkCode,String lnkValue,String typing) {
-        SearchEntity searchEntity = filterUtils.getListQuickSearches(sbeCode,lnkCode,lnkValue,typing);
+    public void sendListQuickSearches(String queGrp, String code,String sbeCode,String lnkCode,String lnkValue,
+                                      String typing,List<String> defs) {
+        SearchEntity searchEntity = filterUtils.getListQuickSearches(sbeCode,lnkCode,lnkValue,typing,defs);
         QDataBaseEntityMessage msg = getBaseItemsMsg(queGrp,code,lnkCode,lnkValue,searchEntity);
         KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
     }
@@ -814,13 +461,11 @@ public class FilterService {
      */
     public void init(String queCode) {
         clearParamsInCache();
-        String sbe = queCode.replaceFirst(Prefix.QUE,Prefix.SBE);
+        String sbe = queCode.replaceFirst(Prefix.QUE_,Prefix.SBE_);
+        cacheManager.putObject(userToken.getProductCode(),getCachedSbeTable(), sbe);
+
         sendFilterColumns(sbe);
-        cm.putObject(userToken.getProductCode(),getCachedSbeTable(), sbe);
-
-        sendListSavedSearches(Question.QUE_SAVED_SEARCH_SELECT_GRP,
-                Question.QUE_SAVED_SEARCH_SELECT, Attribute.PRI_NAME,FilterConst.VALUE);
-
+        sendListSavedSearches(Question.QUE_SAVED_SEARCH_SELECT_GRP,Question.QUE_SAVED_SEARCH_SELECT);
     }
 
     /**
@@ -828,7 +473,7 @@ public class FilterService {
      */
     public void clearParamsInCache() {
         Map<String, SavedSearch> params = new HashMap<>();
-        cm.putObject(userToken.getProductCode(),getCachedAnswerKey(),params);
+        cacheManager.putObject(userToken.getProductCode(),getCachedAnswerKey(),params);
     }
 
     /**
@@ -836,8 +481,10 @@ public class FilterService {
      * @return sbe code from cache
      */
     public String getSbeTableFromCache() {
-        String sbe = cm.getObject(userToken.getProductCode(),getCachedSbeTable() ,String.class);
-        if(sbe == null) return sbe = "";
+        String sbe = cacheManager.getObject(userToken.getProductCode(),getCachedSbeTable() ,String.class);
+        if(sbe == null) {
+            return "";
+        }
         return sbe;
     }
 
@@ -864,7 +511,6 @@ public class FilterService {
      * @return Process data
      */
     public ProcessData  buildProcessData() {
-        PCM pcm = beUtils.getPCM(PCM.PCM_PROCESS);
 
         // construct
         ProcessData processData = new ProcessData();
@@ -880,7 +526,7 @@ public class FilterService {
         BaseEntity target = beUtils.getBaseEntity(userToken.getUserCode());
 
         // build and send data
-        QBulkMessage msg = dispatch.build(processData, pcm);
+        QBulkMessage msg = dispatch.build(processData);
         msg.add(target);
         dispatch.sendData(msg);
 
@@ -900,13 +546,24 @@ public class FilterService {
             String sessionCode = searchUtils.sessionSearchCode(code);
             String cachedKey = FilterConst.LAST_SEARCH + sessionCode;
 
-            SearchEntity searchBE = cm.getObject(userToken.getProductCode(), cachedKey, SearchEntity.class);
+            SearchEntity searchBE = cacheManager.getObject(userToken.getProductCode(), cachedKey, SearchEntity.class);
             excludeExtraFilterBySearchBE(searchBE);
+
+            // add definitions
+            List<String> definitions = getListDefinitionCodes(code);
+
+            for(int i=0;i< definitions.size(); i++){
+                if(i== 0) {
+                    searchBE.add(new Filter(Attribute.LNK_DEF, Operator.CONTAINS, definitions.get(i)));
+                } else {
+                    searchBE.add(new Or(new Filter(Attribute.LNK_DEF, Operator.CONTAINS, definitions.get(i))));
+                }
+            }
 
             // add conditions by filter parameters
             setFilterParams(searchBE,params);
 
-            cm.putObject(userToken.getProductCode(), cachedKey, searchBE);
+            cacheManager.putObject(userToken.getProductCode(), cachedKey, searchBE);
 
             searchUtils.searchTable(code);
         }
@@ -925,24 +582,94 @@ public class FilterService {
             String sessionCode = searchUtils.sessionSearchCode(code);
             String cachedKey = FilterConst.LAST_SEARCH + sessionCode;
 
-            SearchEntity searchBE = cm.getObject(userToken.getProductCode(), cachedKey, SearchEntity.class);
+            SearchEntity searchBE = cacheManager.getObject(userToken.getProductCode(), cachedKey, SearchEntity.class);
 
             clearFilters(searchBE);
+
+            // add definitions
+            List<String> definitions = getListDefinitionCodes(code);
+
+            for(int i=0;i< definitions.size(); i++){
+                if(i== 0) {
+                    searchBE.add(new Filter(Attribute.LNK_DEF, Operator.CONTAINS, definitions.get(i)));
+                } else {
+                    searchBE.add(new Or(new Filter(Attribute.LNK_DEF, Operator.CONTAINS, definitions.get(i))));
+                }
+            }
 
             // searching by text or search by code
             Filter filter = null;
             String newValue = value.replaceFirst("!", "");
+
             if (coded) {
                 filter = new Filter(Attribute.PRI_CODE, Operator.EQUALS, value);
             } else {
                 filter = new Filter(Attribute.PRI_NAME, Operator.LIKE, "%" + newValue + "%");
             }
+
             searchBE.remove(filter);
             searchBE.add(filter);
 
-            cm.putObject(userToken.getProductCode(), cachedKey, searchBE);
+            cacheManager.putObject(userToken.getProductCode(), cachedKey, searchBE);
 
             searchUtils.searchTable(code);
+        }
+    }
+
+    /**
+     * Return the list of base entity code
+     * @param sbeCode Search base entity code
+     * @return List of base entity code
+     */
+    public List<String> getListDefinitionCodes(String sbeCode) {
+        List<String> definitions = new ArrayList<>();
+
+        // bucket page
+        if (SearchEntity.SBE_PROCESS.equals(sbeCode)) {
+            addDefinitionCodeByBucket(definitions);
+            // Table
+        } else {
+            String defCode = getDefinitionCode(sbeCode);
+            if(!defCode.isEmpty()) {
+                definitions.add(defCode);
+            }
+        }
+
+        return definitions;
+    }
+
+    /**
+     * Return definition code
+     * @param sbeCode search base entity code
+     * @return definition code
+     */
+    public String getDefinitionCode(String sbeCode) {
+        SearchEntity search = cacheManager.getObject(userToken.getProductCode(),sbeCode,SearchEntity.class);
+        List<ClauseContainer> clauses = search.getClauseContainers();
+        for (ClauseContainer clause : clauses) {
+            if (clause.getFilter().getCode().equals(Attribute.LNK_DEF)) {
+                return clause.getFilter().getValue().toString();
+            }
+        }
+        return "";
+    }
+
+    /**
+     * Add definition to the list of definition codes
+     * @param definitions List of definition codes
+     */
+    public void addDefinitionCodeByBucket(List<String> definitions) {
+        PCM pcm = beUtils.getPCM(PCM.PCM_PROCESS);
+
+        List<EntityAttribute> locations = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(pcm.getRealm(), pcm.getCode(), Prefix.PRI_LOC);
+        for (EntityAttribute entityAttribute : locations) {
+            String value = entityAttribute.getAsString();
+            if (value.startsWith(Prefix.SBE_)) {
+                String defCode = getDefinitionCode(value);
+                if(!defCode.isEmpty()) {
+                    definitions.add(defCode);
+                }
+            }
         }
     }
 }

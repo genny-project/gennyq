@@ -134,7 +134,6 @@ public class Attribute extends CodedEntity implements CoreEntityPersistable {
 	public static final String PRI_TOTAL_RESULTS = "PRI_TOTAL_RESULTS";
 	public static final String PRI_INDEX = "PRI_INDEX";
 
-
 	// message
 	public static final String PRI_DEFAULT_MSG_TYPE = "PRI_DEFAULT_MSG_TYPE";
 	public static final String PRI_CONTEXT_LIST = "PRI_CONTEXT_LIST";
@@ -150,6 +149,10 @@ public class Attribute extends CodedEntity implements CoreEntityPersistable {
 	public static final String LNK_SAVED_SEARCHES = "LNK_SAVED_SEARCHES";
 	public static final String LNK_QUICK_SEARCH = "LNK_QUICK_SEARCH";
 	public static final String LNK_SAVED_SEARCH = "LNK_SAVED_SEARCH";
+
+	// edit
+	public static final String LNK_EDIT_QUES = "LNK_EDIT_QUES";
+	public static final String LNK_EDIT_PCMS = "LNK_EDIT_PCMS";
 
 	@Embedded
 	@NotNull
