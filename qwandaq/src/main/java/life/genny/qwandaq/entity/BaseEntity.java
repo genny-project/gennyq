@@ -938,7 +938,6 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 	public void decorate(BaseEntity other) {
 		other.setCapabilityRequirements(getCapabilityRequirements());
 		other.setRealm(getRealm());
-		other.setRealm(getRealm());
 		other.setBaseEntityAttributes(getBaseEntityAttributes());
 	}
 }
