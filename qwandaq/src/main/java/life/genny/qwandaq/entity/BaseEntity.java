@@ -1216,7 +1216,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 	public void decorate(BaseEntity other) {
 		other.setCapabilityRequirements(getCapabilityRequirements());
 		other.setRealm(getRealm());
-		other.setRealm(getRealm());
 		other.setBaseEntityAttributes(getBaseEntityAttributes());
 	}
 }
