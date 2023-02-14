@@ -17,12 +17,10 @@ import javax.ws.rs.core.Response;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import life.genny.qwandaq.managers.CacheManager;
+import life.genny.qwandaq.utils.*;
 import org.jboss.logging.Logger;
 
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.DatabaseUtils;
-import life.genny.qwandaq.utils.HttpUtils;
-import life.genny.qwandaq.utils.SecurityUtils;
 import life.genny.qwandaq.validation.Validation;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Question;
@@ -48,6 +46,12 @@ public class Bolt {
 
 	@Inject
 	BaseEntityUtils beUtils;
+
+	@Inject
+	QuestionUtils questionUtils;
+
+	@Inject
+	CacheManager cacheManager;
 
 	/**
 	* Get all Validations from the database in pages.
@@ -201,7 +205,7 @@ public class Bolt {
 				.entity(HttpUtils.error("Not authorized to make this request")).build();
 		}
 
-		dbUtils.saveAttribute(attribute);
+		cacheManager.saveAttribute(attribute);
 
 		return Response.ok().entity(HttpUtils.ok()).build();
 	}
@@ -216,7 +220,7 @@ public class Bolt {
 				.entity(HttpUtils.error("Not authorized to make this request")).build();
 		}
 
-		dbUtils.saveQuestion(question);
+		questionUtils.saveQuestion(question);
 
 		return Response.ok().entity(HttpUtils.ok()).build();
 	}
@@ -231,7 +235,7 @@ public class Bolt {
 				.entity(HttpUtils.error("Not authorized to make this request")).build();
 		}
 
-		dbUtils.saveQuestionQuestion(questionQuestion);
+		questionUtils.saveQuestionQuestion(questionQuestion);
 
 		return Response.ok().entity(HttpUtils.ok()).build();
 	}
@@ -280,9 +284,9 @@ public class Bolt {
 				.entity(HttpUtils.error("No Weight Specified")).build();
 		}
 
-		BaseEntity source = dbUtils.findBaseEntityByCode(productCode, sourceCode);
-		BaseEntity target = dbUtils.findBaseEntityByCode(productCode, targetCode);
-		Attribute attribute = dbUtils.findAttributeByCode(productCode, attributeCode);
+		BaseEntity source = beUtils.getBaseEntity(productCode, sourceCode);
+		BaseEntity target = beUtils.getBaseEntity(productCode, targetCode);
+		Attribute attribute = cacheManager.getAttribute(productCode, attributeCode);
 
 		if (target == null) {
 			return Response.status(Response.Status.BAD_REQUEST)
@@ -311,10 +315,8 @@ public class Bolt {
 		}
 
 		// save entity and send back in response
-		dbUtils.saveBaseEntity(target);
+		target = beUtils.updateBaseEntity(target);
 
-		// update from DB again before sending back
-		target = dbUtils.findBaseEntityByCode(productCode, targetCode);
 		String json = jsonb.toJson(target);
 
 		return Response.ok().entity(json).build();

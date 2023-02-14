@@ -1,15 +1,5 @@
 package life.genny.qwandaq.utils;
 
-import life.genny.qwandaq.constants.Prefix;
-import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.models.ANSIColour;
-import life.genny.qwandaq.models.GennySettings;
-import life.genny.qwandaq.models.GennyToken;
-import life.genny.qwandaq.models.ServiceToken;
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-import org.keycloak.representations.account.UserRepresentation;
-import org.keycloak.util.JsonSerialization;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
@@ -27,12 +17,15 @@ import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
@@ -41,7 +34,18 @@ import javax.json.bind.JsonbBuilder;
 import javax.net.ssl.HttpsURLConnection;
 import javax.ws.rs.core.Response;
 
+import life.genny.qwandaq.constants.Prefix;
+import life.genny.qwandaq.entity.BaseEntity;
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+import org.keycloak.representations.account.UserRepresentation;
+import org.keycloak.util.JsonSerialization;
+
 import life.genny.qwandaq.exception.runtime.KeycloakException;
+import life.genny.qwandaq.models.ANSIColour;
+import life.genny.qwandaq.models.GennySettings;
+import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.models.ServiceToken;
 
 /**
  * A static utility class used for standard requests and
@@ -50,7 +54,11 @@ import life.genny.qwandaq.exception.runtime.KeycloakException;
  * @author Adam Crow
  * @author Jasper Robison
  */
+@ApplicationScoped
 public class KeycloakUtils {
+
+    @Inject
+    EntityAttributeUtils beaUtils;
 
 	private static Logger log = Logger.getLogger(KeycloakUtils.class);
 
@@ -152,7 +160,7 @@ public class KeycloakUtils {
      * @param project    the project to use to fetch the token
      * @return String
      */
-    public static String getImpersonatedToken(BaseEntity userBE, GennyToken gennyToken, BaseEntity project) {
+    public String getImpersonatedToken(BaseEntity userBE, GennyToken gennyToken, BaseEntity project) {
 
         String realm = gennyToken.getRealm();
         String token = gennyToken.getToken();
@@ -187,7 +195,8 @@ public class KeycloakUtils {
         }
 
         // fetch keycloak json from project entity
-        String keycloakJson = project.getValueAsString("ENV_KEYCLOAK_JSON");
+        String projectCode = project.getCode();
+        String keycloakJson = beaUtils.getEntityAttribute(realm, projectCode, "ENV_KEYCLOAK_JSON", false).getValueString();
         JsonReader reader = Json.createReader(new StringReader(keycloakJson));
         String secret = reader.readObject().getJsonObject("credentials").getString("secret");
         reader.close();

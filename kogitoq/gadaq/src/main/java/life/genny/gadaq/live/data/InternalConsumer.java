@@ -156,5 +156,4 @@ public class InternalConsumer implements KogitoServiceConsumerIntf {
 		Instant end = Instant.now();
 		log.trace("Duration = " + Duration.between(start, end).toMillis() + "ms");
 	}
-
 }

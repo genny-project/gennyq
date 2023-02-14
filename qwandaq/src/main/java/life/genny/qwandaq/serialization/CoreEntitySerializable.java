@@ -1,8 +1,8 @@
 package life.genny.qwandaq.serialization;
 
-import life.genny.qwandaq.CoreEntityPersistable;
-
 import java.io.Serializable;
+
+import life.genny.qwandaq.CoreEntityPersistable;
 
 /*
  * Interface for the representation of any entity in the cache

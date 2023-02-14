@@ -2,6 +2,7 @@ package life.genny.test.qwandaq.utils.merge;
 
 import java.util.Map;
 
+import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Test;
 
 import life.genny.qwandaq.entity.search.trait.Filter;
@@ -11,14 +12,20 @@ import life.genny.qwandaq.utils.collections.MapBuilder;
 import life.genny.qwandaq.utils.testsuite.JUnitTester;
 import life.genny.test.qwandaq.utils.BaseTestCase;
 
+import javax.inject.Inject;
+
+@QuarkusTest
 public class BaseTests extends BaseTestCase {
+
+    @Inject
+    MergeUtils mergeUtils;
     
     @Test
     public void wordMergeTest() {
         new JUnitTester<Map<String, Object>, Object>()
         .setTest((input) -> {
             Filter filter = new Filter("LNK_TENANT", Operator.CONTAINS, "USER");
-            return Expected(MergeUtils.wordMerge((String)filter.getValue(), input.input));
+            return Expected(mergeUtils.wordMerge((String)filter.getValue(), input.input));
         })
         
         .createTest("Word Merge test")

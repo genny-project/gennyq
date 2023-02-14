@@ -16,29 +16,31 @@
 
 package life.genny.qwandaq;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import io.quarkus.runtime.annotations.RegisterForReflection;
-import life.genny.qwandaq.attribute.Attribute;
+import java.security.InvalidParameterException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import javax.json.bind.annotation.JsonbTransient;
+import javax.persistence.Transient;
+
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.converter.CapabilityConverter;
-import life.genny.qwandaq.datatype.capability.core.Capability;
-import life.genny.qwandaq.exception.runtime.BadDataException;
-import life.genny.qwandaq.intf.ICapabilityHiddenFilterable;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
+import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import org.hibernate.annotations.Type;
 import org.jboss.logging.Logger;
 
-import javax.json.bind.annotation.JsonbTransient;
-import javax.persistence.*;
-import javax.validation.Valid;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-import java.security.InvalidParameterException;
-import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.datatype.capability.core.Capability;
+import life.genny.qwandaq.exception.runtime.BadDataException;
+import life.genny.qwandaq.intf.ICapabilityHiddenFilterable;
 
 /**
  * Question is the abstract base class for all questions managed in the Qwanda
@@ -66,19 +68,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @since 1.0
  */
 
-@XmlRootElement
-@Cacheable
-@XmlAccessorType(value = XmlAccessType.FIELD)
-@Table(name = "question", indexes = { @Index(columnList = "code", name = "code_idx"),
-		@Index(columnList = "realm", name = "code_idx") }, uniqueConstraints = @UniqueConstraint(columnNames = { "code",
-				"realm" }))
-@Entity
-@DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
-//@Inheritance(strategy = InheritanceType.JOINED)
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-
 @RegisterForReflection
-public class Question extends CodedEntity implements ICapabilityHiddenFilterable {
+public class Question extends CodedEntity implements CoreEntityPersistable, ICapabilityHiddenFilterable {
 
 	private static final Logger log = Logger.getLogger(Question.class);
 
@@ -137,20 +128,13 @@ public class Question extends CodedEntity implements ICapabilityHiddenFilterable
 	public static final String QUE_TABLE_PREVIOUS_BTN = "QUE_TABLE_PREVIOUS_BTN";
 	public static final String QUE_FILTER_VALUE_BOOLEAN = "QUE_FILTER_VALUE_BOOLEAN";
 
-	@XmlTransient
-	@OneToMany(fetch = FetchType.EAGER, mappedBy = "pk.source", cascade = CascadeType.MERGE)
-	@JsonManagedReference(value = "questionQuestion")
 	@JsonbTransient
 	private Set<QuestionQuestion> childQuestions = new HashSet<>(0);
 
-	@XmlTransient
-	@ManyToOne(fetch = FetchType.EAGER)
-	@JoinColumn(name = "attribute_id", nullable = false)
+	private Set<String> childQuestionCodes = new HashSet<>(0);
+
 	private Attribute attribute;
 
-
-	@Column(name = "capreqs")
-	@Convert(converter = CapabilityConverter.class)
 	private Set<Capability> capabilityRequirements;
 
 	private String attributeCode;
@@ -172,11 +156,27 @@ public class Question extends CodedEntity implements ICapabilityHiddenFilterable
 
 	private String icon;
 
+	private Long attributeId;
+
+	/**
+	 * @return String
+	 */
+	public String getHelper() {
+		return helper;
+	}
+
+	/**
+	 * @param helper the helper to set
+	 */
+	public void setHelper(String helper) {
+		this.helper = helper;
+	}
+
 	/**
 	 * Constructor.
 	 */
-	@SuppressWarnings("unused")
 	public Question() {
+		super();
 	}
 
 	/**
@@ -187,50 +187,27 @@ public class Question extends CodedEntity implements ICapabilityHiddenFilterable
 	 * @param attribute The associated attribute
 	 */
 	public Question(final String code, final String name, final Attribute attribute) {
-		this(code, name, attribute, false);
+		this(code, name);
+		this.attribute = attribute;
+		this.attributeCode = attribute.getCode();
 	}
 
-	/**
-	 * Constructor.
-	 * 
-	 * @param code        The unique code for this Question
-	 * @param name        The human readable summary name
-	 * @param attribute   The associated attribute
-	 * @param placeholder The placeholder text
-	 */
 	public Question(final String code, final String name, final Attribute attribute, final String placeholder) {
 		this(code, name, attribute, false, name, placeholder);
 	}
 
-	/**
-	 * Constructor.
-	 * 
-	 * @param code      The unique code for this Question
-	 * @param name      The human readable summary name
-	 * @param attribute The associated attribute
-	 * @param mandatory the mandatory status of the Question
-	 */
 	public Question(final String code, final String name, final Attribute attribute, final Boolean mandatory) {
 		this(code, name, attribute, mandatory, name);
 	}
 
-	/**
-	 * Constructor.
-	 * 
-	 * @param code      The unique code for this Question
-	 * @param name      The human readable summary name
-	 * @param attribute The associated attribute
-	 * @param mandatory the mandatory status of the Question
-	 * @param html      the html of the Question
-	 */
 	public Question(final String code, final String name, final Attribute attribute, final Boolean mandatory,
-			final String html) {
+					final String html) {
 		this(code, name, attribute, mandatory, html, null);
 	}
 
 	/**
 	 * Constructor.
-	 * 
+	 *
 	 * @param code        The unique code for this Question
 	 * @param name        The human readable summary name
 	 * @param attribute   The associated attribute
@@ -239,13 +216,11 @@ public class Question extends CodedEntity implements ICapabilityHiddenFilterable
 	 * @param placeholder The placeholder text
 	 */
 	public Question(final String code, final String name, final Attribute attribute, final Boolean mandatory,
-			final String html, final String placeholder) {
+					final String html, final String placeholder) {
 		super(code, name);
 		if (attribute == null) {
 			throw new InvalidParameterException("Attribute must not be null");
 		}
-		this.attribute = attribute;
-		this.attributeCode = attribute.getCode();
 		this.mandatory = mandatory;
 		this.html = html;
 		this.placeholder = placeholder;
@@ -253,7 +228,7 @@ public class Question extends CodedEntity implements ICapabilityHiddenFilterable
 
 	/**
 	 * Constructor.
-	 * 
+	 *
 	 * @param code           The unique code for this Question
 	 * @param name           The human readable summary name
 	 * @param childQuestions The associated child Questions in this question Group
@@ -282,20 +257,6 @@ public class Question extends CodedEntity implements ICapabilityHiddenFilterable
 		}
 		this.attribute = null;
 		this.attributeCode = Attribute.QQQ_QUESTION_GROUP;
-	}
-
-
-    @JsonbTransient
-    @JsonIgnore
-    public Set<Capability> getCapabilityRequirements() {
-		return this.capabilityRequirements;
-	}
-
-	@Override
-    @JsonbTransient
-    @JsonIgnore
-	public void setCapabilityRequirements(Set<Capability> requirements) {
-		this.capabilityRequirements = requirements;
 	}
 
 	/**
@@ -337,6 +298,15 @@ public class Question extends CodedEntity implements ICapabilityHiddenFilterable
 		return qq;
 	}
 
+
+	public Set<Capability> getCapabilityRequirements() {
+		return this.capabilityRequirements;
+	}
+
+	public void setCapabilityRequirements(Set<Capability> requirements) {
+		this.capabilityRequirements = requirements;
+	}
+
 	/**
 	 * @return the attribute
 	 */
@@ -367,7 +337,7 @@ public class Question extends CodedEntity implements ICapabilityHiddenFilterable
 
 	/**
 	 * getDefaultCodePrefix This method is overrides the Base class
-	 * 
+	 *
 	 * @return the default Code prefix for this class.
 	 */
 	static public String getDefaultCodePrefix() {
@@ -459,6 +429,7 @@ public class Question extends CodedEntity implements ICapabilityHiddenFilterable
     }
 
 	/**
+	 *
 	 * addChildQuestion This adds an child Question with default weight of 0.0 to
 	 * the question. It auto creates the QuestionQuestion object. For efficiency we
 	 * assume the child question link does not exist
@@ -470,7 +441,7 @@ public class Question extends CodedEntity implements ICapabilityHiddenFilterable
 		if (qq == null)
 			throw new BadDataException("missing Question");
 
-		addChildQuestion(qq.getPk().getTargetCode(), qq.getWeight(), qq.getMandatory());
+		addChildQuestion(qq.getChildCode(), qq.getWeight(), qq.getMandatory());
 	}
 
 	/**
@@ -511,7 +482,7 @@ public class Question extends CodedEntity implements ICapabilityHiddenFilterable
 	 * @throws BadDataException if something is missing
 	 */
 	public QuestionQuestion addChildQuestion(final String childQuestionCode, final Double weight,
-			final Boolean mandatory) throws BadDataException {
+											 final Boolean mandatory) throws BadDataException {
 		if (childQuestionCode == null)
 			throw new BadDataException("missing Question");
 		if (weight == null)
@@ -523,6 +494,14 @@ public class Question extends CodedEntity implements ICapabilityHiddenFilterable
 		final QuestionQuestion questionLink = new QuestionQuestion(this, childQuestionCode, weight, mandatory);
 		getChildQuestions().add(questionLink);
 		return questionLink;
+	}
+
+	public Long getAttributeId() {
+		return attributeId;
+	}
+
+	public void setAttributeId(Long attributeId) {
+		this.attributeId = attributeId;
 	}
 
 	/**
@@ -551,7 +530,7 @@ public class Question extends CodedEntity implements ICapabilityHiddenFilterable
 	 */
 	public Optional<QuestionQuestion> findQuestionLink(final String childQuestionCode) {
 		final Optional<QuestionQuestion> foundEntity = Optional.of(getChildQuestions().parallelStream()
-				.filter(x -> (x.getPk().getTargetCode().equals(childQuestionCode))).findFirst().get());
+				.filter(x -> (x.getChildCode().equals(childQuestionCode))).findFirst().get());
 
 		return foundEntity;
 	}
@@ -566,7 +545,7 @@ public class Question extends CodedEntity implements ICapabilityHiddenFilterable
 	 */
 	public QuestionQuestion findQuestionQuestion(final Question childQuestion) {
 		final QuestionQuestion foundEntity = getChildQuestions().parallelStream()
-				.filter(x -> (x.getPk().getTargetCode().equals(childQuestion.getCode()))).findFirst().get();
+				.filter(x -> (x.getChildCode().equals(childQuestion.getCode()))).findFirst().get();
 
 		return foundEntity;
 	}
@@ -590,7 +569,7 @@ public class Question extends CodedEntity implements ICapabilityHiddenFilterable
 		String ret = "";
 		if (getAttributeCode().equals(Attribute.QQQ_QUESTION_GROUP)) {
 			for (QuestionQuestion childQuestion : qqList) {
-				ret += childQuestion.getPk().getTargetCode() + ",";
+				ret += childQuestion.getChildCode() + ",";
 			}
 		} else {
 			ret = getCode();
@@ -654,19 +633,35 @@ public class Question extends CodedEntity implements ICapabilityHiddenFilterable
 		this.icon = icon;
 	}
 
-	/**
-	 * @return String
-	 */
-	public String getHelper() {
-		return helper;
+	public Set<String> getChildQuestionCodesAsStrings() {
+		return childQuestionCodes;
 	}
 
-	/**
-	 * @param helper the helper to set
-	 */
-	public void setHelper(String helper) {
-		this.helper = helper;
+	public void setChildQuestionCodes(Set<String> childQuestionCodes) {
+		this.childQuestionCodes = childQuestionCodes;
 	}
 
-
+	@Override
+	public CoreEntitySerializable toSerializableCoreEntity() {
+		life.genny.qwandaq.serialization.question.Question question = new life.genny.qwandaq.serialization.question.Question();
+		question.setCode(getCode());
+		question.setCreated(getCreated());
+		// question.setDtype();
+		question.setId(getId());
+		question.setName(getName());
+		question.setRealm(getRealm());
+		question.setStatus(getStatus().ordinal());
+		question.setUpdated(getUpdated());
+		question.setAttributeCode(getAttributeCode());
+		question.setDirections(getDirections());
+		question.setHelper(getHelper());
+		question.setHtml(getHtml());
+		question.setIcon(getIcon());
+		question.setMandatory(getMandatory());
+		question.setOneshot(getOneshot());
+		question.setPlaceholder(getPlaceholder());
+		question.setReadonly(getReadonly());
+		question.setCapreqs(CapabilityConverter.convertToDBColumn(getCapabilityRequirements()));
+		return question;
+	}
 }

@@ -12,6 +12,7 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
 import life.genny.qwandaq.message.QDataAnswerMessage;
+import life.genny.qwandaq.utils.SecurityUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
@@ -23,10 +24,10 @@ import life.genny.qwandaq.Question;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.kafka.KafkaTopic;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.message.MessageData;
 import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.GraphQLUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
@@ -52,6 +53,8 @@ public class Events {
 
 	@Inject
 	UserToken userToken;
+	@Inject
+	CacheManager cm;
 
 	@Inject
 	KogitoUtils kogitoUtils;
@@ -80,6 +83,13 @@ public class Events {
 		MessageData data = msg.getData();
 
 		String code = data.getCode();
+
+		if (StringUtils.isEmpty(code)) {
+			log.errorf("'code' is missing from the QEventMessage %s . Sending the event to dead letter queue...", jsonb.toJson(msg, QEventMessage.class));
+			KafkaUtils.writeMsg(KafkaTopic.DEAD_LETTER_QUEUE, msg);
+			return;
+		}
+
 		String processId = data.getProcessId();
 
 		String parentCode = data.getParentCode();
@@ -171,7 +181,7 @@ public class Events {
 		// add item
 		if (code.startsWith(QUE_ADD_)) {
 			code = StringUtils.removeStart(code, QUE_ADD_);
-			String prefix = CacheUtils.getObject(userToken.getProductCode(), Prefix.DEF_ + code + ":PREFIX", String.class);
+			String prefix = cm.getObject(userToken.getProductCode(), Prefix.DEF_ + code + ":PREFIX", String.class);
 
 			JsonObject json = Json.createObjectBuilder()
 				.add("definitionCode", Prefix.DEF_.concat(code))
@@ -186,8 +196,7 @@ public class Events {
 		}
 
 		// edit item (TODO This needs to be moved into a timer based bpmn)
-		
-		if (ACT_EDIT.equals(code)) {
+		if (ACT_EDIT.equals(code) && parentCode.startsWith(Prefix.SBE_)) {
 
 			if (parentCode.startsWith("SBE_")) {
 				JsonObject payload = Json.createObjectBuilder()

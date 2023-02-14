@@ -15,7 +15,6 @@
 
 	<properties>
 		<jackson.version>2.13.0</jackson.version>
-		<jandex.version>1.0.7</jandex.version>
 		<jjwt.version>0.7.0</jjwt.version>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
@@ -61,7 +60,12 @@
 			<artifactId>quarkus-junit5</artifactId>
 			<scope>test</scope>
 		</dependency>
-	</dependencies>
+        <dependency>
+            <groupId>life.genny</groupId>
+            <artifactId>qwandaq</artifactId>
+            <version>10.3.0</version>
+        </dependency>
+    </dependencies>
 
 	<build>
 		<plugins>
@@ -90,7 +94,7 @@
 			<plugin>
 				<groupId>org.jboss.jandex</groupId>
 				<artifactId>jandex-maven-plugin</artifactId>
-				<version>${jandex.version}</version>
+				<version>${jandex-maven.version}</version>
 				<executions>
 					<execution>
 						<id>make-index</id>

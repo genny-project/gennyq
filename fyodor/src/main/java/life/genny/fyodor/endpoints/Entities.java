@@ -14,6 +14,8 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.transaction.Transactional;
 
+import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.utils.EntityAttributeUtils;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.annotations.jaxrs.PathParam;
 
@@ -21,15 +23,13 @@ import io.vertx.core.http.HttpServerRequest;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.HttpUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.Service;
-
-
-
 
 /**
  * Entities --- Endpoints providing database entity access
@@ -48,6 +48,9 @@ public class Entities {
 	HttpServerRequest request;
 
 	@Inject
+	CacheManager cm;
+
+	@Inject
 	DatabaseUtils databaseUtils;
 
 	@Inject
@@ -60,7 +63,9 @@ public class Entities {
 	BaseEntityUtils beUtils;
 
 	@Inject
-	QwandaUtils qwandaUtils;
+	EntityAttributeUtils beaUtils;
+
+	private static final String NOT_AUTHORIZED_TO_MAKE_THIS_REQUEST = "Not authorized to make this request";
 
 	/**
 	 * Read an item from the cache.
@@ -75,12 +80,23 @@ public class Entities {
 
 		if (userToken == null) {
 			return Response.status(Response.Status.BAD_REQUEST)
-					.entity(HttpUtils.error("Not authorized to make this request")).build();
+					.entity(HttpUtils.error(NOT_AUTHORIZED_TO_MAKE_THIS_REQUEST)).build();
 		}
 
-		BaseEntity entity = databaseUtils.findBaseEntityByCode(userToken.getProductCode(), code);
-		if (entity == null) {
-			log.error("productCode=[" + userToken.getProductCode() + "] , code=" + code);
+		String productCode = userToken.getProductCode();
+		BaseEntityKey beKey = new BaseEntityKey(productCode, code);
+		BaseEntity entity = (BaseEntity) cm.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, beKey);
+		if (entity != null) {
+			log.debug("Entity in cache.. returning...  ");
+		} else {
+			entity = beUtils.getBaseEntity(userToken.getProductCode(), code);
+			if (entity != null) {
+				// Entity found in DB but not cache. Add it to cache..
+				log.debug("Entity not in cache, but in DB.. adding to cache...  ");
+				cm.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, beKey, entity);
+			} else {
+				log.error(getBaseEntityNotFoundLog(userToken.getProductCode(), code));
+			}
 		}
 
 		return Response.ok(entity).build();
@@ -99,12 +115,12 @@ public class Entities {
 
 		if (userToken == null) {
 			return Response.status(Response.Status.BAD_REQUEST)
-					.entity(HttpUtils.error("Not authorized to make this request")).build();
+					.entity(HttpUtils.error(NOT_AUTHORIZED_TO_MAKE_THIS_REQUEST)).build();
 		}
 
-		BaseEntity entity = databaseUtils.findBaseEntityByCode(userToken.getProductCode(), code);
+		BaseEntity entity = beUtils.removeBaseEntity(userToken.getProductCode(), code);
 		if (entity == null) {
-			log.error("productCode=[" + userToken.getProductCode() + "] , code=" + code);
+			log.error(getBaseEntityNotFoundLog(userToken.getProductCode(), code));
 		}
 
 		return Response.ok(entity).build();
@@ -119,12 +135,20 @@ public class Entities {
 	@PUT
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response update(BaseEntity entity) {
-		log.info("Put BE "+entity.getCode());
+		String code = entity.getCode();
+		log.info("Put BE " + code);
 		if (userToken == null) {
 			return Response.status(Response.Status.BAD_REQUEST)
-					.entity(HttpUtils.error("Not authorized to make this request")).build();
+					.entity(HttpUtils.error(NOT_AUTHORIZED_TO_MAKE_THIS_REQUEST)).build();
 		}
-		beUtils.updateBaseEntity(entity);
+
+		// NOTE: Forgive me for this, but the rulesservice needs it :(
+		String productCode = entity.getRealm();
+		userToken.setProductCode(productCode);
+
+		BaseEntityKey beKey = new BaseEntityKey(productCode, code);
+		cm.saveEntity(productCode, beKey, entity);
+		// beUtils.updateBaseEntity(entity);
 
 		return Response.ok(entity).build();
 	}
@@ -143,21 +167,23 @@ public class Entities {
 
 		log.info("received request to create entity");
 
-		BaseEntity be = new BaseEntity("Test Entity");
+		BaseEntity be = new BaseEntity("TST_ENTITY", "Test Entity");
 
 		log.info("Created BaseEntity " + be.getCode());
-		Attribute attr = qwandaUtils.getAttribute("LNK_AUTHOR");
+		Attribute attr = cm.getAttribute("LNK_AUTHOR");
 		EntityAttribute attribute = new EntityAttribute(be, attr, 1.0, "TEST");
+		attribute.setBaseEntityCode(be.getCode());
+		attribute.setAttribute(attr);
 
 		try {
-            be.addAttribute(attribute);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+			be.addAttribute(attribute);
+			beaUtils.updateEntityAttribute(attribute);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
-		beUtils.updateBaseEntity(be);
+		BaseEntity saved = beUtils.updateBaseEntity(be);
 
-		BaseEntity saved = databaseUtils.findBaseEntityByCode(userToken.getProductCode(), be.getCode());
 		log.info("SAVED = " + jsonb.toJson(saved));
 
 		return Response.ok(be).build();
@@ -172,24 +198,21 @@ public class Entities {
 	@POST
 	@Path("/{productCode}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response create(@PathParam("productCode") String productCode,String baseentityJson) {
-
+	public Response create(@PathParam("productCode") String productCode, String baseentityJson) {
 		if (userToken == null) {
 			return Response.status(Response.Status.BAD_REQUEST)
-					.entity(HttpUtils.error("Not authorized to make this request")).build();
+					.entity(HttpUtils.error(NOT_AUTHORIZED_TO_MAKE_THIS_REQUEST)).build();
 		}
-
 		BaseEntity be = jsonb.fromJson(baseentityJson, BaseEntity.class);
 		be.setRealm(productCode);
-		databaseUtils.saveBaseEntity(be);
-
-	BaseEntity entity = databaseUtils.findBaseEntityByCode(productCode, be.getCode());
-
+		BaseEntity entity = beUtils.updateBaseEntity(be);
 		if (entity == null) {
-			log.error("productCode=[" + productCode + "] , code=" + be.getCode());
-			// TODO: Need to produce a proper response here
+			log.error(getBaseEntityNotFoundLog(productCode, be.getCode()));
 		}
-
 		return Response.ok(entity.getId()).build();
+	}
+
+	private String getBaseEntityNotFoundLog(String productCode, String code) {
+		return "productCode=[" + productCode + "] , code=" + code;
 	}
 }

@@ -3,6 +3,7 @@ package life.genny.kogito.common.service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -118,7 +119,7 @@ public class TaskService extends KogitoService {
 
 		// build data
 		QBulkMessage msg = dispatch.build(processData);
-		List<Ask> asks = msg.getAsks();
+		Set<Ask> asks = msg.getAsks();
 		Map<String, Ask> flatMapOfAsks = QwandaUtils.buildAskFlatMap(asks);
 
 		// perform basic checks on attribute codes
@@ -194,7 +195,7 @@ public class TaskService extends KogitoService {
 		answers.add(answer);
 		processData.setAnswers(answers);
 
-		List<Ask> asks = qwandaUtils.fetchAsks(processData);
+		Set<Ask> asks = qwandaUtils.fetchAsks(processData);
 		Map<String, Ask> flatMapOfAsks = QwandaUtils.buildAskFlatMap(asks);
 
 		QBulkMessage msg = new QBulkMessage();
@@ -222,7 +223,7 @@ public class TaskService extends KogitoService {
 	 */
 	public Boolean submit(ProcessData processData) {
 		// construct bulk message
-		List<Ask> asks = qwandaUtils.fetchAsks(processData);
+		Set<Ask> asks = qwandaUtils.fetchAsks(processData);
 		Map<String, Ask> flatMapOfAsks = QwandaUtils.buildAskFlatMap(asks);
 
 		// check mandatory fields
@@ -273,7 +274,7 @@ public class TaskService extends KogitoService {
 	 * @param processData Process Data
 	 */
 	public void disableButtons(ProcessData processData) {
-		List<Ask> asks = qwandaUtils.fetchAsks(processData);
+		Set<Ask> asks = qwandaUtils.fetchAsks(processData);
 		Map<String, Ask> flatMapOfAsks = QwandaUtils.buildAskFlatMap(asks);
 
 		for (String event : Dispatch.BUTTON_EVENTS) {

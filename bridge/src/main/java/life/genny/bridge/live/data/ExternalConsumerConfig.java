@@ -1,28 +1,25 @@
 package life.genny.bridge.live.data;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Observes;
-import javax.inject.Inject;
-
-import org.eclipse.microprofile.config.inject.ConfigProperty;
-
-import io.vertx.core.Vertx;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.bridge.BridgeEventType;
 import io.vertx.ext.bridge.PermittedOptions;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.CorsHandler;
-
 import io.vertx.ext.web.handler.sockjs.BridgeEvent;
 import io.vertx.ext.web.handler.sockjs.SockJSBridgeOptions;
 import io.vertx.ext.web.handler.sockjs.SockJSHandler;
 import io.vertx.ext.web.handler.sockjs.SockJSHandlerOptions;
+import org.eclipse.microprofile.config.inject.ConfigProperty;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.event.Observes;
+import javax.inject.Inject;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * ExternalConsumerConfig --- This class contains configurations for {@link CorsHandler}
@@ -94,23 +91,23 @@ public class ExternalConsumerConfig {
 
 	public static CorsHandler cors() {
 		return CorsHandler.create(
-				"http://localhost:\\d\\d|"+
-				"https://localhost:\\d\\d|"+
-				"http://localhost:\\d\\d\\d\\d|"+
-				"https://localhost:\\d\\d\\d\\d|"+
-				"http://.*.genny.life|http://.*.gada.io|"+
-				"https://.*.genny.life|https://.*.gada.io|"+
-				System.getenv("CORS_URLS")
+						"http://localhost:\\d\\d|"+
+								"https://localhost:\\d\\d|"+
+								"http://localhost:\\d\\d\\d\\d|"+
+								"https://localhost:\\d\\d\\d\\d|"+
+								"http://.*.genny.life|http://.*.gada.io|"+
+								"https://.*.genny.life|https://.*.gada.io|"+
+								System.getenv("CORS_URLS")
 				).allowCredentials(true)
-			.allowedMethod(HttpMethod.GET)
-			.allowedMethod(HttpMethod.POST)
-			.allowedMethod(HttpMethod.PUT)
-			.allowedMethod(HttpMethod.OPTIONS)
-			.allowedHeader("X-PINGARUNER")
-			.allowedHeader("Content-Type")
-			.allowedHeader("Authorization")
-			.allowedHeader("Accept")
-			.allowedHeader("X-Requested-With");
+				.allowedMethod(HttpMethod.GET)
+				.allowedMethod(HttpMethod.POST)
+				.allowedMethod(HttpMethod.PUT)
+				.allowedMethod(HttpMethod.OPTIONS)
+				.allowedHeader("X-PINGARUNER")
+				.allowedHeader("Content-Type")
+				.allowedHeader("Authorization")
+				.allowedHeader("Accept")
+				.allowedHeader("X-Requested-With");
 	}
 
 	/**
@@ -124,8 +121,8 @@ public class ExternalConsumerConfig {
 	 */
 	public void init(@Observes Router router) {
 		SockJSHandlerOptions sockOptions = new SockJSHandlerOptions()
-			.setHeartbeatInterval(2000);
-		
+				.setHeartbeatInterval(2000);
+
 		SockJSHandler sockJSHandler = SockJSHandler.create(vertx, sockOptions);
 
 		sockJSHandler.bridge(setBridgeOptions(),handler::handleConnectionTypes);
@@ -153,18 +150,18 @@ public class ExternalConsumerConfig {
 		};
 
 		environment.filter(d -> !"prod".equals(d))
-		.ifPresent(d -> {
-				router.route() // do we want to be routing to d here?
-				.subRouter(sockJSHandler.bridge(options, handler))
-				.handler(cors());
-		});
+				.ifPresent(d -> {
+					router.route() // do we want to be routing to d here?
+							.subRouter(sockJSHandler.bridge(options, handler))
+							.handler(cors());
+				});
 
 		router.route("/frontend/*")
-		.subRouter(sockJSHandler.bridge(options, handler));
+				.subRouter(sockJSHandler.bridge(options, handler));
 
 		router.route("/frontend/*")
-		.handler(cors())
-		.handler(sockJSHandler);
+				.handler(cors())
+				.handler(sockJSHandler);
 		// .subRouter(sockJSHandler.bridge(options, handler))
 
 	}

@@ -20,12 +20,12 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.kafka.KafkaTopic;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.message.QSearchMessage;
 import life.genny.qwandaq.models.Page;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.KafkaUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
 
@@ -49,7 +49,7 @@ public class InternalConsumer {
 	FyodorUltra fyodor;
 
 	@Inject
-	QwandaUtils qwandaUtils;
+	CacheManager cm;
 
 	void onStart(@Observes StartupEvent ev) {
 
@@ -57,7 +57,6 @@ public class InternalConsumer {
 
 		service.initToken();
 		service.initCache();
-		service.initAttributes();
 		service.initKafka();
 		log.info("[*] Finished Startup!");
 	}
@@ -82,9 +81,9 @@ public class InternalConsumer {
 
 		Page page = fyodor.fetch26(searchEntity);
 
-		Attribute totalResults = qwandaUtils.getAttribute(Attribute.PRI_TOTAL_RESULTS);
+		Attribute totalResults = cm.getAttribute(Attribute.PRI_TOTAL_RESULTS);
 		searchEntity.addAnswer(new Answer(searchEntity, searchEntity, totalResults, String.valueOf(page.getTotal())));
-		Attribute index = qwandaUtils.getAttribute(Attribute.PRI_INDEX);
+		Attribute index = cm.getAttribute(Attribute.PRI_INDEX);
 		searchEntity.addAnswer(new Answer(searchEntity, searchEntity, index, String.valueOf(page.getPageNumber())));
 
 		// convert to sendable

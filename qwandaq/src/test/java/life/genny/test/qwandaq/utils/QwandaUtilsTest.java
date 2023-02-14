@@ -1,8 +1,6 @@
 package life.genny.test.qwandaq.utils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.inject.Inject;
 
@@ -38,7 +36,6 @@ public class QwandaUtilsTest extends BaseTestCase {
 	private static Attribute PRI_LASTNAME = new Attribute(Attribute.PRI_LASTNAME, "Last Name",
 			new DataType(String.class));
 
-	@Inject
 	QwandaUtils qwandaUtils;
 
 	// @BeforeAll
@@ -83,10 +80,10 @@ public class QwandaUtilsTest extends BaseTestCase {
 	@Test
 	public void testAskFlatMapBuilder() {
 
-		List<Ask> asks = new ArrayList<>();
+		Set<Ask> asks = new HashSet<>();
 		asks.add(buildAskGroup());
 
-		new JUnitTester<List<Ask>, Boolean>()
+		new JUnitTester<Set<Ask>, Boolean>()
 				.setTest((input) -> {
 					boolean found = true;
 					Map<String, Ask> flatMap = QwandaUtils.buildAskFlatMap(input.input);
@@ -108,15 +105,15 @@ public class QwandaUtilsTest extends BaseTestCase {
 	@Test
 	public void testMandatoryFieldCheck() {
 
-		List<Ask> asks = new ArrayList<>();
+		Set<Ask> asks = new HashSet<>();
 		asks.add(buildAskGroup());
 		Map<String, Ask> map = QwandaUtils.buildAskFlatMap(asks);
 
-		BaseEntity filled = new BaseEntity(PER_TARGET);
+		BaseEntity filled = new BaseEntity(PER_TARGET, PER_TARGET);
 		filled.addAttribute(new EntityAttribute(filled, PRI_FIRSTNAME, 1.0, "Boris"));
 		filled.addAttribute(new EntityAttribute(filled, PRI_LASTNAME, 1.0, "Yeltson"));
 
-		BaseEntity nonFilled = new BaseEntity(PER_TARGET);
+		BaseEntity nonFilled = new BaseEntity(PER_TARGET, PER_TARGET);
 		nonFilled.addAttribute(new EntityAttribute(nonFilled, PRI_FIRSTNAME, 1.0, "Boris"));
 
 		new JUnitTester<BaseEntity, Boolean>()

@@ -2,9 +2,7 @@ package life.genny.qwandaq.constants;
 
 public final class GennyConstants {
 
-    public static final String CACHE_NAME_BASEENTITY = "baseentity";
-    public static final String CACHE_NAME_BASEENTITY_ATTRIBUTE = "baseentity_attribute";
-	public static final String CACHE_NAME_USERSTORE = "userstore";
+    public static final String CACHE_NAME_USERSTORE = "userstore";
 	public static final String PATH_TO_PROTOS = "/life/genny/qwandaq/serialization/protos/";
     public static final String PACKAGE_PREFIX = "life.genny";
 
@@ -45,5 +43,29 @@ public final class GennyConstants {
 
     public static final String ERROR_FALLBACK_MSG = "Error Occurred!";
 
+	// ================================== DATA TYPES =============================================
+	public static final String JAVA_LANG_INTEGER = "java.lang.Integer";
+	public static final String INTEGER = "Integer";
+	public static final String JAVA_TIME_LOCAL_DATE_TIME = "java.time.LocalDateTime";
+	public static final String LOCAL_DATE_TIME = "LocalDateTime";
+	public static final String JAVA_TIME_LOCAL_TIME = "java.time.LocalTime";
+	public static final String LOCAL_TIME = "LocalTime";
+	public static final String JAVA_LANG_LONG = "java.lang.Long";
+	public static final String LONG = "Long";
+	public static final String JAVA_LANG_DOUBLE = "java.lang.Double";
+	public static final String DOUBLE = "Double";
+	public static final String JAVA_LANG_BOOLEAN = "java.lang.Boolean";
+	public static final String BOOLEAN = "Boolean";
+	public static final String JAVA_TIME_LOCAL_DATE = "java.time.LocalDate";
+	public static final String LOCAL_DATE = "LocalDate";
+	public static final String ORG_JAVAMONEY_MONETA_MONEY = "org.javamoney.moneta.Money";
+	public static final String MONEY = "Money";
+	public static final String JAVA_LANG_STRING = "java.lang.String";
+    public static final String CACHE_NAME_BASEENTITY = "baseentity";
+    public static final String CACHE_NAME_BASEENTITY_ATTRIBUTE = "baseentity_attribute";
+    public static final String CACHE_NAME_ATTRIBUTE = "attribute";
+    public static final String CACHE_NAME_QUESTION = "question";
+    public static final String CACHE_NAME_QUESTIONQUESTION = "questionquestion";
+    // =====================================================================================================
 }
 

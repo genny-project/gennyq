@@ -31,4 +31,8 @@ public class ItemNotFoundException extends GennyRuntimeException {
 	public ItemNotFoundException(String productCode, String code, Throwable err) {
 		super(String.format(PRD_TXT, code, productCode), err);
 	}
+
+	public ItemNotFoundException(String productCode, String baseEntityCode, String attributeCode) {
+		super(String.format(PRD_TXT, "[" + baseEntityCode + ":" + attributeCode + "]", productCode));
+	}
 }

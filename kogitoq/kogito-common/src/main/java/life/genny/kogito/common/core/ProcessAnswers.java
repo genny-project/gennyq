@@ -9,6 +9,7 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import life.genny.qwandaq.attribute.Attribute;
 import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.service.TaskService;
@@ -17,6 +18,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.kafka.KafkaTopic;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -40,13 +42,19 @@ public class ProcessAnswers {
 	UserToken userToken;
 
 	@Inject
-	QwandaUtils qwandaUtils;
+	CacheManager cm;
+
+	@Inject
+	TaskService taskService;
+
 	@Inject
 	BaseEntityUtils beUtils;
+
 	@Inject
 	DefUtils defUtils;
 
-	@Inject TaskService taskService;
+	@Inject
+	QwandaUtils qwandaUtils;
 
 	@Inject
 	FilterUtils filter;
@@ -144,9 +152,38 @@ public class ProcessAnswers {
 		// save answers
 		String targetCode = processData.getTargetCode();
 		processData.getAnswers().forEach(a -> a.setTargetCode(targetCode));
+		processData.getAnswers().forEach(a -> a.setTargetCode(targetCode));
 		BaseEntity target = beUtils.getBaseEntity(targetCode);
-		qwandaUtils.saveAnswers(processData.getAnswers(), target);
-		// send target to FE
+		// iterate our stored process updates and create an answer
+		for (Answer answer : processData.getAnswers()) {
+
+			// find the attribute
+			String attributeCode = answer.getAttributeCode();
+			Attribute attribute = cm.getAttribute(attributeCode);
+			answer.setAttribute(attribute);
+
+			// debug log the value before saving
+			String currentValue = target.getValueAsString(attributeCode);
+			log.debug("Overwriting Value -> " + answer.getAttributeCode() + " = " + currentValue);
+
+			// check if name needs updating
+			if (Attribute.PRI_NAME.equals(attributeCode)) {
+				String name = answer.getValue();
+				log.debug("Updating BaseEntity Name Value -> " + name);
+				target.setName(name);
+				continue;
+			}
+
+			// update the baseentity
+			target.addAnswer(answer);
+			String value = target.getValueAsString(answer.getAttributeCode());
+			log.debug("Value Saved -> " + answer.getAttributeCode() + " = " + value);
+		}
+
+		// save these answrs to db and cache
+		beUtils.updateBaseEntity(target);
+		log.info("Saved answers for target " + targetCode);
+
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(target);
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);

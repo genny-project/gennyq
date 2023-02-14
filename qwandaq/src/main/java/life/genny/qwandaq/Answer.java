@@ -17,23 +17,13 @@
 package life.genny.qwandaq;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.attribute.HAttribute;
 import life.genny.qwandaq.datatype.LocalDateTimeAdapter;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.BadDataException;
-import org.hibernate.annotations.GenericGenerator;
-import org.hibernate.annotations.Immutable;
-import org.hibernate.annotations.Type;
 
 import javax.json.bind.annotation.JsonbTransient;
-import javax.persistence.*;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -62,17 +52,6 @@ import java.util.Date;
  * @version %I%, %G%
  * @since 1.0
  */
-@XmlRootElement
-@XmlAccessorType(value = XmlAccessType.FIELD)
-@Table(name = "answer", indexes = {
-		@Index(columnList = "targetcode", name = "code_idx"),
-		@Index(columnList = "attributecode", name = "code_idx"),
-		@Index(columnList = "realm", name = "code_idx")
-})
-@Entity
-@Immutable
-@RegisterForReflection
-@DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
 public class Answer {
 
 	private static final long serialVersionUID = 1L;
@@ -80,47 +59,31 @@ public class Answer {
 	/**
 	 * Stores the hibernate generated Id value for this object
 	 */
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
-	@GenericGenerator(name = "native", strategy = "native")
-	@Basic(optional = false)
-	@Column(name = "id", updatable = false, nullable = false)
 	private Long id;
 
 	/**
 	 * Stores the Created UMT DateTime that this object was created
 	 */
-	@Column(name = "created")
 	private LocalDateTime created;
 
 	/**
 	 * Stores the Last Modified UMT DateTime that this object was last updated
 	 */
-	@Column(name = "updated")
 	private LocalDateTime updated;
 
 	/**
 	 * A field that stores the human readable value of the answer.
 	 */
-	@NotNull
-	@Type(type = "text")
-	@Column(name = "value", updatable = true, nullable = false)
 	private String value;
 
 	/**
 	 * A field that stores the human readable attributecode associated with this
 	 * answer.
 	 */
-	@NotNull
-	@Size(max = 250)
-	@Column(name = "attributecode", updatable = true, nullable = false)
 	private String attributeCode;
 
-	@JsonIgnore
-	@NotNull
-	@XmlTransient
-	@OneToOne(fetch = FetchType.EAGER)
-	@JoinColumn(name = "attribute_id", nullable = false)
+	private HAttribute hAttribute;
+
 	private Attribute attribute;
 
 	/**
@@ -137,18 +100,12 @@ public class Answer {
 	 * A field that stores the human readable targetcode associated with this
 	 * answer.
 	 */
-	@NotNull
-	@Size(max = 64)
-	@Column(name = "targetcode", updatable = true, nullable = true)
 	private String targetCode;
 
 	/**
 	 * A field that stores the human readable sourcecode associated with this
 	 * answer.
 	 */
-	@NotNull
-	@Size(max = 64)
-	@Column(name = "sourcecode", updatable = true, nullable = true)
 	private String sourceCode;
 
 	private String code;
@@ -177,7 +134,6 @@ public class Answer {
 
 	// Provide a clue to any new attribute type that may be needed if the attribute
 	// does not exist yet, e.g. java.util.Double
-	@Transient
 	private String dataType = null;
 
 	private String realm;
@@ -205,6 +161,7 @@ public class Answer {
 		this.sourceCode = source.getCode();
 		this.targetCode = target.getCode();
 		this.attributeCode = attribute.getCode();
+		this.hAttribute = attribute.toHAttribute();
 		this.attribute = attribute;
 		this.setValue(value);
 		autocreateCreated();
@@ -447,8 +404,8 @@ public class Answer {
 	 * @throws BadDataException if Answer could not be constructed
 	 */
 	public Answer(final Ask aAsk, final String value) throws BadDataException {
-		this.askId = aAsk.getId();
-		this.attributeCode = aAsk.getQuestion().getAttribute().getCode();
+		this.attributeCode = aAsk.getQuestion().getAttributeCode();
+		this.hAttribute = aAsk.getQuestion().getAttribute().toHAttribute();
 		this.attribute = aAsk.getQuestion().getAttribute();
 		this.sourceCode = aAsk.getSourceCode();
 		this.targetCode = aAsk.getTargetCode();
@@ -514,7 +471,6 @@ public class Answer {
 		this.updated = updated;
 	}
 
-	@PreUpdate
 	/**
 	 * Set Updated to current UTC Time
 	 */
@@ -522,7 +478,6 @@ public class Answer {
 		setUpdated(LocalDateTime.now(ZoneId.of("Z")));
 	}
 
-	@PrePersist
 	/**
 	 * set created to the current UTC time
 	 */
@@ -731,6 +686,22 @@ public class Answer {
 	}
 
 	/**
+	 * @return hibernate variant of attribute
+	 */
+	public HAttribute getHAttribute() {
+		return hAttribute;
+	}
+
+	/**
+	 * @param hAttribute
+	 *                  hibernate variant of attribute to set
+	 */
+	public void setHAttribute(final HAttribute hAttribute) {
+		this.hAttribute = hAttribute;
+		this.attribute = hAttribute.toAttribute();
+	}
+
+	/**
 	 * @return the attribute
 	 */
 	public Attribute getAttribute() {
@@ -743,6 +714,7 @@ public class Answer {
 	 */
 	public void setAttribute(final Attribute attribute) {
 		this.attribute = attribute;
+		this.hAttribute = attribute.toHAttribute();
 		if (attribute == null)
 			return;
 		if (attribute.getDataType() == null)

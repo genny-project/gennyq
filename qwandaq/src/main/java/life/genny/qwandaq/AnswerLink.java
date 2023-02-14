@@ -15,6 +15,7 @@ import javax.persistence.Convert;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlTransient;
 
+import life.genny.qwandaq.entity.HBaseEntity;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
@@ -38,7 +39,7 @@ import life.genny.qwandaq.constants.TemporalFormat;
 import life.genny.qwandaq.converter.MoneyConverter;
 import life.genny.qwandaq.converter.StringListConverter;
 import life.genny.qwandaq.datatype.DataType;
-import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.HBaseEntity;
 
 /**
  * AnswerLink represents a link between BaseEntitys for Answer objects.
@@ -119,7 +120,7 @@ public class AnswerLink implements java.io.Serializable {
 	Money valueMoney;
 
 	/**
-	 * Store the BaseEntity Code value of the attribute for the baseEntity
+	 * Store the HBaseEntity Code value of the attribute for the baseEntity
 	 */
 	@Convert(converter = StringListConverter.class)
 	private List<String> valueBaseEntityCodeList;
@@ -162,7 +163,7 @@ public class AnswerLink implements java.io.Serializable {
 	 * @param target    the target entity
 	 * @param answer 	the answer
 	 */
-	public AnswerLink(final BaseEntity source, final BaseEntity target, final Answer answer) {
+	public AnswerLink(final HBaseEntity source, final HBaseEntity target, final Answer answer) {
 
 		this(source, target, answer, 0.0); // make zero so to not impact scoring
 		this.attributeCode = answer.getAttributeCode();
@@ -179,7 +180,7 @@ public class AnswerLink implements java.io.Serializable {
 	 * @param answer 	the answer
 	 * @param weight    the weighted importance
 	 */
-	public AnswerLink(final BaseEntity source, final BaseEntity target, final Answer answer, Double weight) {
+	public AnswerLink(final HBaseEntity source, final HBaseEntity target, final Answer answer, Double weight) {
 		autocreateCreated();
 		setSource(source);
 		setTarget(target);
@@ -220,6 +221,8 @@ public class AnswerLink implements java.io.Serializable {
 			// TODO: remove the qwanda version once db's are clear of it
 			case "life.genny.qwandaq.entity.BaseEntity":
 			case "life.genny.qwanda.entity.BaseEntity":
+			case "life.genny.qwandaq.entity.HBaseEntity":
+			case "life.genny.qwanda.entity.HBaseEntity":
 				setValueString(result);
 				break;
 
@@ -346,32 +349,32 @@ public class AnswerLink implements java.io.Serializable {
 	}
 	
 	/** 
-	 * @return BaseEntity
+	 * @return HBaseEntity
 	 */
 	@Transient
 	@JsonIgnore
-	public BaseEntity getSource() {
+	public HBaseEntity getSource() {
 		return getPk().getSource();
 	}
 	
 	/** 
 	 * @param source the source to set
 	 */
-	public void setSource(final BaseEntity source) {
+	public void setSource(final HBaseEntity source) {
 		getPk().setSource(source);
 		setSourceCode(source.getCode());
 	}
 
 	@Transient
 	@JsonIgnore
-	public BaseEntity getTarget() {
+	public HBaseEntity getTarget() {
 		return getPk().getTarget();
 	}
 	
 	/** 
 	 * @param target the target to set
 	 */
-	public void setTarget(final BaseEntity target) {
+	public void setTarget(final HBaseEntity target) {
 		getPk().setTarget(target);
 		setTargetCode(target.getCode());
 	}

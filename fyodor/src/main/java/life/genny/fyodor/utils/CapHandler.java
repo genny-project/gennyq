@@ -149,7 +149,6 @@ public class CapHandler extends Manager {
 		} else {
 			log.info("Service token. Bypassing requirements");
 		}
-		// TODO: implement capabilities
 		return true;
 	}
 
