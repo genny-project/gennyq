@@ -47,6 +47,8 @@ public class BaseEntityService extends KogitoService {
 
 	@Inject
 	DefUtils defUtils;
+
+	@Inject
 	Logger log;
 
 	/**
