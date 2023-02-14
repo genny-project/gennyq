@@ -152,7 +152,8 @@ public class QwandaUtils {
 	}
 
 	/**
-	 * Get an attribute from the cache.
+	 * Get an attribute from the cache. If it is missing, system will check the database and
+	 * repopulate the cache with it if it exists
 	 *
 	 * @param attributeCode the code of the attribute to get
 	 * @param productCode   the product code
