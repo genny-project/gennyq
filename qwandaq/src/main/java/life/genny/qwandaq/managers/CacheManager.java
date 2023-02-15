@@ -278,7 +278,6 @@ public class CacheManager {
 		if (attribute == null) {
 			throw new ItemNotFoundException(productCode, code);
 		}
-		log.info("attribute = " + jsonb.toJson(attribute));
         return attribute;
     }
 
