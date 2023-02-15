@@ -334,9 +334,7 @@ public class QwandaUtils {
 				log.debugf("No child questions found for the question: [%s,%s]", question.getRealm(), question.getCode());
 			} else {
 				// recursively operate on child questions
-				questionQuestions.stream()
-					.sorted((a, b) -> a.getWeight().compareTo(b.getWeight()))
-					.forEach(questionQuestion -> {
+				questionQuestions.forEach(questionQuestion -> {
 					log.debug("   [-] Found Child Question:  " + questionQuestion.getParentCode() + ":"
 							+ questionQuestion.getChildCode());
 					if (!questionQuestion.requirementsMet(capSet, requirementsConfig)) { // For now all caps are needed. I'll make this more comprehensive later
@@ -848,7 +846,7 @@ public class QwandaUtils {
 				questionAttribute);
 		Ask ask = new Ask(question, sourceCode, targetCode);
 
-		Set<Ask> childAsks = new HashSet<>();
+		LinkedHashSet<Ask> childAsks = new LinkedHashSet<>();
 		QDataBaseEntityMessage entityMessage = new QDataBaseEntityMessage();
 		entityMessage.setToken(userToken.getToken());
 		entityMessage.setReplace(true);

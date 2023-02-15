@@ -20,7 +20,7 @@ import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 
 import javax.xml.bind.annotation.XmlTransient;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
@@ -72,7 +72,7 @@ public class Ask extends CoreEntity {
 
 	private Double weight = 0.0;
 
-	private Set<Ask> childAsks;
+	private LinkedHashSet<Ask> childAsks;
 
 	/**
 	 * Default Constructor.
@@ -165,7 +165,7 @@ public class Ask extends CoreEntity {
 	 */
 	public void add(Ask child) {
 		if (this.childAsks == null)
-			this.childAsks = new HashSet<Ask>();
+			this.childAsks = new LinkedHashSet<Ask>();
 		this.childAsks.add(child);
 	}
 
@@ -275,7 +275,7 @@ public class Ask extends CoreEntity {
 		return childAsks;
 	}
 
-	public void setChildAsks(Set<Ask> children) {
+	public void setChildAsks(LinkedHashSet<Ask> children) {
 		this.childAsks = children;
 	}
 }
