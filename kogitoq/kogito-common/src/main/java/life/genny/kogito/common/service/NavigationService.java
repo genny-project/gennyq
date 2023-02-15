@@ -7,6 +7,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.List;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
@@ -36,6 +37,9 @@ public class NavigationService extends KogitoService {
 	Jsonb jsonb = JsonbBuilder.create();
 
 	public static final String PRI_IS_PREFIX = "PRI_IS_";
+
+	@Inject
+	FilterService filterService;
 
 	/**
 	 * Trigger the default redirection for the user.
@@ -213,6 +217,7 @@ public class NavigationService extends KogitoService {
 	 * @param code Question code
 	 */
 	public void redirectByTable(String code) {
+		filterService.init(code);
 		searchService.sendTable(code);
 	}
 
