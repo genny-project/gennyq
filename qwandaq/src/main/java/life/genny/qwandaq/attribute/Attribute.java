@@ -93,6 +93,7 @@ public class Attribute extends CodedEntity implements CoreEntityPersistable {
 	public static final String LNK_ITEMS = "LNK_ITEMS";
 	public static final String LNK_AUTHOR = "LNK_AUTHOR";
 	public static final String LNK_SUMMARY = "LNK_SUMMARY";
+	public static final String LNK_PARENT = "LNK_PARENT";
 
 	// definition
 	public static final String LNK_DEF = "LNK_DEF";
