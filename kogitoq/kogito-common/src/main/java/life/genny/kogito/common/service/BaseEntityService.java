@@ -43,6 +43,9 @@ public class BaseEntityService extends KogitoService {
 	QwandaUtils qwandaUtils;
 
 	@Inject
+	KeycloakUtils keycloakUtils;
+
+	@Inject
 	CacheManager cm;
 
 	@Inject
@@ -186,18 +189,20 @@ public class BaseEntityService extends KogitoService {
 	 */
 	public void updateKeycloak(String userCode) {
 
-		BaseEntity user = beUtils.getBaseEntity(userCode);
-		String email = user.getValue("PRI_EMAIL", null);
-		String firstName = user.getValue("PRI_FIRSTNAME", null);
-		String lastName = user.getValue("PRI_LASTNAME", null);
+		String productCode = userToken.getProductCode();
+		EntityAttribute email = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_EMAIL);
+		EntityAttribute firstName = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_FIRSTNAME);
+		EntityAttribute lastName = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_LASTNAME);
+
+		BaseEntity user = beUtils.getUserBaseEntity();
 
 		// update user fields
 		// NOTE: this could be turned into a single http request
 		// Could make it a builder pattern to make it a single http request?
-		KeycloakUtils.updateUserEmail(serviceToken, user, email);
-		KeycloakUtils.updateUserField(serviceToken, user, "username", email);
-		KeycloakUtils.updateUserField(serviceToken, user, "firstName", firstName);
-		KeycloakUtils.updateUserField(serviceToken, user, "lastName", lastName);
+		keycloakUtils.updateUserEmail(user, email.getValueString());
+		keycloakUtils.updateUserField(user, "username", email.getValueString());
+		keycloakUtils.updateUserField(user, "firstName", firstName.getValueString());
+		keycloakUtils.updateUserField(user, "lastName", lastName.getValueString());
 	}
 
 	/**

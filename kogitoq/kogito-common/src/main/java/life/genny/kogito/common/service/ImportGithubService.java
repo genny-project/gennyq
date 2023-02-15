@@ -78,9 +78,9 @@ public class ImportGithubService extends KogitoService {
 				String productCode = be.getRealm();
 				newBe.setRealm(productCode);
 
-				newBe.addAnswer(new Answer(newBe, newBe, cm.getAttribute("PRI_NAME"), be.getName()));
-				newBe.addAnswer(new Answer(newBe, newBe, cm.getAttribute("PRI_CODE"), beCode));
-				newBe.addAnswer(new Answer(newBe, newBe, cm.getAttribute("PRI_HTML_MERGE"),
+				newBe.addAttribute(new EntityAttribute(newBe, cm.getAttribute("PRI_NAME"), 1.0, be.getName()));
+				newBe.addAttribute(new EntityAttribute(newBe, cm.getAttribute("PRI_CODE"), 1.0, beCode));
+				newBe.addAttribute(new EntityAttribute(newBe, cm.getAttribute("PRI_HTML_MERGE"), 1.0,
 						beaUtils.getEntityAttribute(
 								productCode, beCode, "PRI_HTML_MERGE").getValueString()));
 

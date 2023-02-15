@@ -51,8 +51,8 @@ import org.eclipse.jgit.treewalk.filter.PathSuffixFilter;
 import org.jboss.logging.Logger;
 
 import io.vertx.mutiny.sqlclient.Tuple;
-import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
@@ -275,24 +275,24 @@ public class GithubUtils {
                         layout = new BaseEntity(layoutCode, name);
                     }
 
-                    layout.addAnswer(new Answer(layout, layout, new Attribute("PRI_LAYOUT_DATA", "Layout Data", dtt),
+                    layout.addAttribute(new EntityAttribute(layout, new Attribute("PRI_LAYOUT_DATA", "Layout Data", dtt), 1.0,
                             content));
 
-                    layout.addAnswer(
-                            new Answer(layout, layout, new Attribute("PRI_LAYOUT_URI", "Layout URI", dtt), uri));
-                    layout.addAnswer(new Answer(layout, layout, new Attribute("PRI_LAYOUT_URL", "Layout URL", dtt),
+                    layout.addAttribute(
+                            new EntityAttribute(layout, new Attribute("PRI_LAYOUT_URI", "Layout URI", dtt), 1.0, uri));
+                    layout.addAttribute(new EntityAttribute(layout, new Attribute("PRI_LAYOUT_URL", "Layout URL", dtt), 1.0,
                             "http://layout-cache-service/" + fullpath));
-                    layout.addAnswer(
-                            new Answer(layout, layout, new Attribute("PRI_LAYOUT_NAME", "Layout Name", dtt), name));
-                    layout.addAnswer(
-                            new Answer(layout, layout, new Attribute("PRI_BRANCH", "Branch", dtt), branch));
+                    layout.addAttribute(
+                            new EntityAttribute(layout, new Attribute("PRI_LAYOUT_NAME", "Layout Name", dtt), 1.0, name));
+                    layout.addAttribute(
+                            new EntityAttribute(layout, new Attribute("PRI_BRANCH", "Branch", dtt), 1.0, branch));
                     long secs = commit.getCommitTime();
                     LocalDateTime commitDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(secs * 1000),
                             TimeZone.getDefault().toZoneId());
 
                     String lastCommitDateTimeString = commitDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-                    layout.addAnswer(new Answer(layout, layout,
-                            new Attribute("PRI_LAYOUT_MODIFIED_DATE", "Modified", dtt), lastCommitDateTimeString)); // if
+                    layout.addAttribute(new EntityAttribute(layout,
+                            new Attribute("PRI_LAYOUT_MODIFIED_DATE", "Modified", dtt), 1.0, lastCommitDateTimeString)); // if
                                                                                                                    // new
                     layout.setRealm(realm);
                     layout.setUpdated(commitDateTime);
@@ -363,17 +363,17 @@ public class GithubUtils {
             String layoutCode = ("LAY_" + realm + "_" + precode).toUpperCase();
             log.info(layoutCode + " file = " + fullpath + " size=" + tupleFile.getString(1).length());
             BaseEntity layout = new BaseEntity(layoutCode, name);
-            layout.addAnswer(new Answer(layout, layout, new Attribute("PRI_LAYOUT_DATA", "Layout Data", dtt), content));
-            layout.addAnswer(new Answer(layout, layout, new Attribute("PRI_LAYOUT_URI", "Layout URI", dtt), filepath));
-            layout.addAnswer(new Answer(layout, layout, new Attribute("PRI_LAYOUT_URL", "Layout URL", dtt),
+            layout.addAttribute(new EntityAttribute(layout, new Attribute("PRI_LAYOUT_DATA", "Layout Data", dtt), 1.0, content));
+            layout.addAttribute(new EntityAttribute(layout, new Attribute("PRI_LAYOUT_URI", "Layout URI", dtt), 1.0, filepath));
+            layout.addAttribute(new EntityAttribute(layout, new Attribute("PRI_LAYOUT_URL", "Layout URL", dtt), 1.0,
                     "http://layout-cache-service/" + realmFilter + "/" + fullpath));
-            layout.addAnswer(new Answer(layout, layout, new Attribute("PRI_LAYOUT_NAME", "Layout Name", dtt), name));
+            layout.addAttribute(new EntityAttribute(layout, new Attribute("PRI_LAYOUT_NAME", "Layout Name", dtt), 1.0, name));
             long secs = commitTime;
             LocalDateTime commitDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(secs * 1000),
                     TimeZone.getDefault().toZoneId());
 
             String lastCommitDateTimeString = commitDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-            layout.addAnswer(new Answer(layout, layout, new Attribute("PRI_LAYOUT_MODIFIED_DATE", "Modified", dtt),
+            layout.addAttribute(new EntityAttribute(layout, new Attribute("PRI_LAYOUT_MODIFIED_DATE", "Modified", dtt), 1.0,
                     lastCommitDateTimeString)); // if new
             layout.setRealm(realm);
             layout.setUpdated(commitDateTime);

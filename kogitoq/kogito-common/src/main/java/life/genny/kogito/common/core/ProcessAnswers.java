@@ -10,6 +10,7 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
 import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.attribute.EntityAttribute;
 import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.service.TaskService;
@@ -160,7 +161,6 @@ public class ProcessAnswers {
 			// find the attribute
 			String attributeCode = answer.getAttributeCode();
 			Attribute attribute = cm.getAttribute(attributeCode);
-			answer.setAttribute(attribute);
 
 			// debug log the value before saving
 			String currentValue = target.getValueAsString(attributeCode);
@@ -175,7 +175,7 @@ public class ProcessAnswers {
 			}
 
 			// update the baseentity
-			target.addAnswer(answer);
+			target.addAttribute(new EntityAttribute(target, attribute, 1.0, answer.getValue()));
 			String value = target.getValueAsString(answer.getAttributeCode());
 			log.debug("Value Saved -> " + answer.getAttributeCode() + " = " + value);
 		}

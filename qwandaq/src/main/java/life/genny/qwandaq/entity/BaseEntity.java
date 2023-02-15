@@ -31,7 +31,6 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
 import life.genny.qwandaq.Answer;
-import life.genny.qwandaq.AnswerLink;
 import life.genny.qwandaq.CodedEntity;
 import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.attribute.Attribute;
@@ -78,8 +77,6 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 
 	private Map<String, EntityAttribute> baseEntityAttributes = new HashMap<>(0);
 
-	private transient Set<AnswerLink> answers = new HashSet<AnswerLink>(0);
-
 	@Transient
 	private Boolean fromCache = false;
 
@@ -121,18 +118,6 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 	@Override
 	public void setCapabilityRequirements(Set<Capability> requirements) {
 		this.capabilityRequirements = requirements;
-	}
-
-	public Set<AnswerLink> getAnswers() {
-		return answers;
-	}
-
-	public void setAnswers(final Set<AnswerLink> answers) {
-		this.answers = answers;
-	}
-
-	public void setAnswers(final List<AnswerLink> answers) {
-		this.answers.addAll(answers);
 	}
 
 	public Collection<EntityAttribute> getBaseEntityAttributes() {
@@ -313,66 +298,6 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 	 */
 	public Boolean removeAttribute(final String attributeCode) {
 		return this.getBaseEntityAttributesMap().remove(attributeCode) != null ? true : false;
-	}
-
-	/**
-	 * addAnswer This links this baseEntity to a target BaseEntity and associated
-	 * Answer. It auto creates the AnswerLink object and sets itself to be the
-	 * source and assumes itself to be the target. For efficiency we assume the link
-	 * does not already exist and weight = 0
-	 * 
-	 * @param answer the answer to add
-	 * @return AnswerLink
-	 * @throws BadDataException if answer could not be added
-	 */
-	public AnswerLink addAnswer(final Answer answer) throws BadDataException {
-		return addAnswer(this, answer, 0.0);
-	}
-
-	/**
-	 * addAnswer This links this baseEntity to a target BaseEntity and associated
-	 * Answer. It auto creates the AnswerLink object and sets itself to be the
-	 * source and assumes itself to be the target. For efficiency we assume the link
-	 * does not already exist
-	 * 
-	 * @param answer the answer to add
-	 * @param weight the weight of the answer
-	 * @return AnswerLink
-	 * @throws BadDataException if answer could not be added
-	 */
-	public AnswerLink addAnswer(final Answer answer, final Double weight) throws BadDataException {
-		return addAnswer(this, answer, weight);
-	}
-
-	/**
-	 * addAnswer This links this baseEntity to a target BaseEntity and associated
-	 * Answer. It auto creates the AnswerLink object and sets itself to be the
-	 * source. For efficiency we assume the link does not already exist
-	 * 
-	 * @param source the source entity
-	 * @param answer the answer to add
-	 * @param weight the weight of the answer
-	 * @return AnswerLink
-	 * @throws BadDataException if answer could not be added
-	 */
-	public AnswerLink addAnswer(final BaseEntity source, final Answer answer, final Double weight)
-			throws BadDataException {
-		if (source == null)
-			throw new BadDataException("missing Target Entity");
-		if (answer == null)
-			throw new BadDataException("missing Answer");
-		if (weight == null)
-			throw new BadDataException("missing weight");
-
-		final AnswerLink answerLink = new AnswerLink(source.toHBaseEntity(), this.toHBaseEntity(), answer, weight);
-		if (answer.getAskId() != null) {
-			answerLink.setAskId(answer.getAskId());
-		}
-
-		// Update the EntityAttribute
-		addEntityAttribute(answerLink.getAttribute(), weight, answer.getInferred(), answerLink.getValue());
-
-		return answerLink;
 	}
 
 	/**

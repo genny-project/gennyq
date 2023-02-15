@@ -17,6 +17,7 @@ import io.smallrye.reactive.messaging.annotations.Blocking;
 import life.genny.fyodor.utils.FyodorUltra;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.kafka.KafkaTopic;
@@ -82,9 +83,9 @@ public class InternalConsumer {
 		Page page = fyodor.fetch26(searchEntity);
 
 		Attribute totalResults = cm.getAttribute(Attribute.PRI_TOTAL_RESULTS);
-		searchEntity.addAnswer(new Answer(searchEntity, searchEntity, totalResults, String.valueOf(page.getTotal())));
+		searchEntity.addAttribute(new EntityAttribute(searchEntity, totalResults, 1.0, String.valueOf(page.getTotal())));
 		Attribute index = cm.getAttribute(Attribute.PRI_INDEX);
-		searchEntity.addAnswer(new Answer(searchEntity, searchEntity, index, String.valueOf(page.getPageNumber())));
+		searchEntity.addAttribute(new EntityAttribute(searchEntity, index, 1.0, String.valueOf(page.getPageNumber())));
 
 		// convert to sendable
 		searchEntity = searchEntity.convertToSendable();

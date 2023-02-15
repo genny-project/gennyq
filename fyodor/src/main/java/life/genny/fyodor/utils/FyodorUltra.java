@@ -119,10 +119,10 @@ public class FyodorUltra {
 					.collect(Collectors.toSet());
 
 			for (String code : associatedCodes) {
-				Answer ans = getAssociatedColumnValue(be, code);
-
-				if (ans != null)
-					be.addAnswer(ans);
+				EntityAttribute ea = getAssociatedColumnValue(be, code);
+				if (ea != null) {
+					be.addAttribute(ea);
+				}
 			}
 
 			if (!searchEntity.getAllColumns())
@@ -630,20 +630,21 @@ public class FyodorUltra {
 	 * @param code
 	 * @return
 	 */
-	public Answer getAssociatedColumnValue(BaseEntity entity, String code) {
+	public EntityAttribute getAssociatedColumnValue(BaseEntity entity, String code) {
 
 		String cleanCode = StringUtils.removeStart(code, "_");
 
 		// recursively find value
-		Answer answer = getRecursiveColumnLink(entity, cleanCode);
-		if (answer == null)
+		EntityAttribute ea = getRecursiveColumnLink(entity, cleanCode);
+		if (ea == null) {
 			return null;
+		}
 
 		// update attribute code for frontend
-		answer.setAttributeCode(code);
-		answer.getAttribute().setCode(code);
+		ea.setAttributeCode(code);
+		ea.getAttribute().setCode(code);
 
-		return answer;
+		return ea;
 	}
 
 	/**
@@ -654,7 +655,7 @@ public class FyodorUltra {
 	 * @param code
 	 * @return
 	 */
-	public Answer getRecursiveColumnLink(BaseEntity entity, String code) {
+	public EntityAttribute getRecursiveColumnLink(BaseEntity entity, String code) {
 
 		if (entity == null)
 			return null;
@@ -687,13 +688,11 @@ public class FyodorUltra {
 			value = entityAttribute.getAsString();
 		}
 
-		// create answer
-		Answer answer = new Answer(entity.getCode(), entity.getCode(), attributeCode, value);
-		log.info(code);
-		Attribute attribute = cm.getAttribute(attributeCode);
-		answer.setAttribute(attribute);
+		// create ea
+		Attribute attribute = cm.getAttribute(entity.getRealm(), attributeCode);
+		EntityAttribute ea = new EntityAttribute(entity, attribute, 1.0, value);
 
-		return answer;
+		return ea;
 	}
 
 }

@@ -685,9 +685,9 @@ public class QwandaUtils {
 			// ensure the attribute is set
 			String attributeCode = answer.getAttributeCode();
 			Attribute attribute = cm.getAttribute(attributeCode);
-			answer.setAttribute(attribute);
+			EntityAttribute ea = new EntityAttribute(processEntity, attribute, 1.0, answer.getValue());
 			// add answer to entity
-			processEntity.addAnswer(answer);
+			processEntity.addAttribute(ea);
 		});
 
 		log.debug("ProcessBE contains " + processEntity.getBaseEntityAttributesMap().size() + " entity attributes");
@@ -792,7 +792,6 @@ public class QwandaUtils {
 				// find the attribute
 				String attributeCode = answer.getAttributeCode();
 				Attribute attribute = cm.getAttribute(attributeCode);
-				answer.setAttribute(attribute);
 				// check if name needs updating
 				if (Attribute.PRI_NAME.equals(attributeCode)) {
 					String name = answer.getValue();
@@ -926,12 +925,13 @@ public class QwandaUtils {
 		// Check if attribute code exists as a UNQ for the DEF
 		String productCode = definition.getRealm();
 		String definitionCode = definition.getCode();
-		List<EntityAttribute> uniques = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(productCode, definitionCode, "UNQ");
+		List<EntityAttribute> uniques = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(productCode, definitionCode, Prefix.UNQ_);
 		log.info("Found " + uniques.size() + " UNQ attributes");
 
 		String prefix = beaUtils.getEntityAttribute(productCode, definitionCode, Attribute.PRI_PREFIX).getValueString();
 
 		for (life.genny.qwandaq.attribute.EntityAttribute entityAttribute : uniques) {
+
 			// fetch list of unique code combo
 			List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(definition,
 					entityAttribute.getAttributeCode());
@@ -941,7 +941,7 @@ public class QwandaUtils {
 				continue;
 
 			SearchEntity searchEntity = new SearchEntity(SBE_COUNT_UNIQUE_PAIRS, "Count Unique Pairs")
-					.add(new Filter(PRI_CODE, Operator.LIKE, prefix + "_%"))
+					.add(new Filter(PRI_CODE, Operator.STARTS_WITH, prefix.concat("_")))
 					.setPageStart(0)
 					.setPageSize(1);
 
@@ -958,27 +958,10 @@ public class QwandaUtils {
 					value = answer.getValue();
 				}
 
-				if (value == null) {
-					// get the first value in array of target
-					for (BaseEntity target : targets) {
-						String targetCode = target.getCode();
-						String targetEmail = beaUtils.getEntityAttribute(productCode, targetCode, Attribute.PRI_EMAIL, false).getValueString();
-						log.info("TARGET = " + targetCode + ", EMAIL = " + targetEmail);
-						EntityAttribute valueAttribute = beaUtils.getEntityAttribute(productCode, targetCode, code, false);
-						if (valueAttribute != null) {
-							value = valueAttribute.getValueString();
-							if (value.isEmpty()) {
-								value = null;
-							} else if (value != null) {
-								break;
-							}
-						}
-					}
-				}
-
 				// value has not yet been answered, not a duplicate
-				if (value == null)
+				if (value == null) {
 					return false;
+				}
 
 				// clean it up if it is a code
 				if (value.contains("[") && value.contains("]"))
@@ -992,8 +975,9 @@ public class QwandaUtils {
 			searchEntity.setRealm(userToken.getProductCode());
 			Long count = searchUtils.countBaseEntitys(searchEntity);
 			log.infof("Found %s entities", count);
-			if (count != 0)
+			if (count != 0) {
 				return true;
+			}
 		}
 		return false;
 	}

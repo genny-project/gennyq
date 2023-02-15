@@ -37,7 +37,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import life.genny.qwandaq.Answer;
-import life.genny.qwandaq.AnswerLink;
 import life.genny.qwandaq.CodedEntity;
 import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.attribute.Attribute;
@@ -118,19 +117,6 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	})
 	private Set<HEntityAttribute> baseEntityAttributes = new HashSet<HEntityAttribute>(0);
 
-	/*
-	 * @JsonIgnore
-	 *
-	 * @XmlTransient
-	 *
-	 * @OneToMany(fetch = FetchType.LAZY, mappedBy = "pk.source")
-	 *
-	 * @Cascade({ CascadeType.MERGE, CascadeType.DELETE })
-	 *
-	 * @JsonbTransient
-	 */
-	private transient Set<AnswerLink> answers = new HashSet<AnswerLink>(0);
-
 	@XmlTransient
 	@Transient
 	private Boolean fromCache = false;
@@ -181,27 +167,6 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 	@ProtoFactory
 	public HBaseEntity(final String aCode, final String aName) {
 		super(aCode, aName);
-	}
-
-	/**
-	 * @return Set The Answers.
-	 */
-	public Set<AnswerLink> getAnswers() {
-		return answers;
-	}
-
-	/**
-	 * @param answers the answers to set
-	 */
-	public void setAnswers(final Set<AnswerLink> answers) {
-		this.answers = answers;
-	}
-
-	/**
-	 * @param answers the answers to set
-	 */
-	public void setAnswers(final List<AnswerLink> answers) {
-		this.answers.addAll(answers);
 	}
 
 	/**
@@ -444,77 +409,6 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 		}
 
 		return removed;
-	}
-
-	/**
-	 * addAnswer This links this baseEntity to a target HBaseEntity and associated
-	 * Answer. It auto creates the AnswerLink object and sets itself to be the
-	 * source and assumes itself to be the target. For efficiency we assume the link
-	 * does not already exist and weight = 0
-	 *
-	 * @param answer the answer to add
-	 * @return AnswerLink
-	 * @throws BadDataException if answer could not be added
-	 */
-	public AnswerLink addAnswer(final Answer answer) throws BadDataException {
-		return addAnswer(this, answer, 0.0);
-	}
-
-	/**
-	 * addAnswer This links this baseEntity to a target HBaseEntity and associated
-	 * Answer. It auto creates the AnswerLink object and sets itself to be the
-	 * source and assumes itself to be the target. For efficiency we assume the link
-	 * does not already exist
-	 *
-	 * @param answer the answer to add
-	 * @param weight the weight of the answer
-	 * @return AnswerLink
-	 * @throws BadDataException if answer could not be added
-	 */
-	public AnswerLink addAnswer(final Answer answer, final Double weight) throws BadDataException {
-		return addAnswer(this, answer, weight);
-	}
-
-	/**
-	 * addAnswer This links this baseEntity to a target HBaseEntity and associated
-	 * Answer. It auto creates the AnswerLink object and sets itself to be the
-	 * source. For efficiency we assume the link does not already exist
-	 *
-	 * @param source the source entity
-	 * @param answer the answer to add
-	 * @param weight the weight of the answer
-	 * @return AnswerLink
-	 * @throws BadDataException if answer could not be added
-	 */
-	public AnswerLink addAnswer(final HBaseEntity source, final Answer answer, final Double weight)
-			throws BadDataException {
-		if (source == null)
-			throw new BadDataException("missing Target Entity");
-		if (answer == null)
-			throw new BadDataException("missing Answer");
-		if (weight == null)
-			throw new BadDataException("missing weight");
-
-		final AnswerLink answerLink = new AnswerLink(source, this, answer, weight);
-		if (answer.getAskId() != null) {
-			answerLink.setAskId(answer.getAskId());
-		}
-
-		// Update the HEntityAttribute
-		Optional<HEntityAttribute> ea = findEntityAttribute(answer.getAttributeCode());
-		if (ea.isPresent()) {
-			// modify
-			ea.get().setValue(answerLink.getValue());
-			ea.get().setInferred(answer.getInferred());
-			ea.get().setWeight(answer.getWeight());
-			ea.get().setBaseEntity(this);
-		} else {
-			HEntityAttribute newEA = new HEntityAttribute(this, answerLink.getAttribute().toHAttribute(), weight, answerLink.getValue());
-			newEA.setInferred(answerLink.getInferred());
-			this.baseEntityAttributes.add(newEA);
-		}
-
-		return answerLink;
 	}
 
 	/**

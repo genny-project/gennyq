@@ -34,6 +34,8 @@ import javax.json.bind.JsonbBuilder;
 import javax.net.ssl.HttpsURLConnection;
 import javax.ws.rs.core.Response;
 
+import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
 import org.apache.commons.lang3.StringUtils;
@@ -41,6 +43,7 @@ import org.jboss.logging.Logger;
 import org.keycloak.representations.account.UserRepresentation;
 import org.keycloak.util.JsonSerialization;
 
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.KeycloakException;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.GennySettings;
@@ -59,6 +62,9 @@ public class KeycloakUtils {
 
     @Inject
     EntityAttributeUtils beaUtils;
+
+    @Inject
+    ServiceToken serviceToken;
 
 	private static Logger log = Logger.getLogger(KeycloakUtils.class);
 
@@ -495,16 +501,21 @@ public class KeycloakUtils {
      * @param value     the value to update to
      * @return int statusCode
      */
-    public static int updateUserField(GennyToken userToken, BaseEntity user, String field, String value) {
+    public int updateUserField(BaseEntity user, String field, String value) {
 
-        String realm = userToken.getKeycloakRealm();
+        String realm = serviceToken.getKeycloakRealm();
+		String productCode = user.getRealm();
+		String userCode = user.getCode();
 
-        String uuid = user.getValue("PRI_UUID", null);
-        uuid = uuid.toLowerCase();
+		EntityAttribute id = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_UUID);
+		if (id == null) {
+			throw new ItemNotFoundException(productCode, userCode, Attribute.PRI_UUID);
+		}
+        String uuid = id.getValueString().toLowerCase();
 
         String json = "{\"" + field + "\":\"" + value + "\"}";
         String uri = GennySettings.keycloakUrl() + "/admin/realms/" + realm + "/users/" + uuid;
-        HttpResponse<String> response = HttpUtils.put(uri, json, userToken);
+        HttpResponse<String> response = HttpUtils.put(uri, json, serviceToken);
 
         return response.statusCode();
     }
@@ -517,16 +528,21 @@ public class KeycloakUtils {
      * @param email     the email to set
      * @return int statusCode
      */
-    public static int updateUserEmail(GennyToken userToken, BaseEntity user, String email) {
+    public int updateUserEmail(BaseEntity user, String email) {
 
-        String realm = userToken.getKeycloakRealm();
+        String realm = serviceToken.getKeycloakRealm();
+		String productCode = user.getRealm();
+		String userCode = user.getCode();
 
-        String uuid = user.getValue("PRI_UUID", null);
-        uuid = uuid.toLowerCase();
+		EntityAttribute id = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_UUID);
+		if (id == null) {
+			throw new ItemNotFoundException(productCode, userCode, Attribute.PRI_UUID);
+		}
+        String uuid = id.getValueString().toLowerCase();
 
         String json = "{ \"email\" : \"" + email + "\" , \"enabled\" : true, \"emailVerified\" : true}";
         String uri = GennySettings.keycloakUrl() + "/admin/realms/" + realm + "/users/" + uuid;
-        HttpResponse<String> response = HttpUtils.put(uri, json, userToken);
+        HttpResponse<String> response = HttpUtils.put(uri, json, serviceToken);
 
         return response.statusCode();
     }

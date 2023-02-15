@@ -199,7 +199,7 @@ public class BaseEntityUtils {
 		BaseEntityKey key = new BaseEntityKey(baseEntity.getRealm(), baseEntity.getCode());
 		boolean savedSuccessfully = cm.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, baseEntity);
 		if (updateBaseEntityAttributes) {
-			beaUtils.getAllEntityAttributesForBaseEntity(baseEntity).forEach(bea -> {
+			baseEntity.getBaseEntityAttributes().forEach(bea -> {
 				// ensure for all entityAttribute that baseentity and attribute are not null
 				if (bea.getRealm() == null) {
 					bea.setRealm(baseEntity.getRealm());
@@ -520,7 +520,7 @@ public class BaseEntityUtils {
 		}
 
 		// save to DB and cache
-		updateBaseEntity(item);
+		updateBaseEntity(item, true);
 
 		List<EntityAttribute> atts = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(productCode, definitionCode, Prefix.ATT_);
 		for (EntityAttribute ea : atts) {
@@ -557,13 +557,13 @@ public class BaseEntityUtils {
 		}
 
 		Attribute linkDef = cm.getAttribute(Attribute.LNK_DEF);
-		item.addAnswer(new Answer(item, item, linkDef, "[\"" + definitionCode + "\"]"));
+		item.addAttribute(new EntityAttribute(item, linkDef, 1.0, "[\"" + definitionCode + "\"]"));
 
 		// author of the BE
 		Attribute lnkAuthorAttr = cm.getAttribute(Attribute.LNK_AUTHOR);
-		item.addAnswer(new Answer(item, item, lnkAuthorAttr, "[\"" + userToken.getUserCode() + "\"]"));
+		item.addAttribute(new EntityAttribute(item, lnkAuthorAttr, 1.0, "[\"" + userToken.getUserCode() + "\"]"));
 
-		updateBaseEntity(item);
+		updateBaseEntity(item, true);
 
 		return item;
 	}
@@ -600,14 +600,14 @@ public class BaseEntityUtils {
 			// Check to see if the email exists
 			// TODO: check to see if the email exists in the database and keycloak
 			Attribute emailAttribute = cm.getAttribute(Attribute.PRI_EMAIL);
-			item.addAnswer(new Answer(item, item, emailAttribute, email));
+			item.addAttribute(new EntityAttribute(item, emailAttribute, 1.0, email));
 			Attribute usernameAttribute = cm.getAttribute(Attribute.PRI_USERNAME);
-			item.addAnswer(new Answer(item, item, usernameAttribute, email));
+			item.addAttribute(new EntityAttribute(item, usernameAttribute, 1.0, email));
 		}
 
 		// add PRI_UUID
 		Attribute uuidAttribute = cm.getAttribute(Attribute.PRI_UUID);
-		item.addAnswer(new Answer(item, item, uuidAttribute, uuid.toUpperCase()));
+		item.addAttribute(new EntityAttribute(item, uuidAttribute, 1.0, uuid.toUpperCase()));
 
 		return item;
 	}

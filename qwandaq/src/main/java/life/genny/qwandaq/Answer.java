@@ -17,8 +17,6 @@
 package life.genny.qwandaq;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.HAttribute;
 import life.genny.qwandaq.datatype.LocalDateTimeAdapter;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.BadDataException;
@@ -82,10 +80,6 @@ public class Answer {
 	 */
 	private String attributeCode;
 
-	private HAttribute hAttribute;
-
-	private Attribute attribute;
-
 	/**
 	 * Store the askId (if present)
 	 */
@@ -143,29 +137,6 @@ public class Answer {
 	 */
 	@SuppressWarnings("unused")
 	public Answer() {
-	}
-
-	/**
-	 * Constructor.
-	 * 
-	 * @param source
-	 *                  The source associated with this Answer
-	 * @param target
-	 *                  The target associated with this Answer
-	 * @param attribute
-	 *                  The attribute associated with this Answer
-	 * @param value
-	 *                  The associated String value
-	 */
-	public Answer(final BaseEntity source, final BaseEntity target, final Attribute attribute, final String value) {
-		this.sourceCode = source.getCode();
-		this.targetCode = target.getCode();
-		this.attributeCode = attribute.getCode();
-		this.hAttribute = attribute.toHAttribute();
-		this.attribute = attribute;
-		this.setValue(value);
-		autocreateCreated();
-		checkInputs();
 	}
 
 	/**
@@ -392,27 +363,6 @@ public class Answer {
 		this.setValue(value);
 		autocreateCreated();
 		checkInputs();
-	}
-
-	/**
-	 * Constructor.
-	 * 
-	 * @param aAsk
-	 *              The ask that created this answer
-	 * @param value
-	 *              The associated String value
-	 * @throws BadDataException if Answer could not be constructed
-	 */
-	public Answer(final Ask aAsk, final String value) throws BadDataException {
-		this.attributeCode = aAsk.getQuestion().getAttributeCode();
-		this.hAttribute = aAsk.getQuestion().getAttribute().toHAttribute();
-		this.attribute = aAsk.getQuestion().getAttribute();
-		this.sourceCode = aAsk.getSourceCode();
-		this.targetCode = aAsk.getTargetCode();
-		this.setValue(value);
-		autocreateCreated();
-		checkInputs();
-		// this.ask.add(this);
 	}
 
 	/**
@@ -683,44 +633,6 @@ public class Answer {
 	 */
 	public void setSourceCode(final String sourceCode) {
 		this.sourceCode = sourceCode;
-	}
-
-	/**
-	 * @return hibernate variant of attribute
-	 */
-	public HAttribute getHAttribute() {
-		return hAttribute;
-	}
-
-	/**
-	 * @param hAttribute
-	 *                  hibernate variant of attribute to set
-	 */
-	public void setHAttribute(final HAttribute hAttribute) {
-		this.hAttribute = hAttribute;
-		this.attribute = hAttribute.toAttribute();
-	}
-
-	/**
-	 * @return the attribute
-	 */
-	public Attribute getAttribute() {
-		return attribute;
-	}
-
-	/**
-	 * @param attribute
-	 *                  the attribute to set
-	 */
-	public void setAttribute(final Attribute attribute) {
-		this.attribute = attribute;
-		this.hAttribute = attribute.toHAttribute();
-		if (attribute == null)
-			return;
-		if (attribute.getDataType() == null)
-			return;
-		if (this.dataType == null)
-			setDataType(attribute.getDataType().getClassName());
 	}
 
 	/**
