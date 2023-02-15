@@ -454,7 +454,7 @@ public class CacheManager {
 		QueryFactory queryFactory = Search.getQueryFactory(remoteCache);
 		Query<QuestionQuestion> query = queryFactory
 				.create("from life.genny.qwandaq.persistence.questionquestion.QuestionQuestion where sourceCode = '" + parentQuestionCode
-						+ "' and realm = '" + productCode + "' order by weight");
+						+ "' and realm = '" + productCode + "'");
 		// execute query
 		QueryResult<QuestionQuestion> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
 		return queryResult.list();

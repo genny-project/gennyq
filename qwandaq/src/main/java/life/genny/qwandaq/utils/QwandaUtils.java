@@ -334,7 +334,9 @@ public class QwandaUtils {
 				log.debugf("No child questions found for the question: [%s,%s]", question.getRealm(), question.getCode());
 			} else {
 				// recursively operate on child questions
-				questionQuestions.forEach(questionQuestion -> {
+				questionQuestions.stream()
+					.sorted((a, b) -> a.getWeight().compareTo(b.getWeight()))
+					.forEach(questionQuestion -> {
 					log.debug("   [-] Found Child Question:  " + questionQuestion.getParentCode() + ":"
 							+ questionQuestion.getChildCode());
 					if (!questionQuestion.requirementsMet(capSet, requirementsConfig)) { // For now all caps are needed. I'll make this more comprehensive later
