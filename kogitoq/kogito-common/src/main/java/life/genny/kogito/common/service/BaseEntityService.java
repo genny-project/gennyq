@@ -194,7 +194,7 @@ public class BaseEntityService extends KogitoService {
 		EntityAttribute firstName = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_FIRSTNAME);
 		EntityAttribute lastName = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_LASTNAME);
 
-		BaseEntity user = beUtils.getUserBaseEntity();
+		BaseEntity user = beUtils.getBaseEntity(userCode);
 
 		// update user fields
 		// NOTE: this could be turned into a single http request
