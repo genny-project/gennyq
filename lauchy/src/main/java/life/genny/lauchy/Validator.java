@@ -148,11 +148,9 @@ public class Validator {
 		if (StringUtils.isBlank(processId))
 			return blacklist("ProcessId is blank");
 
-		if (processId.equalsIgnoreCase("no-idq")) {
-			// TODO : Temporary solution and rethink for filter and saved search
-			if (filter.validFilter(attributeCode)) {
-				return true;
-			}
+		// check filter attributes
+		if (filter.validFilter(attributeCode)) {
+			return true;
 		}
 
 		// Check if inferredflag is set

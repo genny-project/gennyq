@@ -32,9 +32,9 @@ public class GennySettings {
 	 * @param fallback - default value in the case the environment variable is not present
 	 * @param alert - whether or not to log a warning if the environment variable is missing
 	 * */
-	private static final String getConfig(String env, String fallback, boolean alert) 
+	private static final String getConfig(String env, String fallback, boolean alert) // env: PROJECT_URL, fallback:"http://alyson.genny.life", alert: true
 		throws IllegalStateException {
-		String value = CommonUtils.getSystemEnv(env, alert);
+		String value = CommonUtils.getSystemEnv(env, alert && fallback == null);
 		if(StringUtils.isBlank(value)) {
 			if(fallback != null) {
 				log.warn("Using fallback for " + env + ": " + fallback);
@@ -54,9 +54,17 @@ public class GennySettings {
 	 * This is likely due to an issue with the environment variables not being present at initialisation.
 	 * Because of this, we are have to opt for doing it as seen below.
 	 */
+	
+	/**
+	 * Return the dummy user password (contact dev team 1 if missing)
+	 * @return dummy user password as a string
+	 */
+	public static String dummyUserPassword() {
+		return getConfig("GENNY_DUMMY_PASSWORD", null, true);
+	}
 
 	/* ############ URL Methods ############## */
-	
+
 	/** 
 	 * Return the project URL
 	 *
