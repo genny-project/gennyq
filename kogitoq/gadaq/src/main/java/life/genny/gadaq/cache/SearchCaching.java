@@ -104,16 +104,12 @@ public class SearchCaching {
         cacheSearch(
                 new SearchEntity(SBE_TABLE_MESSAGE, "Messages")
                         .add(new Filter(PRI_CODE, Operator.STARTS_WITH, Prefix.MSG_))
-                        .add(new Column(PRI_NAME, "Code"))
-                        .add(new Column(PRI_DESCRIPTION, "Description"))
-                        .add(new Column(PRI_DEFAULT_MSG_TYPE, "Default Message Type"))
-                        .add(new Column(PRI_CONTEXT_LIST, "Context List"))
-                        .add(new Column(PRI_CONTEXT_ASSOCIATIONS, "Context Associations"))
-                        .add(new Column(PRI_CC, "CC"))
-                        .add(new Column(PRI_BCC, "BCC"))
+                        .add(new Column(PRI_CODE, "Message Id"))
+                        .add(new Column(PRI_NAME, "Name"))
                         .add(new Column(PRI_BODY, "Body"))
+                        .add(new AssociatedColumn(LNK_MESSAGE_TYPE, PRI_NAME, "Message Type"))
                         .add(new Action(EDIT, "Edit"))
-                        .setPageSize(4)
+                        .setPageSize(8)
                         .setPageStart(0));
     }
 
