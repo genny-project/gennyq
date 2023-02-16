@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.capability.core.CapabilityBuilder;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 import life.genny.qwandaq.entity.BaseEntity;
@@ -46,11 +47,21 @@ public class RoleBuilder {
 
     private String redirectCode;
 
+    private boolean shouldBuild = true;
+
     public RoleBuilder(String roleCode, String roleName, String productCode) {
         initCDI();
 
         this.productCode = productCode;
         targetRole = roleMan.createRole(productCode, roleCode, roleName);
+
+        // create role will return a base entity with no capability attributes so far
+        // if it doesn't already exist. If any do exist I am willing to assume we are running on startup
+        // again and shouldn't need to repersist the roles.
+
+        // TODO: Finish implementing this mechanism once rest of capabilities revision works
+        boolean hasCapabilities = targetRole.getBaseEntityAttributes().stream().anyMatch(ea -> ea.getAttributeCode().startsWith(Prefix.CAP_));
+        shouldBuild = !hasCapabilities;
     }
 
     /**
@@ -136,7 +147,7 @@ public class RoleBuilder {
 
         // We aren't persisting on each call to addCapability, so persist
         // going to experiment with persisting once here
-        beUtils.updateBaseEntity(targetRole);
+        beUtils.updateBaseEntity(productCode, targetRole);
 
         controller.doPersist(controllerPersistState);
         return targetRole;
