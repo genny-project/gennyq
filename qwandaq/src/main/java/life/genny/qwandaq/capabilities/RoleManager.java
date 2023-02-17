@@ -167,9 +167,10 @@ public class RoleManager {
 		
 		BaseEntity role = null;
 		roleCode = cleanRoleCode(roleCode);
+		log.info("Creating Role: " + roleCode + " in product: " + productCode);
 		try {
-			log.debug("Found existing " + roleCode);
 			role = beUtils.getBaseEntity(productCode, roleCode);
+			log.debug("Found existing " + roleCode);
 		} catch(ItemNotFoundException e) {
 			log.debug("Previous role: " + roleCode + " not found. Generating");
 			Definition defRole = defUtils.getDEF(Definition.DEF_ROLE);

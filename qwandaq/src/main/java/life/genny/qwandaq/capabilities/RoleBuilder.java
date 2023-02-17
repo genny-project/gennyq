@@ -128,25 +128,30 @@ public class RoleBuilder {
         controller.doPersist(false);
 
         // Redirect
+        log.debug("Setting redirect");
         roleMan.setRoleRedirect(productCode, targetRole, redirectCode);
 
         // Capabilities
         for(Entry<String, CapabilityNode[]> capabilityEntry : roleCapabilities.entrySet()) {
             String code = capabilityEntry.getKey();
             CapabilityNode[] nodes = capabilityEntry.getValue();
+            log.debug("Adding Capability: " + code + " to " + targetRole.getCode());
             controller.addCapability(productCode, targetRole, fetch(code), nodes);
         }
 
         // Role inherits
         for(BaseEntity parentRole : this.inheritedRoles) {
+            log.debug("Inheriting " + parentRole + " from " + targetRole);
             roleMan.inheritRole(productCode, targetRole, parentRole);
         }
         
         // Children
+        log.debug("Setting children of " + targetRole + " to " + childrenCodes);
         roleMan.setChildren(productCode, targetRole, childrenCodes.toArray(new String[0]));
 
         // We aren't persisting on each call to addCapability, so persist
         // going to experiment with persisting once here
+        log.debug("Persisting at end");
         beUtils.updateBaseEntity(productCode, targetRole);
 
         controller.doPersist(controllerPersistState);
