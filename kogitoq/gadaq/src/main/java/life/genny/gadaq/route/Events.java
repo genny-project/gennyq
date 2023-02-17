@@ -188,9 +188,7 @@ public class Events {
 
 			if (Prefix.MSG_.equals(prefix+"_")) {
                 kogitoUtils.triggerWorkflow(SELF, "messageLifecycle", "userCode", userToken.getUserCode());
-                return;
 			}
-			
 		}
 
         		// edit item (TODO This needs to be moved into a timer based bpmn)
