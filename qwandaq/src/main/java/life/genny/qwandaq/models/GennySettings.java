@@ -1,6 +1,7 @@
 package life.genny.qwandaq.models;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.constants.Delimiter;
 import life.genny.qwandaq.utils.CommonUtils;
 
 import org.apache.commons.lang3.StringUtils;
@@ -200,5 +201,17 @@ public class GennySettings {
 	 */
 	public static String minIOBucketName() {
 		return getConfig("BUCKET_NAME", "media", true);
+	}
+
+	/**
+	 * return the product codes loaded into the system
+	 * @return
+	 */
+	public static String[] productCodes() {
+		String codeString = getConfig("PRODUCT_CODES", null, true);
+		// no null check necessary, will have verbosely errored out past this point
+		String[] codes = codeString.split(Delimiter.COLON);
+		log.debug("Found " + codes.length + " product codes. Codes: " + codes);
+		return codes;
 	}
 }

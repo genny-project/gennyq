@@ -6,7 +6,12 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 
+import org.jboss.logging.Logger;
+
+import life.genny.qwandaq.exception.runtime.LaunchException;
+
 public interface KogitoServiceConsumerIntf {
+	static Logger log = Logger.getLogger(KogitoServiceConsumerIntf.class);
 
 	public static final String PROTOBUF_SRC = "/deployments/protobuf-location";
 	public static final String PROTOBUF_DEST = "/deployments/protobuf/";
@@ -55,12 +60,16 @@ public interface KogitoServiceConsumerIntf {
 		if (Files.exists(Paths.get(source))) {
 			directory = new File(source);
 		} else if (Files.exists(Paths.get(defaultSource))) {
-			// TODO: handle
+			log.info("Directory not found: " + source + ". Using Default Source: " + defaultSource + " instead.");
+			directory = new File(defaultSource);
 			return;
 		} else {
-			// TODO: throw launch exception
-			// throw new LaunchException("Could not find protobuf directory. Make sure the the project has been built.");
-			return;
+			String msg = new StringBuilder("Could not find protobuf directory in:\n")
+					.append("\t- ").append(source).append('\n')
+					.append("\t- ").append(defaultSource).append('\n')
+					.append("Make sure the project has been built.")
+					.toString();
+			throw new LaunchException(msg);
 		}
 		// copy all files to the correct directory
 		for (File file : directory.listFiles()) {

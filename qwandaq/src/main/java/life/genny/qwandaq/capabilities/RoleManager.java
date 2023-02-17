@@ -1,5 +1,6 @@
 package life.genny.qwandaq.capabilities;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
@@ -18,11 +19,13 @@ import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
+import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.DefUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,11 +52,12 @@ public class RoleManager {
 	@Inject
 	Logger log;
 
-	private static final AttributeProductDecorator lnkRoleAttribute = new AttributeProductDecorator(
-		new Attribute(Attribute.LNK_ROLE, "Role Link", new DataType(String.class))
-	);
-	
-	private static final AttributeProductDecorator lnkChildAttribute = new AttributeProductDecorator(
+	@Inject
+	QwandaUtils qwandaUtils;
+
+	// Product-agnostic attributes (to access these attributes it is a requirement to specify the product code)
+	private static AttributeProductDecorator lnkRoleAttribute;
+	private static AttributeProductDecorator lnkChildAttribute = new AttributeProductDecorator(
 		new Attribute(Attribute.LNK_CHILDREN, "Child Roles Link", new DataType(String.class))
 	);
 
@@ -61,6 +65,34 @@ public class RoleManager {
 	CapabilitiesController controller;
 
 	public RoleManager() {/* json constructor */}
+
+	/**
+	 * Search all product codes (if more than 1 exists) for the core attributes.
+	 * If none are found, scream about it.
+	 */
+	@PostConstruct
+	private void initDecorators() {
+	}
+
+	/**
+	 * Initialize a single attribute product decorator by finding the relevant attribute in at least one
+	 * of the loaded products
+	 * @param decorator
+	 * @param attributeCode
+	 * @return
+	 */
+	private AttributeProductDecorator initDecorator(String attributeCode) {
+		String[] productCodes = GennySettings.productCodes();
+		for(int i = 0; i < productCodes.length; i++) {
+			try {
+				Attribute attribute = qwandaUtils.getAttribute(productCodes[i], attributeCode);
+				// we found it without erroring out so we don't have to look through the rest
+				return new AttributeProductDecorator(attribute);
+			} catch(ItemNotFoundException e) {
+				log.error("Core Attribute: LNK_ROLE is undefinied in the database. Please bootq or check the sheets to ensure it exists");
+			}
+		}
+	}
     
 	/**
 	 * Attach a role to a person base entity
