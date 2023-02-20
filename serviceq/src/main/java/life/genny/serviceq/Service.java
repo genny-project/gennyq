@@ -161,10 +161,6 @@ public class Service {
 		if (allowedProducts == null) {
 			log.error("You must set up the PRODUCT_CODES environment variable!");
 		}
-
-		for (String productCode : allowedProducts) {
-			qwandaUtils.loadAllAttributesIntoCache(productCode);
-		}
 	}
 
 	/**
