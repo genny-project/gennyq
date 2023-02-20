@@ -94,7 +94,6 @@ public class Service {
 	 * Initialize the serviceTok
 	 */
 	public void initToken() {
-
 		// fetch token and init entity utility
 		String token = KeycloakUtils.getToken(keycloakUrl, keycloakRealm, clientId, secret, serviceUsername, servicePassword);
 

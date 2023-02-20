@@ -17,6 +17,7 @@ import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.exception.checked.RoleException;
+import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.models.GennySettings;
@@ -57,9 +58,7 @@ public class RoleManager {
 
 	// Product-agnostic attributes (to access these attributes it is a requirement to specify the product code)
 	private static AttributeProductDecorator lnkRoleAttribute;
-	private static AttributeProductDecorator lnkChildAttribute = new AttributeProductDecorator(
-		new Attribute(Attribute.LNK_CHILDREN, "Child Roles Link", new DataType(String.class))
-	);
+	private static AttributeProductDecorator lnkChildAttribute;
 
 	@Inject
 	CapabilitiesController controller;
@@ -72,6 +71,8 @@ public class RoleManager {
 	 */
 	@PostConstruct
 	private void initDecorators() {
+		lnkRoleAttribute = initDecorator(Attribute.LNK_ROLE);
+		lnkChildAttribute = initDecorator(Attribute.LNK_CHILDREN);
 	}
 
 	/**
@@ -86,12 +87,24 @@ public class RoleManager {
 		for(int i = 0; i < productCodes.length; i++) {
 			try {
 				Attribute attribute = qwandaUtils.getAttribute(productCodes[i], attributeCode);
+
 				// we found it without erroring out so we don't have to look through the rest
 				return new AttributeProductDecorator(attribute);
 			} catch(ItemNotFoundException e) {
-				log.error("Core Attribute: LNK_ROLE is undefinied in the database. Please bootq or check the sheets to ensure it exists");
+
+				// cry about it in an informative manner
+				String msg = "Core Attribute: " + attributeCode + " is undefined in the database for ";
+				if(i == productCodes.length - 1) {
+					log.error(msg + " any of products: " + productCodes + ". Please bootq or check the sheets to ensure it exists");
+					throw new BadDataException(attributeCode, e);
+				} else {
+					log.debug(msg + " product: " + productCodes[i] + ". Checking " + (productCodes.length - i - 1) + " others");
+				}
 			}
 		}
+
+		// we should never reach here but an NPE never killed anyone
+		return null;
 	}
     
 	/**
