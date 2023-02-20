@@ -2,6 +2,7 @@ package life.genny.test.qwandaq.utils.capabilities.roles;
 
 import java.util.Map;
 
+import life.genny.qwandaq.utils.AttributeUtils;
 import org.jboss.logging.Logger;
 import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
@@ -49,9 +50,9 @@ public class RoleCapabilitiesTest extends BaseTestCase {
     // @Test
     public void testRoleCreation() {
 		
-        CacheManager cm = Mockito.mock(CacheManager.class);
-		Mockito.when(cm.getAttribute(PRODUCT_CODE, Attribute.LNK_ROLE)).thenReturn(LNK_ROLE);
-		Mockito.when(cm.getAttribute(PRODUCT_CODE, Attribute.LNK_CHILDREN)).thenReturn(LNK_CHILDREN);
+        AttributeUtils attributeUtils = Mockito.mock(AttributeUtils.class);
+		Mockito.when(attributeUtils.getAttribute(PRODUCT_CODE, Attribute.LNK_ROLE)).thenReturn(LNK_ROLE);
+		Mockito.when(attributeUtils.getAttribute(PRODUCT_CODE, Attribute.LNK_CHILDREN)).thenReturn(LNK_CHILDREN);
         
         String[][] capData = {
             {"CAP_TEST_1", "Capability Test 1"},

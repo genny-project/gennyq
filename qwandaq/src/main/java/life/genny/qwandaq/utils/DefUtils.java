@@ -72,6 +72,9 @@ public class DefUtils {
 	@Inject
 	CacheManager cacheManager;
 
+	@Inject
+	AttributeUtils attributeUtils;
+
 	public DefUtils() {
 	}
 
@@ -170,7 +173,7 @@ public class DefUtils {
 			Definition definition = beUtils.getDefinition(code);
 
 			// merge into new def
-			for (EntityAttribute ea : beaUtils.getAllEntityAttributesForBaseEntity(definition)) {
+			for (EntityAttribute ea : beaUtils.getAllEntityAttributesForBaseEntity(definition, true)) {
 				try {
 					mergedDef.addAttribute(ea);
 				} catch (Exception e) {
@@ -266,7 +269,7 @@ public class DefUtils {
 			throw new NullParameterException("acvs");
 		}
 
-		Attribute attribute = cm.getAttribute(acvs.getAttributeCode());
+		Attribute attribute = attributeUtils.getAttribute(acvs.getAttributeCode(), true, true);
 
 		if (attribute == null)
 			throw new NullParameterException("attribute");
@@ -312,7 +315,7 @@ public class DefUtils {
 				String[] attributeCodeArray = attributeCode.split("\\.");
 				String attributeCodeLast = attributeCodeArray[attributeCodeArray.length - 1];
 				// fetch the corresponding attribute
-				Attribute att = cm.getAttribute(attributeCodeLast);
+				Attribute att = attributeUtils.getAttribute(attributeCodeLast, true);
 				DataType dataType = att.getDataType();
 
 				Object attributeFilterValue = entityAttribute.getValue();

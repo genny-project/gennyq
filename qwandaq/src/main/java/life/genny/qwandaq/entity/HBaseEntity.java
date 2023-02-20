@@ -20,38 +20,30 @@ import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-import javax.json.bind.annotation.JsonbTransient;
-import javax.persistence.*;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.CodedEntity;
 import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.HEntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.exception.runtime.BadDataException;
-
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.FilterDefs;
-import org.hibernate.annotations.Filters;
-import org.hibernate.annotations.ParamDef;
+import org.hibernate.annotations.*;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.jboss.logging.Logger;
+
+import javax.json.bind.annotation.JsonbTransient;
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.Index;
+import javax.persistence.Table;
+import javax.persistence.*;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * BaseEntity represents a base entity that contains many attributes. It is the

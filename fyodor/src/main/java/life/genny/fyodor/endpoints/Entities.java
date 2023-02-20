@@ -15,7 +15,7 @@ import javax.ws.rs.core.Response;
 import javax.transaction.Transactional;
 
 import life.genny.qwandaq.constants.GennyConstants;
-import life.genny.qwandaq.utils.EntityAttributeUtils;
+import life.genny.qwandaq.utils.*;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.annotations.jaxrs.PathParam;
 
@@ -26,9 +26,6 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.DatabaseUtils;
-import life.genny.qwandaq.utils.HttpUtils;
 import life.genny.serviceq.Service;
 
 /**
@@ -64,6 +61,9 @@ public class Entities {
 
 	@Inject
 	EntityAttributeUtils beaUtils;
+
+	@Inject
+	AttributeUtils attributeUtils;
 
 	private static final String NOT_AUTHORIZED_TO_MAKE_THIS_REQUEST = "Not authorized to make this request";
 
@@ -170,7 +170,7 @@ public class Entities {
 		BaseEntity be = new BaseEntity("TST_ENTITY", "Test Entity");
 
 		log.info("Created BaseEntity " + be.getCode());
-		Attribute attr = cm.getAttribute("LNK_AUTHOR");
+		Attribute attr = attributeUtils.getAttribute("LNK_AUTHOR");
 		EntityAttribute attribute = new EntityAttribute(be, attr, 1.0, "TEST");
 		attribute.setBaseEntityCode(be.getCode());
 		attribute.setAttribute(attr);

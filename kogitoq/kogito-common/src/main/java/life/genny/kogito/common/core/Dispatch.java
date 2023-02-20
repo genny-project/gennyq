@@ -81,6 +81,9 @@ public class Dispatch {
 	@Inject
 	MergeUtils mergeUtils;
 
+	@Inject
+	AttributeUtils attributeUtils;
+
 	/**
 	 * Send Asks, PCMs and Searches
 	 *
@@ -133,7 +136,9 @@ public class Dispatch {
 				// Now set the unique code of the PCM_EVENTS so that it is unique
 				msg.add(eventsPCM);
 				// Now update the PCM to point the last location to the PCM_EVENTS
-				if (pcm.getLocation(2) == null)
+				EntityAttribute pcmLocationEA = beaUtils.getEntityAttribute(pcm.getRealm(), pcm.getCode(), Attribute.PRI_LOC + 2, true, true);
+				String pcmLocation = pcmLocationEA.getAsString();
+				if (pcmLocation == null)
 					pcm.setLocation(2, PCM.PCM_EVENTS);
 			}
 		}
@@ -265,7 +270,11 @@ public class Dispatch {
 		}
 
 		// use pcm target if one is specified
-		String targetCode = pcm.getTargetCode();
+		String targetCode = null;
+		EntityAttribute targetCodeEA = beaUtils.getEntityAttribute(pcm.getRealm(), pcm.getCode(), Attribute.PRI_TARGET_CODE, true, true);
+		if (targetCodeEA != null) {
+			targetCode = targetCodeEA.getAsString();
+		}
 		if (targetCode != null && !targetCode.equals(target.getCode())) {
 			// merge targetCode
 			Map<String, Object> ctxMap = new HashMap<>();
@@ -298,6 +307,8 @@ public class Dispatch {
 
 			log.debug("Passed Capabilities check for: " + entityAttribute.getBaseEntityCode() + ":" + entityAttribute.getAttributeCode());
 
+			Attribute attribute = attributeUtils.getAttribute(entityAttribute.getRealm(), entityAttribute.getAttributeCode(), true);
+			entityAttribute.setAttribute(attribute);
 			// recursively check PCM fields
 			String value = entityAttribute.getAsString();
 			if (value.startsWith(Prefix.PCM_)) {
@@ -318,7 +329,11 @@ public class Dispatch {
 		msg.add(pcm);
 
 		// check for a question code
-		String questionCode = pcm.getQuestionCode();
+		EntityAttribute pcmQuestionCodeEA = beaUtils.getEntityAttribute(pcm.getRealm(), pcm.getCode(), Attribute.PRI_QUESTION_CODE, true, true);
+		String questionCode = null;
+		if (pcmQuestionCodeEA != null) {
+			questionCode = pcmQuestionCodeEA.getAsString();
+		}
 		if (questionCode == null) {
 			log.warn("Question Code is null for " + pcmCode + ". Checking ProcessData");
 			questionCode = processData.getQuestionCode();
@@ -346,7 +361,7 @@ public class Dispatch {
 	public Ask createButtonEvents(String buttonEvents, String sourceCode, String targetCode) {
 
 		// fetch attributes and create group
-		Attribute groupAttribute = cm.getAttribute(Attribute.QQQ_QUESTION_GROUP);
+		Attribute groupAttribute = qwandaUtils.getAttribute(Attribute.QQQ_QUESTION_GROUP);
 		Question groupQuestion = new Question(Question.QUE_EVENTS, "", groupAttribute);
 
 		// init ask

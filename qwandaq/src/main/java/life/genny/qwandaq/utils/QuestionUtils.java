@@ -58,6 +58,9 @@ public class QuestionUtils {
     @Inject
     BaseEntityUtils beUtils;
 
+    @Inject
+    AttributeUtils attributeUtils;
+
     public life.genny.qwandaq.entity.BaseEntity getPersistableBaseEntityFromQuestion(Question question) {
         life.genny.qwandaq.entity.BaseEntity baseEntity = (life.genny.qwandaq.entity.BaseEntity) getSerializableBaseEntityFromQuestion(question).toPersistableCoreEntity();
         List<life.genny.qwandaq.attribute.EntityAttribute> persistableBaseEntityAttributes = new LinkedList<>();
@@ -236,7 +239,7 @@ public class QuestionUtils {
             switch (columnName) {
                 case ATTRIBUTE_CODE -> {
                     log.debugf("Setting attribute for question %s with value %s", question.getCode(), attributeValueString);
-                    question.setAttribute(cacheManager.getAttribute(question.getRealm(), attributeValueString));
+                    question.setAttribute(attributeUtils.getAttribute(question.getRealm(), attributeValueString));
                     question.setAttributeCode(attributeValueString);
                 }
                 case DIRECTIONS -> question.setDirections(attributeValueString);

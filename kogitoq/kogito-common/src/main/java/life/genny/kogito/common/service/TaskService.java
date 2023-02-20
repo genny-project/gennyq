@@ -228,7 +228,7 @@ public class TaskService extends KogitoService {
 
 		// check mandatory fields
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
-		if (!QwandaUtils.mandatoryFieldsAreAnswered(flatMapOfAsks, processEntity))
+		if (!qwandaUtils.mandatoryFieldsAreAnswered(flatMapOfAsks, processEntity))
 			return false;
 
 		// check uniqueness in answers

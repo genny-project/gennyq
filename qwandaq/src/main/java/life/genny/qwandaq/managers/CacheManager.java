@@ -8,6 +8,7 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.data.GennyCache;
+import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.models.UserToken;
@@ -15,11 +16,14 @@ import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import life.genny.qwandaq.serialization.attribute.AttributeKey;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.serialization.common.CoreEntityKey;
+import life.genny.qwandaq.serialization.datatype.DataTypeKey;
 import life.genny.qwandaq.serialization.entityattribute.EntityAttributeKey;
 import life.genny.qwandaq.serialization.question.QuestionKey;
 import life.genny.qwandaq.serialization.questionquestion.QuestionQuestionKey;
 import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.QuestionUtils;
+import life.genny.qwandaq.validation.Validation;
 import org.apache.commons.lang3.StringUtils;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.Search;
@@ -34,6 +38,7 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import java.lang.reflect.Type;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 /*
@@ -245,49 +250,14 @@ public class CacheManager {
 		.stream().map((CoreEntity entity) -> (BaseEntity)entity).collect(Collectors.toList());
 	}
 
-    /**
-     * @param productCode
-     * @param code
-     * @return
-     */
-    public Attribute get(String productCode, String code) {
-        AttributeKey key = new AttributeKey(productCode, code);
-		Attribute attribute = (Attribute) getPersistableEntity(GennyConstants.CACHE_NAME_ATTRIBUTE, key);
-		if (attribute == null) {
-			throw new ItemNotFoundException(productCode, code);
-		}
-        return attribute;
-    }
 
-    /**
-     * @param code
-     * @return
-     */
-    public Attribute getAttribute(String code) {
-		return getAttribute(userToken.getProductCode(), code);
-    }
-
-    /**
-     * @param productCode
-     * @param code
-     * @return
-     */
-    public Attribute getAttribute(String productCode, String code) {
-        AttributeKey key = new AttributeKey(productCode, code);
-		Attribute attribute = (Attribute) getPersistableEntity(GennyConstants.CACHE_NAME_ATTRIBUTE, key);
-		if (attribute == null) {
-			throw new ItemNotFoundException(productCode, code);
-		}
-		log.info("attribute = " + jsonb.toJson(attribute));
-        return attribute;
-    }
 
 	/**
 	 * Fetch all attributes for a product.
 	 *
 	 * @return Collection of all attributes in the system across all products
 	 */
-	public Collection<Attribute> getAllAttributes() {
+	public List<Attribute> getAllAttributes() {
 		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_ATTRIBUTE));
 		Query<Attribute> query = queryFactory
 				.create("from life.genny.qwandaq.persistence.attribute.Attribute");
@@ -301,10 +271,24 @@ public class CacheManager {
 	 * @param productCode
 	 * @return
 	 */
-	public Collection<Attribute> getAttributes(String productCode) {
+	public List<Attribute> getAttributesForProduct(String productCode) {
 		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_ATTRIBUTE));
 		Query<Attribute> query = queryFactory
 				.create("from life.genny.qwandaq.persistence.attribute.Attribute where realm = '" + productCode + "'");
+		QueryResult<Attribute> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
+		return queryResult.list();
+	}
+
+	/**
+	 * Fetch all attributes with a given prefix value in code for a product.
+	 *
+	 * @param prefix
+	 * @return
+	 */
+	public List<Attribute> getAttributesWithPrefix(String prefix) {
+		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_ATTRIBUTE));
+		Query<Attribute> query = queryFactory
+				.create("from life.genny.qwandaq.persistence.attribute.Attribute where code like '" + prefix + "%'");
 		QueryResult<Attribute> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
 		return queryResult.list();
 	}
@@ -316,7 +300,7 @@ public class CacheManager {
 	 * @param prefix
 	 * @return
 	 */
-	public Collection<Attribute> getAttributes(String productCode, String prefix) {
+	public List<Attribute> getAttributesWithPrefixForProduct(String productCode, String prefix) {
 		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_ATTRIBUTE));
 		Query<Attribute> query = queryFactory
 				.create("from life.genny.qwandaq.persistence.attribute.Attribute where realm = '" + productCode
@@ -325,12 +309,23 @@ public class CacheManager {
 		return queryResult.list();
 	}
 
-	/**
-	 * @param attribute
-	 */
-	public void saveAttribute(Attribute attribute) {
-		AttributeKey key = new AttributeKey(attribute.getRealm(), attribute.getCode());
-		cache.putEntityIntoCache(GennyConstants.CACHE_NAME_ATTRIBUTE, key, attribute);
+	public DataType getDataType(String productCode, String dttCode) {
+		DataTypeKey key = new DataTypeKey(productCode, dttCode);
+		return (DataType) cache.getPersistableEntityFromCache(GennyConstants.CACHE_NAME_DATATYPE, key);
+	}
+
+	public List<Validation> getValidations(String productCode, String commaSeparatedValidationCodes) {
+		String inClauseValue = StringUtils.replace(commaSeparatedValidationCodes, ",", "','");
+		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_VALIDATION));
+		Query<Validation> query = queryFactory
+				.create("from life.genny.qwandaq.persistence.validation.Validation where realm = '" + productCode +
+						"' and code in ('"+inClauseValue+"')");
+		QueryResult<Validation> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
+		return queryResult.list();
+	}
+
+	public List<Validation> getValidations(String productCode, List<String> validationCodes) {
+		return getValidations(productCode, new CopyOnWriteArrayList<>(validationCodes).toString());
 	}
 
 	/**

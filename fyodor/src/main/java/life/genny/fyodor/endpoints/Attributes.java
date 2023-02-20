@@ -5,6 +5,7 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.AttributeUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.HttpUtils;
 import org.jboss.logging.Logger;
@@ -46,6 +47,9 @@ public class Attributes {
 	@Inject
 	UserToken userToken;
 
+	@Inject
+	AttributeUtils attributeUtils;
+
 	/**
 	 * Read an item from the cache.
 	 *
@@ -63,7 +67,7 @@ public class Attributes {
 		}
 
 		String productCode = userToken.getProductCode();
-		Attribute attribute = cm.getAttribute(productCode, code);
+		Attribute attribute = attributeUtils.getAttribute(productCode, code, true, true);
 
 		return Response.ok(attribute).build();
 	}

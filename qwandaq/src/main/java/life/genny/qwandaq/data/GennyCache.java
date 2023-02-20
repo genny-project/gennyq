@@ -7,6 +7,8 @@ import life.genny.qwandaq.serialization.attribute.AttributeKeyInitializerImpl;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityInitializerImpl;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKeyInitializerImpl;
 import life.genny.qwandaq.serialization.common.CoreEntityKey;
+import life.genny.qwandaq.serialization.datatype.DataTypeInitializerImpl;
+import life.genny.qwandaq.serialization.datatype.DataTypeKeyInitializerImpl;
 import life.genny.qwandaq.serialization.entityattribute.EntityAttributeInitializerImpl;
 import life.genny.qwandaq.serialization.entityattribute.EntityAttributeKeyInitializerImpl;
 import life.genny.qwandaq.serialization.question.QuestionInitializerImpl;
@@ -15,6 +17,8 @@ import life.genny.qwandaq.serialization.questionquestion.QuestionQuestionInitial
 import life.genny.qwandaq.serialization.questionquestion.QuestionQuestionKeyInitializerImpl;
 import life.genny.qwandaq.serialization.userstore.UserStoreInitializerImpl;
 import life.genny.qwandaq.serialization.userstore.UserStoreKeyInitializerImpl;
+import life.genny.qwandaq.serialization.validation.ValidationInitializerImpl;
+import life.genny.qwandaq.serialization.validation.ValidationKeyInitializerImpl;
 import org.infinispan.client.hotrod.DefaultTemplate;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
@@ -122,6 +126,14 @@ public class GennyCache {
 		serCtxInitList.add(userStoreSCI);
 		SerializationContextInitializer userStoreKeySCI = new UserStoreKeyInitializerImpl();
 		serCtxInitList.add(userStoreKeySCI);
+		SerializationContextInitializer validationSCI = new ValidationInitializerImpl();
+		serCtxInitList.add(validationSCI);
+		SerializationContextInitializer validationKeySCI = new ValidationKeyInitializerImpl();
+		serCtxInitList.add(validationKeySCI);
+		SerializationContextInitializer dataTypeSCI = new DataTypeInitializerImpl();
+		serCtxInitList.add(dataTypeSCI);
+		SerializationContextInitializer dataTypeKeySCI = new DataTypeKeyInitializerImpl();
+		serCtxInitList.add(dataTypeKeySCI);
 
 		return serCtxInitList;
 	}

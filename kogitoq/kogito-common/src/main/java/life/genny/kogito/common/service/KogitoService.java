@@ -84,4 +84,6 @@ public abstract class KogitoService {
 	@Inject
 	EntityManager entityManager;
 
+	@Inject
+	AttributeUtils attributeUtils;
 }

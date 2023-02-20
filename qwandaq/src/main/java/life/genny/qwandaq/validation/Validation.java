@@ -38,6 +38,10 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import life.genny.qwandaq.CoreEntityPersistable;
+import life.genny.qwandaq.EEntityStatus;
+import life.genny.qwandaq.converter.ValidationListConverter;
+import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import org.hibernate.annotations.Type;
 
 import life.genny.qwandaq.CodedEntity;
@@ -60,22 +64,10 @@ import life.genny.qwandaq.converter.StringListConverter;
 
 @XmlRootElement
 @XmlAccessorType(value = XmlAccessType.FIELD)
-@Table(name = "validation", 
-indexes = {
-        @Index(columnList = "code", name =  "code_idx"),
-        @Index(columnList = "realm", name = "code_idx")
-    },
-uniqueConstraints = @UniqueConstraint(columnNames = {"code", "realm"}))
-@Entity
-@DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
-
-public class Validation extends CodedEntity implements Serializable {
+public class Validation extends CodedEntity implements CoreEntityPersistable {
 
 	/** 
 	 * @return String
-	 */
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
 	 */
 	@Override
 	public String toString() {
@@ -92,9 +84,6 @@ public class Validation extends CodedEntity implements Serializable {
 	 * A field that stores the validation regex.
 	 * Note that this regex needs to be applied to the complete value (Not partial).
 	 */
-	@NotNull
-	@Type(type = "text")
-	@Column(name = "regex", updatable = true, nullable = false)	
 	private String regex;
 	
 	
@@ -106,10 +95,8 @@ public class Validation extends CodedEntity implements Serializable {
 	
 	private Boolean multiAllowed = false;
 
-	@Column(name = "options", length = 2048, updatable = true, nullable = true)
 	private String options;
 	
-	@Column(name = "errormsg", length = 280, updatable = true, nullable = true)
 	private String errormsg;
 	
 	
@@ -301,4 +288,22 @@ public class Validation extends CodedEntity implements Serializable {
 		return DEFAULT_CODE_PREFIX;
 	}
 
+	@Override
+	public CoreEntitySerializable toSerializableCoreEntity() {
+		life.genny.qwandaq.serialization.validation.Validation validation = new life.genny.qwandaq.serialization.validation.Validation();
+		validation.setErrorMsg(getErrormsg());
+		validation.setOptions(getOptions());
+		validation.setMultiAllowed(getMultiAllowed());
+		validation.setRegex(getRegex());
+		validation.setCode(getCode());
+		validation.setRecursiveGroup(getRecursiveGroup());
+		validation.setCreated(getCreated());
+		validation.setUpdated(getUpdated());
+		validation.setStatus(getStatus().ordinal());
+		validation.setRealm(getRealm());
+		validation.setName(getName());
+		ValidationListConverter validationListConverter = new ValidationListConverter();
+		validation.setSelectionGroup(validationListConverter.convertToString(getSelectionBaseEntityGroupList()));
+		return validation;
+	}
 }

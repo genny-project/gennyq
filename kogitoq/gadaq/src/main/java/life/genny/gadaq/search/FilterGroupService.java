@@ -55,6 +55,9 @@ public class FilterGroupService {
     @Inject
     QuestionUtils questionUtils;
 
+    @Inject
+    AttributeUtils attributeUtils;
+
     public static final String PRI_PREFIX = "PRI_PREFIX";
     public  static final DataType DataTypeStr = DataType.getInstance("life.genny.qwanda.entity.BaseEntity");
 
@@ -850,8 +853,8 @@ public class FilterGroupService {
     public String getAttributeDataType(String attrCode) {
         String result = "";
         try {
-            Attribute attribute = cacheManager.getAttribute(user.getProductCode(), attrCode);
-            if (attribute != null) result = attribute.dataType.getDttCode();
+            Attribute attribute = attributeUtils.getAttribute(user.getProductCode(), attrCode, false);
+            if (attribute != null) result = attribute.getDttCode();
         } catch (Exception ex){
             log.error(ex);
         }

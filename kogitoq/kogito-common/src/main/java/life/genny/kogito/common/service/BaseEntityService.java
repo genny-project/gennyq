@@ -54,6 +54,9 @@ public class BaseEntityService extends KogitoService {
 	@Inject
 	Logger log;
 
+	@Inject
+	AttributeUtils attributeUtils;
+
 	/**
 	 * Send a message to perform an update of a persons summary
 	 */
@@ -215,7 +218,7 @@ public class BaseEntityService extends KogitoService {
 
 		// iterate our stored process updates and create an answer
 		for (EntityAttribute ea : beaUtils.getAllEntityAttributesForBaseEntity(processEntity)) {
-			Attribute attribute = cm.getAttribute(ea.getAttributeCode());
+			Attribute attribute = attributeUtils.getAttribute(ea.getAttributeCode());
 			ea.setAttribute(attribute);
 			ea.setBaseEntityCode(entity.getCode());
 			entity.addAttribute(ea);

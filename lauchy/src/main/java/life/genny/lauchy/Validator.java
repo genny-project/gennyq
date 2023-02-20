@@ -10,7 +10,7 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.utils.EntityAttributeUtils;
+import life.genny.qwandaq.utils.*;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
@@ -29,10 +29,6 @@ import life.genny.qwandaq.message.QDataAnswerMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.FilterUtils;
-import life.genny.qwandaq.utils.KafkaUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
 
 @ApplicationScoped
 public class Validator {
@@ -62,6 +58,9 @@ public class Validator {
 
 	@Inject
 	FilterUtils filter;
+
+	@Inject
+	AttributeUtils attributeUtils;
 
 	/**
 	 * @param data
@@ -200,7 +199,7 @@ public class Validator {
 		}
 
 		// TODO: The attribute should be retrieved from askMessage
-		Attribute attribute = qwandaUtils.getAttribute(attributeCode);
+		Attribute attribute = attributeUtils.getAttribute(attributeCode, true, true);
 
 		temporaryBucketSearchHandler(answer, target, attribute);
 

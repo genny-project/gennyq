@@ -30,6 +30,9 @@ public class EntityAttributeUtils {
 	@Inject
 	CacheManager cm;
 
+	@Inject
+	AttributeUtils attributeUtils;
+
 	/**
 	 * Fetch a {@link EntityAttribute} from the cache using a realm:baseEntityCode:attributeCode.
 	 *
@@ -39,26 +42,52 @@ public class EntityAttributeUtils {
 	 * @return The corresponding EntityAttribute with embedded "Attribute", or null if not found.
 	 */
 	public EntityAttribute getEntityAttribute(String productCode, String baseEntityCode, String attributeCode) {
-		return getEntityAttribute(productCode, baseEntityCode, attributeCode, true);
+		return getEntityAttribute(productCode, baseEntityCode, attributeCode, false);
 	}
 
-    /**
+	/**
 	 * Fetch a {@link EntityAttribute} from the cache using a realm:baseEntityCode:attributeCode.
 	 *
 	 * @param productCode The productCode to use
 	 * @param baseEntityCode        The BaseEntity code of the EntityAttribute to fetch
-     * @param attributeCode        The Attribute code of the EntityAttribute to fetch
-     * @param embedAttribute       Defines if "Attribute" will be embedded into the returned EntityAttribute
+	 * @param attributeCode        The Attribute code of the EntityAttribute to fetch
+	 * @param embedAttribute       Defines if "Attribute" will be embedded into the returned EntityAttribute
 	 * @return The corresponding BaseEntityAttribute, or null if not found.
 	 */
-    public EntityAttribute getEntityAttribute(String productCode, String baseEntityCode, String attributeCode, boolean embedAttribute) {
-        EntityAttributeKey key = new EntityAttributeKey(productCode, baseEntityCode, attributeCode);
-        EntityAttribute entityAttribute = (EntityAttribute) cm.getPersistableEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, key);
+	public EntityAttribute getEntityAttribute(String productCode, String baseEntityCode, String attributeCode, boolean embedAttribute) {
+		return getEntityAttribute(productCode, baseEntityCode, attributeCode, embedAttribute, false);
+	}
+
+	/**
+	 * Fetch a {@link EntityAttribute} from the cache using a realm:baseEntityCode:attributeCode.
+	 *
+	 * @param productCode The productCode to use
+	 * @param baseEntityCode        The BaseEntity code of the EntityAttribute to fetch
+	 * @param attributeCode        The Attribute code of the EntityAttribute to fetch
+	 * @param embedAttribute       Defines if "Attribute" will be embedded into the returned EntityAttribute
+	 * @return The corresponding BaseEntityAttribute, or null if not found.
+	 */
+	public EntityAttribute getEntityAttribute(String productCode, String baseEntityCode, String attributeCode, boolean embedAttribute, boolean embedDataType) {
+		return getEntityAttribute(productCode, baseEntityCode, attributeCode, embedAttribute, embedDataType, false);
+	}
+
+	/**
+	 * Fetch a {@link EntityAttribute} from the cache using a realm:baseEntityCode:attributeCode.
+	 *
+	 * @param productCode The productCode to use
+	 * @param baseEntityCode        The BaseEntity code of the EntityAttribute to fetch
+	 * @param attributeCode        The Attribute code of the EntityAttribute to fetch
+	 * @param embedAttribute       Defines if "Attribute" will be embedded into the returned EntityAttribute
+	 * @return The corresponding BaseEntityAttribute, or null if not found.
+	 */
+	public EntityAttribute getEntityAttribute(String productCode, String baseEntityCode, String attributeCode, boolean embedAttribute, boolean embedDataType, boolean embedValidationInfo) {
+		EntityAttributeKey key = new EntityAttributeKey(productCode, baseEntityCode, attributeCode);
+		EntityAttribute entityAttribute = (EntityAttribute) cm.getPersistableEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, key);
 		if (embedAttribute && entityAttribute != null) {
-			entityAttribute.setAttribute(cm.getAttribute(productCode, attributeCode));
+			entityAttribute.setAttribute(attributeUtils.getAttribute(productCode, attributeCode, embedDataType, embedValidationInfo));
 		}
 		return entityAttribute;
-    }
+	}
 
 	/**
 	 * Fetch a {@link EntityAttribute} from the cache using a realm:baseEntityCode:attributeCode.
@@ -171,7 +200,7 @@ public class EntityAttributeUtils {
 				.forEach((ea) -> {
 					String productCode = ea.getRealm();
 					String baseEntityCode = ea.getBaseEntityCode();
-					Attribute attribute = cm.getAttribute(productCode, ea.getAttributeCode());
+					Attribute attribute = attributeUtils.getAttribute(productCode, ea.getAttributeCode());
 					if (attribute == null) {
 						log.debugf("Attribute not found for BaseEntityAttribute [%s:%s:%s]", productCode, baseEntityCode, ea.getAttributeCode());
 						throw new ItemNotFoundException(productCode, ea.getAttributeCode());

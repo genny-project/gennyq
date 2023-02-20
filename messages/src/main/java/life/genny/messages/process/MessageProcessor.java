@@ -52,6 +52,9 @@ public class MessageProcessor {
     @Inject
     MergeUtils mergeUtils;
 
+    @Inject
+    AttributeUtils attributeUtils;
+
     public void processGenericMessage(QMessageGennyMSG message) {
         executor.supplyAsync(() -> {
             Object result = "";
@@ -202,8 +205,8 @@ public class MessageProcessor {
     }
 
     private List<BaseEntity> getRecipientBeList(String[] recipientArr) {
-        Attribute emailAttr = cm.getAttribute("PRI_EMAIL");
-        Attribute mobileAttr = cm.getAttribute("PRI_MOBILE");
+        Attribute emailAttr = attributeUtils.getAttribute("PRI_EMAIL");
+        Attribute mobileAttr = attributeUtils.getAttribute("PRI_MOBILE");
         List<BaseEntity> recipientBeList = new ArrayList<>();
 
         for (String recipient : recipientArr) {

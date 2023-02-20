@@ -11,6 +11,7 @@ import javax.json.bind.JsonbBuilder;
 
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.utils.*;
 import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.service.TaskService;
@@ -22,12 +23,7 @@ import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.DefUtils;
-import life.genny.qwandaq.utils.KafkaUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.entity.PCM;
-import life.genny.qwandaq.utils.FilterUtils;
 
 /**
  * ProcessAnswers
@@ -59,6 +55,9 @@ public class ProcessAnswers {
 
 	@Inject
 	FilterUtils filter;
+
+	@Inject
+	EntityAttributeUtils beaUtils;
 
 	/**
 	 * @param answer
@@ -115,9 +114,8 @@ public class ProcessAnswers {
 
 		// send error for last answer in the list
 		// NOTE: This should be reconsidered
-		Boolean acceptSubmission = true;
 		if (answers.isEmpty())
-			return acceptSubmission;
+			return true;
 
 		// TODO: Might review below in the future
 		if (qwandaUtils.isDuplicate(definitions, null, processEntity, originalTarget)) {
@@ -130,17 +128,20 @@ public class ProcessAnswers {
 					if (definition.findEntityAttribute("UNQ_" + attributeCode).isPresent()) {
 						String questionCode = answer.getCode();
 						PCM mainPcm = beUtils.getPCM(processData.getPcmCode());
-						PCM subPcm = beUtils.getPCM(mainPcm.getLocation(1));
+						EntityAttribute subPcmLocationEA = beaUtils.getEntityAttribute(mainPcm.getRealm(), mainPcm.getCode(), Attribute.PRI_LOC + 1, true, true);
+						String subPcmLocation = subPcmLocationEA.getAsString();
+						PCM subPcm = beUtils.getPCM(subPcmLocation);
 
-						qwandaUtils.sendAttributeErrorMessage(subPcm.getQuestionCode(), questionCode, attributeCode, feedback);
-						acceptSubmission = false;
-						return acceptSubmission;
+						EntityAttribute subPcmQuestionCodeEA = beaUtils.getEntityAttribute(subPcm.getRealm(), subPcm.getCode(), Attribute.PRI_QUESTION_CODE, true, true);
+						String subPcmQuestionCode = subPcmQuestionCodeEA.getAsString();
+						qwandaUtils.sendAttributeErrorMessage(subPcmQuestionCode, questionCode, attributeCode, feedback);
+						return false;
 					}
 				}
 			}
 		}
 
-		return acceptSubmission;
+		return true;
 	}
 
 	/**
@@ -160,10 +161,14 @@ public class ProcessAnswers {
 
 			// find the attribute
 			String attributeCode = answer.getAttributeCode();
-			Attribute attribute = cm.getAttribute(attributeCode);
+			Attribute attribute = qwandaUtils.getAttribute(attributeCode);
 
 			// debug log the value before saving
-			String currentValue = target.getValueAsString(attributeCode);
+			String currentValue = null;
+			EntityAttribute entityAttribute = beaUtils.getEntityAttribute(target.getRealm(), target.getCode(), attributeCode, true);
+			if (entityAttribute != null) {
+				currentValue = target.getValueAsString(attributeCode);
+			}
 			log.debug("Overwriting Value -> " + answer.getAttributeCode() + " = " + currentValue);
 
 			// check if name needs updating

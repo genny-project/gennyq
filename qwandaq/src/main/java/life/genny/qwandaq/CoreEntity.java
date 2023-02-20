@@ -114,7 +114,7 @@ public abstract class CoreEntity implements Comparable<Object> {
 	@NotNull
 	@Size(max = 48)
 	@Pattern(regexp = REGEX_REALM, message = "Must contain valid characters for realm")
-	@Column(name = "realm", updatable = true, nullable = false)
+	@Column(name = "realm", insertable = false, updatable = false, nullable = false)
 	private String realm = DEFAULT_REALM;
 
 	/**

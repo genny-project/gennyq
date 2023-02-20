@@ -8,7 +8,6 @@ import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import life.genny.qwandaq.validation.Validation;
-import life.genny.qwandaq.validation.ValidationList;
 
 /*
  * A representation of BaseEntity in the cache

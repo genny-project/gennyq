@@ -90,6 +90,9 @@ public class QwandaUtils {
 	@Inject
 	UserToken userToken;
 
+	@Inject
+	AttributeUtils attributeUtils;
+
 	public QwandaUtils() {
 	}
 
@@ -136,7 +139,7 @@ public class QwandaUtils {
 
 		cm.putObject(productCode, attribute.getCode(), attribute);
 		attribute.setRealm(productCode);
-		cm.saveAttribute(attribute);
+		attributeUtils.saveAttribute(attribute);
 
 		return cm.getObject(productCode, attribute.getCode(), HAttribute.class).toAttribute();
 	}
@@ -160,7 +163,7 @@ public class QwandaUtils {
 	 * @return Attribute
 	 */
 	public Attribute getAttribute(final String productCode, final String attributeCode) {
-		return cm.get(productCode, attributeCode);
+		return attributeUtils.getAttribute(productCode, attributeCode);
 	}
 
 	/**
@@ -248,7 +251,7 @@ public class QwandaUtils {
 		if (!code.startsWith(Prefix.EVT_))
 			code = Prefix.EVT_.concat(code);
 		code = code.toUpperCase();
-		DataType DTT_EVENT = cm.getAttribute(userToken.getProductCode(), Attribute.EVT_SUBMIT).getDataType();
+		DataType DTT_EVENT = attributeUtils.getAttribute(userToken.getProductCode(), Attribute.EVT_SUBMIT, true).getDataType();
 		return new Attribute(code, name.concat(" Event"), DTT_EVENT);
 	}
 
@@ -280,7 +283,7 @@ public class QwandaUtils {
 		Question question;
 		try {
 			question = questionUtils.getQuestionFromQuestionCode(productCode, code);
-			Attribute attribute = cm.getAttribute(productCode, question.getAttributeCode());
+			Attribute attribute = attributeUtils.getAttribute(productCode, question.getAttributeCode());
 			question.setAttribute(attribute);
 		} catch (NoResultException e) {
 			throw new ItemNotFoundException(code, e);
@@ -485,7 +488,7 @@ public class QwandaUtils {
 	 * @param baseEntity The BaseEntity to check against
 	 * @return Boolean
 	 */
-	public static Boolean mandatoryFieldsAreAnswered(Map<String, Ask> map, BaseEntity baseEntity) {
+	public Boolean mandatoryFieldsAreAnswered(Map<String, Ask> map, BaseEntity baseEntity) {
 // find all the mandatory booleans
 		Boolean complete = true;
 
@@ -503,7 +506,12 @@ public class QwandaUtils {
 			}
 
 			boolean mandatory = ask.getMandatory();
-			String value = baseEntity.getValueAsString(attributeCode);
+			EntityAttribute entityAttribute = beaUtils.getEntityAttribute(baseEntity.getRealm(), baseEntity.getCode(), attributeCode, true, true);
+
+			String value = null;
+			if (entityAttribute != null) {
+				value = entityAttribute.getAsString();
+			}
 
 			// if any are blank, mandatory and non-readonly, then task is not complete
 			Boolean answered = false;
@@ -664,8 +672,8 @@ public class QwandaUtils {
 		for (String code : attributeCodes) {
 
 			// check for existing attribute in target
-			EntityAttribute ea = beaUtils.getEntityAttribute(productCode, targetCode, code);
-			Attribute attribute = cm.getAttribute(productCode, code);
+			EntityAttribute ea = beaUtils.getEntityAttribute(productCode, targetCode, code, true, true);
+			Attribute attribute = ea.getAttribute();
 			if(ea == null) {
 				// otherwise create new attribute
 				ea = new EntityAttribute(processEntity, attribute, 1.0, null);
@@ -684,7 +692,7 @@ public class QwandaUtils {
 		processData.getAnswers().forEach(answer -> {
 			// ensure the attribute is set
 			String attributeCode = answer.getAttributeCode();
-			Attribute attribute = cm.getAttribute(attributeCode);
+			Attribute attribute = attributeUtils.getAttribute(attributeCode);
 			EntityAttribute ea = new EntityAttribute(processEntity, attribute, 1.0, answer.getValue());
 			// add answer to entity
 			processEntity.addAttribute(ea);
@@ -791,7 +799,7 @@ public class QwandaUtils {
 			for (Answer answer : validAnswers) {
 				// find the attribute
 				String attributeCode = answer.getAttributeCode();
-				Attribute attribute = cm.getAttribute(attributeCode);
+				Attribute attribute = attributeUtils.getAttribute(attributeCode);
 				// check if name needs updating
 				if (Attribute.PRI_NAME.equals(attributeCode)) {
 					String name = answer.getValue();
@@ -840,7 +848,7 @@ public class QwandaUtils {
 		}
 
 		// create GRP ask
-		Attribute questionAttribute = cm.getAttribute(Attribute.QQQ_QUESTION_GROUP);
+		Attribute questionAttribute = attributeUtils.getAttribute(Attribute.QQQ_QUESTION_GROUP);
 		Question question = new Question(Question.QUE_BASEENTITY_GRP,
 				"Edit " + baseEntity.getName() + " : " + name,
 				questionAttribute);
@@ -858,7 +866,7 @@ public class QwandaUtils {
 				return;
 			}
 			String strippedAttributeCode = StringUtils.removeStart(attributeCode, Prefix.ATT_);
-			Attribute attribute = cm.getAttribute(baseEntity.getRealm(), strippedAttributeCode);
+			Attribute attribute = attributeUtils.getAttribute(baseEntity.getRealm(), strippedAttributeCode);
 
 					String questionCode = Prefix.QUE_
 							+ StringUtils.removeStart(StringUtils.removeStart(attribute.getCode(),

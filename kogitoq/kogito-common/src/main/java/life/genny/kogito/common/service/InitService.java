@@ -7,6 +7,11 @@ import java.util.stream.Collectors;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.converter.ValidationListConverter;
+import life.genny.qwandaq.datatype.DataType;
+import life.genny.qwandaq.validation.Validation;
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Ask;
@@ -29,6 +34,7 @@ import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.*;
 import org.jboss.logging.Logger;
+import org.jbpm.process.core.datatype.DataTypeUtils;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -109,7 +115,7 @@ public class InitService extends KogitoService {
 		log.info("Sending Attributes for " + userToken.getProductCode());
 		String productCode = userToken.getProductCode();
 
-		Collection<Attribute> allAttributes = cacheManager.getAttributes(productCode);
+		Collection<Attribute> allAttributes = attributeUtils.getAttributesForProduct(productCode);
 
 		int BATCH_SIZE = 500;
 		int count = 0;
@@ -122,8 +128,16 @@ public class InitService extends KogitoService {
 		log.infof("%s Attribute(s) to be sent in %s batch(es).", totalAttributesCount, totalBatches);
 		List<Attribute> attributesBatch = new LinkedList<>();
 		for(Attribute attribute : allAttributes) {
-			if (attribute.getCode().startsWith(Prefix.CAP_)) {
+			String attributeCode = attribute.getCode();
+			if (attributeCode.startsWith(Prefix.CAP_)) {
 				continue;
+			}
+			DataType dataType = attributeUtils.getDataType(attribute, true);
+			if (dataType != null) {
+				attribute.setDataType(dataType);
+				log.infof("$$$$$$$$$$$$$$$ Set the datatype %s in attribute %s", dataType.getDttCode(), attributeCode);
+			} else {
+				log.errorf("Datatype is null for attribute [%s,%s], which is not a good sign!", attribute.getRealm(), attributeCode);
 			}
 			attributesBatch.add(attribute);
 			count++;

@@ -41,7 +41,12 @@ public class ImportGithubService extends KogitoService {
 
 	@Inject
 	DefUtils defUtils;
+
+	@Inject
 	Logger log;
+
+	@Inject
+	AttributeUtils attributeUtils;
 
 	/**
 	 * Import github files
@@ -78,9 +83,9 @@ public class ImportGithubService extends KogitoService {
 				String productCode = be.getRealm();
 				newBe.setRealm(productCode);
 
-				newBe.addAttribute(new EntityAttribute(newBe, cm.getAttribute("PRI_NAME"), 1.0, be.getName()));
-				newBe.addAttribute(new EntityAttribute(newBe, cm.getAttribute("PRI_CODE"), 1.0, beCode));
-				newBe.addAttribute(new EntityAttribute(newBe, cm.getAttribute("PRI_HTML_MERGE"), 1.0,
+				newBe.addAttribute(new EntityAttribute(newBe, attributeUtils.getAttribute("PRI_NAME"), 1.0, be.getName()));
+				newBe.addAttribute(new EntityAttribute(newBe, attributeUtils.getAttribute("PRI_CODE"), 1.0, beCode));
+				newBe.addAttribute(new EntityAttribute(newBe, attributeUtils.getAttribute("PRI_HTML_MERGE"), 1.0,
 						beaUtils.getEntityAttribute(
 								productCode, beCode, "PRI_HTML_MERGE").getValueString()));
 

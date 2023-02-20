@@ -61,6 +61,9 @@ public class CapabilitiesManager extends Manager {
 	@Inject
 	QuestionUtils questionUtils;
 
+	@Inject
+	AttributeUtils attributeUtils;
+
 	public CapabilitiesManager() {
 		super();
 	}
@@ -210,7 +213,7 @@ public class CapabilitiesManager extends Manager {
 		String cleanCapabilityCode = cleanedCode ? rawCapabilityCode : cleanCapabilityCode(rawCapabilityCode);
 		Attribute attribute = null;
 		try {
-			attribute = cm.getAttribute(productCode, cleanCapabilityCode);
+			attribute = attributeUtils.getAttribute(productCode, cleanCapabilityCode);
 		} catch(ItemNotFoundException e) {
 			log.debug("Could not find Attribute: " + cleanCapabilityCode + ". Creating new Capability");
 		}
@@ -219,7 +222,7 @@ public class CapabilitiesManager extends Manager {
 			log.trace("Creating Capability : " + cleanCapabilityCode + " : " + name);
 			attribute = new Attribute(cleanCapabilityCode, name, new DataType(String.class));
 			attribute.setRealm(productCode);
-			cm.saveAttribute(attribute);
+			attributeUtils.saveAttribute(attribute);
 		}
 
 		return attribute;
@@ -299,7 +302,7 @@ public class CapabilitiesManager extends Manager {
 		String cleanCapabilityCode = cleanCapabilityCode(rawCapabilityCode);
 
 		// Don't need to catch here since we don't want to create
-		Attribute attribute = cm.getAttribute(productCode, cleanCapabilityCode);
+		Attribute attribute = attributeUtils.getAttribute(productCode, cleanCapabilityCode);
 
 		return addCapabilityToBaseEntity(productCode, targetBe, attribute, modes);
 	}
@@ -310,7 +313,7 @@ public class CapabilitiesManager extends Manager {
 		String cleanCapabilityCode = cleanCapabilityCode(rawCapCode);
 
 		// Don't need to catch here since we don't want to create
-		Attribute attribute = cm.getAttribute(productCode, cleanCapabilityCode);
+		Attribute attribute = attributeUtils.getAttribute(productCode, cleanCapabilityCode);
 		return addCapabilityToBaseEntity(productCode, target, attribute, capabilityList);
 	}
 

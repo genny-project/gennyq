@@ -84,6 +84,9 @@ public class FyodorUltra {
 	EntityAttributeUtils beaUtils;
 
 	@Inject
+	AttributeUtils attributeUtils;
+
+	@Inject
 	MergeUtils mergeUtils;
 
 	@Inject
@@ -522,7 +525,7 @@ public class FyodorUltra {
 
 		Join<HBaseEntity, HEntityAttribute> entityAttribute = createOrFindJoin(cauldron, code);
 
-		Attribute attr = cm.getAttribute(cauldron.getProductCode(), code);
+		Attribute attr = attributeUtils.getAttribute(cauldron.getProductCode(), code, true);
 		DataType dtt = attr.getDataType();
 		String className = dtt.getClassName();
 		Class<?> c = null;
@@ -642,7 +645,8 @@ public class FyodorUltra {
 
 		// update attribute code for frontend
 		ea.setAttributeCode(code);
-		ea.getAttribute().setCode(code);
+		/*ea.setAttribute(attributeUtils.getAttribute(code));
+		ea.getAttribute().setCode(code);*/
 
 		return ea;
 	}
@@ -681,7 +685,7 @@ public class FyodorUltra {
 		} else if (Attribute.PRI_CODE.equals(attributeCode)) {
 			value = entity.getCode();
 		} else {
-			EntityAttribute entityAttribute = beaUtils.getEntityAttribute(entity.getRealm(), entity.getCode(), attributeCode);
+			EntityAttribute entityAttribute = beaUtils.getEntityAttribute(entity.getRealm(), entity.getCode(), attributeCode, true, true);
 			if (entityAttribute == null) {
 				return null;
 			}
@@ -689,7 +693,7 @@ public class FyodorUltra {
 		}
 
 		// create ea
-		Attribute attribute = cm.getAttribute(entity.getRealm(), attributeCode);
+		Attribute attribute = attributeUtils.getAttribute(entity.getRealm(), attributeCode);
 		EntityAttribute ea = new EntityAttribute(entity, attribute, 1.0, value);
 
 		return ea;

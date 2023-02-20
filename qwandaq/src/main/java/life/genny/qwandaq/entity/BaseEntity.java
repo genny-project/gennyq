@@ -16,31 +16,25 @@
 
 package life.genny.qwandaq.entity;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-import javax.json.bind.annotation.JsonbTransient;
-import javax.persistence.Transient;
-
-import life.genny.qwandaq.converter.CapabilityConverter;
-import org.infinispan.protostream.annotations.ProtoFactory;
-import org.jboss.logging.Logger;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-
 import io.quarkus.runtime.annotations.RegisterForReflection;
-
-import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.CodedEntity;
 import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
+import life.genny.qwandaq.converter.CapabilityConverter;
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.exception.runtime.BadDataException;
-import life.genny.qwandaq.intf.ICapabilityFilterable;
 import life.genny.qwandaq.intf.ICapabilityHiddenFilterable;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
+import org.infinispan.protostream.annotations.ProtoFactory;
+import org.jboss.logging.Logger;
+
+import javax.json.bind.annotation.JsonbTransient;
+import javax.persistence.Transient;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * BaseEntity represents a base entity that contains many attributes. It is the
@@ -255,6 +249,7 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 			entityAttribute = new EntityAttribute(this, attribute, weight, value);
 		}
 		if (value != null) {
+			entityAttribute.setAttribute(attribute);
 			entityAttribute.setValue(value);
 		}
 		entityAttribute.setWeight(weight);
@@ -317,6 +312,7 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 		if (eaOpt.isPresent()) {
 			ea = eaOpt.get();
 			// modify
+			ea.setAttribute(attribute);
 			ea.setValue(value);
 			ea.setInferred(inferred);
 			ea.setWeight(weight);
@@ -562,6 +558,7 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 				result = Optional.of(oldValue.get().getLoopValue());
 			}
 			EntityAttribute ea = oldValue.get();
+			ea.setAttribute(attribute);
 			ea.setValue(value);
 			ea.setWeight(weight);
 		} else {

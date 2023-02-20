@@ -66,6 +66,8 @@ public final class GennyConstants {
     public static final String CACHE_NAME_ATTRIBUTE = "attribute";
     public static final String CACHE_NAME_QUESTION = "question";
     public static final String CACHE_NAME_QUESTIONQUESTION = "questionquestion";
+	public static final String CACHE_NAME_DATATYPE = "datatype";
+	public static final String CACHE_NAME_VALIDATION = "validation";
     // =====================================================================================================
 }
 

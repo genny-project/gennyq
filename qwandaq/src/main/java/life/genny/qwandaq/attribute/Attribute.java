@@ -25,16 +25,11 @@ import life.genny.qwandaq.CodedEntity;
 import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
-import life.genny.qwandaq.utils.CommonUtils;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 
-import javax.persistence.Embedded;
-import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 
 /**
  * Attribute represents a distinct abstract Fact about a target entity
@@ -154,9 +149,9 @@ public class Attribute extends CodedEntity implements CoreEntityPersistable {
 	public static final String LNK_EDIT_QUES = "LNK_EDIT_QUES";
 	public static final String LNK_EDIT_PCMS = "LNK_EDIT_PCMS";
 
-	@Embedded
-	@NotNull
-	public DataType dataType;
+	private String dttCode;
+
+	private DataType dataType;
 
 	private Boolean defaultPrivacyFlag = false;
 
@@ -193,6 +188,14 @@ public class Attribute extends CodedEntity implements CoreEntityPersistable {
 	 */
 	public void setDataType(DataType dataType) {
 		this.dataType = dataType;
+	}
+
+	public String getDttCode() {
+		return dttCode;
+	}
+
+	public void setDttCode(String dttCode) {
+		this.dttCode = dttCode;
 	}
 
 	/*

@@ -379,7 +379,10 @@ public class FilterService extends KogitoService {
     public void sendPartialPCM(String pcmCode,String loc,String queValCode) {
         BaseEntity pcm = beUtils.getBaseEntity(pcmCode, true);
         for(EntityAttribute ea : pcm.getBaseEntityAttributes()) {
-            if(ea.getAttributeCode().equalsIgnoreCase(loc)) {
+            String attributeCode = ea.getAttributeCode();
+            if(attributeCode.equalsIgnoreCase(loc)) {
+                Attribute attribute = qwandaUtils.getAttribute(attributeCode);
+                ea.setAttribute(attribute);
                 ea.setValue(queValCode);
                 ea.setValueString(queValCode);
             }
@@ -398,7 +401,7 @@ public class FilterService extends KogitoService {
             String strJson = jsonb.toJson(param.getValue());
             SavedSearch ss = jsonb.fromJson(strJson, SavedSearch.class);
 
-            Attribute att= qwandaUtils.getAttribute(ss.getColumn());
+            Attribute att = attributeUtils.getAttribute(ss.getColumn(), true);
             StringBuilder valBuild = new StringBuilder(ss.getColumn());
             valBuild.append(FilterConst.SEPARATOR+ss.getOperator());
             valBuild.append(FilterConst.SEPARATOR+ss.getValueCode());
@@ -663,6 +666,8 @@ public class FilterService extends KogitoService {
 
         List<EntityAttribute> locations = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(pcm.getRealm(), pcm.getCode(), Prefix.PRI_LOC);
         for (EntityAttribute entityAttribute : locations) {
+            Attribute attribute = attributeUtils.getAttribute(entityAttribute.getRealm(), entityAttribute.getAttributeCode(), true);
+            entityAttribute.setAttribute(attribute);
             String value = entityAttribute.getAsString();
             if (value.startsWith(Prefix.SBE_)) {
                 String defCode = getDefinitionCode(value);

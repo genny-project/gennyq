@@ -46,17 +46,9 @@ public class Definition extends BaseEntity {
 		return definition;
 	}
 
-	public void setAllowedAttribute(String attributeCode, Boolean mandatory) {
-		setValue(Prefix.ATT_.concat(attributeCode), mandatory);
-	}
-
 	@JsonbTransient
 	public List<EntityAttribute> getAllowedAttributes() {
 		return findPrefixEntityAttributes(Prefix.ATT_);
-	}
-
-	public void setDefaultValue(String attributeCode, Object value) {
-		setValue(Prefix.DFT_.concat(attributeCode), value);
 	}
 
 	@JsonbTransient

@@ -9,6 +9,7 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import life.genny.qwandaq.utils.AttributeUtils;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
@@ -52,6 +53,9 @@ public class InternalConsumer {
 	@Inject
 	CacheManager cm;
 
+	@Inject
+	AttributeUtils attributeUtils;
+
 	void onStart(@Observes StartupEvent ev) {
 
 		service.showConfiguration();
@@ -82,9 +86,9 @@ public class InternalConsumer {
 
 		Page page = fyodor.fetch26(searchEntity);
 
-		Attribute totalResults = cm.getAttribute(Attribute.PRI_TOTAL_RESULTS);
+		Attribute totalResults = attributeUtils.getAttribute(Attribute.PRI_TOTAL_RESULTS);
 		searchEntity.addAttribute(new EntityAttribute(searchEntity, totalResults, 1.0, String.valueOf(page.getTotal())));
-		Attribute index = cm.getAttribute(Attribute.PRI_INDEX);
+		Attribute index = attributeUtils.getAttribute(Attribute.PRI_INDEX);
 		searchEntity.addAttribute(new EntityAttribute(searchEntity, index, 1.0, String.valueOf(page.getPageNumber())));
 
 		// convert to sendable

@@ -66,6 +66,9 @@ public class BaseEntityUtils {
 	@Inject
 	QwandaUtils qwandaUtils;
 
+	@Inject
+	AttributeUtils attributeUtils;
+
 	public BaseEntityUtils() { 
 	}
 
@@ -208,7 +211,7 @@ public class BaseEntityUtils {
 					bea.setBaseEntityCode(baseEntity.getCode());
 				}
 				if (bea.getAttribute() == null) {
-					Attribute attribute = cm.getAttribute(baseEntity.getRealm(), bea.getAttributeCode());
+					Attribute attribute = attributeUtils.getAttribute(baseEntity.getRealm(), bea.getAttributeCode());
 					bea.setAttribute(attribute);
 				}
 				beaUtils.updateEntityAttribute(bea);
@@ -556,11 +559,11 @@ public class BaseEntityUtils {
 			}
 		}
 
-		Attribute linkDef = cm.getAttribute(Attribute.LNK_DEF);
+		Attribute linkDef = attributeUtils.getAttribute(Attribute.LNK_DEF);
 		item.addAttribute(new EntityAttribute(item, linkDef, 1.0, "[\"" + definitionCode + "\"]"));
 
 		// author of the BE
-		Attribute lnkAuthorAttr = cm.getAttribute(Attribute.LNK_AUTHOR);
+		Attribute lnkAuthorAttr = attributeUtils.getAttribute(Attribute.LNK_AUTHOR);
 		item.addAttribute(new EntityAttribute(item, lnkAuthorAttr, 1.0, "[\"" + userToken.getUserCode() + "\"]"));
 
 		updateBaseEntity(item, true);
@@ -599,14 +602,14 @@ public class BaseEntityUtils {
 		if (!email.startsWith("random+")) {
 			// Check to see if the email exists
 			// TODO: check to see if the email exists in the database and keycloak
-			Attribute emailAttribute = cm.getAttribute(Attribute.PRI_EMAIL);
+			Attribute emailAttribute = attributeUtils.getAttribute(Attribute.PRI_EMAIL);
 			item.addAttribute(new EntityAttribute(item, emailAttribute, 1.0, email));
-			Attribute usernameAttribute = cm.getAttribute(Attribute.PRI_USERNAME);
+			Attribute usernameAttribute = attributeUtils.getAttribute(Attribute.PRI_USERNAME);
 			item.addAttribute(new EntityAttribute(item, usernameAttribute, 1.0, email));
 		}
 
 		// add PRI_UUID
-		Attribute uuidAttribute = cm.getAttribute(Attribute.PRI_UUID);
+		Attribute uuidAttribute = attributeUtils.getAttribute(Attribute.PRI_UUID);
 		item.addAttribute(new EntityAttribute(item, uuidAttribute, 1.0, uuid.toUpperCase()));
 
 		return item;
@@ -630,7 +633,7 @@ public class BaseEntityUtils {
 			throw new NullParameterException("attributeCode");
 		}
 
-		Attribute attribute = cm.getAttribute(attributeCode);
+		Attribute attribute = attributeUtils.getAttribute(attributeCode);
 
 		EntityAttribute ea = new EntityAttribute(be, attribute, 1.0, value);
 		be.addAttribute(ea);

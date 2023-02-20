@@ -1,11 +1,6 @@
 package life.genny.kogito.common.messages;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.inject.Inject;
-
+import io.quarkus.arc.Arc;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
@@ -13,12 +8,16 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
-import life.genny.qwandaq.utils.SearchUtils;
 import life.genny.qwandaq.models.ServiceToken;
+import life.genny.qwandaq.utils.AttributeUtils;
+import life.genny.qwandaq.utils.SearchUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
-import io.quarkus.arc.Arc;
+import javax.inject.Inject;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class SendAllMessages extends MessageSendingStrategy {
 
@@ -27,6 +26,9 @@ public class SendAllMessages extends MessageSendingStrategy {
 
     @Inject
     ServiceToken serviceToken;
+
+    @Inject
+    AttributeUtils attributeUtils;
 
     static final Logger log = Logger.getLogger(SendAllMessages.class);
     private final String productCode;
@@ -87,7 +89,7 @@ public class SendAllMessages extends MessageSendingStrategy {
                 BaseEntity message = beUtils.getBaseEntity(messageCode);
 
                 // Determine the recipientBECode
-                EntityAttribute recipientLink = beaUtils.getEntityAttribute(message.getRealm(), message.getCode(), PRI_RECIPIENT_LNK, false);
+                EntityAttribute recipientLink = beaUtils.getEntityAttribute(message.getRealm(), message.getCode(), PRI_RECIPIENT_LNK);
                 if (recipientLink != null) {
                     String recipientLnkValue = recipientLink.getValueString();
                     determineRecipientLnkValueAndUpdateMap(recipientLnkValue);
@@ -100,7 +102,10 @@ public class SendAllMessages extends MessageSendingStrategy {
                 StringBuilder contextMapStr = new StringBuilder();
 
                 lnkEAs.parallelStream().forEach((ea) -> {
-                    String aliasCode = ea.getAttributeCode().substring("LNK_".length());
+                    String attributeCode = ea.getAttributeCode();
+                    Attribute attribute = attributeUtils.getAttribute(attributeCode, true);
+                    ea.setAttribute(attribute);
+                    String aliasCode = attributeCode.substring("LNK_".length());
                     String aliasValue = ea.getAsString();
                     aliasValue = aliasValue.replace("\"", "").replace("[", "").replace("]", "");
                     contextMapStr.append(aliasCode).append("=").append(aliasValue).append(",");
