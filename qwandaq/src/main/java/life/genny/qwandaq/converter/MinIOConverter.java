@@ -21,19 +21,23 @@ public class MinIOConverter implements AttributeConverter<String, String> {
 
     @Override
     public String convertToEntityAttribute(String dbData) {
-        if (dbData != null && dbData.startsWith(QwandaQConstant.MINIO_LAZY_PREFIX)) {
-            log.info("Fetching from MinIO");
-
-            byte[] data = Arc.container().instance(MinIOUtils.class).get().fetchFromStorePublicDirectory(dbData);
-            if (data.length > 0) {
-                return new String(data);
+        try {
+            if (dbData != null && dbData.startsWith(QwandaQConstant.MINIO_LAZY_PREFIX)) {
+                log.info("Fetching from MinIO");
+                byte[] data = Arc.container().instance(MinIOUtils.class).get().fetchFromStorePublicDirectory(dbData);
+                log.info("data.length: "+ data.length);
+                if (data.length > 0) {
+                    return new String(data);
+                } else {
+                    // Exception handled in Minio.fetchFromStorePublicDirectory(dbData);;
+                    // This will be the default text the attribute value will show since there was exception in Minio.fetchFromStorePublicDirectory(dbData);
+                    return GennyConstants.ERROR_FALLBACK_MSG;
+                }
             } else {
-                // Exception handled in Minio.fetchFromStorePublicDirectory(dbData);;
-                // This will be the default text the attribute value will show since there was exception in Minio.fetchFromStorePublicDirectory(dbData);
-                return GennyConstants.ERROR_FALLBACK_MSG;
+                return dbData;
             }
-        } else {
-            return dbData;
+        }catch (Exception ex){
+            return GennyConstants.ERROR_FALLBACK_MSG;
         }
     }
 }
