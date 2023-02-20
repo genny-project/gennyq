@@ -3,6 +3,7 @@ package life.genny.kogito.common.utils;
 import java.net.http.HttpResponse;
 import java.util.Map;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -279,6 +280,26 @@ public class KogitoUtils {
 	 */
 	public String selectServiceURI(final UseService useService) {
 		return useService.getServiceUrl();
+	}
+
+	/**
+	 * Find the process instance id for an incomplete user task
+	 *
+	 * @param processId
+	 * @param taskName
+	 * @param userCode
+	 */
+	public String findIncompleteTaskProcessInstanceId(String processId, String taskName, String userCode) throws GraphQLException {
+		Map<String, String> queryMap = new HashMap<>();
+		queryMap.put("processId", processId);
+		queryMap.put("name", userCode);
+		queryMap.put("state", "Ready");
+		JsonArray array = gqlUtils.queryTable("UserTaskInstances", queryMap, "id");
+
+		return array.stream()
+				.map(x -> x.asJsonObject())
+				.filter(x -> x.getString("inputs").contains("\"userCode\":\"" + userCode + "\""))
+				.findFirst().get().getString("processInstanceId");
 	}
 
 	/**
