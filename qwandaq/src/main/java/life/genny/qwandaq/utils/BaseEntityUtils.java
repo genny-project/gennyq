@@ -641,10 +641,12 @@ public class BaseEntityUtils {
 	}
 
 	public BaseEntity removeBaseEntity(BaseEntity baseEntity) {
-		return (BaseEntity) cm.removePersistableEntity(GennyConstants.CACHE_NAME_BASEENTITY, new BaseEntityKey(baseEntity.getRealm(), baseEntity.getCode()));
+		beaUtils.removeBaseEntityAttributesForBaseEntity(baseEntity);
+		return removeBaseEntity(baseEntity.getRealm(), baseEntity.getCode());
 	}
 
 	public BaseEntity removeBaseEntity(String productCode, String beCode) {
+		beaUtils.removeBaseEntityAttributesForBaseEntity(productCode, beCode);
 		return (BaseEntity) cm.removePersistableEntity(GennyConstants.CACHE_NAME_BASEENTITY, new BaseEntityKey(productCode, beCode));
 	}
 }

@@ -224,4 +224,13 @@ public class EntityAttributeUtils {
 	public List<EntityAttribute> getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(String productCode, String baseEntityCode, String attributeCodePrefix) {
 		return cm.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(productCode, baseEntityCode, attributeCodePrefix);
 	}
+
+    public void removeBaseEntityAttributesForBaseEntity(BaseEntity baseEntity) {
+		removeBaseEntityAttributesForBaseEntity(baseEntity.getRealm(), baseEntity.getCode());
+    }
+
+	public void removeBaseEntityAttributesForBaseEntity(String productCode, String baseEntityCode) {
+		cm.removePersistableEntities(productCode, "from life.genny.qwandaq.persistence.entityattribute.EntityAttribute where realm = '" + productCode
+				+ "' and baseEntityCode = '" + baseEntityCode + "'");
+	}
 }

@@ -416,6 +416,13 @@ public class CacheManager {
 		return queryResult.list();
 	}
 
+	public void removePersistableEntities(String cacheName, String deleteQueryStr) {
+		RemoteCache<CoreEntityKey, CoreEntityPersistable> remoteCache = cache.getRemoteCacheForEntity(cacheName);
+		QueryFactory queryFactory = Search.getQueryFactory(remoteCache);
+		Query<EntityAttribute> query = queryFactory.create(deleteQueryStr);
+		query.execute();
+	}
+
 	/**
 	 * @param questionQuestion
 	 * @return The question object to be saved

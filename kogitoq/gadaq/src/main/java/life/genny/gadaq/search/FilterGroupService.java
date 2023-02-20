@@ -47,9 +47,6 @@ public class FilterGroupService {
     FilterService filterService;
 
     @Inject
-    DatabaseUtils databaseUtils;
-
-    @Inject
     CacheManager cacheManager;
 
     @Inject
@@ -378,7 +375,7 @@ public class FilterGroupService {
      * @param code Base entity
      */
     public void deleteSearch(String code) {
-        databaseUtils.deleteBaseEntityAndAttribute(user.getProductCode(), code);
+        beUtils.removeBaseEntity(user.getProductCode(), code);
     }
 
     /**
