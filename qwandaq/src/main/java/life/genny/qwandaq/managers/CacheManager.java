@@ -250,7 +250,27 @@ public class CacheManager {
 		.stream().map((CoreEntity entity) -> (BaseEntity)entity).collect(Collectors.toList());
 	}
 
+    /**
+     * @param code
+     * @return
+     */
+    public Attribute getAttribute(String code) {
+		return getAttribute(userToken.getProductCode(), code);
+    }
 
+    /**
+     * @param productCode
+     * @param code
+     * @return
+     */
+    public Attribute getAttribute(String productCode, String code) {
+        AttributeKey key = new AttributeKey(productCode, code);
+		Attribute attribute = (Attribute) getPersistableEntity(GennyConstants.CACHE_NAME_ATTRIBUTE, key);
+		if (attribute == null) {
+			throw new ItemNotFoundException(productCode, code);
+		}
+        return attribute;
+    }
 
 	/**
 	 * Fetch all attributes for a product.
