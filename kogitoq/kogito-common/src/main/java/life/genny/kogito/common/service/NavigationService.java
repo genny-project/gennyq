@@ -134,7 +134,8 @@ public class NavigationService extends KogitoService {
 		BaseEntity user = beUtils.getUserBaseEntity();
 		BaseEntity summary = beUtils.getBaseEntityFromLinkAttribute(user, Attribute.LNK_SUMMARY, true);
 		if (summary == null) {
-			throw new ItemNotFoundException("LNK_SUMMARY for " + user.getCode());
+			new ItemNotFoundException("LNK_SUMMARY for " + user.getCode()).printStackTrace();
+			return;
 		}
 		PCM pcm = PCM.from(summary);
 		String userCode = userToken.getUserCode();

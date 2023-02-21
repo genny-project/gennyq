@@ -78,7 +78,7 @@ public class BaseEntityUtils {
 	 * @return the user {@link BaseEntity}
 	 */
 	public BaseEntity getProjectBaseEntity() {
-		return getBaseEntity(Prefix.PRJ_.concat(userToken.getProductCode().toUpperCase()));
+		return getBaseEntity(Prefix.PRJ_.concat(userToken.getProductCode().toUpperCase()), true);
 	}
 
 	/**
@@ -240,7 +240,11 @@ public class BaseEntityUtils {
 	 * @return The BaseEntity with code stored in the attribute
 	 */
 	public BaseEntity getBaseEntityFromLinkAttribute(BaseEntity baseEntity, String attributeCode, boolean bundleAttributes) {
-		String newBaseEntityCode = CommonUtils.cleanUpAttributeValue(getStringValueOfAttribute(baseEntity, attributeCode));
+		String value = getStringValueOfAttribute(baseEntity, attributeCode);
+		if (StringUtils.isBlank(value)) {
+			return null;
+		}
+		String newBaseEntityCode = CommonUtils.cleanUpAttributeValue(value);
 		try {
 			return getBaseEntity(newBaseEntityCode, bundleAttributes);
 		} catch (ItemNotFoundException e) {
@@ -281,7 +285,7 @@ public class BaseEntityUtils {
 
 	@Nullable
 	private <T> T getAttributeValue(BaseEntity baseEntity, String attributeCode) {
-		EntityAttribute entityAttribute = beaUtils.getEntityAttribute(baseEntity.getRealm(), baseEntity.getCode(), attributeCode);
+		EntityAttribute entityAttribute = beaUtils.getEntityAttribute(baseEntity.getRealm(), baseEntity.getCode(), attributeCode, true);
 		if (entityAttribute == null) {
 			return null;
 		}
