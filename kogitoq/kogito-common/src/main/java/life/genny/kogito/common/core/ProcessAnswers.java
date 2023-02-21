@@ -59,6 +59,9 @@ public class ProcessAnswers {
 	@Inject
 	EntityAttributeUtils beaUtils;
 
+	@Inject
+	AttributeUtils attributeUtils;
+
 	/**
 	 * @param answer
 	 * @param processData
@@ -161,15 +164,7 @@ public class ProcessAnswers {
 
 			// find the attribute
 			String attributeCode = answer.getAttributeCode();
-			Attribute attribute = qwandaUtils.getAttribute(attributeCode);
-
-			// debug log the value before saving
-			String currentValue = null;
-			EntityAttribute entityAttribute = beaUtils.getEntityAttribute(target.getRealm(), target.getCode(), attributeCode, true);
-			if (entityAttribute != null) {
-				currentValue = target.getValueAsString(attributeCode);
-			}
-			log.debug("Overwriting Value -> " + answer.getAttributeCode() + " = " + currentValue);
+			Attribute attribute = attributeUtils.getAttribute(attributeCode, true);
 
 			// check if name needs updating
 			if (Attribute.PRI_NAME.equals(attributeCode)) {

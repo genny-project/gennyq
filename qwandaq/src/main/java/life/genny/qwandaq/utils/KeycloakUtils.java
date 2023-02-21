@@ -534,7 +534,7 @@ public class KeycloakUtils {
 		String productCode = user.getRealm();
 		String userCode = user.getCode();
 
-		EntityAttribute id = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_UUID);
+		EntityAttribute id = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_UUID, true);
 		if (id == null) {
 			throw new ItemNotFoundException(productCode, userCode, Attribute.PRI_UUID);
 		}

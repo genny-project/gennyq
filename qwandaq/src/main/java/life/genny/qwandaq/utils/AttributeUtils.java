@@ -94,7 +94,6 @@ public class AttributeUtils {
             DataType dataType = getDataType(attribute, bundleValidationList);
             attribute.setDataType(dataType);
         }
-        log.info("attribute = " + jsonb.toJson(attribute));
         return attribute;
     }
 

@@ -508,7 +508,7 @@ public class QwandaUtils {
 			}
 
 			boolean mandatory = ask.getMandatory();
-			EntityAttribute entityAttribute = beaUtils.getEntityAttribute(baseEntity.getRealm(), baseEntity.getCode(), attributeCode, true, true);
+			EntityAttribute entityAttribute = baseEntity.getBaseEntityAttributesMap().get(attributeCode);
 
 			String value = null;
 			if (entityAttribute != null) {
@@ -690,14 +690,14 @@ public class QwandaUtils {
 				ea.setValue(false);
 
 			processEntity.addAttribute(attribute, ea.getWeight(), ea.getValue());
-			beaUtils.updateEntityAttribute(ea);
+			// beaUtils.updateEntityAttribute(ea);
 		}
 
 		// now apply all incoming answers
 		processData.getAnswers().forEach(answer -> {
 			// ensure the attribute is set
 			String attributeCode = answer.getAttributeCode();
-			Attribute attribute = attributeUtils.getAttribute(attributeCode);
+			Attribute attribute = attributeUtils.getAttribute(attributeCode, true, true);
 			EntityAttribute ea = new EntityAttribute(processEntity, attribute, 1.0, answer.getValue());
 			// add answer to entity
 			processEntity.addAttribute(ea);

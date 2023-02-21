@@ -560,11 +560,11 @@ public class BaseEntityUtils {
 			}
 		}
 
-		Attribute linkDef = attributeUtils.getAttribute(Attribute.LNK_DEF);
+		Attribute linkDef = attributeUtils.getAttribute(Attribute.LNK_DEF, true);
 		item.addAttribute(new EntityAttribute(item, linkDef, 1.0, "[\"" + definitionCode + "\"]"));
 
 		// author of the BE
-		Attribute lnkAuthorAttr = attributeUtils.getAttribute(Attribute.LNK_AUTHOR);
+		Attribute lnkAuthorAttr = attributeUtils.getAttribute(Attribute.LNK_AUTHOR, true);
 		item.addAttribute(new EntityAttribute(item, lnkAuthorAttr, 1.0, "[\"" + userToken.getUserCode() + "\"]"));
 
 		updateBaseEntity(item, true);
@@ -602,14 +602,14 @@ public class BaseEntityUtils {
 		if (!email.startsWith("random+")) {
 			// Check to see if the email exists
 			// TODO: check to see if the email exists in the database and keycloak
-			Attribute emailAttribute = attributeUtils.getAttribute(Attribute.PRI_EMAIL);
+			Attribute emailAttribute = attributeUtils.getAttribute(Attribute.PRI_EMAIL, true);
 			item.addAttribute(new EntityAttribute(item, emailAttribute, 1.0, email));
-			Attribute usernameAttribute = attributeUtils.getAttribute(Attribute.PRI_USERNAME);
+			Attribute usernameAttribute = attributeUtils.getAttribute(Attribute.PRI_USERNAME, true);
 			item.addAttribute(new EntityAttribute(item, usernameAttribute, 1.0, email));
 		}
 
 		// add PRI_UUID
-		Attribute uuidAttribute = attributeUtils.getAttribute(Attribute.PRI_UUID);
+		Attribute uuidAttribute = attributeUtils.getAttribute(Attribute.PRI_UUID, true);
 		item.addAttribute(new EntityAttribute(item, uuidAttribute, 1.0, uuid.toUpperCase()));
 
 		return item;

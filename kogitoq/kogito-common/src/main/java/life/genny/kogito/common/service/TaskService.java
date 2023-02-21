@@ -185,7 +185,6 @@ public class TaskService extends KogitoService {
 			Answer a = answers.get(i);
 			if (a.getAttributeCode().equals(answer.getAttributeCode())
 					&& a.getTargetCode().equals(answer.getTargetCode())) {
-				log.info("Found duplicate : " + a.getAttributeCode());
 				answers.remove(i);
 			} else {
 				i++;
