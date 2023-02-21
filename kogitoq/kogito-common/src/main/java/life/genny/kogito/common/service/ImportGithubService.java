@@ -74,7 +74,6 @@ public class ImportGithubService extends KogitoService {
 		}
 		log.info("bes = " + bes.size());
 		Definition dotDef = Definition.from(beUtils.getBaseEntity(realm, "DEF_DOCUMENT_TEMPLATE", true));
-		dotDef.setBaseEntityAttributes(beaUtils.getAllEntityAttributesForBaseEntity(realm, "DEF_DOCUMENT_TEMPLATE"));
 		for (BaseEntity be : bes) {
 			if (be != null) {
 				String beCode = be.getCode();

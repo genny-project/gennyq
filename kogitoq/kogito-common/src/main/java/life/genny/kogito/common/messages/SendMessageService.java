@@ -1,9 +1,13 @@
 package life.genny.kogito.common.messages;
 
+import static life.genny.qwandaq.attribute.Attribute.LNK_MESSAGE_TYPE;
+import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.entity.BaseEntity;
+import static life.genny.qwandaq.entity.BaseEntity.PRI_NAME;
 import life.genny.qwandaq.message.QBaseMSGMessageType;
 import life.genny.qwandaq.models.UserToken;
 
+import life.genny.qwandaq.utils.BaseEntityUtils;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -19,6 +23,9 @@ public class SendMessageService {
 	private static final Logger log = Logger.getLogger(SendMessageService.class);
 
 	Jsonb jsonb = JsonbBuilder.create();
+
+	@Inject
+	BaseEntityUtils baseEntityUtils;
 
 	@Inject
 	UserToken userToken;
@@ -61,6 +68,17 @@ public class SendMessageService {
 
 	public void sendMessage(String templateCode, BaseEntity recipientBE, String url) {
 		new SendMessage(templateCode, recipientBE, url).sendMessage();
+	}
+
+	public void send(String templateCode, String recipientBECode, String entityCode){
+		BaseEntity baseEntity = baseEntityUtils.getBaseEntity(templateCode);
+		if(baseEntity != null){
+			String msgType = baseEntityUtils.getBaseEntityFromLinkAttribute(baseEntity, LNK_MESSAGE_TYPE).getValue(PRI_NAME, null);
+			log.info("Triggering message!");
+			sendMessage(templateCode,recipientBECode,entityCode, msgType);
+		}else{
+			log.error("Message templateCode not found!");
+		}
 	}
 
 	/**

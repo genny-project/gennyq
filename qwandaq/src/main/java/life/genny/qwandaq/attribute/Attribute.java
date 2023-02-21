@@ -131,7 +131,7 @@ public class Attribute extends CodedEntity implements CoreEntityPersistable {
 	public static final String PRI_INDEX = "PRI_INDEX";
 
 	// message
-	public static final String PRI_DEFAULT_MSG_TYPE = "PRI_DEFAULT_MSG_TYPE";
+	public static final String LNK_MESSAGE_TYPE = "LNK_MESSAGE_TYPE";
 	public static final String PRI_CONTEXT_LIST = "PRI_CONTEXT_LIST";
 	public static final String PRI_CONTEXT_ASSOCIATIONS = "PRI_CONTEXT_ASSOCIATIONS";
 	public static final String PRI_CC = "PRI_CC";

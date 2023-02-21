@@ -70,6 +70,9 @@ public class NavigationService extends KogitoService {
 
 	public static final String PRI_IS_PREFIX = "PRI_IS_";
 
+	@Inject
+	FilterService filterService;
+
 	/**
 	 * Trigger the default redirection for the user.
 	 */
@@ -249,6 +252,7 @@ public class NavigationService extends KogitoService {
 	 * @param code Question code
 	 */
 	public void redirectByTable(String code) {
+		filterService.init(code);
 		searchService.sendTable(code);
 	}
 

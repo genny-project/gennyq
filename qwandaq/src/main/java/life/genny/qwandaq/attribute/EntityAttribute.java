@@ -523,11 +523,9 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 	}
 
 	public void autocreateUpdate() {
-
-		if (getValueString() != null) {
+		if (valueString != null && valueString.length() > 0) {
             this.valueString = AttributeMinIOHandler.convertToMinIOObject(valueString,baseEntityCode,attributeCode);
 		}
-
 		setUpdated(LocalDateTime.now(ZoneId.of("Z")));
 	}
 
@@ -535,7 +533,7 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 		if (getCreated() == null)
 			setCreated(LocalDateTime.now(ZoneId.of("Z")));
 
-		if (getValueString() != null) {
+		if (valueString != null && valueString.length() > 0) {
 			this.valueString = AttributeMinIOHandler.convertToMinIOObject(valueString,baseEntityCode,attributeCode);
 		}
 

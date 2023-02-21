@@ -340,6 +340,8 @@ public class QwandaUtils {
 				questionQuestions.forEach(questionQuestion -> {
 					log.debug("   [-] Found Child Question:  " + questionQuestion.getParentCode() + ":"
 							+ questionQuestion.getChildCode());
+
+					CommonUtils.printCollection(capSet, log::debug, (cap) -> "$$$$$$$$$$$$$ " + cap.code + " = " + CommonUtils.getArrayString(cap.nodes));
 					if (!questionQuestion.requirementsMet(capSet, requirementsConfig)) { // For now all caps are needed. I'll make this more comprehensive later
 						return;
 					}
@@ -673,10 +675,13 @@ public class QwandaUtils {
 
 			// check for existing attribute in target
 			EntityAttribute ea = beaUtils.getEntityAttribute(productCode, targetCode, code, true, true);
-			Attribute attribute = ea.getAttribute();
+			Attribute attribute;
 			if(ea == null) {
+				attribute = attributeUtils.getAttribute(productCode, code, true);
 				// otherwise create new attribute
 				ea = new EntityAttribute(processEntity, attribute, 1.0, null);
+			} else {
+				attribute = ea.getAttribute();
 			}
 			String className = attribute.getDataType().getClassName();
 			Object value = ea.getValue();

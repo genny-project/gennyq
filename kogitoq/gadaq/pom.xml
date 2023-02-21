@@ -22,6 +22,12 @@
         <version>${quarkus.platform.version}</version>
         <type>pom</type>
         <scope>import</scope>
+        <exclusions>
+					<exclusion>
+						<groupId>com.squareup.okhttp3</groupId>
+						<artifactId>okhttp</artifactId>
+					</exclusion>
+				</exclusions>
       </dependency>
       <dependency>
         <groupId>${kogito.bom.group-id}</groupId>
@@ -29,6 +35,12 @@
         <version>${kogito.bom.version}</version>
         <type>pom</type>
         <scope>import</scope>
+        <exclusions>
+					<exclusion>
+						<groupId>com.squareup.okhttp3</groupId>
+						<artifactId>okhttp</artifactId>
+					</exclusion>
+				</exclusions>
       </dependency>
       <dependency>
         <groupId>org.drools</groupId>
@@ -36,6 +48,12 @@
         <version>${version.org.drools}</version>
         <type>pom</type>
         <scope>import</scope>
+        <exclusions>
+					<exclusion>
+						<groupId>com.squareup.okhttp3</groupId>
+						<artifactId>okhttp</artifactId>
+					</exclusion>
+				</exclusions>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -57,6 +75,11 @@
       <artifactId>rest-assured</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+			<groupId>com.squareup.okhttp3</groupId>
+			<artifactId>okhttp</artifactId>
+			<version>4.10.0</version>
+		</dependency>
   </dependencies>
   <build>
     <plugins>
