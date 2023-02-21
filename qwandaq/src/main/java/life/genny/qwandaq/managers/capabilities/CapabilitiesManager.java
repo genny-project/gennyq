@@ -213,7 +213,7 @@ public class CapabilitiesManager extends Manager {
 		String cleanCapabilityCode = cleanedCode ? rawCapabilityCode : cleanCapabilityCode(rawCapabilityCode);
 		Attribute attribute = null;
 		try {
-			attribute = attributeUtils.getAttribute(productCode, cleanCapabilityCode);
+			attribute = attributeUtils.getAttribute(productCode, cleanCapabilityCode, true);
 		} catch(ItemNotFoundException e) {
 			log.debug("Could not find Attribute: " + cleanCapabilityCode + ". Creating new Capability");
 		}
@@ -302,7 +302,7 @@ public class CapabilitiesManager extends Manager {
 		String cleanCapabilityCode = cleanCapabilityCode(rawCapabilityCode);
 
 		// Don't need to catch here since we don't want to create
-		Attribute attribute = attributeUtils.getAttribute(productCode, cleanCapabilityCode);
+		Attribute attribute = attributeUtils.getAttribute(productCode, cleanCapabilityCode, true);
 
 		return addCapabilityToBaseEntity(productCode, targetBe, attribute, modes);
 	}
@@ -313,7 +313,7 @@ public class CapabilitiesManager extends Manager {
 		String cleanCapabilityCode = cleanCapabilityCode(rawCapCode);
 
 		// Don't need to catch here since we don't want to create
-		Attribute attribute = attributeUtils.getAttribute(productCode, cleanCapabilityCode);
+		Attribute attribute = attributeUtils.getAttribute(productCode, cleanCapabilityCode, true);
 		return addCapabilityToBaseEntity(productCode, target, attribute, capabilityList);
 	}
 

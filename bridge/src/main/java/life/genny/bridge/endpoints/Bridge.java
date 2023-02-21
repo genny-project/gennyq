@@ -106,23 +106,23 @@ public class Bridge {
             log.info("cid = " + cid + ", url:" + url);
             String baseEntityCode = "PRJ_" + cid.toUpperCase();
             BaseEntity project = beUtils.getBaseEntity(cid, baseEntityCode);
-            if ("internmatch".equals(cid)) {
-                cid = "alyson";
-            }
-            props.setClientId(cid);
-
             // init colours
-            EntityAttribute primaryEA = beaUtils.getEntityAttribute(cid, baseEntityCode, PRI_COLOR_PRIMARY);
+            EntityAttribute primaryEA = beaUtils.getEntityAttribute(cid, baseEntityCode, PRI_COLOR_PRIMARY, true);
             if (primaryEA == null) {
                 throw new ItemNotFoundException("BaseEntityAttribute for primary color not found!");
             }
             String primary = primaryEA.getValueString();
-            EntityAttribute secondaryEA = beaUtils.getEntityAttribute(cid, baseEntityCode, PRI_COLOR_SECONDARY);
+            EntityAttribute secondaryEA = beaUtils.getEntityAttribute(cid, baseEntityCode, PRI_COLOR_SECONDARY, true);
             if (secondaryEA == null) {
                 throw new ItemNotFoundException("BaseEntityAttribute for secondary color not found!");
             }
             String secondary = secondaryEA.getValueString();
             props.setColors(new InitColors(primary, secondary));
+
+            if ("internmatch".equals(cid)) {
+                cid = "alyson";
+            }
+            props.setClientId(cid);
 
             log.info("props=[" + props + "]");
             String json = jsonb.toJson(props);
