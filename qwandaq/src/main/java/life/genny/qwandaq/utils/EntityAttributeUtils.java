@@ -111,17 +111,6 @@ public class EntityAttributeUtils {
 	 */
 	public boolean updateEntityAttribute(EntityAttribute baseEntityAttribute) {
 		EntityAttributeKey key = new EntityAttributeKey(baseEntityAttribute.getRealm(), baseEntityAttribute.getBaseEntityCode(), baseEntityAttribute.getAttributeCode());
-		EntityAttribute eaInDB = (EntityAttribute) cm.getPersistableEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, key);
-		if (eaInDB != null) {
-			String valueInDB = eaInDB.getValueString();
-			if (!StringUtils.isBlank(valueInDB)) {
-				String newVal = baseEntityAttribute.getValueString();
-				if (StringUtils.isBlank(newVal)) {
-					log.errorf("ValueAsString is getting reset!!!!!!!!!!! [%s : %s : %s], valueInDB: %s", baseEntityAttribute.getRealm(), baseEntityAttribute.getBaseEntityCode(), baseEntityAttribute.getAttributeCode(), valueInDB);
-					throw new RuntimeException("ValueAsString getting reset!!!!!!!!!!!");
-				}
-			}
-		}
 		return cm.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, key, baseEntityAttribute);
 	}
 
