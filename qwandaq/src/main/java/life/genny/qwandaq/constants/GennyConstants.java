@@ -39,7 +39,7 @@ public final class GennyConstants {
 	public static final String VALUE = "value";
 
 	//Message
-	public static final String SBE_MESSAGE = "SBE_MESSAGE";
+	public static final String SBE_TABLE_MESSAGE = "SBE_TABLE_MESSAGE";
 
     public static final String ERROR_FALLBACK_MSG = "Error Occurred!";
 

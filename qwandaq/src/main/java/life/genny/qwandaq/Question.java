@@ -425,7 +425,7 @@ public class Question extends CodedEntity implements CoreEntityPersistable, ICap
 	 * @param childQuestions the childQuestions to set
 	 */
 	public void setChildQuestions(ArrayList<QuestionQuestion> childQuestions) {
-        this.childQuestions = new HashSet<QuestionQuestion>(childQuestions);
+        this.childQuestions = new HashSet<>(childQuestions);
     }
 
 	/**

@@ -278,7 +278,9 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 		final EntityAttribute entityAttribute = new EntityAttribute(this, attribute, weight, value);
 		entityAttribute.setRealm(getRealm());
 		entityAttribute.setBaseEntityCode(getCode());
+		entityAttribute.setBaseEntityId(getId());
 		entityAttribute.setAttribute(attribute);
+		entityAttribute.setAttributeId(attribute.getId());
 		this.baseEntityAttributes.put(attribute.getCode(), entityAttribute);
 
 		return entityAttribute;
@@ -318,6 +320,7 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 			ea.setWeight(weight);
 			ea.setRealm(getRealm());
 			ea.setBaseEntityCode(getCode());
+			ea.setBaseEntityId(getId());
 		} else {
 			ea = new EntityAttribute(this, attribute, weight, value);
 			ea.setRealm(getRealm());

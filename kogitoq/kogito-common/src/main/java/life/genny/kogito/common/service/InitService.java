@@ -135,9 +135,6 @@ public class InitService extends KogitoService {
 			DataType dataType = attributeUtils.getDataType(attribute, true);
 			if (dataType != null) {
 				attribute.setDataType(dataType);
-				log.infof("$$$$$$$$$$$$$$$ Set the datatype %s in attribute %s", dataType.getDttCode(), attributeCode);
-			} else {
-				log.errorf("Datatype is null for attribute [%s,%s], which is not a good sign!", attribute.getRealm(), attributeCode);
 			}
 			attributesBatch.add(attribute);
 			count++;
@@ -174,6 +171,12 @@ public class InitService extends KogitoService {
 		String productCode = userToken.getProductCode();
 		BaseEntity user = beUtils.getUserBaseEntity();
 		CapabilitySet userCapabilities = capMan.getUserCapabilities(user);
+
+		log.debugf("$$$$$$$$$$$$$$$$$$$ userCapabilities for [%s:%s]", user.getRealm(), user.getCode());
+		userCapabilities.forEach(capability -> {
+			log.debugf("$$$$$$$$$$$$$$$$$$$ capability.code: %s", capability.code);
+			log.debugf("$$$$$$$$$$$$$$$$$$$ capability.nodes: %s", CapabilitiesManager.getModeString(capability.nodes));
+		});
 
 		// get pcms using search
 		SearchEntity searchEntity = new SearchEntity("SBE_PCMS", "PCM Search")

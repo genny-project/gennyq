@@ -221,6 +221,7 @@ public class BaseEntityService extends KogitoService {
 			Attribute attribute = attributeUtils.getAttribute(ea.getAttributeCode());
 			ea.setAttribute(attribute);
 			ea.setBaseEntityCode(entity.getCode());
+			ea.setBaseEntityId(entity.getId());
 			entity.addAttribute(ea);
 		}
 

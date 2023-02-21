@@ -87,7 +87,7 @@ public class BaseEntityUtils {
 	 * @return the user's {@link BaseEntity}
 	 */
 	public BaseEntity getUserBaseEntity() {
-		return getBaseEntity(userToken.getUserCode());
+		return getBaseEntity(userToken.getProductCode(), userToken.getUserCode(), true);
 	}
 
 	/**
@@ -209,6 +209,7 @@ public class BaseEntityUtils {
 				}
 				if (bea.getBaseEntityCode() == null) {
 					bea.setBaseEntityCode(baseEntity.getCode());
+					bea.setBaseEntityId(baseEntity.getId());
 				}
 				if (bea.getAttribute() == null) {
 					Attribute attribute = attributeUtils.getAttribute(baseEntity.getRealm(), bea.getAttributeCode());
@@ -316,7 +317,7 @@ public class BaseEntityUtils {
 			return null;
 		}
 
-		String[] baseEntityCodeArray = attributeValue.split(",");
+		String[] baseEntityCodeArray = StringUtils.split(attributeValue,",");
 		List<String> beCodeList = Arrays.asList(baseEntityCodeArray);
 		return beCodeList;
 	}
@@ -492,7 +493,7 @@ public class BaseEntityUtils {
 		if (code != null && code.charAt(3) != '_')
 			throw new DebugException("Code parameter " + code + " is not a valid BE code!");
 
-		BaseEntity item = null;
+		BaseEntity item;
 		String productCode = definition.getRealm();
 		String definitionCode = definition.getCode();
 		EntityAttribute uuidEA = beaUtils.getEntityAttribute(productCode, definitionCode, Prefix.ATT_.concat(Attribute.PRI_UUID));
@@ -523,7 +524,7 @@ public class BaseEntityUtils {
 		}
 
 		// save to DB and cache
-		updateBaseEntity(item, true);
+		updateBaseEntity(item);
 
 		List<EntityAttribute> atts = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(productCode, definitionCode, Prefix.ATT_);
 		for (EntityAttribute ea : atts) {
@@ -575,7 +576,6 @@ public class BaseEntityUtils {
 	 * Create a new user {@link BaseEntity} using a DEF entity.
 	 *
 	 * @param definition The def entity to use
-	 * @param email The email to use
 	 * @return The created BaseEntity
 	 */
 	public BaseEntity createUser(final Definition definition) {

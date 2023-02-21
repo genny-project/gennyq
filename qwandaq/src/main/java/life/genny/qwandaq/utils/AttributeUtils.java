@@ -104,7 +104,6 @@ public class AttributeUtils {
         if (bundleValidationList && dataType != null) {
             List<Validation> validationList = getValidationList(dataType);
             dataType.setValidationList(validationList);
-            log.infof("$$$$$$$$$$$$$$$ Set the validationList %s in datatype %s", validationList.toArray(), dataType.getDttCode());
         }
         return dataType;
     }

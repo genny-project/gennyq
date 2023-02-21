@@ -10,7 +10,8 @@ echo "host (this) = ${host}"
 echo "genny host (target system) = ${gennyhost}"
 echo "raw host (target system) = ${rawhost}"
 echo "gadaq debug port ${GADAQ_DEBUG_PORT}"
-
+export GENNY_KEYCLOAK_URL=https://keycloak-testing.gada.io/auth
+export KEYCLOAK_AUTH_URL=https://keycloak-testing.gada.io/auth
 export GENNY_GADAQ_SERVICE_URL=${gennyhost}:${port}
 export PRODUCT_CODES=${PRODUCT_CODES}
 export GENNY_SHOW_VALUES="TRUE"
