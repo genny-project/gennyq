@@ -107,7 +107,7 @@ public class RoleManager extends Manager {
 		if (targetRole == null)
 			throw new NullParameterException("targetRole");
 		String attributeCode = lnkChildAttribute.get(productCode).getCode();
-		EntityAttribute children = beaUtils.getEntityAttribute(productCode, targetRole.getCode(), attributeCode);
+		EntityAttribute children = beaUtils.getEntityAttribute(productCode, targetRole.getCode(), attributeCode, true, true);
 		String codeString = CommonUtils.getArrayString(childrenCodes);
 
 		// add/edit LNK_CHILDREN
@@ -317,13 +317,10 @@ public class RoleManager extends Manager {
 
 	public BaseEntity attachRole(BaseEntity target, BaseEntity role) {
 		String productCode = target.getRealm();
-		EntityAttribute baseEntityAttribute = beaUtils.getEntityAttribute(productCode, target.getCode(), Attribute.LNK_ROLE);
-		Attribute attribute = attributeUtils.getAttribute(productCode, Attribute.LNK_ROLE, true);
-		baseEntityAttribute.setAttribute(attribute);
+		EntityAttribute baseEntityAttribute = beaUtils.getEntityAttribute(productCode, target.getCode(), Attribute.LNK_ROLE, true, true);
 		// Create it
 		if (baseEntityAttribute == null) {
 			baseEntityAttribute = target.addAttribute(lnkRoleAttribute.get(productCode), 1.0, "[" + role.getCode() + "]");
-			beUtils.updateBaseEntity(target);
 			beaUtils.updateEntityAttribute(baseEntityAttribute);
 			return target;
 		}
@@ -339,7 +336,6 @@ public class RoleManager extends Manager {
 
 		baseEntityAttribute.setValue(value);
 
-		beUtils.updateBaseEntity(target);
 		beaUtils.updateEntityAttribute(baseEntityAttribute);
 		return target;
 	}
