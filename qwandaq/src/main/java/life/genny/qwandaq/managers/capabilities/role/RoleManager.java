@@ -108,7 +108,6 @@ public class RoleManager extends Manager {
 			throw new NullParameterException("targetRole");
 		String attributeCode = lnkChildAttribute.get(productCode).getCode();
 		EntityAttribute children = beaUtils.getEntityAttribute(productCode, targetRole.getCode(), attributeCode);
-		children.setAttribute(attributeUtils.getAttribute(productCode, attributeCode, true));
 		String codeString = CommonUtils.getArrayString(childrenCodes);
 
 		// add/edit LNK_CHILDREN
@@ -116,6 +115,7 @@ public class RoleManager extends Manager {
 			EntityAttribute addedAttribute = targetRole.addAttribute(lnkChildAttribute.get(productCode), 1.0, codeString);
 			beaUtils.updateEntityAttribute(addedAttribute);
 		} else {
+			children.setAttribute(attributeUtils.getAttribute(productCode, attributeCode, true));
 			children.setValue(codeString);
 			beaUtils.updateEntityAttribute(children);
 		}
