@@ -9,16 +9,14 @@ echo "host (this) = ${host}"
 echo "genny host (target system) = ${gennyhost}"
 echo "raw host (target system) = ${rawhost}"
 
-#export GENNY_SHOW_VALUES="TRUE"
-export GENNY_SERVICE_USERNAME=wayan.mastra@gada.io
-#export GENNY_KEYCLOAK_URL=https://keycloak.gada.io
-export GENNY_KEYCLOAK_URL=https://keycloak-office.gada.io
+export GENNY_SHOW_VALUES="TRUE"
+export GENNY_SERVICE_USERNAME=service
+export GENNY_KEYCLOAK_URL=https://keycloak.gada.io
 export GENNY_API_URL=${gennyhost}:8280
 export GENNY_KAFKA_URL=${gennyhost}:9092
 #export GENNY_CLIENT_ID=kogito-console-quarkus
 export GENNY_CLIENT_ID=backend
-#export GENNY_REALM=internmatch
-export GENNY_REALM=gadatron
+export GENNY_REALM=internmatch
 export GENNY_KOGITO_SERVICE_URL=${host}:${port}
 export GENNY_KOGITO_DATAINDEX_HTTP_URL=${gennyhost}:8582
 export GENNY_KOGITO_DATAINDEX_WS_URL=ws://${rawhost}:8582
@@ -45,7 +43,7 @@ export INFINISPAN_CLIENT_HOTROD_CLIENT_INTELLIGENCE=BASIC
 export FYODOR_SERVICE_API=http://alyson.genny.life:10070
 
 #export GENNY_MYSQL_FULL_URL=alyson.genny.life:3310/gennydb?zeroDateTimeBehavior=convertToNull&serverTimezone=UTC
-#export FULL_MYSQL_URL=jdbc:mysql://alyson.genny.life:3310/gennydb?allowPublicKeyRetrieval=true&syscharacterEncoding=utf8mb4&useSSL=FALSE&serverTimezone=UTC&rewriteBatchedStatements=true
+export FULL_MYSQL_URL=jdbc:mysql://alyson.genny.life:3310/gennydb?allowPublicKeyRetrieval=true&syscharacterEncoding=utf8mb4&useSSL=FALSE&serverTimezone=UTC&rewriteBatchedStatements=true
 export MYSQL_USER=genny
 export MYSQL_PASSWORD=password
 export GENNY_MYSQL_USERNAME=genny
@@ -57,14 +55,6 @@ export ENV_KEYCLOAK_REDIRECTURI=${GENNY_KEYCLOAK_URL:https\://keycloak.gada.io/a
 export RULESSERVICE_URL=http://wildfly-rulesservice
 export MEDIA_PROXY_URL=https://alyson.genny.life/web/public
 
-export GENNY_MYSQL_FULL_URL=$(echo "alyson.genny.life:3310/gennydb?zeroDateTimeBehavior=convertToNull&serverTimezone=UTC")
-export MYSQL_URL=$(echo "alyson.genny.life:3310/gennydb?zeroDateTimeBehavior=convertToNull&serverTimezone=UTC")
-export CORS_URLS=$(echo "http://localhost:3000|http://localhost:5000|http://alyson.genny.life|http://alyson3.genny.life|http://api.genny.life|http://qwanda-service.genny.life|http://qwanda-service|http://keycloak.genny.life|https://gadatron.genny.life|https://keycloak-office.gada.io|https://0.0.0.0:10020|https://172.17.0.1:10020|http://172.17.0.1:10020")
-export INFINISPAN_URL=alyson.genny.life:11222
-
-echo "cors: $CORS_URLS"
-echo "mysql full url $GENNY_MYSQL_FULL_URL"
-echo "mysql url $MYSQL_URL"
 echo "infinispan url $GENNY_INFINISPAN_URL"
 echo "infinispan username $GENNY_INFINISPAN_CLIENT_AUTH_USERNAME"
 echo "infinispan password $GENNY_INFINISPAN_CLIENT_AUTH_PASSWORD"

@@ -1,7 +1,16 @@
 package life.genny.fyodor.endpoints;
 
 import io.vertx.core.http.HttpServerRequest;
-import java.util.List;
+import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.managers.CacheManager;
+import life.genny.qwandaq.message.QDataAttributeMessage;
+import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.AttributeUtils;
+import life.genny.qwandaq.utils.DatabaseUtils;
+import life.genny.qwandaq.utils.HttpUtils;
+import org.jboss.logging.Logger;
+import org.jboss.resteasy.annotations.jaxrs.PathParam;
+
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
@@ -12,13 +21,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.message.QDataAttributeMessage;
-import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.DatabaseUtils;
-import life.genny.qwandaq.utils.HttpUtils;
-import org.jboss.logging.Logger;
-import org.jboss.resteasy.annotations.jaxrs.PathParam;
+import java.util.List;
 
 /**
  * Attributes Endpoints providing database attribute access
@@ -39,7 +42,13 @@ public class Attributes {
 	DatabaseUtils databaseUtils;
 
 	@Inject
+	CacheManager cm;
+
+	@Inject
 	UserToken userToken;
+
+	@Inject
+	AttributeUtils attributeUtils;
 
 	/**
 	 * Read an item from the cache.
@@ -58,7 +67,7 @@ public class Attributes {
 		}
 
 		String productCode = userToken.getProductCode();
-		Attribute attribute = databaseUtils.findAttributeByCode(productCode, code);
+		Attribute attribute = attributeUtils.getAttribute(productCode, code, true, true);
 
 		return Response.ok(attribute).build();
 	}
@@ -81,7 +90,7 @@ public class Attributes {
 
 		List<Attribute> attributeList = databaseUtils.findAttributes(realm, 0, 10000, "");
 
-		QDataAttributeMessage attributeMsg = new QDataAttributeMessage(attributeList.toArray(new Attribute[0]));
+		QDataAttributeMessage attributeMsg = new QDataAttributeMessage(attributeList);
 		return Response.ok(attributeMsg).build();
 	}
 

@@ -13,6 +13,7 @@ import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.*;
+import life.genny.qwandaq.managers.CacheManager;
 import org.eclipse.microprofile.context.ManagedExecutor;
 import org.jboss.logging.Logger;
 
@@ -27,8 +28,14 @@ public class MessageProcessor {
 
 	private static final ManagedExecutor executor = ManagedExecutor.builder().build();
 
+    @Inject
+    KeycloakUtils keycloakUtils;
+
 	@Inject
 	BaseEntityUtils beUtils;
+
+    @Inject
+    EntityAttributeUtils beaUtils;
 
     @Inject
     QMessageFactory messageFactory;
@@ -40,7 +47,13 @@ public class MessageProcessor {
     ServiceToken serviceToken;
 
 	@Inject
-	QwandaUtils qwandaUtils;
+	CacheManager cm;
+
+    @Inject
+    MergeUtils mergeUtils;
+
+    @Inject
+    AttributeUtils attributeUtils;
 
     public void processGenericMessage(QMessageGennyMSG message) {
         executor.supplyAsync(() -> {
@@ -94,8 +107,11 @@ public class MessageProcessor {
         }
 
         if (templateBe != null) {
-            String cc = templateBe.getValue("PRI_CC", null);
-            String bcc = templateBe.getValue("PRI_BCC", null);
+            String templateBeCode = templateBe.getCode();
+            EntityAttribute ccAttribute = beaUtils.getEntityAttribute(realm, templateBeCode, "PRI_CC");
+            String cc = ccAttribute != null ? ccAttribute.getValueString() : null;
+            EntityAttribute bccAttribute = beaUtils.getEntityAttribute(realm, templateBeCode, "PRI_BCC");
+            String bcc = bccAttribute != null ? bccAttribute.getValueString() : null;
 
             if (cc != null) {
                 log.debug("Using CC from template BaseEntity");
@@ -121,9 +137,10 @@ public class MessageProcessor {
             log.info("Using TemplateBE " + templateBe.getCode());
 
             // Handle any default context associations
-            String contextAssociations = templateBe.getValue("PRI_CONTEXT_ASSOCIATIONS", null);
+            EntityAttribute contextAssociationsAttribute = beaUtils.getEntityAttribute(templateBe.getRealm(), templateBe.getCode(), "PRI_CONTEXT_ASSOCIATIONS");
+            String contextAssociations = contextAssociationsAttribute != null ? contextAssociationsAttribute.getValueString() : null;
             if (contextAssociations != null) {
-                MergeUtils.addAssociatedContexts(beUtils, baseEntityContextMap, contextAssociations, false);
+                mergeUtils.addAssociatedContexts(beUtils, baseEntityContextMap, contextAssociations, false);
             }
 
             // Check for Default Message
@@ -172,7 +189,7 @@ public class MessageProcessor {
 						+ recipientBe.getCode() + " with realm " + serviceToken.getRealm());
 
                 // Fetch access token
-				String accessToken = KeycloakUtils.getImpersonatedToken(recipientBe, serviceToken, projectBe);
+				String accessToken = keycloakUtils.getImpersonatedToken(recipientBe, serviceToken, projectBe);
 
                 // Encode URL and put back in the map
                 String url = MsgUtils.encodedUrlBuilder(GennySettings.projectUrl() + "/home", parentCode, code, targetCode, accessToken);
@@ -188,8 +205,8 @@ public class MessageProcessor {
     }
 
     private List<BaseEntity> getRecipientBeList(String[] recipientArr) {
-        Attribute emailAttr = qwandaUtils.getAttribute("PRI_EMAIL");
-        Attribute mobileAttr = qwandaUtils.getAttribute("PRI_MOBILE");
+        Attribute emailAttr = attributeUtils.getAttribute(Attribute.PRI_EMAIL, true);
+        Attribute mobileAttr = attributeUtils.getAttribute(Attribute.PRI_MOBILE, true);
         List<BaseEntity> recipientBeList = new ArrayList<>();
 
         for (String recipient : recipientArr) {
@@ -247,7 +264,8 @@ public class MessageProcessor {
 
             if (unsubscriptionBe != null) {
                 /* check if unsubscription list for the template code has the userCode */
-                String templateAssociation = unsubscriptionBe.getValue(templateCode, "");
+                EntityAttribute templateAssociationAttribute = beaUtils.getEntityAttribute(unsubscriptionBe.getRealm(), unsubscriptionBe.getCode(), templateCode);
+                String templateAssociation = templateAssociationAttribute != null ? templateAssociationAttribute.getValueString() : "";
                 isUserUnsubscribed = templateAssociation.contains(recipientBe.getCode());
             }
 

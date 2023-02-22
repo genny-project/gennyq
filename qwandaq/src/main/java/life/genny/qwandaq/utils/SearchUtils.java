@@ -10,7 +10,6 @@ import javax.json.bind.JsonbBuilder;
 import javax.ws.rs.core.Response;
 
 import org.jboss.logging.Logger;
-
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.constants.Prefix;
@@ -19,6 +18,7 @@ import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.kafka.KafkaTopic;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.message.MessageData;
 import life.genny.qwandaq.message.QEventDropdownMessage;
@@ -57,6 +57,9 @@ public class SearchUtils {
 	@Inject
 	UserToken userToken;
 
+	@Inject
+	CacheManager cm;
+
 	/**
 	 * Call the Fyodor API to fetch a list of {@link BaseEntity}
 	 * objects using a {@link SearchEntity} object.
@@ -80,7 +83,8 @@ public class SearchUtils {
 		Integer status = response.statusCode();
 
 		if (Response.Status.Family.familyOf(status) != Response.Status.Family.SUCCESSFUL) {
-			log.error("Bad response status " + status + " from " + uri);
+			log.errorf("Bad response status %s from %s.\nResponse body: %s", status, uri, response.body());
+			return null;
 		}
 
 		try {
@@ -90,9 +94,8 @@ public class SearchUtils {
 		} catch (Exception e) {
 			log.error(e.getMessage());
 			e.printStackTrace();
+			return null;
 		}
-
-		return null;
 	}
 
 	/**
@@ -186,12 +189,9 @@ public class SearchUtils {
 
 		// fetch search from cache
 		String sessionCode = sessionSearchCode(code);
-		SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(), "LAST-SEARCH:" + sessionCode, SearchEntity.class);
+		SearchEntity searchEntity = cm.getObject(userToken.getProductCode(), "LAST-SEARCH:" + sessionCode, SearchEntity.class);
 		if (searchEntity == null) {
-			searchEntity = CacheUtils.getObject(userToken.getProductCode(), code, SearchEntity.class);
-			if(searchEntity == null) {
-				throw new BadDataException("Search Entity with code: " + code + " is null (not in cache or cached as last search)");
-			}
+			searchEntity = cm.getObject(userToken.getProductCode(), code, SearchEntity.class);
 			searchEntity.setCode(sessionCode);
 		}
 
@@ -208,7 +208,7 @@ public class SearchUtils {
 		if (searchEntity == null)
 			throw new NullPointerException("searchEntity");
 
-		CacheUtils.putObject(userToken.getProductCode(), "LAST-SEARCH:" + searchEntity.getCode(),
+		cm.putObject(userToken.getProductCode(), "LAST-SEARCH:" + searchEntity.getCode(),
 				searchEntity);
 
 		// remove JTI from code
@@ -279,7 +279,7 @@ public class SearchUtils {
 		// setup dropdown message and assign data
 		QEventDropdownMessage msg = new QEventDropdownMessage();
 		msg.setData(messageData);
-		msg.setAttributeCode(ask.getQuestion().getAttribute().getCode());
+		msg.setAttributeCode(ask.getQuestion().getAttributeCode());
 
 		// publish to events for dropkick
 		msg.setToken(userToken.getToken());

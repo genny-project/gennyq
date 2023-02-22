@@ -19,19 +19,21 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.QuestionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.annotations.jaxrs.PathParam;
 
 import io.vertx.core.http.HttpServerRequest;
 import life.genny.qwandaq.Question;
-import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
-import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.HttpUtils;
 import life.genny.serviceq.Service;
@@ -61,7 +63,16 @@ public class Cache {
 	UserToken userToken;
 
 	@Inject
+	CacheManager cm;
+
+	@Inject
 	DatabaseUtils databaseUtils;
+
+	@Inject
+	BaseEntityUtils beUtils;
+
+	@Inject
+	QuestionUtils questionUtils;
 
 	/**
 	 * Read an item from the cache and return in json status format.
@@ -162,7 +173,7 @@ public class Cache {
 
 		if ((key.contains(":")) || ("attributes".equals(key))) {
 			// It's a token
-			String json = (String) CacheUtils.readCache(productCode, key);
+			String json = (String) cm.readCache(productCode, key);
 
 			if (StringUtils.isBlank(json)) {
 				log.info("Could not find in cache: " + key);
@@ -184,9 +195,9 @@ public class Cache {
 			try {
 				log.info("Getting BE with code " + key);
 
-				BaseEntity baseEntity = databaseUtils.findBaseEntityByCode(productCode, key);
+				BaseEntity baseEntity = beUtils.getBaseEntity(productCode, key);
 
-				// BaseEntity baseEntity = (BaseEntity) CacheUtils.getEntity(GennyConstants.CACHE_NAME_BASEENTITY,
+				// BaseEntity baseEntity = (BaseEntity) cm.getEntity(CacheManager.CACHE_NAME_BASEENTITY,
 				// 		baseEntityKey);
 
 				if (baseEntity == null) {
@@ -197,7 +208,7 @@ public class Cache {
 			} catch (Exception e) {
 				// TODO: just to get something going..
 				log.warn("BaseEntity not found in cache, fetching from database");
-				BaseEntity be = databaseUtils.findBaseEntityByCode(productCode, key);
+				BaseEntity be = beUtils.getBaseEntity(productCode, key);
 
 				return Response.ok(jsonb.toJson(be)).build();
 			}
@@ -211,12 +222,12 @@ public class Cache {
 
 			if ("CAPABILITIES".equals(key)) {
 				log.warn("productCode: [" + productCode + "] ; key: [" + key + "] " + serviceToken.getToken());
-				String json = (String) CacheUtils.readCache(productCode, key);
+				String json = (String) cm.readCache(productCode, key);
 				return Response.ok(json).build();
 			}
 			if ("ACTIVE_BRIDGE_IDS".equals(key)) {
 				log.warn("productCode: [" + productCode + "] ; key: [" + key + "] " + StringUtils.abbreviate(serviceToken.getToken(),20));
-				String json = (String) CacheUtils.readCache(productCode, key);
+				String json = (String) cm.readCache(productCode, key);
 				return Response.ok(json).build();
 			}
 			if ("JENNY".equals(productCode) && "SKIP".equals(key)) {
@@ -233,11 +244,11 @@ public class Cache {
 			}
 
 			log.info("reading " + key + " from raw cache");
-			String json = (String) CacheUtils.readCache(productCode, key);
+			String json = (String) cm.readCache(productCode, key);
 			if ((json == null) && (key.startsWith("QUE_"))) {
 				Question q;
 				try {
-					q = databaseUtils.findQuestionByCode(productCode, key);
+					q = questionUtils.getQuestionFromQuestionCode(productCode, key);
 				} catch (NoResultException e) {
 					throw new ItemNotFoundException(key, e);
 				}
@@ -277,10 +288,10 @@ public class Cache {
 			// It's a baseentity
 			BaseEntityKey baseEntityKey = new BaseEntityKey(productCode, key);
 			BaseEntity entity = jsonb.fromJson(value, BaseEntity.class);
-			CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY,
+			cm.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY,
 					baseEntityKey, entity);
 		} else {
-			CacheUtils.writeCache(productCode, key, value);
+			cm.writeCache(productCode, key, value);
 		}
 		log.info("Wrote json of length " + value.length() + " for " + key);
 
@@ -303,7 +314,7 @@ public class Cache {
 		}
 
 
-			CacheUtils.writeCache(productCode, key, null);
+			cm.writeCache(productCode, key, null);
 
 		log.info("Wrote null for " + key);
 
@@ -333,7 +344,7 @@ public class Cache {
 		log.info("Product Code/Cache: " + userToken.getProductCode());
 
 		String productCode = userToken.getProductCode();
-		String json = (String) CacheUtils.readCache(productCode, key);
+		String json = (String) cm.readCache(productCode, key);
 
 		if (json == null) {
 			log.info("Could not find in cache: " + key);
@@ -364,10 +375,9 @@ public class Cache {
 			// It's a baseentity
 			BaseEntityKey baseEntityKey = new BaseEntityKey(productCode, key);
 			BaseEntity entity = jsonb.fromJson(value, BaseEntity.class);
-			CacheUtils.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY,
-					baseEntityKey, entity);
+			cm.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, baseEntityKey, entity);
 		} else {
-			CacheUtils.writeCache(productCode, key, value);
+			cm.writeCache(productCode, key, value);
 		}
 
 		log.info("Wrote json of length " + value.length() + " for " + key);
@@ -387,7 +397,7 @@ public class Cache {
 		}
 
 		String productCode = userToken.getProductCode();
-		CacheUtils.removeEntry(productCode, key);
+		cm.removeEntry(productCode, key);
 
 		log.info("Removed Item for " + key);
 
@@ -404,7 +414,7 @@ public class Cache {
 					.entity(HttpUtils.error("Not authorized to make this request")).build();
 		}
 
-		CacheUtils.removeEntry(productCode, key);
+		cm.removeEntry(productCode, key);
 
 		log.info("Removed Item for " + key);
 

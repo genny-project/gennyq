@@ -1,8 +1,8 @@
 package life.genny.qwandaq.entity.search.trait;
 
-import java.util.Set;
 import java.io.Serializable;
 import java.util.HashSet;
+import java.util.Set;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.datatype.capability.core.Capability;

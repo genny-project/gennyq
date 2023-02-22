@@ -8,6 +8,7 @@ import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.session.bridge.BridgeSwitch;
 import life.genny.serviceq.live.data.InternalProducer;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.reactive.messaging.Message;
 import org.jboss.logging.Logger;
 
@@ -26,6 +27,9 @@ public class KafkaBean implements KafkaInterface {
 	@Inject 
 	UserToken userToken;
 
+	@Inject 
+	BridgeSwitch bridgeSwitch;
+
 	static final Logger log = Logger.getLogger(KafkaBean.class);
 
 	static Jsonb jsonb = JsonbBuilder.create();
@@ -40,7 +44,7 @@ public class KafkaBean implements KafkaInterface {
 
 		if (topic == null)
 			throw new NullParameterException("channel");
-		if (payload == null)
+		if (StringUtils.isEmpty(payload))
 			throw new NullParameterException("payload");
 
 		// find GennyToken from payload contents
@@ -56,11 +60,11 @@ public class KafkaBean implements KafkaInterface {
 
 		if (topic == KafkaTopic.WEBCMDS || topic == KafkaTopic.WEBDATA) {
 
-			String bridgeId = BridgeSwitch.get(userToken);
+			String bridgeId = bridgeSwitch.get(userToken);
 
 			if (bridgeId == null) {
 				log.warn("No Bridge ID found for " + userToken.getUserCode() + " : " + userToken.getJTI());
-				bridgeId = BridgeSwitch.findActiveBridgeId(userToken);
+				bridgeId = bridgeSwitch.findActiveBridgeId(userToken);
 			}
 
 			if (bridgeId != null) {
@@ -79,16 +83,17 @@ public class KafkaBean implements KafkaInterface {
 			case EVENTS -> producer.getToEvents().send(payload);
 			case VALID_EVENTS -> producer.getToValidEvents().send(payload);
 			case GENNY_EVENTS -> producer.getToGennyEvents().send(payload);
-			case GENNY_DATA -> producer.getToGennyData().send(payload);
 			case SEARCH_EVENTS -> producer.getToSearchEvents().send(payload);
 			case DATA -> producer.getToData().send(payload);
 			case VALID_DATA -> producer.getToValidData().send(payload);
+			case GENNY_DATA -> producer.getToGennyData().send(payload);
 			case SEARCH_DATA -> producer.getToSearchData().send(payload);
 			case MESSAGES -> producer.getToMessages().send(payload);
 			case SCHEDULE -> producer.getToSchedule().send(payload);
 			case BLACKLIST -> producer.getToBlacklist().send(payload);
 			case WEBCMDS -> producer.getToWebCmds().send(Message.of(payload).addMetadata(metadata));
 			case WEBDATA -> producer.getToWebData().send(Message.of(payload).addMetadata(metadata));
+			case DEAD_LETTER_QUEUE -> producer.getToDeadLetterQueue().send(Message.of(payload).addMetadata(metadata));
 			default -> log.error("Producer unable to write to channel " + topic);
 		}
 	}

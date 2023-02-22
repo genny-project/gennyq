@@ -1,0 +1,26 @@
+package life.genny.qwandaq.persistence.validation;
+
+message ValidationKey {
+  optional string realm = 1;
+  optional string code = 2;
+}
+
+/* @Indexed */
+message Validation {
+  optional string dtype = 1;
+  optional int64 id = 2;
+  optional int64 created = 3;
+  optional string name = 4;
+  /* @Field(index=Index.YES, store = Store.YES, analyze = Analyze.NO) */
+  optional string realm = 5;
+  optional int64 updated = 6;
+  /* @Field(index=Index.YES, store = Store.YES, analyze = Analyze.NO) */
+  optional string code = 7;
+  optional int32 status = 8;
+  optional string errormsg = 9;
+  optional bool multiAllowed = 10;
+  optional string options = 11;
+  optional bool recursiveGroup = 12;
+  optional string regex = 13;
+  optional string selection_grp = 14;
+}

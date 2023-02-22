@@ -38,7 +38,7 @@ public class StringListConverter implements AttributeConverter<List<String>, Str
    */
   @Override
   public List<String> convertToEntityAttribute(final String joined) {
-      List<String> strings = new CopyOnWriteArrayList<>();
+    List<String> strings = new CopyOnWriteArrayList<>();
     if (joined != null) {
       strings = new CopyOnWriteArrayList<>(Arrays.asList(joined.split(",")));
     }

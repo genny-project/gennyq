@@ -1,0 +1,7 @@
+package life.genny.qwandaq.serialization.questionquestion;
+
+message QuestionQuestionKey {
+  optional string sourceCode = 1;
+  optional string targetCode = 2;
+  optional string realm = 3;
+}

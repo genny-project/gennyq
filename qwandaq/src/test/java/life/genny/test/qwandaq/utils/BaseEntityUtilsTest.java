@@ -1,15 +1,18 @@
 package life.genny.test.qwandaq.utils;
 
 import io.quarkus.test.junit.mockito.InjectMock;
-
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-
+import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
+import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.DatabaseUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mockito;
 
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.models.UserToken;
@@ -50,8 +53,8 @@ public class BaseEntityUtilsTest extends BaseTestCase {
 		BaseEntity baseEntity = new BaseEntity(ENTITY_CODE, "Test Entity");
 		baseEntity.setRealm(PRODUCT);
 		
-		Mockito.when(dbUtils.findBaseEntityByCode(PRODUCT, ENTITY_CODE)).thenReturn(baseEntity);
-		Mockito.when(dbUtils.findBaseEntityByCode(PRODUCT, DUMMY_CODE)).thenReturn(null);
+		Mockito.when(beUtils.getBaseEntity(PRODUCT, ENTITY_CODE)).thenReturn(baseEntity);
+		Mockito.when(beUtils.getBaseEntity(PRODUCT, DUMMY_CODE)).thenReturn(null);
 
 		assert(baseEntity.equals(beUtils.getBaseEntity(PRODUCT, ENTITY_CODE)));
 		Assertions.assertThrows(ItemNotFoundException.class, () -> beUtils.getBaseEntity(PRODUCT, DUMMY_CODE));
