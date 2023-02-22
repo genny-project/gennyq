@@ -369,6 +369,8 @@ public class EntityAttribute implements CoreEntitySerializable {
 		ea.setValueString(getValueString());
 		ea.setUpdated(getUpdated());
 		ea.setWeight(getWeight());
+		ea.setAttributeId(getAttributeId());
+		ea.setBaseEntityId(getBaseEntityId());
 		// bea.setIcon(geticon);
 		ea.setConfirmationFlag(getConfirmationFlag());
 		ea.setCapabilityRequirements(CapabilityConverter.convertToEA(getCapreqs()));
