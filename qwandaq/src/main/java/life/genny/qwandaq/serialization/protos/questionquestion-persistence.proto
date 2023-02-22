@@ -1,0 +1,32 @@
+package life.genny.qwandaq.persistence.questionquestion;
+
+message QuestionQuestionKey {
+  optional string sourceCode = 1;
+  optional string targetCode = 2;
+  optional string realm = 3;
+}
+
+/* @Indexed */
+message QuestionQuestion {
+  /* @Field(index=Index.YES, store = Store.YES, analyze = Analyze.NO) */
+  optional string sourceCode = 1;
+  /* @Field(index=Index.YES, store = Store.YES, analyze = Analyze.NO) */
+  optional string targetCode = 2;
+  optional bool createOnTrigger = 3;
+  optional int64 created = 4;
+  optional string dependency = 5;
+  optional bool disabled = 6;
+  optional bool hidden = 7;
+  optional bool formTrigger = 8;
+  optional string icon = 9;
+  optional bool mandatory = 10;
+  optional bool oneshot = 11;
+  optional bool readonly = 12;
+  /* @Field(index=Index.YES, store = Store.YES, analyze = Analyze.NO) */
+  optional string realm = 13;
+  optional int64 updated = 14;
+  optional int64 version = 15;
+  optional double weight = 16;
+  optional int64 source_id = 17;
+  optional string capreqs = 18;
+}

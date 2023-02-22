@@ -2,6 +2,7 @@ package life.genny.kogito.common.messages;
 
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.EntityAttributeUtils;
 import life.genny.qwandaq.utils.SearchUtils;
 import org.jboss.logging.Logger;
 
@@ -18,6 +19,7 @@ public abstract class MessageSendingStrategy {
     UserToken userToken;
     SearchUtils searchUtils;
     BaseEntityUtils beUtils;
+    EntityAttributeUtils beaUtils;
 
     public abstract void sendMessage();
 

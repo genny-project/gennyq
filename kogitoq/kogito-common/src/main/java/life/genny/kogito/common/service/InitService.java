@@ -1,29 +1,42 @@
 package life.genny.kogito.common.service;
 
-import java.util.Arrays;
+import java.util.*;
 
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.converter.ValidationListConverter;
+import life.genny.qwandaq.datatype.DataType;
+import life.genny.qwandaq.validation.Validation;
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Ask;
-
+import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.capabilities.CapabilitiesController;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
 import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.entity.BaseEntity;
-
+import life.genny.qwandaq.entity.search.SearchEntity;
+import life.genny.qwandaq.entity.search.trait.Filter;
+import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.kafka.KafkaTopic;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
-import life.genny.qwandaq.utils.CacheUtils;
+import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.*;
+import org.jbpm.process.core.datatype.DataTypeUtils;
 
-import life.genny.qwandaq.utils.KafkaUtils;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import java.util.Arrays;
 
 /**
  * A Service class used for Auth Init operations.
@@ -33,6 +46,27 @@ import life.genny.qwandaq.utils.KafkaUtils;
  */
 @ApplicationScoped
 public class InitService extends KogitoService {
+
+	@Inject
+	private CacheManager cm;
+
+	@Inject
+	private BaseEntityUtils beUtils;
+
+	@Inject
+	private UserToken userToken;
+
+	@Inject
+	private QwandaUtils qwandaUtils;
+
+	@Inject
+	private SearchUtils searchUtils;
+
+	@Inject
+	private CapabilitiesController controller;
+
+	@Inject
+	CacheManager cacheManager;
 
 	@Inject
 	Logger log;
@@ -73,29 +107,53 @@ public class InitService extends KogitoService {
 	 * Send All attributes for the productCode.
 	 */
 	public void sendAllAttributes() {
-
 		log.info("Sending Attributes for " + userToken.getProductCode());
 		String productCode = userToken.getProductCode();
 
-		Integer TOTAL_PAGES = CacheUtils.getObject(productCode, "ATTRIBUTE_PAGES", Integer.class);
+		Collection<Attribute> allAttributes = attributeUtils.getAttributesForProduct(productCode);
 
-		for (int currentPage = 0; currentPage < TOTAL_PAGES + 1; currentPage++) {
-
-			QDataAttributeMessage msg = CacheUtils.getObject(productCode,
-					"ATTRIBUTES_P" + currentPage, QDataAttributeMessage.class);
-
-			Attribute[] attributes = Arrays.asList(msg.getItems()).stream()
-				// Filter capability attributes
-				.filter((attribute) -> !attribute.getCode().startsWith(Prefix.CAP_))
-				.collect(Collectors.toList())
-				.toArray(new Attribute[0]);
-
-			msg.setItems(attributes);
-			// set token and send
-			msg.setToken(userToken.getToken());
-			msg.setAliasCode("ATTRIBUTE_MESSAGE_" + (currentPage + 1) + "_OF_" + (TOTAL_PAGES + 1));
-			KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
+		int BATCH_SIZE = 500;
+		int count = 0;
+		int batchNum = 1;
+		int totalAttributesCount = allAttributes.size();
+		int totalBatches = totalAttributesCount / BATCH_SIZE;
+		if (totalAttributesCount % BATCH_SIZE != 0) {
+			totalBatches++;
 		}
+		log.infof("%s Attribute(s) to be sent in %s batch(es).", totalAttributesCount, totalBatches);
+		List<Attribute> attributesBatch = new LinkedList<>();
+		for(Attribute attribute : allAttributes) {
+			String attributeCode = attribute.getCode();
+			if (attributeCode.startsWith(Prefix.CAP_)) {
+				continue;
+			}
+			DataType dataType = attributeUtils.getDataType(attribute, true);
+			if (dataType != null) {
+				attribute.setDataType(dataType);
+			}
+			attributesBatch.add(attribute);
+			count++;
+			if (count == BATCH_SIZE) {
+				dispatchAttributesToKafka(attributesBatch, batchNum, totalBatches);
+				attributesBatch.clear();
+				count = 0;
+				batchNum++;
+			}
+		}
+		// Dispatch the last batch, if any
+		if (!attributesBatch.isEmpty()) {
+			dispatchAttributesToKafka(attributesBatch, batchNum, totalBatches);
+		}
+	}
+
+	private void dispatchAttributesToKafka(List<Attribute> attributesBatch, int batchNum, int totalBatches) {
+		QDataAttributeMessage msg = new QDataAttributeMessage();
+		msg.add(attributesBatch);
+		msg.setItems(attributesBatch);
+		// set token and send
+		msg.setToken(userToken.getToken());
+		msg.setAliasCode("ATTRIBUTE_MESSAGE_BATCH_" + batchNum + "_OF_" + totalBatches);
+		KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
 	}
 
 	public void sendDrafts() {

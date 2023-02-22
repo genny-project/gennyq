@@ -1,4 +1,4 @@
-package life.genny.qwandaq.entity;
+package life.genny.qwandaq.serialization.baseentity;
 
 message BaseEntity {
   optional string dtype = 1;
@@ -9,4 +9,5 @@ message BaseEntity {
   optional int64 updated = 6;
   optional string code = 7;
   optional int32 status = 8;
+  optional string capreqs = 9;
 }

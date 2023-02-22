@@ -15,7 +15,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
-
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
@@ -23,149 +22,102 @@ import javax.json.bind.annotation.JsonbProperty;
 import javax.json.bind.annotation.JsonbTransient;
 import javax.money.CurrencyUnit;
 import javax.money.Monetary;
-import javax.persistence.AssociationOverride;
-import javax.persistence.AssociationOverrides;
-import javax.persistence.Cacheable;
-import javax.persistence.Column;
 import javax.persistence.Convert;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.Index;
-import javax.persistence.JoinColumn;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
-import javax.persistence.Table;
 import javax.persistence.Transient;
-import javax.persistence.UniqueConstraint;
 import javax.xml.bind.annotation.XmlTransient;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-import life.genny.qwandaq.converter.MinIOConverter;
-import life.genny.qwandaq.handler.AttributeMinIOHandler;
+import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.converter.CapabilityConverter;
+import life.genny.qwandaq.datatype.DataType;
 import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.time.DateUtils;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.javamoney.moneta.Money;
 import org.jboss.logging.Logger;
-
-import io.quarkus.runtime.annotations.RegisterForReflection;
-import life.genny.qwandaq.converter.CapabilityConverter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.converter.MoneyConverter;
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.handler.AttributeMinIOHandler;
 import life.genny.qwandaq.intf.ICapabilityFilterable;
+import life.genny.qwandaq.serialization.CoreEntitySerializable;
 
-@Entity
-@Table(name = "baseentity_attribute", indexes = {
-		@Index(columnList = "baseEntityCode", name = "ba_idx"),
-		@Index(columnList = "attributeCode", name = "ba_idx"),
-		@Index(columnList = "valueString", name = "ba_idx"),
-		@Index(columnList = "valueBoolean", name = "ba_idx")
-}, uniqueConstraints = @UniqueConstraint(columnNames = { "attributeCode", "baseEntityCode", "realm" }))
-@AssociationOverrides({
-		@AssociationOverride(name = "pk.baseEntity", joinColumns = @JoinColumn(name = "BASEENTITY_ID")),
-		@AssociationOverride(name = "pk.attribute", joinColumns = @JoinColumn(name = "ATTRIBUTE_ID"))
-})
-@RegisterForReflection
-@Cacheable
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class EntityAttribute implements java.io.Serializable, Comparable<Object>, ICapabilityFilterable {
+public class EntityAttribute implements CoreEntityPersistable, ICapabilityFilterable, Comparable<Object> {
 
+	public static final String DOUBLE = "Double";
+	public static final String MONEY = "Money";
 	private static final Logger log = Logger.getLogger(EntityAttribute.class);
 
 	private static final long serialVersionUID = 1L;
 
-	@Column
 	private String baseEntityCode;
 
-	@Column
 	private String attributeCode;
 
-	@Transient
-	@Column
 	private String attributeName;
 
-	@Column
 	private Boolean readonly = false;
 
 	private String realm;
 
 	@Transient
 	@XmlTransient
-	@Column
 	private Integer index = 0; // used to assist with ordering
 
 	@Transient
 	private String feedback = null;
 
-	@EmbeddedId
-	@Column
-	public EntityAttributeId pk = new EntityAttributeId();
-
 	/**
 	 * Stores the Created UMT DateTime that this object was created
 	 */
-	@Column(name = "created")
 	private LocalDateTime created;
 
 	/**
 	 * Stores the Last Modified UMT DateTime that this object was last updated
 	 */
-	@Column(name = "updated")
 	private LocalDateTime updated;
 
 	/**
 	 * Store the Double value of the attribute for the baseEntity
 	 */
-	@Column
 	private Double valueDouble;
 
 	/**
 	 * Store the Boolean value of the attribute for the baseEntity
 	 */
-	@Column
 	private Boolean valueBoolean;
 	/**
 	 * Store the Integer value of the attribute for the baseEntity
 	 */
-	@Column
 	private Integer valueInteger;
 
 	/**
 	 * Store the Long value of the attribute for the baseEntity
 	 */
-	@Column
 	private Long valueLong;
 
 	/**
 	 * Store the LocalDateTime value of the attribute for the baseEntity
 	 */
-	@Column
 	private LocalTime valueTime;
 
 	/**
 	 * Store the LocalDateTime value of the attribute for the baseEntity
 	 */
-	@Column
 	private LocalDateTime valueDateTime;
 
 	/**
 	 * Store the LocalDate value of the attribute for the baseEntity
 	 */
-	@Column
 	private LocalDate valueDate;
 
 	/**
 	 * Store the String value of the attribute for the baseEntity
 	 */
-	@Column(columnDefinition = "TEXT")
-	@Convert(converter = MinIOConverter.class)
 	private String valueString;
 
-	@Column(name = "money", length = 128)
 	@Convert(converter = MoneyConverter.class)
 	Money valueMoney;
 
@@ -189,74 +141,52 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	 */
 	private Boolean confirmationFlag = false;
 
-	// // please do not send this out to frontend no matter what
-	// @JsonbTransient
-	// @JsonIgnore
-	@Column(name = "capreqs")
-	@Convert(converter = CapabilityConverter.class)
+	private Attribute attribute;
+
+	private Long baseEntityId;
+
+	private Long attributeId;
+
 	private Set<Capability> capabilityRequirements;
 
 	public EntityAttribute() {
-
 	}
 
-	/**
-	 * Constructor.
-	 * 
-	 * @param baseEntity
-	 *                   the entity that needs to contain attributes
-	 * @param attribute
-	 *                   the associated Attribute
-	 * @param weight
-	 *                   the weighted importance of this attribute (relative to the
-	 *                   other
-	 *                   attributes)
-	 */
-	public EntityAttribute(final BaseEntity baseEntity, final Attribute attribute, Double weight) {
-		this(baseEntity, attribute, weight, null);
-	}
-
-	/**
-	 * Constructor.
-	 * 
-	 * @param baseEntity
-	 *                   the entity that needs to contain attributes
-	 * @param attribute
-	 *                   the associated Attribute
-	 * @param weight
-	 *                   the weighted importance of this attribute (relative to the
-	 *                   other
-	 *                   attributes)
-	 * @param value
-	 *                   the value associated with this attribute
-	 */
-	public EntityAttribute(final BaseEntity baseEntity, final Attribute attribute, Double weight, final Object value) {
-		autocreateCreated();
+	public EntityAttribute(BaseEntity baseEntity, Attribute attribute) {
+		this.realm = baseEntity.getRealm();
 		setBaseEntity(baseEntity);
 		setAttribute(attribute);
-		this.setPrivacyFlag(attribute.getDefaultPrivacyFlag());
+	}
+
+	/**
+	 * @param baseEntity
+	 * @param attribute
+	 * @param weight
+	 * @param value
+	 */
+	public EntityAttribute(BaseEntity baseEntity, Attribute attribute, Double weight, final Object value) {
+		autocreateCreated();
+		this.realm = baseEntity.getRealm();
+		setBaseEntity(baseEntity);
+		setAttribute(attribute);
 		if (weight == null) {
 			weight = 0.0; // This permits ease of adding attributes and hides attribute from scoring.
 		}
 		setWeight(weight);
-		// Assume that Attribute Validation has been performed
 		if (value != null) {
 			setValue(value);
 		}
-		setReadonly(false);
 	}
 
+	public void setBaseEntity(BaseEntity baseEntity) {
+		setBaseEntityCode(baseEntity.getCode());
+		setBaseEntityId(baseEntity.getId());
+	}
+
+	@JsonbTransient
+    @JsonIgnore
     public Set<Capability> getCapabilityRequirements() {
 		return this.capabilityRequirements;
-	}
-
-	/**
-	 * @return EntityAttributeId
-	 */
-	@JsonIgnore
-	@JsonbTransient
-	public EntityAttributeId getPk() {
-		return pk;
 	}
 
 	/**
@@ -287,43 +217,6 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	 */
 	public void setAttributeCode(final String attributeCode) {
 		this.attributeCode = attributeCode;
-	}
-
-	/**
-	 * @param pk the pk to set
-	 */
-	public void setPk(final EntityAttributeId pk) {
-		this.pk = pk;
-	}
-
-	public void setBaseEntity(final BaseEntity baseEntity) {
-		getPk().setBaseEntity(baseEntity);
-		this.baseEntityCode = baseEntity.getCode();
-		this.realm = baseEntity.getRealm();
-	}
-
-	@Transient
-	@JsonbTransient
-	public BaseEntity getBaseEntity() {
-		return getPk().getBaseEntity();
-	}
-
-	/**
-	 * @return Attribute
-	 */
-	@Transient
-	// @JsonIgnore
-	public Attribute getAttribute() {
-		return getPk().getAttribute();
-	}
-
-	/**
-	 * @param attribute the attribute to set
-	 */
-	public void setAttribute(final Attribute attribute) {
-		getPk().setAttribute(attribute);
-		this.attributeCode = attribute.getCode();
-		this.attributeName = attribute.getName();
 	}
 
 	/**
@@ -612,22 +505,34 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 		this.feedback = feedback;
 	}
 
-	@PreUpdate
-	public void autocreateUpdate() {
+	public Long getBaseEntityId() {
+		return baseEntityId;
+	}
 
-		if (getValueString() != null) {
+	public void setBaseEntityId(Long baseEntityId) {
+		this.baseEntityId = baseEntityId;
+	}
+
+	public Long getAttributeId() {
+		return attributeId;
+	}
+
+	public void setAttributeId(Long attributeId) {
+		this.attributeId = attributeId;
+	}
+
+	public void autocreateUpdate() {
+		if (valueString != null && valueString.length() > 0) {
             this.valueString = AttributeMinIOHandler.convertToMinIOObject(valueString,baseEntityCode,attributeCode);
 		}
-
 		setUpdated(LocalDateTime.now(ZoneId.of("Z")));
 	}
 
-	@PrePersist
 	public void autocreateCreated() {
 		if (getCreated() == null)
 			setCreated(LocalDateTime.now(ZoneId.of("Z")));
 
-		if (getValueString() != null) {
+		if (valueString != null && valueString.length() > 0) {
 			this.valueString = AttributeMinIOHandler.convertToMinIOObject(valueString,baseEntityCode,attributeCode);
 		}
 
@@ -660,6 +565,17 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 		return out;
 	}
 
+	public Attribute getAttribute() {
+		return attribute;
+	}
+
+	public void setAttribute(Attribute attribute) {
+		this.attribute = attribute;
+		setAttributeId(attribute.getId());
+		setAttributeCode(attribute.getCode());
+		setAttributeName(attribute.getName());
+	}
+
 	/**
 	 * Get the value of the EntityAttribute.
 	 *
@@ -672,22 +588,24 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	@XmlTransient
 	@JsonbProperty(nillable = true)
 	public <T> T getValue() {
-		if ((getPk() == null) || (getPk().attribute == null)) {
+		if (attribute == null) {
 			return getLoopValue();
 		}
-		final String dataType = getPk().getAttribute().getDataType().getClassName();
-		return switch (dataType) {
-			case "Integer", "java.lang.Integer" -> (T) getValueInteger();
-			case "java.time.LocalDateTime", "LocalDateTime" -> (T) getValueDateTime();
-			case "java.time.LocalTime", "LocalTime" -> (T) getValueTime();
-			case "java.lang.Long", "Long" -> (T) getValueLong();
-			case "java.lang.Double", "Double" -> (T) getValueDouble();
-			case "java.lang.Boolean", "Boolean" -> (T) getValueBoolean();
-			case "java.time.LocalDate", "LocalDate" -> (T) getValueDate();
-			case "org.javamoney.moneta.Money", "Money" -> (T) getValueMoney();
-			// case "java.lang.String":
-			default -> (T) getValueString();
-		};
+		DataType dataType = attribute.getDataType();
+		if (dataType != null) {
+			final String dataTypeClassName = dataType.getClassName();
+			switch (dataTypeClassName) {
+				case GennyConstants.JAVA_LANG_INTEGER, GennyConstants.INTEGER -> { return (T) getValueInteger(); }
+				case GennyConstants.JAVA_TIME_LOCAL_DATE_TIME, GennyConstants.LOCAL_DATE_TIME -> { return (T) getValueDateTime(); }
+				case GennyConstants.JAVA_TIME_LOCAL_TIME, GennyConstants.LOCAL_TIME -> { return (T) getValueTime(); }
+				case GennyConstants.JAVA_LANG_LONG, GennyConstants.LONG -> { return (T) getValueLong(); }
+				case GennyConstants.JAVA_LANG_DOUBLE, GennyConstants.DOUBLE -> { return (T) getValueDouble(); }
+				case GennyConstants.JAVA_LANG_BOOLEAN, GennyConstants.BOOLEAN -> { return (T) getValueBoolean(); }
+				case GennyConstants.JAVA_TIME_LOCAL_DATE, GennyConstants.LOCAL_DATE -> { return (T) getValueDate(); }
+				case GennyConstants.ORG_JAVAMONEY_MONETA_MONEY, GennyConstants.MONEY -> { return (T) getValueMoney(); }
+			}
+		}
+		return (T) getValueString();
 	}
 
 	/**
@@ -711,7 +629,6 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	 * @param value the value to set
 	 * @param lock  should lock
 	 */
-	@SuppressWarnings("unchecked")
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
@@ -723,133 +640,160 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 					+ this.attributeCode);
 			return;
 		}
+		if (this.getReadonly()) {
+			log.error("Trying to set the value of a readonly EntityAttribute! " + this.getBaseEntityCode() + ":"
+					+ this.attributeCode);
+			return;
+		}
 
-		if (getAttribute() == null) {
+		if (attribute == null) {
 			setLoopValue(value);
 			return;
 		}
 
-		if (value instanceof String result) {
-			try {
-				if (getAttribute().getDataType().getClassName().equalsIgnoreCase(String.class.getCanonicalName())) {
-					setValueString(result);
-				} else if (getAttribute().getDataType().getClassName()
-						.equalsIgnoreCase(LocalDateTime.class.getCanonicalName())) {
-					List<String> formatStrings = Arrays.asList("yyyy-MM-dd", "yyyy-MM-dd'T'HH:mm:ss",
-							"yyyy-MM-dd HH:mm:ss",
-							"yyyy-MM-dd'T'HH:mm:ss.SSSZ", "yyyy-MM-dd HH:mm:ss.SSSZ");
-					for (String formatString : formatStrings) {
-						try {
-							Date olddate = new SimpleDateFormat(formatString).parse(result);
-							final LocalDateTime dateTime = olddate.toInstant().atZone(ZoneId.systemDefault())
-									.toLocalDateTime();
-							setValueDateTime(dateTime);
-							break;
-
-						} catch (ParseException e) {
-						}
-					}
-
-				} else if (getAttribute().getDataType().getClassName()
-						.equalsIgnoreCase(LocalDate.class.getCanonicalName())) {
-					Date olddate = null;
-					try {
-						olddate = DateUtils.parseDate(result, "M/y", "yyyy-MM-dd", "yyyy/MM/dd",
-								"yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-					} catch (java.text.ParseException e) {
-						olddate = DateUtils.parseDate(result, "yyyy-MM-dd", "yyyy-MM-dd'T'HH:mm:ss",
+		DataType dataType = attribute.getDataType();
+		if(dataType!=null) {
+			String className = dataType.getClassName();
+			if (value instanceof String) {
+				String result = (String) value;
+				try {
+					if (className.equalsIgnoreCase(String.class.getCanonicalName())) {
+						setValueString(result);
+					} else if (className
+							.equalsIgnoreCase(LocalDateTime.class.getCanonicalName())) {
+						List<String> formatStrings = Arrays.asList("yyyy-MM-dd", "yyyy-MM-dd'T'HH:mm:ss",
 								"yyyy-MM-dd HH:mm:ss",
 								"yyyy-MM-dd'T'HH:mm:ss.SSSZ", "yyyy-MM-dd HH:mm:ss.SSSZ");
-					}
-					final LocalDate date = olddate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-					setValueDate(date);
-				} else if (getAttribute().getDataType().getClassName()
-						.equalsIgnoreCase(LocalTime.class.getCanonicalName())) {
-					final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-					final LocalTime date = LocalTime.parse(result, formatter);
-					setValueTime(date);
-				} else if (getAttribute().getDataType().getClassName()
-						.equalsIgnoreCase(Money.class.getCanonicalName())) {
-					JsonReader reader = Json.createReader(new StringReader(result));
-					JsonObject obj = reader.readObject();
+						for (String formatString : formatStrings) {
+							try {
+								Date olddate = new SimpleDateFormat(formatString).parse(result);
+								final LocalDateTime dateTime = olddate.toInstant().atZone(ZoneId.systemDefault())
+										.toLocalDateTime();
+								setValueDateTime(dateTime);
+								break;
 
-					CurrencyUnit currency = Monetary.getCurrency(obj.getString("currency"));
-					Double amount = Double.valueOf(obj.getString("amount"));
-
-					Money money = Money.of(amount, currency);
-					setValueMoney(money);
-				} else if (getAttribute().getDataType().getClassName()
-						.equalsIgnoreCase(Integer.class.getCanonicalName())) {
-					final Integer integer = Integer.parseInt(result);
-					setValueInteger(integer);
-				} else if (getAttribute().getDataType().getClassName()
-						.equalsIgnoreCase(Double.class.getCanonicalName())) {
-					final Double d = Double.parseDouble(result);
-					setValueDouble(d);
-				} else if (getAttribute().getDataType().getClassName()
-						.equalsIgnoreCase(Long.class.getCanonicalName())) {
-					final Long l = Long.parseLong(result);
-					setValueLong(l);
-				} else if (getAttribute().getDataType().getClassName()
-						.equalsIgnoreCase(Boolean.class.getCanonicalName())) {
-					final Boolean b = Boolean.parseBoolean(result);
-					setValueBoolean(b);
-				} else {
-					setValueString(result);
-				}
-			} catch (Exception e) {
-				log.error("Conversion Error :" + value + " for attribute " + getAttribute() + " and SourceCode:"
-						+ this.baseEntityCode);
-			}
-		} else {
-
-			switch (this.getAttribute().getDataType().getClassName()) {
-
-				case "java.lang.Integer", "Integer" -> {
-					if (value instanceof BigDecimal bValue) {
-						if (bValue == null) {
-							setValueInteger(null);
-						} else {
-							setValueInteger(bValue.intValue());
+							} catch (ParseException e) {
+							}
 						}
-					} else
-						setValueInteger((Integer) value);
-				}
-				case "java.time.LocalDateTime", "LocalDateTime" -> setValueDateTime((LocalDateTime) value);
-				case "java.time.LocalDate", "LocalDate" -> setValueDate((LocalDate) value);
-				case "java.lang.Long", "Long" -> {
-					if (value instanceof BigDecimal bValue)
-						setValueLong(bValue.longValue());
-					else
-						setValueLong((Long) value);
-				}
-				case "java.time.LocalTime", "LocalTime" -> setValueTime((LocalTime) value);
-				case "org.javamoney.moneta.Money", "Money" -> setValueMoney((Money) value);
-				case "java.lang.Double", "Double" -> {
-					if (value instanceof BigDecimal bValue)
-						setValueDouble(bValue.doubleValue());
-					else
-						setValueDouble((Double) value);
-				}
-				case "java.lang.Boolean", "Boolean" -> setValueBoolean((Boolean) value);
-				// case "java.lang.String" ->
-				default -> {
-					if (value instanceof Boolean bValue) {
-						log.error("Value is boolean being saved to String. DataType = "
-								+ this.getAttribute().getDataType().getClassName() + " and attributecode="
-								+ this.getAttributeCode());
-						setValueBoolean(bValue);
+
+					} else if (className
+							.equalsIgnoreCase(LocalDate.class.getCanonicalName())) {
+						Date olddate = null;
+						try {
+							olddate = DateUtils.parseDate(result, "M/y", "yyyy-MM-dd", "yyyy/MM/dd",
+									"yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+						} catch (java.text.ParseException e) {
+							olddate = DateUtils.parseDate(result, "yyyy-MM-dd", "yyyy-MM-dd'T'HH:mm:ss",
+									"yyyy-MM-dd HH:mm:ss",
+									"yyyy-MM-dd'T'HH:mm:ss.SSSZ", "yyyy-MM-dd HH:mm:ss.SSSZ");
+						}
+						final LocalDate date = olddate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+						setValueDate(date);
+					} else if (className
+							.equalsIgnoreCase(LocalTime.class.getCanonicalName())) {
+						final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+						final LocalTime date = LocalTime.parse(result, formatter);
+						setValueTime(date);
+					} else if (className
+							.equalsIgnoreCase(Money.class.getCanonicalName())) {
+						JsonReader reader = Json.createReader(new StringReader(result));
+						JsonObject obj = reader.readObject();
+
+						CurrencyUnit currency = Monetary.getCurrency(obj.getString("currency"));
+						Double amount = Double.valueOf(obj.getString("amount"));
+
+						Money money = Money.of(amount, currency);
+						setValueMoney(money);
+					} else if (className
+							.equalsIgnoreCase(Integer.class.getCanonicalName())) {
+						final Integer integer = Integer.parseInt(result);
+						setValueInteger(integer);
+					} else if (className
+							.equalsIgnoreCase(Double.class.getCanonicalName())) {
+						final Double d = Double.parseDouble(result);
+						setValueDouble(d);
+					} else if (className
+							.equalsIgnoreCase(Long.class.getCanonicalName())) {
+						final Long l = Long.parseLong(result);
+						setValueLong(l);
+					} else if (className
+							.equalsIgnoreCase(Boolean.class.getCanonicalName())) {
+						final Boolean b = Boolean.parseBoolean(result);
+						setValueBoolean(b);
 					} else {
-						if (value == null) {
-							setValueString(null);
-						} else {
-							setValueString(value.toString());
-						}
+						setValueString(result);
 					}
+				} catch (Exception e) {
+					log.error("Conversion Error :" + value + " for attribute " + attribute + " and SourceCode:"
+							+ this.baseEntityCode);
+				}
+			} else {
+
+				switch (className) {
+
+					case GennyConstants.JAVA_LANG_INTEGER:
+					case GennyConstants.INTEGER:
+						if (value instanceof BigDecimal)
+							setValueInteger(((BigDecimal) value).intValue());
+						else
+							setValueInteger((Integer) value);
+						break;
+
+					case GennyConstants.JAVA_TIME_LOCAL_DATE_TIME:
+					case GennyConstants.LOCAL_DATE_TIME:
+						setValueDateTime((LocalDateTime) value);
+						break;
+
+					case GennyConstants.JAVA_TIME_LOCAL_DATE:
+					case GennyConstants.LOCAL_DATE:
+						setValueDate((LocalDate) value);
+						break;
+
+					case GennyConstants.JAVA_LANG_LONG:
+					case GennyConstants.LONG:
+						if (value instanceof BigDecimal)
+							setValueLong(((BigDecimal) value).longValue());
+						else
+							setValueLong((Long) value);
+						break;
+
+					case GennyConstants.JAVA_TIME_LOCAL_TIME:
+					case GennyConstants.LOCAL_TIME:
+						setValueTime((LocalTime) value);
+						break;
+
+					case GennyConstants.ORG_JAVAMONEY_MONETA_MONEY:
+					case GennyConstants.MONEY:
+						setValueMoney((Money) value);
+						break;
+
+					case GennyConstants.JAVA_LANG_DOUBLE:
+					case GennyConstants.DOUBLE:
+						if (value instanceof BigDecimal)
+							setValueDouble(((BigDecimal) value).doubleValue());
+						else
+							setValueDouble((Double) value);
+						break;
+
+					case GennyConstants.JAVA_LANG_BOOLEAN:
+					case GennyConstants.BOOLEAN:
+						setValueBoolean((Boolean) value);
+						break;
+
+					case GennyConstants.JAVA_LANG_STRING:
+					default:
+						if (value instanceof Boolean) {
+							log.error("Value is boolean being saved to String. DataType = "
+									+ className + " and attributecode="
+									+ this.getAttributeCode());
+							setValueBoolean((Boolean) value);
+						} else {
+							setValueString((String) value);
+						}
+						break;
 				}
 			}
 		}
-
 		// if the lock is set then 'Lock it in Eddie!'.
 		if (lock) {
 			this.setReadonly(true);
@@ -877,7 +821,6 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	 * @param value the value to set
 	 * @param lock  should lock
 	 */
-	@SuppressWarnings("unchecked")
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
@@ -889,40 +832,43 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 					+ this.attributeCode);
 			return;
 		}
+		if (this.getReadonly()) {
+			log.error("Trying to set the value of a readonly EntityAttribute! " + this.getBaseEntityCode() + ":"
+					+ this.attributeCode);
+			return;
+		}
 
-		if (value instanceof Money mValue)
-			setValueMoney(mValue);
-		else if (value instanceof Integer iValue)
-			setValueInteger(iValue);
-		else if (value instanceof LocalDateTime ldtValue)
-			setValueDateTime(ldtValue);
-		else if (value instanceof LocalDate ldValue)
-			setValueDate(ldValue);
-		else if (value instanceof Long lValue)
-			setValueLong(lValue);
-		else if (value instanceof LocalTime ltValue)
-			setValueTime(ltValue);
-		else if (value instanceof Double dValue)
-			setValueDouble(dValue);
-		else if (value instanceof Boolean bValue)
-			setValueBoolean(bValue);
-		else if (value instanceof BigDecimal bdValue)
+		if (value instanceof Money)
+			setValueMoney((Money) value);
+		else if (value instanceof Integer)
+			setValueInteger((Integer) value);
+		else if (value instanceof LocalDateTime)
+			setValueDateTime((LocalDateTime) value);
+		else if (value instanceof LocalDate)
+			setValueDate((LocalDate) value);
+		else if (value instanceof Long)
+			setValueLong((Long) value);
+		else if (value instanceof LocalTime)
+			setValueTime((LocalTime) value);
+		else if (value instanceof Double)
+			setValueDouble((Double) value);
+		else if (value instanceof Boolean)
+			setValueBoolean((Boolean) value);
+		else if (value instanceof BigDecimal)
 			// NOTE: This assumes at least one will not be null and defaults to int
 			// otherwise
 			// This could cause issues with deserialisation.
 			if (this.getValueDouble() != null) {
-				setValueDouble(bdValue.doubleValue());
+				setValueDouble(((BigDecimal) value).doubleValue());
 			} else if (this.getValueLong() != null) {
-				setValueLong(bdValue.longValue());
+				setValueLong(((BigDecimal) value).longValue());
 			} else {
-				setValueInteger(bdValue.intValue());
+				setValueInteger(((BigDecimal) value).intValue());
 			}
 		else
 			setValueString((String) value);
 
-		if (lock) {
-			this.setReadonly(true);
-		}
+		this.setReadonly(lock);
 	}
 
 	/**
@@ -933,42 +879,41 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	@XmlTransient
 	@JsonbTransient
 	public String getAsString() {
-		if ((getPk() == null) || (getPk().attribute == null)) {
+		if (attribute == null) {
 			return getAsLoopString();
 		}
 
 		if (getValue() == null) {
 			return null;
 		}
-		final String dataType = getPk().getAttribute().getDataType().getClassName();
-		return switch (dataType) {
-			case "java.lang.Integer", "Integer" -> "" + getValueInteger();
-			case "java.time.LocalDateTime", "LocalDateTime" -> {
+		final String dataType = attribute.getDataType().getClassName();
+		switch (dataType) {
+			case GennyConstants.JAVA_LANG_INTEGER, GennyConstants.INTEGER -> { return "" + getValueInteger(); }
+			case GennyConstants.JAVA_TIME_LOCAL_DATE_TIME, GennyConstants.LOCAL_DATE_TIME -> {
 				DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS");
 				Date datetime = Date.from(getValueDateTime().atZone(ZoneId.systemDefault()).toInstant());
-				yield df.format(datetime);
+				return df.format(datetime);
 			}
-			case "java.lang.Long", "Long" -> "" + getValueLong();
-			case "java.time.LocalTime", "LocalTime" -> {
+			case GennyConstants.JAVA_LANG_LONG, GennyConstants.LONG -> { return "" + getValueLong(); }
+			case GennyConstants.JAVA_TIME_LOCAL_TIME, GennyConstants.LOCAL_TIME -> {
 				DateFormat df2 = new SimpleDateFormat("HH:mm");
-				yield df2.format(getValueTime());
+				return df2.format(getValueTime());
 			}
-			case "org.javamoney.moneta.Money", "Money" -> {
+			case GennyConstants.ORG_JAVAMONEY_MONETA_MONEY, GennyConstants.MONEY -> {
 				DecimalFormat decimalFormat = new DecimalFormat("###############0.00");
 				String amount = decimalFormat.format(getValueMoney().getNumber().doubleValue());
-				yield "{\"amount\":" + amount + ",\"currency\":\"" + getValueMoney().getCurrency().getCurrencyCode()
+				return "{\"amount\":" + amount + ",\"currency\":\"" + getValueMoney().getCurrency().getCurrencyCode()
 						+ "\"}";
 			}
-			case "java.lang.Double", "Double" -> getValueDouble().toString();
-			case "java.lang.Boolean", "Boolean" -> Boolean.TRUE.equals(getValueBoolean()) ? "TRUE" : "FALSE";
-			case "java.time.LocalDate", "LocalDate" -> {
+			case GennyConstants.JAVA_LANG_DOUBLE, GennyConstants.DOUBLE -> { return getValueDouble().toString(); }
+			case GennyConstants.JAVA_LANG_BOOLEAN, GennyConstants.BOOLEAN -> { return getValueBoolean() ? "TRUE" : "FALSE"; }
+			case GennyConstants.JAVA_TIME_LOCAL_DATE, GennyConstants.LOCAL_DATE -> {
 				DateFormat df2 = new SimpleDateFormat("yyyy-MM-dd");
 				Date date = Date.from(getValueDate().atStartOfDay(ZoneId.systemDefault()).toInstant());
-				yield df2.format(date);
+				return df2.format(date);
 			}
-			// case "java.lang.String" ->
-			default -> getValueString();
-		};
+		}
+		return getValueString();
 	}
 
 	/**
@@ -1008,7 +953,7 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 			return getValueDouble().toString();
 		}
 		if (getValueBoolean() != null) {
-			return Boolean.TRUE.equals(getValueBoolean()) ? "TRUE" : "FALSE";
+			return getValueBoolean() ? "TRUE" : "FALSE";
 		}
 
 		return ret;
@@ -1044,12 +989,29 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 		} else if (getValueLong() != null) {
 			return (T) getValueLong();
 		}
+		if (getValueString() != null) {
+			return (T) getValueString();
+		} else if (getValueBoolean() != null) {
+			return (T) getValueBoolean();
+		} else if (getValueDateTime() != null) {
+			return (T) getValueDateTime();
+		} else if (getValueDouble() != null) {
+			return (T) getValueDouble();
+		} else if (getValueInteger() != null) {
+			return (T) getValueInteger();
+		} else if (getValueDate() != null) {
+			return (T) getValueDate();
+		} else if (getValueTime() != null) {
+			return (T) getValueTime();
+		} else if (getValueLong() != null) {
+			return (T) getValueLong();
+		}
 
 		return null;
 	}
 
 	private Object getValueAsObject() {
-		return getValue();
+		return (Object)getValue();
 	}
 
 	/**
@@ -1059,6 +1021,7 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	public int hashCode() {
 
 		HashCodeBuilder hcb = new HashCodeBuilder();
+		hcb.append(realm);
 		hcb.append(baseEntityCode);
 		hcb.append(attributeCode);
 		hcb.append(getValueAsObject());
@@ -1071,18 +1034,15 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	 */
 	@Override
 	public boolean equals(Object obj) {
-
-		if (this == obj) {
-			return true;
-		}
-		if (!(obj instanceof EntityAttribute that)) {
+		if (!(obj instanceof EntityAttribute)) {
 			return false;
 		}
+		EntityAttribute that = (EntityAttribute) obj;
 		EqualsBuilder eb = new EqualsBuilder();
+		eb.append(realm, that.realm);
 		eb.append(baseEntityCode, that.baseEntityCode);
 		eb.append(attributeCode, that.attributeCode);
 		eb.append(getValueAsObject(), getValueAsObject());
-
 		return eb.isEquals();
 	}
 
@@ -1095,29 +1055,36 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	public int compareTo(Object obj) {
 
 		EntityAttribute myClass = (EntityAttribute) obj;
-		final String dataType = getPk().getAttribute().getDataType().getClassName();
+		final String dataType = attribute.getDataType().getClassName();
 
-		return switch (dataType) {
-			case "java.lang.Integer", "Integer" ->
-				new CompareToBuilder().append(this.getValueInteger(), myClass.getValueInteger()).toComparison();
-			case "java.time.LocalDateTime", "LocalDateTime" ->
-				new CompareToBuilder().append(this.getValueDateTime(), myClass.getValueDateTime())
+		switch (dataType) {
+			case GennyConstants.JAVA_LANG_INTEGER, GennyConstants.INTEGER -> {
+				return new CompareToBuilder().append(this.getValueInteger(), myClass.getValueInteger()).toComparison();
+			}
+			case GennyConstants.JAVA_TIME_LOCAL_DATE_TIME, GennyConstants.LOCAL_DATE_TIME -> {
+				return new CompareToBuilder().append(this.getValueDateTime(), myClass.getValueDateTime())
 						.toComparison();
-			case "java.time.LocalTime", "LocalTime" ->
-				new CompareToBuilder().append(this.getValueTime(), myClass.getValueTime()).toComparison();
-			case "java.lang.Long", "Long" ->
-				new CompareToBuilder().append(this.getValueLong(), myClass.getValueLong()).toComparison();
-			case "java.lang.Double", "Double" ->
-				new CompareToBuilder().append(this.getValueDouble(), myClass.getValueDouble()).toComparison();
-			case "java.lang.Boolean", "Boolean" ->
-				new CompareToBuilder().append(this.getValueBoolean(), myClass.getValueBoolean()).toComparison();
-			case "java.time.LocalDate", "LocalDate" ->
-				new CompareToBuilder().append(this.getValueDate(), myClass.getValueDate()).toComparison();
-			case "org.javamoney.moneta.Money", "Money" ->
-				new CompareToBuilder().append(this.getValueMoney(), myClass.getValueMoney()).toComparison();
-			// case "java.lang.String" ->
-			default -> new CompareToBuilder().append(this.getValueString(), myClass.getValueString()).toComparison();
-		};
+			}
+			case GennyConstants.JAVA_TIME_LOCAL_TIME, GennyConstants.LOCAL_TIME -> {
+				return new CompareToBuilder().append(this.getValueTime(), myClass.getValueTime()).toComparison();
+			}
+			case GennyConstants.JAVA_LANG_LONG, GennyConstants.LONG -> {
+				return new CompareToBuilder().append(this.getValueLong(), myClass.getValueLong()).toComparison();
+			}
+			case GennyConstants.JAVA_LANG_DOUBLE, GennyConstants.DOUBLE -> {
+				return new CompareToBuilder().append(this.getValueDouble(), myClass.getValueDouble()).toComparison();
+			}
+			case GennyConstants.JAVA_LANG_BOOLEAN, GennyConstants.BOOLEAN -> {
+				return new CompareToBuilder().append(this.getValueBoolean(), myClass.getValueBoolean()).toComparison();
+			}
+			case GennyConstants.JAVA_TIME_LOCAL_DATE, GennyConstants.LOCAL_DATE -> {
+				return new CompareToBuilder().append(this.getValueDate(), myClass.getValueDate()).toComparison();
+			}
+			case GennyConstants.ORG_JAVAMONEY_MONETA_MONEY, GennyConstants.MONEY -> {
+				return new CompareToBuilder().append(this.getValueMoney(), myClass.getValueMoney()).toComparison();
+			}
+		}
+		return new CompareToBuilder().append(this.getValueString(), myClass.getValueString()).toComparison();
 	}
 
 	@Override
@@ -1181,8 +1148,7 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 		if (getValueDateTime() != null) {
 			DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS");
 			Date datetime = Date.from(getValueDateTime().atZone(ZoneId.systemDefault()).toInstant());
-			String dout = df.format(datetime);
-			return dout;
+			return df.format(datetime);
 		}
 
 		if (getValueLong() != null) {
@@ -1200,13 +1166,11 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 		if (getValueDate() != null) {
 			DateFormat df2 = new SimpleDateFormat("yyyy-MM-dd");
 			Date date = Date.from(getValueDate().atStartOfDay(ZoneId.systemDefault()).toInstant());
-			String dout2 = df2.format(date);
-			return dout2;
+			return df2.format(date);
 		}
 		if (getValueTime() != null) {
 
-			String dout2 = getValueTime().toString();
-			return dout2;
+			return getValueTime().toString();
 		}
 
 		if (getValueString() != null) {
@@ -1272,6 +1236,36 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 		this.confirmationFlag = confirmationFlag;
 	}
 
+	@Override
+	public CoreEntitySerializable toSerializableCoreEntity() {
+		life.genny.qwandaq.serialization.entityattribute.EntityAttribute bea = new life.genny.qwandaq.serialization.entityattribute.EntityAttribute();
+		bea.setRealm(getRealm());
+		bea.setBaseEntityCode(getBaseEntityCode());
+		bea.setAttributeCode(getAttributeCode());
+		bea.setCreated(getCreated());
+		bea.setInferred(getInferred());
+		bea.setPrivacyFlag(getPrivacyFlag());
+		bea.setReadonly(getReadonly());
+		bea.setUpdated(getUpdated());
+		bea.setValueBoolean(getValueBoolean());
+		bea.setValueDate(getValueDate());
+		bea.setValueDateTime(getValueDateTime());
+		bea.setValueDouble(getValueDouble());
+		bea.setValueInteger(getValueInteger());
+		bea.setValueLong(getValueLong());
+		bea.setMoney(getValueMoney());
+		bea.setValueString(getValueString());
+		bea.setUpdated(getUpdated());
+		bea.setWeight(getWeight());
+		bea.setAttributeId(getAttributeId());
+		bea.setBaseEntityId(getBaseEntityId());
+		// bea.setIcon(geticon);
+		bea.setConfirmationFlag(getConfirmationFlag());
+		bea.setCapreqs(CapabilityConverter.convertToDBColumn(getCapabilityRequirements()));
+		return bea;
+	}
+
+
 	public boolean isLocked() {
 		return capabilityRequirements != null;
 	}
@@ -1279,5 +1273,58 @@ public class EntityAttribute implements java.io.Serializable, Comparable<Object>
 	@Override
 	public void setCapabilityRequirements(Set<Capability> requirements) {
 		this.capabilityRequirements = requirements;
+	}
+
+	@Override
+	public EntityAttribute clone() {
+		EntityAttribute clone = new EntityAttribute();
+		clone.setRealm(getRealm());
+		clone.setBaseEntityCode(getBaseEntityCode());
+		clone.setAttributeCode(getAttributeCode());
+		clone.setCreated(getCreated());
+		clone.setInferred(getInferred());
+		clone.setPrivacyFlag(getPrivacyFlag());
+		clone.setReadonly(getReadonly());
+		clone.setUpdated(getUpdated());
+		clone.setValueBoolean(getValueBoolean());
+		clone.setValueDate(getValueDate());
+		clone.setValueDateTime(getValueDateTime());
+		clone.setValueDouble(getValueDouble());
+		clone.setValueInteger(getValueInteger());
+		clone.setValueLong(getValueLong());
+		clone.setValueMoney(getValueMoney());
+		clone.setValueString(getValueString());
+		clone.setUpdated(getUpdated());
+		clone.setWeight(getWeight());
+		clone.setConfirmationFlag(getConfirmationFlag());
+		clone.setAttributeId(getAttributeId());
+		clone.setBaseEntityId(getBaseEntityId());
+		clone.setCapabilityRequirements(getCapabilityRequirements());
+		return clone;
+	}
+
+	public HEntityAttribute toHEntityAttribute() {
+		HEntityAttribute hEntityAttribute = new HEntityAttribute();
+		hEntityAttribute.setRealm(getRealm());
+		hEntityAttribute.setBaseEntityCode(getBaseEntityCode());
+		hEntityAttribute.setAttributeCode(getAttributeCode());
+		hEntityAttribute.setCreated(getCreated());
+		hEntityAttribute.setReadonly(getReadonly());
+		hEntityAttribute.setUpdated(getUpdated());
+		hEntityAttribute.setValueBoolean(getValueBoolean());
+		hEntityAttribute.setValueDate(getValueDate());
+		hEntityAttribute.setValueDateTime(getValueDateTime());
+		hEntityAttribute.setValueDouble(getValueDouble());
+		hEntityAttribute.setValueInteger(getValueInteger());
+		hEntityAttribute.setValueLong(getValueLong());
+		hEntityAttribute.setValueMoney(getValueMoney());
+		hEntityAttribute.setValueString(getValueString());
+		hEntityAttribute.setUpdated(getUpdated());
+		hEntityAttribute.setWeight(getWeight());
+		hEntityAttribute.setInferred(getInferred());
+		hEntityAttribute.setPrivacyFlag(getPrivacyFlag());
+		hEntityAttribute.setConfirmationFlag(getConfirmationFlag());
+		hEntityAttribute.setCapabilityRequirements(getCapabilityRequirements());
+		return hEntityAttribute;
 	}
 }

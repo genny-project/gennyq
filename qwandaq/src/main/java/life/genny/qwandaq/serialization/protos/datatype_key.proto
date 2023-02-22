@@ -1,0 +1,6 @@
+package life.genny.qwandaq.serialization.datatype;
+
+message DataTypeKey {
+  optional string realm = 1;
+  optional string dttcode = 2;
+}

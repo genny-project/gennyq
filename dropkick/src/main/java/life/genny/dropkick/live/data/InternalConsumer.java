@@ -5,6 +5,7 @@ import io.quarkus.runtime.StartupEvent;
 import io.smallrye.reactive.messaging.annotations.Blocking;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.capabilities.CapabilitiesController;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.entity.search.clause.Or;
@@ -15,6 +16,7 @@ import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.kafka.KafkaTopic;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.*;
@@ -58,6 +60,9 @@ public class InternalConsumer {
 	UserToken userToken;
 
 	@Inject
+	CacheManager cm;
+
+	@Inject
 	DefUtils defUtils;
 
 	@Inject
@@ -65,6 +70,12 @@ public class InternalConsumer {
 
 	@Inject
 	BaseEntityUtils beUtils;
+
+	@Inject
+	EntityAttributeUtils beaUtils;
+
+	@Inject
+	CapabilitiesController controller;
 
 	@Inject
 	SearchUtils searchUtils;
@@ -171,7 +182,7 @@ public class InternalConsumer {
 		String searchAttributeCode = new StringBuilder("SBE_SER_").append(attrCode).toString();
 		String key = new StringBuilder(definition.getCode()).append(":").append(searchAttributeCode).toString();
 		log.info("key="+key);
-		SearchEntity searchEntity = CacheUtils.getObject(productCode, key, SearchEntity.class);
+		SearchEntity searchEntity = cm.getObject(productCode, key, SearchEntity.class);
 
 		if (searchEntity == null) {
 			String valueString = null;
@@ -207,7 +218,7 @@ public class InternalConsumer {
 					searchEntity = new SearchEntity(code, name);
 					searchEntity.setLinkCode(code);
 					searchEntity.setLinkValue(name);
-					CacheUtils.putObject(productCode, key, searchEntity);
+					cm.putObject(productCode, key, searchEntity);
 				}
 			}
 		}
@@ -242,11 +253,16 @@ public class InternalConsumer {
 		log.info("DROPDOWN :Loaded " + msg.getItems().size() + " baseentitys");
 
 		for (BaseEntity item : msg.getItems()) {
-			String logStr = String.format("DROPDOWN : item: %s ===== %s", item.getCode(),
-					item.getValueAsString(Attribute.PRI_NAME));
-
-			if (item.getValueAsString(Attribute.PRI_NAME) == null)
+			String name = null;
+			String itemCode = item.getCode();
+			EntityAttribute nameAttribute = beaUtils.getEntityAttribute(productCode, itemCode, Attribute.PRI_NAME, false);
+			if (nameAttribute != null) {
+				name = nameAttribute.getValueString();
+			}
+			String logStr = String.format("DROPDOWN : item: %s ===== %s", itemCode, name);
+			if (StringUtils.isEmpty(name)) {
 				log.warn(logStr);
+			}
 			else
 				log.info(logStr);
 		}

@@ -1,23 +1,22 @@
 package life.genny.gadaq.cache;
 
-import java.lang.invoke.MethodHandles;
+import static life.genny.qwandaq.attribute.Attribute.LNK_MESSAGE_TYPE;
+import static life.genny.qwandaq.attribute.Attribute.PRI_BODY;
+import static life.genny.qwandaq.attribute.Attribute.PRI_CODE;
+import static life.genny.qwandaq.attribute.Attribute.PRI_NAME;
 
+import java.lang.invoke.MethodHandles;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-import static life.genny.qwandaq.constants.GennyConstants.*;
-
 import life.genny.qwandaq.constants.GennyConstants;
-import life.genny.qwandaq.constants.Prefix;
-import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.*;
 import org.jboss.logging.Logger;
-import life.genny.qwandaq.entity.search.trait.Filter;
-import life.genny.qwandaq.entity.search.trait.Operator;
-import life.genny.qwandaq.utils.CacheUtils;
+import life.genny.qwandaq.constants.Prefix;
+import life.genny.qwandaq.entity.search.SearchEntity;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.serviceq.Service;
-import static life.genny.qwandaq.entity.search.trait.Action.*;
-import static life.genny.qwandaq.attribute.Attribute.*;
+
 
 /**
  * SearchCaching
@@ -25,10 +24,28 @@ import static life.genny.qwandaq.attribute.Attribute.*;
 @ApplicationScoped
 public class SearchCaching {
 
-	static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
+    static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
+
+	public static final String DEF_ADDRESS = "DEF_ADDRESS";
+	public static final String DEF_PERSON = "DEF_PERSON";
+	public static final String DEF_COMPANY = "DEF_COMPANY";
+	public static final String DEF_APPOINTMENT = "DEF_APPOINTMENT";
+	public static final String DEF_TOOL = "DEF_TOOL";
+	public static final String DEF_BUILDING = "DEF_BUILDING";
+
+	public static final String EDIT = "EDIT";
+
+	public static final String GRP_GENDERS = "GRP_GENDERS";
+	public static final String GRP_COUNTRIES = "GRP_COUNTRIES";
+	public static final String GRP_NUMBER_STAFF = "GRP_NUMBER_STAFF";
+	public static final String GRP_COMPANY_INDUSTRY = "GRP_COMPANY_INDUSTRY";
+	public static final String GRP_AREA_UNIT = "GRP_AREA_UNIT";
 
 	@Inject
 	Service service;
+
+	@Inject
+	CacheManager cm;
 
 	public void saveToCache() {
 
@@ -100,25 +117,21 @@ public class SearchCaching {
 
 		// DEF_MESSAGE
 		cacheSearch(
-				new SearchEntity(SBE_MESSAGE, "Messages")
+				new SearchEntity(GennyConstants.SBE_TABLE_MESSAGE, "Messages")
 						.add(new Filter(PRI_CODE, Operator.STARTS_WITH, Prefix.MSG_))
-						.add(new Column(PRI_NAME, "Code"))
-						.add(new Column(PRI_DESCRIPTION, "Description"))
-						.add(new Column(PRI_DEFAULT_MSG_TYPE, "Default Message Type"))
-						.add(new Column(PRI_CONTEXT_LIST, "Context List"))
-						.add(new Column(PRI_CONTEXT_ASSOCIATIONS, "Context Associations"))
-						.add(new Column(PRI_CC, "CC"))
-						.add(new Column(PRI_BCC, "BCC"))
+						.add(new Column(PRI_CODE, "Message Id"))
+						.add(new Column(PRI_NAME, "Name"))
 						.add(new Column(PRI_BODY, "Body"))
+						.add(new AssociatedColumn(LNK_MESSAGE_TYPE, PRI_NAME, "Message Type"))
 						.add(new Action(EDIT, "Edit"))
-						.setPageSize(4)
+						.setPageSize(8)
 						.setPageStart(0));
 	}
 
 	private void cacheSearch(SearchEntity entity) {
 		for (String productCode : service.getProductCodes()) {
 			entity.setRealm(productCode);
-			CacheUtils.putObject(productCode, entity.getCode(), entity);
+			cm.putObject(productCode, entity.getCode(), entity);
 		}
 	}
 
@@ -126,8 +139,7 @@ public class SearchCaching {
 		for (String productCode : service.getProductCodes()) {
 			entity.setRealm(productCode);
 			String key = new StringBuilder(definitionCode).append(":").append(entity.getCode()).toString();
-			CacheUtils.putObject(productCode, key, entity);
+			cm.putObject(productCode, key, entity);
 		}
 	}
-
 }

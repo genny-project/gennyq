@@ -148,7 +148,6 @@ public class CapHandler {
 		} else {
 			log.info("Service token. Bypassing requirements");
 		}
-		// TODO: implement capabilities
 		return true;
 	}
 

@@ -98,7 +98,6 @@ public class ValidationListConverter implements AttributeConverter<List<Validati
 	 * @return String
 	 */
 	public String convertToString(final List<String> list) {
-
 		return list.toString();
 	}
 	
@@ -114,5 +113,15 @@ public class ValidationListConverter implements AttributeConverter<List<Validati
 		} else {
 			return new String[] {joined};
 		}
+	}
+
+	/**
+	 * Convert a stringified list to a List of Strings
+	 *
+	 * @param joined the string to convert
+	 * @return List&lt;String&gt;
+	 */
+	public List<String> convertFromStringToStringList(final String joined) {
+		return CommonUtils.getListFromCommaSeparatedString(joined);
 	}
 }

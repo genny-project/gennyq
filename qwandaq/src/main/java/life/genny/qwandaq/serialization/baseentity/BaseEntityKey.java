@@ -3,7 +3,7 @@ package life.genny.qwandaq.serialization.baseentity;
 import life.genny.qwandaq.serialization.common.CoreEntityKey;
 
 public class BaseEntityKey implements CoreEntityKey {
-	public static final String BE_KEY_DELIMITER = ":";
+	public static final String BE_KEY_DELIMITER = "|";
 
 	private String realm;
 	private String code;
@@ -59,5 +59,19 @@ public class BaseEntityKey implements CoreEntityKey {
 	@Override
 	public String getEntityCode() {
 		return getComponents()[1];
+	}
+
+	@Override
+	public int hashCode() {
+		return getKeyString().hashCode();
+	}
+
+	@Override
+	public boolean equals(Object other) {
+		if(!(other instanceof BaseEntityKey)) {
+			return false;
+		}
+		BaseEntityKey otherBE = (BaseEntityKey) other;
+		return getKeyString().equals(otherBE.getKeyString());
 	}
 }

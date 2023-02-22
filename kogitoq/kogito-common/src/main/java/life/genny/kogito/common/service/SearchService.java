@@ -11,6 +11,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import life.genny.qwandaq.constants.FilterConst;
+import life.genny.qwandaq.managers.CacheManager;
 import org.jboss.logging.Logger;
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -32,6 +33,9 @@ public class SearchService extends KogitoService {
 
 	@Inject
 	Logger log;
+
+	@Inject
+	CacheManager cacheManager;
 
 	/**
 	 * Perform a Bucket search.
@@ -103,7 +107,7 @@ public class SearchService extends KogitoService {
 
 	/**
 	 * Perform a named search from search bar
-	 * 
+	 *
 	 * @param code
 	 * @param nameWildcard
 	 */
@@ -112,10 +116,10 @@ public class SearchService extends KogitoService {
 		// get sbe code from cache if code is empty
 		if(code.isEmpty()) {
 			String cachedCode = FilterConst.LAST_SBE_TABLE + ":" + userToken.getUserCode();
-			code = CacheUtils.getObject(userToken.getProductCode(),cachedCode,String.class);
+			code = cacheManager.getObject(userToken.getProductCode(),cachedCode,String.class);
 		}
 		// find in cache
-		SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(),
+		SearchEntity searchEntity = cacheManager.getObject(userToken.getProductCode(),
 				code, SearchEntity.class);
 		// TODO: remove this char from alyson
 		nameWildcard = StringUtils.removeStart(nameWildcard, "!");
@@ -133,9 +137,9 @@ public class SearchService extends KogitoService {
 	public void handleSearchPagination(String code, Boolean reverse) {
 		// fetch search from cache
 		String sessionCode = searchUtils.sessionSearchCode(code);
-		SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(), "LAST-SEARCH:" + sessionCode, SearchEntity.class);
+		SearchEntity searchEntity = cacheManager.getObject(userToken.getProductCode(), "LAST-SEARCH:" + sessionCode, SearchEntity.class);
 		if (searchEntity == null) {
-			searchEntity = CacheUtils.getObject(userToken.getProductCode(), code, SearchEntity.class);
+			searchEntity = cacheManager.getObject(userToken.getProductCode(), code, SearchEntity.class);
 			searchEntity.setCode(sessionCode);
 		}
 		// find direction
@@ -157,9 +161,9 @@ public class SearchService extends KogitoService {
 	public void handleSearchSort(String code) {
 		// fetch from the cache
 		String sessionCode = searchUtils.sessionSearchCode(code);
-		SearchEntity searchEntity = CacheUtils.getObject(userToken.getProductCode(), "LAST-SEARCH:" + sessionCode, SearchEntity.class);
+		SearchEntity searchEntity = cacheManager.getObject(userToken.getProductCode(), "LAST-SEARCH:" + sessionCode, SearchEntity.class);
 		if (searchEntity == null) {
-			searchEntity = CacheUtils.getObject(userToken.getProductCode(), code, SearchEntity.class);
+			searchEntity = cacheManager.getObject(userToken.getProductCode(), code, SearchEntity.class);
 			searchEntity.setCode(sessionCode);
 		}
 		// find the sort

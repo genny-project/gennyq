@@ -19,7 +19,7 @@
 
 package life.genny.qwandaq.datatype;
 
-import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -34,13 +34,14 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import life.genny.qwandaq.CoreEntityPersistable;
+import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import org.javamoney.moneta.Money;
 import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.converter.ValidationListConverter;
 import life.genny.qwandaq.validation.Validation;
-import life.genny.qwandaq.validation.ValidationList;
 
 /**
  * DataType represents a distinct abstract Data Representation in the Qwanda
@@ -62,7 +63,7 @@ import life.genny.qwandaq.validation.ValidationList;
 
 @Embeddable
 @RegisterForReflection
-public class DataType implements Serializable {
+public class DataType implements CoreEntityPersistable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -70,6 +71,11 @@ public class DataType implements Serializable {
 
 	public static final String DTT_LINK = "LNK_ATTRIBUTE"; // This datatype classname indicates the datatype belongs to
 															// the BaseEntity set with parent
+
+	@NotNull
+	@Size(max = 120)
+	private String realm;
+
 	@NotNull
 	@Size(max = 120)
 	private String dttCode; // e.g. java.util.String
@@ -84,6 +90,8 @@ public class DataType implements Serializable {
 	private String typeName; // e.g. TEXT
 
 	private String inputmask;
+
+	private String validationCodes;
 
 	/**
 	 * @return String
@@ -120,33 +128,33 @@ public class DataType implements Serializable {
 	}
 
 	public DataType(final Class clazz) {
-		this(clazz, new ValidationList());
+		this(clazz, new ArrayList<>(0));
 	}
 
 	public DataType(final String className) {
-		this(className, new ValidationList());
+		this(className, new ArrayList<>(0));
 	}
 
-	public DataType(final String className, final ValidationList aValidationList, final String name,
+	public DataType(final String className, final List<Validation> aValidationList, final String name,
 			final String inputmask) {
 		setDttCodeFromClassName(className);
 		setClassName(className);
-		setValidationList(aValidationList.getValidationList());
+		setValidationList(aValidationList);
 		setTypeName(name);
 		setInputmask(inputmask);
 	}
 
-	public DataType(final String className, final ValidationList aValidationList, final String name,
+	public DataType(final String className, final List<Validation> aValidationList, final String name,
 			final String inputmask, final String component) {
 		setDttCodeFromClassName(className);
 		setClassName(className);
-		setValidationList(aValidationList.getValidationList());
+		setValidationList(aValidationList);
 		setTypeName(name);
 		setInputmask(inputmask);
 		setComponent(component);
 	}
 
-	public DataType(final String className, final ValidationList aValidationList, final String name) {
+	public DataType(final String className, final List<Validation> aValidationList, final String name) {
 		this(className, aValidationList, name, "");
 	}
 
@@ -169,11 +177,11 @@ public class DataType implements Serializable {
 		}
 	}
 
-	public DataType(final String className, final ValidationList aValidationList) {
+	public DataType(final String className, final List<Validation> aValidationList) {
 		this(className, aValidationList, className);
 	}
 
-	public DataType(final Class clazz, final ValidationList aValidationList) {
+	public DataType(final Class clazz, final List<Validation> aValidationList) {
 		this(clazz.getCanonicalName(), aValidationList);
 	}
 
@@ -190,6 +198,21 @@ public class DataType implements Serializable {
 	 */
 	public void setValidationList(final List<Validation> validationList) {
 		this.validationList = validationList;
+	}
+
+	/**
+	 * @return the realm
+	 */
+	public String getRealm() {
+		return realm;
+	}
+
+	/**
+	 * @param realm
+	 *                  the realm to set
+	 */
+	public void setRealm(final String realm) {
+		this.realm = realm;
 	}
 
 	/**
@@ -253,6 +276,21 @@ public class DataType implements Serializable {
 	}
 
 	/**
+	 * @return the validationCodes
+	 */
+	public String getValidationCodes() {
+		return validationCodes;
+	}
+
+	/**
+	 * @param validationCodes
+	 *                  the validationCodes to set
+	 */
+	public void setValidationCodes(String validationCodes) {
+		this.validationCodes = validationCodes;
+	}
+
+	/**
 	 * @param c the class to set
 	 */
 	@JsonIgnore
@@ -284,8 +322,7 @@ public class DataType implements Serializable {
 	 */
 	static public DataType getInstance(final String className) {
 		final List<Validation> validationList = new CopyOnWriteArrayList<Validation>();
-		ValidationList vlist = new ValidationList(validationList);
-		DataType dataTypeInstance = new DataType(className, vlist);
+		DataType dataTypeInstance = new DataType(className, validationList);
 		return dataTypeInstance;
 	}
 
@@ -319,22 +356,12 @@ public class DataType implements Serializable {
 	 */
 	static public Object Zero(DataType dtype) {
 		switch (dtype.getClassName()) {
-			case "java.lang.Integer":
-			case "Integer":
-				return new Integer(0);
-			case "java.lang.Long":
-			case "Long":
-				return new Long(0);
-			case "java.lang.Double":
-			case "Double":
-				return new Double(0.0);
-			case "javax.money.CurrencyUnit":
-			case "org.javamoney.moneta.Money":
-			case "Money":
-				return Money.zero(Monetary.getCurrency("AUD"));
-			default:
-				return null;
+			case "java.lang.Integer", "Integer" -> { return Integer.valueOf(0); }
+			case "java.lang.Long", "Long" -> { return Long.valueOf(0); }
+			case "java.lang.Double","Double" -> { return Double.valueOf(0.0); }
+			case "javax.money.CurrencyUnit", "org.javamoney.moneta.Money", "Money" -> { return Money.zero(Monetary.getCurrency("AUD")); }
 		}
+		return null;
 	}
 
 	/**
@@ -347,24 +374,27 @@ public class DataType implements Serializable {
 	 */
 	static public Object add(DataType dtype, Object x, Object y) {
 		switch (dtype.getClassName()) {
-			case "java.lang.Integer":
-			case "Integer":
-				return ((Integer) x) + ((Integer) y);
-			case "java.lang.Long":
-			case "Long":
-				return ((Long) x) + ((Long) y);
-			case "java.lang.Double":
-			case "Double":
-				return ((Double) x) + ((Double) y);
-			case "org.javamoney.moneta.Money":
-			case "Money":
+			case "java.lang.Integer", "Integer" -> { return ((Integer) x) + ((Integer) y); }
+			case "java.lang.Long", "Long" -> { return ((Long) x) + ((Long) y); }
+			case "java.lang.Double", "Double" -> { return ((Double) x) + ((Double) y); }
+			case "org.javamoney.moneta.Money", "Money" -> {
 				Money m1 = (Money) x;
 				Money m2 = (Money) y;
-				Money sum = m1.add(m2);
-				return sum;
-			default:
-				return null;
+				return m2.add(m2);
+			}
 		}
+		return null;
 	}
 
+	@Override
+	public CoreEntitySerializable toSerializableCoreEntity() {
+		life.genny.qwandaq.serialization.datatype.DataType dataType = new life.genny.qwandaq.serialization.datatype.DataType();
+		dataType.setRealm(getRealm());
+		dataType.setDttCode(getDttCode());
+		dataType.setClassName(getClassName());
+		dataType.setComponent(getComponent());
+		dataType.setInputMask(getInputmask());
+		dataType.setValidationCodes(getValidationCodes());
+		return dataType;
+	}
 }

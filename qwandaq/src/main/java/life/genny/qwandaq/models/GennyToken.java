@@ -29,7 +29,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
@@ -591,7 +593,7 @@ public class GennyToken implements Serializable {
 
 	/**
 	 * @param jsonObj the json object to get
-	 * @return Map&lt;String, Object&gt;
+	 * @return Map&lt;String, Object&g`t;
 	 */
 	@JsonbTransient
 	@JsonIgnore
@@ -606,6 +608,10 @@ public class GennyToken implements Serializable {
 
 			map = mapper.readValue(json, typeRef);
 
+		} catch (final JsonGenerationException e) {
+			e.printStackTrace();
+		} catch (final JsonMappingException e) {
+			e.printStackTrace();
 		} catch (final IOException e) {
 			e.printStackTrace();
 		}

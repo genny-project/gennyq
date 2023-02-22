@@ -39,9 +39,11 @@ public class AttributeMinIOHandler {
                 }
                 log.info("Writing to MinIO");
 
+                String fileId =  Arc.container().instance(MinIOUtils.class).get().saveOnStore(new FileUpload(fileName, fileInfoName));
+
                 fileInfo.delete();
 
-                return Arc.container().instance(MinIOUtils.class).get().saveOnStore(new FileUpload(fileName, fileInfoName));
+                return fileId;
             } else {
                 return valueString;
             }

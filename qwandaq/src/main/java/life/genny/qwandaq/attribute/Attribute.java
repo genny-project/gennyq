@@ -20,29 +20,20 @@
 
 package life.genny.qwandaq.attribute;
 
-import javax.persistence.Cacheable;
-import javax.persistence.DiscriminatorColumn;
-import javax.persistence.DiscriminatorType;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.Index;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
-import javax.validation.constraints.NotNull;
+import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.CodedEntity;
+import life.genny.qwandaq.CoreEntityPersistable;
+import life.genny.qwandaq.datatype.DataType;
+import life.genny.qwandaq.serialization.CoreEntitySerializable;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-
-import io.quarkus.runtime.annotations.RegisterForReflection;
-import life.genny.qwandaq.CodedEntity;
-import life.genny.qwandaq.datatype.DataType;
-import life.genny.qwandaq.utils.CommonUtils;
-
 /**
  * Attribute represents a distinct abstract Fact about a target entity
- * managed in the Qwanda library.
+ * managed in the Qwandaq library.
  * An attribute may be used directly in processing meaning for a target
  * entity. Such processing may be in relation to a comparison score against
  * another target entity, or to generate more attribute information via
@@ -67,17 +58,8 @@ import life.genny.qwandaq.utils.CommonUtils;
 
 @XmlRootElement
 @XmlAccessorType(value = XmlAccessType.FIELD)
-
-@Table(name = "attribute", indexes = {
-		@Index(columnList = "code", name = "code_idx"),
-		@Index(columnList = "realm", name = "code_idx")
-}, uniqueConstraints = @UniqueConstraint(columnNames = { "code", "realm" }))
-@Entity
-@DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
-@Cacheable
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @RegisterForReflection
-public class Attribute extends CodedEntity {
+public class Attribute extends CodedEntity implements CoreEntityPersistable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -106,6 +88,7 @@ public class Attribute extends CodedEntity {
 	public static final String LNK_ITEMS = "LNK_ITEMS";
 	public static final String LNK_AUTHOR = "LNK_AUTHOR";
 	public static final String LNK_SUMMARY = "LNK_SUMMARY";
+	public static final String LNK_PARENT = "LNK_PARENT";
 
 	// definition
 	public static final String LNK_DEF = "LNK_DEF";
@@ -141,6 +124,7 @@ public class Attribute extends CodedEntity {
 	public static final String PRI_EMAIL = "PRI_EMAIL";
 	public static final String PRI_TIMEZONE_ID = "PRI_TIMEZONE_ID";
 	public static final String PRI_ADDRESS = "PRI_ADDRESS";
+	public static final String PRI_ADDRESS_FULL = "PRI_ADDRESS_FULL";
 
 	// search
 	public static final String PRI_SEARCH_TEXT = "PRI_SEARCH_TEXT";
@@ -148,7 +132,7 @@ public class Attribute extends CodedEntity {
 	public static final String PRI_INDEX = "PRI_INDEX";
 
 	// message
-	public static final String PRI_DEFAULT_MSG_TYPE = "PRI_DEFAULT_MSG_TYPE";
+	public static final String LNK_MESSAGE_TYPE = "LNK_MESSAGE_TYPE";
 	public static final String PRI_CONTEXT_LIST = "PRI_CONTEXT_LIST";
 	public static final String PRI_CONTEXT_ASSOCIATIONS = "PRI_CONTEXT_ASSOCIATIONS";
 	public static final String PRI_CC = "PRI_CC";
@@ -167,9 +151,9 @@ public class Attribute extends CodedEntity {
 	public static final String LNK_EDIT_QUES = "LNK_EDIT_QUES";
 	public static final String LNK_EDIT_PCMS = "LNK_EDIT_PCMS";
 
-	@Embedded
-	@NotNull
-	public DataType dataType;
+	private String dttCode;
+
+	private DataType dataType;
 
 	private Boolean defaultPrivacyFlag = false;
 
@@ -206,6 +190,14 @@ public class Attribute extends CodedEntity {
 	 */
 	public void setDataType(DataType dataType) {
 		this.dataType = dataType;
+	}
+
+	public String getDttCode() {
+		return dttCode;
+	}
+
+	public void setDttCode(String dttCode) {
+		this.dttCode = dttCode;
 	}
 
 	/*
@@ -328,36 +320,65 @@ public class Attribute extends CodedEntity {
 	 * @return true if all fields are the same. False if one is different
 	 */
 	public boolean equals(Attribute other, boolean checkId) {
-		boolean sameDesc = CommonUtils.compare(description, other.description);
-		if (!sameDesc)
-			return false;
-
-		boolean samePrivacy = (defaultPrivacyFlag == other.defaultPrivacyFlag);
-		if (!samePrivacy)
-			return false;
-
-		boolean sameDTT = CommonUtils.compare(dataType, other.dataType);
-		if (!sameDTT)
-			return false;
-
-		boolean sameHelp = CommonUtils.compare(help, other.help);
-		if (!sameHelp)
-			return false;
-
-		boolean samePlaceholder = CommonUtils.compare(placeholder, other.placeholder);
-		if (!samePlaceholder)
-			return false;
-
-		boolean sameDefault = CommonUtils.compare(defaultValue, other.defaultValue);
-		if (!sameDefault)
-			return false;
-
-		boolean sameIcon = CommonUtils.compare(icon, other.icon);
-		if (!sameIcon)
-			return false;
-
-		// Check the id if necessary
-		return checkId ? (other.getId() == getId()) : true;
+		EqualsBuilder equalsBuilder = new EqualsBuilder();
+		equalsBuilder.append(description, other.description);
+		equalsBuilder.append(defaultPrivacyFlag, other.defaultPrivacyFlag);
+		equalsBuilder.append(dataType, other.dataType);
+		equalsBuilder.append(help, other.help);
+		equalsBuilder.append(placeholder, other.placeholder);
+		equalsBuilder.append(defaultValue, other.defaultValue);
+		equalsBuilder.append(icon, other.icon);
+		if(checkId) {
+			equalsBuilder.append(getId(), other.getId());
+		}
+		return equalsBuilder.isEquals();
 	}
 
+	@Override
+	public CoreEntitySerializable toSerializableCoreEntity() {
+		life.genny.qwandaq.serialization.attribute.Attribute attributeSerializable = new life.genny.qwandaq.serialization.attribute.Attribute();
+		attributeSerializable.setCode(getCode());
+		attributeSerializable.setCreated(getCreated());
+		attributeSerializable.setName(getName());
+		attributeSerializable.setRealm(getRealm());
+		attributeSerializable.setUpdated(getUpdated());
+		attributeSerializable.setDefaultPrivacyFlag(getDefaultPrivacyFlag());
+		attributeSerializable.setDefaultValue(getDefaultValue());
+		attributeSerializable.setDescription(getDescription());
+		attributeSerializable.setHelp(getHelp());
+		attributeSerializable.setPlaceholder(getPlaceholder());
+		attributeSerializable.setIcon(getIcon());
+		attributeSerializable.setStatus(getStatus().ordinal());
+		return attributeSerializable;
+	}
+
+	@Override
+	public int hashCode() {
+		return (this.getRealm()+this.getCode()).hashCode();
+	}
+
+	@Override
+	public boolean equals(Object otherObject) {
+		return this.getRealm().equals(((HAttribute) otherObject).getRealm())
+				&& this.getCode().equals(((HAttribute) otherObject).getCode());
+	}
+
+	public HAttribute toHAttribute() {
+		HAttribute hAttribute = new HAttribute();
+		hAttribute.setDataType(getDataType());
+		hAttribute.setIndex(getIndex());
+		hAttribute.setCode(getCode());
+		hAttribute.setCreated(getCreated());
+		hAttribute.setName(getName());
+		hAttribute.setRealm(getRealm());
+		hAttribute.setUpdated(getUpdated());
+		hAttribute.setDefaultPrivacyFlag(getDefaultPrivacyFlag());
+		hAttribute.setDefaultValue(getDefaultValue());
+		hAttribute.setDescription(getDescription());
+		hAttribute.setHelp(getHelp());
+		hAttribute.setPlaceholder(getPlaceholder());
+		hAttribute.setIcon(getIcon());
+		hAttribute.setStatus(getStatus());
+		return hAttribute;
+	}
 }

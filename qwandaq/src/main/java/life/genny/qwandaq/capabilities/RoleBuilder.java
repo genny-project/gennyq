@@ -152,7 +152,7 @@ public class RoleBuilder {
         // We aren't persisting on each call to addCapability, so persist
         // going to experiment with persisting once here
         log.debug("Persisting at end");
-        beUtils.updateBaseEntity(productCode, targetRole);
+        beUtils.updateBaseEntity(targetRole, true);
 
         controller.doPersist(controllerPersistState);
         return targetRole;

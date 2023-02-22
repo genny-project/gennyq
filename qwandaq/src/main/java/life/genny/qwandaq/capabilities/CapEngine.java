@@ -12,8 +12,11 @@ import javax.inject.Inject;
 
 import org.jboss.logging.Logger;
 
+import life.genny.qwandaq.Question;
+import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.attribute.HEntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
 
@@ -22,15 +25,19 @@ import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
 
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.HBaseEntity;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.exception.runtime.entity.BaseEntityException;
+import life.genny.qwandaq.intf.ICapabilityFilterable;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.AttributeUtils;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CacheUtils;
 import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.DatabaseUtils;
+import life.genny.qwandaq.utils.QuestionUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 
 /*
@@ -61,6 +68,12 @@ class CapEngine {
 
 	@Inject
 	DatabaseUtils dbUtils;
+
+	@Inject
+	QuestionUtils questionUtils;
+
+	@Inject
+	AttributeUtils attributeUtils;
 
 	/**
      * @deprecated (Marked as deprecated to show use cases in code. This is going to be moved to somewhere where it can be cached with User Session)
@@ -243,6 +256,51 @@ class CapEngine {
 		CacheUtils.putObject(productCode, targetBe.getCode() + ":" + capabilityAttribute.getCode(), "[]");
 		beUtils.updateBaseEntity(targetBe);
 		return targetBe;
+	}
+
+	/**
+	 * @param filterable
+	 * @param capabilityRequirements
+	 * @return
+	 */
+	boolean updateCapabilityRequirements(String realm, ICapabilityFilterable filterable, Capability... capabilityRequirements) {
+		if(capabilityRequirements == null) {
+			log.error("Attempted to set Capability Requirements to null. Call updateCapabilityRequirements(filterable) instead of updateCapabilityRequirements(filterable, null)");
+			throw new NullParameterException("capabilityRequirements");
+		}
+
+		filterable.setCapabilityRequirements(capabilityRequirements);
+
+		// TODO: Turn this into a sustainable solution
+
+		if(filterable instanceof HBaseEntity) {
+			HBaseEntity be = (HBaseEntity)filterable;
+			log.info("Attaching Capability Requirements: " + CommonUtils.getArrayString(capabilityRequirements) + " to BaseEntity: " + realm + ":" + be.getCode());
+			beUtils.updateBaseEntity(be.toBaseEntity());
+			return true;
+		}
+
+		if(filterable instanceof QuestionQuestion) {
+			QuestionQuestion qq = (QuestionQuestion)filterable;
+			log.info("Attaching Capability Requirements: " + CommonUtils.getArrayString(capabilityRequirements) + " to QuestionQuestion: " + realm + ":" + qq.getParentCode() + ":" + qq.getChildCode());
+			// TODO: Potentially update sub questions
+			return questionUtils.saveQuestionQuestion(qq);
+		}
+
+		if(filterable instanceof Question) {
+			Question q = (Question)filterable;
+			log.info("Attaching Capability Requirements: " + CommonUtils.getArrayString(capabilityRequirements) + " to Question: " + realm + ":" + q.getCode());
+			return questionUtils.saveQuestion(q);
+		}
+
+		if(filterable instanceof HEntityAttribute) {
+			HEntityAttribute ea = (HEntityAttribute)filterable;
+			log.info("Attaching Capability Requirements: " + CommonUtils.getArrayString(capabilityRequirements) + " to EntityAttribute: " + realm + ":" + ea.getBaseEntityCode() + ":" + ea.getAttributeCode());
+			HBaseEntity be = ea.getBaseEntity();
+			beUtils.updateBaseEntity(be.toBaseEntity());
+			return true;
+		}
+		return false;
 	}
 
 	private boolean shouldOverride() {

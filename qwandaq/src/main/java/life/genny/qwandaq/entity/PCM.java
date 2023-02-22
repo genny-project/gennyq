@@ -48,9 +48,14 @@ public class PCM extends BaseEntity {
 	}
 
 	public static PCM from(BaseEntity entity) {
-
 		PCM pcm = new PCM(entity.getCode(), entity.getName());
 		entity.decorate(pcm);
+		pcm.setRealm(entity.getRealm());
+		pcm.setStatus(entity.getStatus());
+		pcm.setIndex(entity.getIndex());
+		pcm.setCreated(entity.getCreated());
+		pcm.setUpdated(entity.getUpdated());
+		pcm.setBaseEntityAttributes(entity.getBaseEntityAttributes());
 		return pcm;
 	}
 
@@ -67,12 +72,6 @@ public class PCM extends BaseEntity {
 	}
 
 	public void addStringAttribute(String code, String name, Double weight, String value) {
-
-		if (findEntityAttribute(code).isPresent()) {
-			setValue(code, value);
-			return;
-		}
-
 		Attribute attribute = new Attribute(code, name, new DataType(String.class));
 		EntityAttribute ea = new EntityAttribute();
 		ea.setAttribute(attribute);

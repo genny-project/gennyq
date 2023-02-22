@@ -25,6 +25,9 @@ import life.genny.qwandaq.utils.KeycloakUtils;
 public class Service2Service extends KogitoService {
 
 	@Inject
+	KeycloakUtils keycloakUtils;
+
+	@Inject
 	Logger log;
 
 	/**
@@ -40,7 +43,7 @@ public class Service2Service extends KogitoService {
 			log.debug(taskExchange.getSourceCode() + " : No token found, fetching latest token");
 			BaseEntity userBE = beUtils.getBaseEntity(taskExchange.getSourceCode());
 			BaseEntity project = beUtils.getBaseEntity(Prefix.PRJ_.concat(userBE.getRealm().toUpperCase()));
-			userToken = new UserToken(KeycloakUtils.getImpersonatedToken(userBE, serviceToken, project));
+			userToken = new UserToken(keycloakUtils.getImpersonatedToken(userBE, serviceToken, project));
 		}
 		logToken();
 		taskExchange.setToken(userToken.getToken());

@@ -1,0 +1,28 @@
+package life.genny.qwandaq.serialization.entityattribute;
+
+message EntityAttribute {
+  optional string attributeCode = 1;
+  optional string baseEntityCode = 2;
+  optional int64 created = 3;
+  optional bool inferred = 4;
+  optional bool privacyFlag = 5;
+  optional bool readonly = 6;
+  optional string realm = 7;
+  optional int64 updated = 8;
+  optional bool valueBoolean = 9;
+  optional int64 valueDate = 10;
+  optional int64 valueDateRange = 11;
+  optional int64 valueDateTime = 12;
+  optional double valueDouble = 13;
+  optional int32 valueInteger = 14;
+  optional int64 valueLong = 15;
+  optional string money = 16;
+  optional string valueString = 17;
+  optional int64 valueTime = 18;
+  optional double weight = 19;
+  optional int64 attribute_id = 20;
+  optional int64 baseentity_id = 21;
+  optional string icon = 22;
+  optional bool confirmationFlag = 23;
+  optional string capreqs = 24;
+}

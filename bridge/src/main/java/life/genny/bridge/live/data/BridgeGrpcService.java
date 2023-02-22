@@ -40,6 +40,9 @@ public class BridgeGrpcService implements Stream {
     private static final Logger LOG = Logger.getLogger(BridgeGrpcService.class);
 
     @Inject
+    BridgeSwitch bridgeSwitch;
+
+    @Inject
     ExternalConsumer handler;
 
     /**
@@ -161,8 +164,8 @@ public class BridgeGrpcService implements Stream {
         LOG.info("JTI " + payload.jti + " " + payload.sid);
         JsonObject object = new JsonObject(request.getBody());
         // put bridgeId into users cached info
-        BridgeSwitch.put(new GennyToken(request.getToken()), bridgeId);
-        BridgeSwitch.addActiveBridgeId(new GennyToken(request.getToken()), bridgeId);
+        bridgeSwitch.put(new GennyToken(request.getToken()), bridgeId);
+        bridgeSwitch.addActiveBridgeId(new GennyToken(request.getToken()), bridgeId);
         handler.routeDataByMessageType(object, new GennyToken(request.getToken()));
     }
 

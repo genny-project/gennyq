@@ -24,17 +24,17 @@
 
 	<properties>
 		<!-- Quarkus Properties -->
-		<quarkus.platform.version>2.15.0.Final</quarkus.platform.version>
+		<quarkus.platform.version>2.16.3.Final</quarkus.platform.version>
 		<quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
 		<quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
 		<quarkus-plugin.version>${quarkus.platform.version}</quarkus-plugin.version>
 
 		<!-- drools -->
-		<version.org.drools>8.31.0.Final</version.org.drools>
+		<version.org.drools>8.34.0.Final</version.org.drools>
 		<version.org.optaplanner>${version.org.drools}</version.org.optaplanner>
 
 		<!-- kogito -->
-		<kogito.version>1.31.0.Final</kogito.version>
+		<kogito.version>1.34.0.Final</kogito.version>
 		<kogito.bom.group-id>org.kie.kogito</kogito.bom.group-id>
 		<kogito.bom.artifact-id>kogito-bom</kogito.bom.artifact-id>
 		<kogito.bom.version>${kogito.version}</kogito.bom.version>
@@ -59,7 +59,8 @@
 		<genny.version>${project.version}</genny.version>
 
 		<jackson.version>2.13.0</jackson.version>
-		<jandex.version>3.0.3</jandex.version>
+		<jandex.version>3.0.5</jandex.version>
+		<jandex-maven.version>1.2.3</jandex-maven.version>
 		<jjwt.version>0.7.0</jjwt.version>
 
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

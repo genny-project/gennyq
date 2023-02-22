@@ -4,14 +4,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
 import org.jboss.logging.Logger;
-
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
@@ -22,10 +20,9 @@ import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
-import life.genny.qwandaq.entity.search.trait.Ord;
-import life.genny.qwandaq.entity.search.trait.Sort;
 import life.genny.qwandaq.exception.runtime.DefinitionException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.AttributeCodeValueString;
 import life.genny.qwandaq.models.UserToken;
@@ -50,10 +47,16 @@ public class DefUtils {
 	Jsonb jsonb = JsonbBuilder.create();
 
 	@Inject
+	CacheManager cm;
+
+	@Inject
 	QwandaUtils qwandaUtils;
 
 	@Inject
 	BaseEntityUtils beUtils;
+
+	@Inject
+	EntityAttributeUtils beaUtils;
 
 	@Inject
 	SearchUtils searchUtils;
@@ -61,54 +64,16 @@ public class DefUtils {
 	@Inject
 	UserToken userToken;
 
+	@Inject
+	MergeUtils mergeUtils;
+
+	@Inject
+	CacheManager cacheManager;
+
+	@Inject
+	AttributeUtils attributeUtils;
+
 	public DefUtils() {
-	}
-
-	/**
-	 * Initialize the in memory DEF store
-	 *
-	 * @param productCode The product of DEFs to initialize
-	 */
-	// TODO: remove this soon
-	@Deprecated
-	public void initializeDefPrefixs(String productCode) {
-
-		SearchEntity searchEntity = new SearchEntity(SBE_DEF, "DEF check")
-				.add(new Sort(Attribute.PRI_NAME, Ord.ASC))
-				.add(new Filter(Attribute.PRI_CODE, Operator.STARTS_WITH, Prefix.DEF_))
-				.setPageStart(0)
-				.setPageSize(10000);
-
-		log.info("########  PRODUCT CODE ===== " + productCode);
-		searchEntity.setRealm(productCode);
-
-		log.info("Search Entity: " + jsonb.toJson(searchEntity));
-
-		List<String> codes = searchUtils.searchBaseEntityCodes(searchEntity);
-
-		if (codes == null) {
-			log.error("Could not fetch DEF codes!");
-			return;
-		}
-
-		log.info("DEF code search returned " + codes.size() + " results for product " + productCode);
-		defPrefixMap.put(productCode, new ConcurrentHashMap<>());
-
-		for (String code : codes) {
-
-			if (code == null) {
-				log.error("Code is null, skipping DEF prefix");
-				continue;
-			}
-			Definition def = Definition.from(beUtils.getBaseEntity(productCode, code));
-			String prefix = def.getValue(Attribute.PRI_PREFIX, null);
-			if (prefix == null)
-				continue;
-
-			log.info("(" + productCode + ") Saving Prefix for " + def.getCode());
-			defPrefixMap.get(productCode).put(prefix, code);
-			CacheUtils.putObject(productCode, def.getCode() + ":PREFIX", prefix);
-		}
 	}
 
 	/**
@@ -118,9 +83,10 @@ public class DefUtils {
 	 * @return BaseEntity The corresponding definition {@link BaseEntity}
 	 */
 	public Definition getDEF(final BaseEntity entity) {
-
 		if (entity == null)
 			throw new NullParameterException("entity");
+
+		entity.setBaseEntityAttributes(beaUtils.getAllEntityAttributesForBaseEntity(entity));
 
 		// save processing time on particular entities
 		if (entity.getCode().startsWith(Prefix.DEF_))
@@ -159,7 +125,7 @@ public class DefUtils {
 			Definition definition = beUtils.getDefinition(code);
 
 			// merge into new def
-			for (EntityAttribute ea : definition.getBaseEntityAttributes()) {
+			for (EntityAttribute ea : beaUtils.getAllEntityAttributesForBaseEntity(definition, true)) {
 				try {
 					mergedDef.addAttribute(ea);
 				} catch (Exception e) {
@@ -175,9 +141,20 @@ public class DefUtils {
 	 * Find the corresponding definition for a given {@link BaseEntity} code.
 	 *
 	 * @param baseEntityCode The {@link BaseEntity} code to check
-	 * @return BaseEntity The corresponding definition {@link BaseEntity}
+	 * @return The corresponding definition {@link BaseEntity}
 	 */
 	public Definition getDEF(final String baseEntityCode) {
+		return getDEF(userToken.getProductCode(), baseEntityCode);
+	}
+
+	/**
+	 * Find the corresponding definition for a given {@link BaseEntity} code.
+	 *
+	 * @param productCode The 
+	 * @param baseEntityCode The {@link BaseEntity#getCode() BaseEntity code} to check
+	 * @return The corresponding definition {@link BaseEntity}
+	 */
+	public Definition getDEF(final String productCode, final String baseEntityCode) {
 		if(baseEntityCode == null)
 			throw new NullParameterException(baseEntityCode);
 		BaseEntity target = beUtils.getBaseEntity(baseEntityCode);
@@ -243,8 +220,7 @@ public class DefUtils {
 	 * saved to a {@link BaseEntity}
 	 *
 	 * @param defBE     the defBE to check with
-	 * @param attribute the attribute to check
-	 * @param value     the value to check
+	 * @param acvs     the attribute code value to check
 	 * @return Boolean
 	 */
 	public Boolean attributeValueValidForDEF(BaseEntity defBE, AttributeCodeValueString acvs) {
@@ -256,7 +232,7 @@ public class DefUtils {
 			throw new NullParameterException("acvs");
 		}
 
-		Attribute attribute = qwandaUtils.getAttribute(acvs.getAttributeCode());
+		Attribute attribute = attributeUtils.getAttribute(acvs.getAttributeCode(), true, true);
 
 		if (attribute == null)
 			throw new NullParameterException("attribute");
@@ -291,28 +267,29 @@ public class DefUtils {
 	 */
 	@Deprecated
 	public SearchEntity mergeFilterValueVariables(SearchEntity searchBE, Map<String, Object> ctxMap) {
-
-		for (EntityAttribute ea : searchBE.getBaseEntityAttributes()) {
+		List<EntityAttribute> entityAttributes = beaUtils.getAllEntityAttributesForBaseEntity(searchBE);
+		for (EntityAttribute entityAttribute : entityAttributes) {
 			// iterate all Filters
-			if (ea.getAttributeCode().startsWith("PRI_") || ea.getAttributeCode().startsWith("LNK_")) {
+			String attributeCode = entityAttribute.getAttributeCode();
+			if (attributeCode.startsWith("PRI_") || attributeCode.startsWith("LNK_")) {
 
 				// grab the Attribute for this Code, using array in case this is an associated
 				// filter
-				String[] attributeCodeArray = ea.getAttributeCode().split("\\.");
-				String attributeCode = attributeCodeArray[attributeCodeArray.length - 1];
+				String[] attributeCodeArray = attributeCode.split("\\.");
+				String attributeCodeLast = attributeCodeArray[attributeCodeArray.length - 1];
 				// fetch the corresponding attribute
-				Attribute att = qwandaUtils.getAttribute(attributeCode);
+				Attribute att = attributeUtils.getAttribute(attributeCodeLast, true);
 				DataType dataType = att.getDataType();
 
-				Object attributeFilterValue = ea.getValue();
+				Object attributeFilterValue = entityAttribute.getValue();
 				if (attributeFilterValue != null) {
 					// ensure EntityAttribute Dataype is Correct for Filter
-					Attribute searchAtt = new Attribute(ea.getAttributeCode(), ea.getAttributeName(), dataType);
-					ea.setAttribute(searchAtt);
+					Attribute searchAtt = new Attribute(attributeCode, entityAttribute.getAttributeName(), dataType);
+					entityAttribute.setAttribute(searchAtt);
 					String attrValStr = attributeFilterValue.toString();
 
 					// first check if merge is required
-					Boolean requiresMerging = MergeUtils.requiresMerging(attrValStr);
+					Boolean requiresMerging = mergeUtils.requiresMerging(attrValStr);
 
 					if (requiresMerging != null && requiresMerging) {
 						// update Map with latest baseentity
@@ -328,13 +305,13 @@ public class DefUtils {
 						});
 
 						// check if contexts are present
-						if (MergeUtils.contextsArePresent(attrValStr, ctxMap)) {
+						if (mergeUtils.contextsArePresent(attrValStr, ctxMap)) {
 							// TODO: mergeUtils should be taking care of this bracket replacement - Jasper
 							// (6/08/2021)
-							Object mergedObj = MergeUtils.wordMerge(attrValStr.replace("[[", "").replace("]]", ""),
+							Object mergedObj = mergeUtils.wordMerge(attrValStr.replace("[[", "").replace("]]", ""),
 									ctxMap);
 							// Ensure Datatype is Correct, then set Value
-							ea.setValue(mergedObj);
+							entityAttribute.setValue(mergedObj);
 						} else {
 							log.warn(ANSIColour.RED + "Not all contexts are present for " + attrValStr
 									+ ANSIColour.RESET);
@@ -342,7 +319,7 @@ public class DefUtils {
 						}
 					} else {
 						// this should filter out any values of incorrect datatype
-						ea.setValue(attributeFilterValue);
+						entityAttribute.setValue(attributeFilterValue);
 					}
 				} else {
 					log.error(

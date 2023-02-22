@@ -20,7 +20,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.exception.runtime.entity.BaseEntityException;
-
+import life.genny.qwandaq.intf.ICapabilityFilterable;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
@@ -178,6 +178,10 @@ public class CapabilitiesController {
     
     public BaseEntity resetCapability(String productCode, BaseEntity targetBe, Attribute capabilityAttribute) {
         return engine.resetCapability(productCode, targetBe, capabilityAttribute);
+    }
+
+    public boolean updateRequirements(String productCode, ICapabilityFilterable filterable, Capability... capabilityRequirements) {
+        return engine.updateCapabilityRequirements(productCode, filterable, capabilityRequirements);
     }
 
 	/**

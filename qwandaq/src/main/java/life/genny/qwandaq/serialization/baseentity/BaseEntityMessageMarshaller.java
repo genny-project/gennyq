@@ -1,12 +1,14 @@
 package life.genny.qwandaq.serialization.baseentity;
 
-import life.genny.qwandaq.EEntityStatus;
-import life.genny.qwandaq.entity.BaseEntity;
-import org.infinispan.protostream.MessageMarshaller;
-
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+
+import life.genny.qwandaq.converter.CapabilityConverter;
+import org.infinispan.protostream.MessageMarshaller;
+
+import life.genny.qwandaq.EEntityStatus;
+import life.genny.qwandaq.entity.BaseEntity;
 
 public class BaseEntityMessageMarshaller implements MessageMarshaller<BaseEntity> {
 
@@ -17,7 +19,7 @@ public class BaseEntityMessageMarshaller implements MessageMarshaller<BaseEntity
 
 	@Override
 	public String getTypeName() {
-		return "life.genny.qwandaq.entity.BaseEntity";
+		return "life.genny.qwandaq.persistence.baseentity.BaseEntity";
 	}
 
 	// @Override
@@ -31,12 +33,13 @@ public class BaseEntityMessageMarshaller implements MessageMarshaller<BaseEntity
 		}
 		be.setName(reader.readString("name"));
 		be.setRealm(reader.readString("realm"));
-//		Integer statusInt = reader.readInt("status");
-		be.setStatus(EEntityStatus.valueOf(reader.readInt("status")));
+		Integer statusInt = reader.readInt("status");
+		be.setStatus(EEntityStatus.valueOf(statusInt));
 		Long updatedLong = reader.readLong("updated");
 		if (updatedLong != null) {
 			be.setUpdated(LocalDateTime.ofEpochSecond(updatedLong / 1000, 0, ZoneOffset.UTC));
 		}
+		be.setCapabilityRequirements(CapabilityConverter.convertToEA(reader.readString("capreqs")));
 		return be;
 	}
 
@@ -53,6 +56,7 @@ public class BaseEntityMessageMarshaller implements MessageMarshaller<BaseEntity
 		LocalDateTime updated = be.getUpdated();
 		Long updatedLong = created != null ? updated.toEpochSecond(ZoneOffset.UTC)*1000 : null;
 		writer.writeLong("updated", updatedLong);
+		writer.writeString("capreqs", CapabilityConverter.convertToDBColumn(be.getCapabilityRequirements()));
 	}
 
 }

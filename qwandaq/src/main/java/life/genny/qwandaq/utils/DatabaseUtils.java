@@ -4,11 +4,12 @@ import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Link;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
-import life.genny.qwandaq.QuestionQuestionId;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.attribute.HAttribute;
+import life.genny.qwandaq.attribute.HEntityAttribute;
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.HBaseEntity;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.intf.ICapabilityFilterable;
@@ -27,6 +28,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.Query;
 import javax.persistence.Table;
 import javax.transaction.Transactional;
+import java.util.LinkedList;
 import java.util.List;
 
 
@@ -102,7 +104,7 @@ public class DatabaseUtils {
 	public Long countAttributes(String realm) {
 
 		return (Long) entityManager
-				.createQuery("SELECT count(1) FROM Attribute WHERE realm=:realmStr AND name not like 'App\\_%'")
+				.createQuery("SELECT count(1) FROM HAttribute WHERE realm=:realmStr AND name not like 'App\\_%'")
 				.setParameter("realmStr", realm)
 				.getResultList().get(0);
 	}
@@ -122,10 +124,10 @@ public class DatabaseUtils {
 	public List<Attribute> findAttributes(String realm, Integer startIdx, Integer pageSize, String wildcard) {
 
 		Boolean isWildcard = (wildcard != null && !wildcard.isEmpty());
-		String queryStr = "FROM Attribute WHERE realm=:realmStr" + (isWildcard ? " AND code like :code" : "")
+		String queryStr = "FROM HAttribute WHERE realm=:realmStr" + (isWildcard ? " AND code like :code" : "")
 				+ " AND name not like 'App\\_%' order by id";
 
-		Query query = entityManager.createQuery(queryStr, Attribute.class)
+		Query query = entityManager.createQuery(queryStr, HAttribute.class)
 				.setParameter("realmStr", realm);
 
 		if (isWildcard) {
@@ -137,7 +139,10 @@ public class DatabaseUtils {
 			query = query.setFirstResult(startIdx).setMaxResults(pageSize);
 		}
 
-		return query.getResultList();
+		List<Attribute> attributes = new LinkedList<>();
+		List<HAttribute> hAttributes = query.getResultList();
+		hAttributes.stream().forEach(hAttribute -> attributes.add(hAttribute.toAttribute()));
+		return attributes;
 	}
 
 	/**
@@ -153,11 +158,11 @@ public class DatabaseUtils {
 	 * @return List
 	 */
 	public List<BaseEntity> findBaseEntitys(String realm, Integer pageSize, Integer pageNumber,
-			String wildcard) {
+											String wildcard) {
 
 		Boolean isWildcard = (wildcard != null && !wildcard.isEmpty());
-		String queryStr = "FROM BaseEntity WHERE realm=:realmStr" + (isWildcard ? " AND code like :code" : "");
-		Query query = entityManager.createQuery(queryStr, BaseEntity.class)
+		String queryStr = "FROM HBaseEntity WHERE realm=:realmStr" + (isWildcard ? " AND code like :code" : "");
+		Query query = entityManager.createQuery(queryStr, HBaseEntity.class)
 				.setParameter("realmStr", realm);
 
 		if (isWildcard) {
@@ -168,7 +173,10 @@ public class DatabaseUtils {
 					.setMaxResults(pageSize);
 		}
 
-		return query.getResultList();
+		List<BaseEntity> baseEntities = new LinkedList<>();
+		List<HBaseEntity> hBaseEntities = query.getResultList();
+		hBaseEntities.stream().forEach(hbe -> baseEntities.add(hbe.toBaseEntity()));
+		return baseEntities;
 	}
 
 	/**
@@ -254,16 +262,16 @@ public class DatabaseUtils {
 	}
 
 	/**
-	 * Fetch an Attribute from the database using a realm and a code.
+	 * Fetch an HAttribute from the database using a realm and a code.
 	 * 
 	 * @param realm the realm to find in
 	 * @param code  the code to find by
-	 * @return Attribute
+	 * @return HAttribute
 	 */
 
-	public Attribute findAttributeByCode(String realm, String code) {
+	public HAttribute findAttributeByCode(String realm, String code) {
 		return entityManager
-				.createQuery("FROM Attribute WHERE realm=:realmStr AND code =:code", Attribute.class)
+				.createQuery("FROM HAttribute WHERE realm=:realmStr AND code =:code", HAttribute.class)
 				.setParameter("realmStr", realm)
 				.setParameter("code", code)
 				.getSingleResult();
@@ -374,22 +382,6 @@ public class DatabaseUtils {
 	}
 
 	/**
-	 * Find the parent links.
-	 * 
-	 * @param realm      Realm to query
-	 * @param targetCode Code of the target entity
-	 * @return A list of Links
-	 */
-	public List<Link> findParentLinks(String realm, String targetCode) {
-
-		return entityManager.createQuery("SELECT ee.link FROM EntityEntity ee"
-				+ " where ee.pk.targetCode=:targetCode and ee.pk.source.realm=:realmStr", Link.class)
-				.setParameter("targetCode", targetCode)
-				.setParameter("realmStr", realm)
-				.getResultList();
-	}
-
-	/**
 	 * Save a {@link Validation} to the database.
 	 * 
 	 * @param validation A {@link Validation} object to save
@@ -415,16 +407,16 @@ public class DatabaseUtils {
 	}
 
 	/**
-	 * Save an {@link Attribute} to the database.
+	 * Save an {@link HAttribute} to the database.
 	 * 
-	 * @param attribute An {@link Attribute} object to save
+	 * @param attribute An {@link HAttribute} object to save
 	 */
 	@Transactional
 	public void saveAttribute(Attribute attribute) {
 
-		log.info("Saving Attribute " + attribute.getCode());
+		log.info("Saving HAttribute " + attribute.getCode());
 
-		Attribute existingAttribute = null;
+		HAttribute existingAttribute = null;
 		try {
 			existingAttribute = findAttributeByCode(attribute.getRealm(), attribute.getCode());
 		} catch (NoResultException e) {
@@ -432,20 +424,30 @@ public class DatabaseUtils {
 		}
 
 		if (existingAttribute == null) {
-			entityManager.persist(attribute);
+			entityManager.persist(attribute.toHAttribute());
 		} else {
-			entityManager.merge(attribute);
+			entityManager.merge(attribute.toHAttribute());
 		}
-		log.info("Successfully saved Attribute " + attribute.getCode());
+		log.info("Successfully saved HAttribute " + attribute.getCode());
 	}
 
 	/**
 	 * Save a {@link BaseEntity} to the database.
-	 * 
+	 *
 	 * @param entity A {@link BaseEntity} object to save
 	 */
 	@Transactional
 	public void saveBaseEntity(BaseEntity entity) {
+		saveBaseEntity(entity.toHBaseEntity());
+	}
+
+	/**
+	 * Save a {@link HBaseEntity} to the database.
+	 * 
+	 * @param entity A {@link HBaseEntity} object to save
+	 */
+	@Transactional
+	public void saveBaseEntity(HBaseEntity entity) {
 
 		log.debug("Saving BaseEntity " + entity.getRealm() + ":" + entity.getCode());
 
@@ -475,7 +477,7 @@ public class DatabaseUtils {
 	 * @param question A {@link Question} object to save
 	 */
 	@Transactional
-	public Question saveQuestion(Question question) {
+	public void saveQuestion(Question question) {
 
 		log.info("Saving Question " + question.getCode());
 
@@ -489,10 +491,9 @@ public class DatabaseUtils {
 		if (existingQuestion == null) {
 			entityManager.persist(question);
 		} else {
-			question = entityManager.merge(question);
+			entityManager.merge(question);
 		}
 		log.info("Successfully saved Question " + question.getCode());
-		return question;
 	}
 
 	/**
@@ -501,30 +502,30 @@ public class DatabaseUtils {
 	 * @param questionQuestion A {@link QuestionQuestion} object to save
 	 */
 	@Transactional
-	public QuestionQuestion saveQuestionQuestion(QuestionQuestion questionQuestion) {
+	public void saveQuestionQuestion(QuestionQuestion questionQuestion) {
 
-		QuestionQuestionId pk = questionQuestion.getPk();
-		log.info("Saving QuestionQuestion " + pk.getSourceCode() + ":" + pk.getTargetCode());
+		String sourceCode = questionQuestion.getParentCode();
+		String targetCode = questionQuestion.getChildCode();
+		log.info("Saving QuestionQuestion " + sourceCode + ":" + targetCode);
 
 		QuestionQuestion existingQuestionQuestion = null;
 		try {
 			existingQuestionQuestion = findQuestionQuestionBySourceAndTarget(
 					questionQuestion.getRealm(),
-					pk.getSourceCode(),
-					pk.getTargetCode());
+					sourceCode,
+					targetCode);
 		} catch (NoResultException e) {
 			log.debugf("%s:%s not found in database, creating new row...",
-					questionQuestion.getSourceCode(), questionQuestion.getTargetCode());
+					sourceCode, targetCode);
 		}
 
 		if (existingQuestionQuestion == null) {
 			entityManager.persist(questionQuestion);
 		} else {
-			questionQuestion = entityManager.merge(questionQuestion);
+			entityManager.merge(questionQuestion);
 		}
 
-		log.info("Successfully saved QuestionQuestion " + pk.getSourceCode() + ":" + pk.getTargetCode());
-		return questionQuestion;
+		log.info("Successfully saved QuestionQuestion " + sourceCode + ":" + targetCode);
 	}
 
 	/**
@@ -555,14 +556,14 @@ public class DatabaseUtils {
 	@Transactional
 	public void deleteAttribute(String realm, String code) {
 
-		log.info("Deleting Attribute " + code);
+		log.info("Deleting HAttribute " + code);
 
-		entityManager.createQuery("DELETE Attribute WHERE realm=:realmStr AND code=:code")
+		entityManager.createQuery("DELETE HAttribute WHERE realm=:realmStr AND code=:code")
 				.setParameter("realmStr", realm)
 				.setParameter("code", code)
 				.executeUpdate();
 
-		log.info("Successfully deleted Attribute " + code + " in realm " + realm);
+		log.info("Successfully deleted HAttribute " + code + " in realm " + realm);
 	}
 
 	/**
@@ -576,7 +577,7 @@ public class DatabaseUtils {
 
 		log.info("Deleting BaseEntity " + code);
 
-		entityManager.createQuery("DELETE BaseEntity WHERE realm=:realmStr AND code=:code")
+		entityManager.createQuery("DELETE HBaseEntity WHERE realm=:realmStr AND code=:code")
 				.setParameter("realmStr", realm)
 				.setParameter("code", code)
 				.executeUpdate();
@@ -688,8 +689,8 @@ public class DatabaseUtils {
 
 		// TODO: Turn this into a sustainable solution
 
-		if(filterable instanceof BaseEntity) {
-			BaseEntity be = (BaseEntity)filterable;
+		if(filterable instanceof HBaseEntity) {
+			HBaseEntity be = (HBaseEntity)filterable;
 			log.info("Attaching Capability Requirements: " + CommonUtils.getArrayString(capabilityRequirements) + " to BaseEntity: " + realm + ":" + be.getCode());
 			saveBaseEntity(be);
 			return true;
@@ -697,7 +698,8 @@ public class DatabaseUtils {
 
 		if(filterable instanceof QuestionQuestion) {
 			QuestionQuestion qq = (QuestionQuestion)filterable;
-			log.info("Attaching Capability Requirements: " + CommonUtils.getArrayString(capabilityRequirements) + " to QuestionQuestion: " + realm + ":" + qq.getSourceCode() + ":" + qq.getTargetCode());
+			log.info("Attaching Capability Requirements: " + CommonUtils.getArrayString(capabilityRequirements) + " to QuestionQuestion: " + realm + ":" + qq.getParentCode() + ":" + qq.getChildCode());
+			// TODO: Potentially update sub questions
 			saveQuestionQuestion(qq);
 			return true;
 		}
@@ -709,10 +711,10 @@ public class DatabaseUtils {
 			return true;
 		}
 
-		if(filterable instanceof EntityAttribute) {
-			EntityAttribute ea = (EntityAttribute)filterable;
+		if(filterable instanceof HEntityAttribute) {
+			HEntityAttribute ea = (HEntityAttribute)filterable;
 			log.info("Attaching Capability Requirements: " + CommonUtils.getArrayString(capabilityRequirements) + " to EntityAttribute: " + realm + ":" + ea.getBaseEntityCode() + ":" + ea.getAttributeCode());
-			BaseEntity be = ea.getBaseEntity();
+			HBaseEntity be = ea.getBaseEntity();
 			saveBaseEntity(be);
 			return true;
 
