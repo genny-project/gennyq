@@ -124,23 +124,6 @@ public class Dispatch {
 		if (buttonEvents != null) {
 			Ask eventsAsk = createButtonEvents(buttonEvents, sourceCode, targetCode);
 			msg.add(eventsAsk);
-
-			boolean hasEvents = msg.getEntities().stream()
-					.map(entity -> entity.getCode())
-					.filter(Objects::nonNull)
-					.anyMatch(code -> code.equals(PCM.PCM_EVENTS));
-
-			// TODO: fix this as it removes flexibility
-			if (!hasEvents) {
-				PCM eventsPCM = beUtils.getPCM(PCM.PCM_EVENTS);
-				// Now set the unique code of the PCM_EVENTS so that it is unique
-				msg.add(eventsPCM);
-				// Now update the PCM to point the last location to the PCM_EVENTS
-				EntityAttribute pcmLocationEA = beaUtils.getEntityAttribute(pcm.getRealm(), pcm.getCode(), Attribute.PRI_LOC + 2, true, true);
-				String pcmLocation = pcmLocationEA.getAsString();
-				if (pcmLocation == null)
-					pcm.setLocation(2, PCM.PCM_EVENTS);
-			}
 		}
 		// init if null to stop null pointers
 		if (processData.getAttributeCodes() == null) {
