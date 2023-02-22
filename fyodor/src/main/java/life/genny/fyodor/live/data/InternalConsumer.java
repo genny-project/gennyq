@@ -86,9 +86,9 @@ public class InternalConsumer {
 
 		Page page = fyodor.fetch26(searchEntity);
 
-		Attribute totalResults = attributeUtils.getAttribute(Attribute.PRI_TOTAL_RESULTS);
+		Attribute totalResults = attributeUtils.getAttribute(Attribute.PRI_TOTAL_RESULTS, true);
 		searchEntity.addAttribute(new EntityAttribute(searchEntity, totalResults, 1.0, String.valueOf(page.getTotal())));
-		Attribute index = attributeUtils.getAttribute(Attribute.PRI_INDEX);
+		Attribute index = attributeUtils.getAttribute(Attribute.PRI_INDEX, true);
 		searchEntity.addAttribute(new EntityAttribute(searchEntity, index, 1.0, String.valueOf(page.getPageNumber())));
 
 		// convert to sendable
