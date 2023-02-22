@@ -111,7 +111,7 @@ public class BaseEntityService extends KogitoService {
 			throw new NullParameterException("processId");
 		if (status == null)
 			throw new NullParameterException("status");
-		if (!definitionCode.startsWith("DEF_"))
+		if (!definitionCode.startsWith(Prefix.DEF_))
 			throw new DebugException("Invalid definitionCode: " + definitionCode);
 
 		// fetch the def baseentity
@@ -266,7 +266,7 @@ public class BaseEntityService extends KogitoService {
 		EntityAttribute defEAttribute = beaUtils.getEntityAttribute(be.getRealm(), baseEntityCode, attributeCode);
 		if (defEAttribute != null) {
 
-			if (attributeCode.startsWith("LNK_")) {
+			if (attributeCode.startsWith(Prefix.LNK_)) {
 				// Check if value is in JsonArray format , otherwise wrap it..
 				if (value != null) {
 					if (!value.startsWith("[")) {

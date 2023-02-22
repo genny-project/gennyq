@@ -98,14 +98,14 @@ public class SendAllMessages extends MessageSendingStrategy {
                 }
 
                 // Extract all the contexts from the core baseEntity LNKs
-                List<EntityAttribute> lnkEAs = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(coreBE.getRealm(), coreBE.getCode(), "LNK");
+                List<EntityAttribute> lnkEAs = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(coreBE.getRealm(), coreBE.getCode(), Prefix.LNK_);
                 StringBuilder contextMapStr = new StringBuilder();
 
                 lnkEAs.parallelStream().forEach((ea) -> {
                     String attributeCode = ea.getAttributeCode();
                     Attribute attribute = attributeUtils.getAttribute(attributeCode, true);
                     ea.setAttribute(attribute);
-                    String aliasCode = attributeCode.substring("LNK_".length());
+                    String aliasCode = attributeCode.substring(Prefix.LNK_.length());
                     String aliasValue = ea.getAsString();
                     aliasValue = aliasValue.replace("\"", "").replace("[", "").replace("]", "");
                     contextMapStr.append(aliasCode).append("=").append(aliasValue).append(",");

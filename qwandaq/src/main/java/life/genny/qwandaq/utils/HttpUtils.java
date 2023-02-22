@@ -103,7 +103,6 @@ public class HttpUtils {
 	// We should be moving to using these methods beause the genny token should
 	// always be well defined!
 	public static HttpResponse<String> post(String uri, String body, GennyToken token) {
-		log.debugf("Uri: %s\nBody: %s", uri, body);
 		return post(uri, body, token.getToken());
 	}
 

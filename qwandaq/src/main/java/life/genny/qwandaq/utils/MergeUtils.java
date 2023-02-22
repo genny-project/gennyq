@@ -14,7 +14,7 @@ import javax.json.JsonObject;
 import javax.json.JsonReader;
 
 import org.jboss.logging.Logger;
-
+import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 
 /**
@@ -138,7 +138,7 @@ public class MergeUtils {
 
 		if (value.getClass().equals(BaseEntity.class)) {
 
-			BaseEntity be = (BaseEntity)value;
+			BaseEntity be = (BaseEntity) value;
 			String attributeCode = entityArr[1];
 
 			if (attributeCode.equals("PRI_CODE")) {
@@ -146,7 +146,8 @@ public class MergeUtils {
 				return be.getCode();
 			}
 
-			Object attributeValue = be.getValue(attributeCode, null);
+			EntityAttribute ea = beaUtils.getEntityAttribute(be.getRealm(), be.getCode(), attributeCode, true);
+			Object attributeValue = ea.getValue();
 			log.debug("context: " + keyCode + ", attr: " + attributeCode + ", value: " + attributeValue);
 
 			Matcher matchFormat = null;

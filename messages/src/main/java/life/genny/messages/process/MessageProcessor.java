@@ -205,8 +205,8 @@ public class MessageProcessor {
     }
 
     private List<BaseEntity> getRecipientBeList(String[] recipientArr) {
-        Attribute emailAttr = attributeUtils.getAttribute("PRI_EMAIL");
-        Attribute mobileAttr = attributeUtils.getAttribute("PRI_MOBILE");
+        Attribute emailAttr = attributeUtils.getAttribute(Attribute.PRI_EMAIL, true);
+        Attribute mobileAttr = attributeUtils.getAttribute(Attribute.PRI_MOBILE, true);
         List<BaseEntity> recipientBeList = new ArrayList<>();
 
         for (String recipient : recipientArr) {

@@ -13,6 +13,7 @@ public class Prefix {
 	public static final String PRJ_ = "PRJ_";
 	public static final String EVT_ = "EVT_";
 	public static final String SEL_ = "SEL_";
+	public static final String TTY_ = "TTY_";
 
 	// baseentity
 	public static final String PER_ = "PER_";
@@ -45,9 +46,6 @@ public class Prefix {
 	public static final String COL_ = "COL_";
 	public static final String ACT_ = "ACT_";
 	public static final String SRT_ = "SRT_";
-
-	// type
-	public static final String TTY_ = "TTY_";
 
 	// Table
 	public static final String QUE_TABLE_ = "QUE_TABLE_";

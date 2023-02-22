@@ -341,7 +341,6 @@ public class QwandaUtils {
 					log.debug("   [-] Found Child Question:  " + questionQuestion.getParentCode() + ":"
 							+ questionQuestion.getChildCode());
 
-					CommonUtils.printCollection(capSet, log::debug, (cap) -> "$$$$$$$$$$$$$ " + cap.code + " = " + CommonUtils.getArrayString(cap.nodes));
 					if (!questionQuestion.requirementsMet(capSet, requirementsConfig)) { // For now all caps are needed. I'll make this more comprehensive later
 						return;
 					}
@@ -374,7 +373,6 @@ public class QwandaUtils {
 	}
 
 	/**
-	 * Recursively set the processId and target down through an ask tree.
 	 * Recursively set the processId and target down through an ask tree.
 	 *
 	 * @param ask       The ask to traverse
@@ -619,7 +617,7 @@ public class QwandaUtils {
 		String key = String.format("%s:PROCESS_DATA", processData.getProcessId());
 
 		cm.putObject(productCode, key, processData);
-		log.infof("ProcessData cached to %s", key);
+		log.tracef("ProcessData cached to %s", key);
 	}
 
 	/**
@@ -633,7 +631,7 @@ public class QwandaUtils {
 		String key = String.format("%s:PROCESS_DATA", processId);
 
 		cm.removeEntry(productCode, key);
-		log.infof("ProcessData removed from cache: %s", key);
+		log.tracef("ProcessData removed from cache: %s", key);
 	}
 
 	/**
@@ -943,7 +941,7 @@ public class QwandaUtils {
 
 		String prefix = beaUtils.getEntityAttribute(productCode, definitionCode, Attribute.PRI_PREFIX).getValueString();
 
-		for (life.genny.qwandaq.attribute.EntityAttribute entityAttribute : uniques) {
+		for (EntityAttribute entityAttribute : uniques) {
 
 			// fetch list of unique code combo
 			List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(definition,
