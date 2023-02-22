@@ -54,7 +54,6 @@ public class RoleBuilder {
 
         this.productCode = productCode;
         targetRole = roleMan.createRole(productCode, roleCode, roleName);
-
         // create role will return a base entity with no capability attributes so far
         // if it doesn't already exist. If any do exist I am willing to assume we are running on startup
         // again and shouldn't need to repersist the roles.
@@ -70,7 +69,7 @@ public class RoleBuilder {
      */
     private void initCDI() {
         this.controller = CommonUtils.getArcInstance(CapabilitiesController.class);
-        this.roleMan = controller.getRoleManager();
+        this.roleMan = CommonUtils.getArcInstance(RoleManager.class);//controller.getRoleManager();
         this.beUtils = CommonUtils.getArcInstance(BaseEntityUtils.class);
     }
 

@@ -219,8 +219,7 @@ public class CapabilitiesController {
      * </pre>
 	 */
 	public Map<String, Attribute> getCapabilityAttributeMap(String productCode, String[][] attribData) {
-		Map<String, Attribute> capabilityMap = new HashMap<String, Attribute>();
-
+		Map<String, Attribute> capabilityMap = new HashMap<>();
 		Arrays.asList(attribData).stream()
 				// Map data to capability. If capability name/tag is missing then use the code
 				// with standard capitalisation
@@ -229,7 +228,6 @@ public class CapabilitiesController {
 				// add each capability attribute to the capability map, stripping the CAP_
 				// prefix to be used with the constants
 				.forEach((Attribute attr) -> capabilityMap.put(attr.getCode(), attr));
-
 		return capabilityMap;
 	}
     
@@ -318,6 +316,12 @@ public class CapabilitiesController {
 
     public static String getModeString(Collection<CapabilityNode> capabilities) {
         return CommonUtils.getArrayString(capabilities, (capability) -> capability.toString());
+    }
+
+
+    // Unit testing helpers
+    void setEngine(CapEngine engine) {
+        this.engine = engine;
     }
 
 }

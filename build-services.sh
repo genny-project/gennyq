@@ -1,2 +1,2 @@
 #!/bin/zsh
-./build.sh bridge fyodor gadaq lauchy messsages shleemy
+./build.sh bridge fyodor gadaq lauchy messages shleemy

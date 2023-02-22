@@ -15,7 +15,6 @@ import life.genny.test.qwandaq.utils.BaseTestCase;
 
 import javax.inject.Inject;
 
-@QuarkusTest
 public class BaseTests extends BaseTestCase {
 
     @InjectMocks

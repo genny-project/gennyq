@@ -179,7 +179,6 @@ public class CapabilityBuilder {
      * @see CapabilityBuilder#roleBuilder
      */
     public RoleBuilder build() {
-        
         // TODO: add negate to rolebuilder
         if(roleBuilder == null)
             throw new UnsupportedOperationException("Cannot call build() on a CapabilityBuilder that was instantiated with new CapabilityBuilder(String code). Use .buildCap() instead");

@@ -47,7 +47,7 @@ import life.genny.qwandaq.utils.QwandaUtils;
  * @author Bryn Meachem
  */
 @ApplicationScoped
-class CapEngine {
+public class CapEngine {
 
 	static final String[] CAPABILITY_BEARING_ENTITY_PREFIXES = {Prefix.PER_, Prefix.ROL_};
 
@@ -206,15 +206,11 @@ class CapEngine {
 		
 		Attribute attribute = null;
 		try {
-			attribute = qwandaUtils.getAttribute(productCode, capabilityCode);
+			attribute = attributeUtils.getAttribute(productCode, capabilityCode, true);
 		} catch (ItemNotFoundException e) {
-			log.debug("Could not find Attribute: " + capabilityCode + ". Creating new Capability");
-		}
-
-		if (attribute == null) {
-			log.trace("Creating Capability : " + capabilityCode + " : " + name);
+			log.debug("Could not find Capability Attribute: " + capabilityCode + ". Creating new Capability");
 			attribute = new Attribute(capabilityCode, name, new DataType(String.class));
-			qwandaUtils.saveAttribute(productCode, attribute);
+			attributeUtils.saveAttribute(productCode, attribute);
 		}
 
 		return attribute;
@@ -306,5 +302,11 @@ class CapEngine {
 	private boolean shouldOverride() {
 		// allow keycloak admin and devcs to do anything
 		return (userToken.hasRole("service", "admin", "dev") || ("service".equals(userToken.getUsername())));
+	}
+
+
+	// Unit Testing Helpers
+	public void setAttributeUtils(AttributeUtils attributes) {
+		this.attributeUtils = attributes;
 	}
 }

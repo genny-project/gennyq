@@ -8,7 +8,6 @@ import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.attribute.AttributeKey;
 import life.genny.qwandaq.serialization.datatype.DataTypeKey;
-import life.genny.qwandaq.serialization.validation.ValidationKey;
 import life.genny.qwandaq.validation.Validation;
 import org.jboss.logging.Logger;
 
@@ -16,7 +15,6 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -112,12 +110,26 @@ public class AttributeUtils {
     }
 
     /**
-     * @param attribute
+     * Save an attribute to the cache using the {@link CacheManager}
+     * @param attribute {@link Attribute} to save
      */
     public void saveAttribute(Attribute attribute) {
         AttributeKey key = new AttributeKey(attribute.getRealm(), attribute.getCode());
         cm.saveEntity(GennyConstants.CACHE_NAME_ATTRIBUTE, key, attribute);
-    }/**
+
+    }
+
+    /**
+     * Save an attribute with a different productCode to the cache using the {@link CacheManager}
+     * @param productCode product to save to
+     * @param attribute {@link Attribute} to save
+     */
+    public void saveAttribute(String productCode, Attribute attribute) {
+        attribute.setRealm(productCode);
+        saveAttribute(attribute);
+    }
+    
+    /**
      * Fetch all attributes for a product.
      *
      * @return Collection of all attributes in the system across all products
