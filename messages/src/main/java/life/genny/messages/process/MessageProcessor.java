@@ -91,14 +91,6 @@ public class MessageProcessor {
 
         BaseEntity projectBe = beUtils.getBaseEntity("PRJ_" + realm.toUpperCase());
 
-        // try {
-        //     log.warn("*** HORRIBLE ACC HACK TO DELAY FOR 10 SEC TO ALLOW CACHE ITEM TO BE COMPLETE");
-        //     Thread.sleep(10000);
-        // } catch (InterruptedException e1) {
-        //     e1.printStackTrace();
-        // } /* TODO: horrible hack by ACC to give the be time to save - should use Shleemy , hopefully updated cache will help */
-
-
         List<QBaseMSGMessageType> messageTypeList = Arrays.asList(message.getMessageTypeArr());
 
         BaseEntity templateBe = null;
@@ -307,7 +299,7 @@ public class MessageProcessor {
                     log.info("Fetching contextCodeArray :: " + Arrays.toString(codeArr));
                     // Convert to BEs
                     BaseEntity[] beArray = Arrays.stream(codeArr)
-                            .map(itemCode -> beUtils.getBaseEntity(itemCode))
+                            .map(itemCode -> beUtils.getBaseEntity(itemCode, true))
                             .toArray(BaseEntity[]::new);
 
                     if (beArray.length == 1) {
