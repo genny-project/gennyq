@@ -381,7 +381,7 @@ public class FilterService extends KogitoService {
         for(EntityAttribute ea : pcm.getBaseEntityAttributes()) {
             String attributeCode = ea.getAttributeCode();
             if(attributeCode.equalsIgnoreCase(loc)) {
-                Attribute attribute = qwandaUtils.getAttribute(attributeCode);
+                Attribute attribute = attributeUtils.getAttribute(attributeCode, true);
                 ea.setAttribute(attribute);
                 ea.setValue(queValCode);
                 ea.setValueString(queValCode);

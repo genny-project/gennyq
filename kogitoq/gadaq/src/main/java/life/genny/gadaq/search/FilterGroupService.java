@@ -298,7 +298,7 @@ public class FilterGroupService {
                 baseEntity = beUtils.create(defBE, nameOrCode, baseCode);
             }
 
-            Attribute attrFound = qwandaUtils.getAttribute(user.getProductCode(),attCode);
+            Attribute attrFound = attributeUtils.getAttribute(user.getProductCode(), attCode, true);
 
             // array of parameters and update main base entity
             List<String> listUUID = getListUUID(prefix + "_",params.entrySet().size());

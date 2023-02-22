@@ -693,7 +693,7 @@ public class FyodorUltra {
 		}
 
 		// create ea
-		Attribute attribute = attributeUtils.getAttribute(entity.getRealm(), attributeCode);
+		Attribute attribute = attributeUtils.getAttribute(entity.getRealm(), attributeCode, true);
 		EntityAttribute ea = new EntityAttribute(entity, attribute, 1.0, value);
 
 		return ea;

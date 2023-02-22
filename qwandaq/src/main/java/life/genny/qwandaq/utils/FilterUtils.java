@@ -49,6 +49,9 @@ public class FilterUtils {
     EntityAttributeUtils beaUtils;
 
     @Inject
+    AttributeUtils attributeUtils;
+
+    @Inject
     SearchUtils searchUtils;
 
     @Inject
@@ -82,9 +85,10 @@ public class FilterUtils {
         Ask ask = new Ask();
         ask.setName(FilterConst.FILTERS);
 
-        Attribute attribute = new Attribute(Attribute.QQQ_QUESTION_GROUP,Attribute.QQQ_QUESTION_GROUP,new DataType());
+        Attribute attribute = new Attribute(Attribute.QQQ_QUESTION_GROUP,Attribute.QQQ_QUESTION_GROUP,new DataType(String.class));
         Question question = new Question(questionCode,questionCode,attribute);
         question.setAttributeCode(Attribute.QQQ_QUESTION_GROUP);
+		question.setAttribute(attribute);
         ask.setQuestion(question);
 
         Ask addFilterAsk = getAddFilterGroupBySearchBE(questionCode);
@@ -153,6 +157,8 @@ public class FilterUtils {
                     String attrCode = e.getAttributeCode().replaceFirst(Prefix.FLC_, "");
                     ea.setAttributeName(e.getAttributeName());
                     ea.setAttributeCode(attrCode);
+					Attribute attr = attributeUtils.getAttribute(attrCode, true, true);
+					ea.setAttribute(attr);
 
                     String baseCode = FilterConst.FILTER_SEL + Prefix.FLC_ + attrCode;
                     ea.setBaseEntityCode(baseCode);
