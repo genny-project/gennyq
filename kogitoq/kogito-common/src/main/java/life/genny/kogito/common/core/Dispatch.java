@@ -361,7 +361,7 @@ public class Dispatch {
 	public Ask createButtonEvents(String buttonEvents, String sourceCode, String targetCode) {
 
 		// fetch attributes and create group
-		Attribute groupAttribute = qwandaUtils.getAttribute(Attribute.QQQ_QUESTION_GROUP);
+		Attribute groupAttribute = attributeUtils.getAttribute(Attribute.QQQ_QUESTION_GROUP, true);
 		Question groupQuestion = new Question(Question.QUE_EVENTS, "", groupAttribute);
 
 		// init ask
@@ -551,7 +551,7 @@ public class Dispatch {
 		Map<String, Object> contexts = new HashMap<>();
 		contexts.put("USER_CODE", beUtils.getUserBaseEntity());
 
-		Attribute priName = qwandaUtils.getAttribute(Attribute.PRI_NAME);
+		Attribute priName = attributeUtils.getAttribute(Attribute.PRI_NAME, true);
 
 		baseEntities.stream()
 				.filter(b -> !b.getCode().startsWith(Prefix.QBE_))

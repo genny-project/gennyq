@@ -218,7 +218,7 @@ public class BaseEntityService extends KogitoService {
 
 		// iterate our stored process updates and create an answer
 		for (EntityAttribute ea : beaUtils.getAllEntityAttributesForBaseEntity(processEntity)) {
-			Attribute attribute = attributeUtils.getAttribute(ea.getAttributeCode());
+			Attribute attribute = attributeUtils.getAttribute(ea.getAttributeCode(), true);
 			ea.setAttribute(attribute);
 			ea.setBaseEntityCode(entity.getCode());
 			ea.setBaseEntityId(entity.getId());

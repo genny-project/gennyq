@@ -283,7 +283,7 @@ public class QwandaUtils {
 		Question question;
 		try {
 			question = questionUtils.getQuestionFromQuestionCode(productCode, code);
-			Attribute attribute = attributeUtils.getAttribute(productCode, question.getAttributeCode());
+			Attribute attribute = attributeUtils.getAttribute(productCode, question.getAttributeCode(), true);
 			question.setAttribute(attribute);
 		} catch (NoResultException e) {
 			throw new ItemNotFoundException(code, e);
