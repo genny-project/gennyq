@@ -152,18 +152,6 @@ public class Service {
 	}
 
 	/**
-	 * Initialize the Attribute cache for each allowed productCode.
-	 */
-	public void initAttributes() {
-
-		// null check the allowed codes
-		String[] allowedProducts = serviceToken.getAllowedProducts();
-		if (allowedProducts == null) {
-			log.error("You must set up the PRODUCT_CODES environment variable!");
-		}
-	}
-
-	/**
 	 * log the service confiduration details.
 	 */
 	public void showConfiguration() {
