@@ -260,8 +260,7 @@ public class CacheManager {
 		Query<life.genny.qwandaq.serialization.baseentity.BaseEntity> query = queryFactory
 				.create("select max(id) from life.genny.qwandaq.persistence.baseentity.BaseEntity where realm = '" + productCode + "'");
 		QueryResult<life.genny.qwandaq.serialization.baseentity.BaseEntity> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
-		life.genny.qwandaq.serialization.baseentity.BaseEntity max = queryResult.list().get(0);
-		return max.getId();
+		return queryResult.list().get(0).getId();
 	}
 
     /**
