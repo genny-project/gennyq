@@ -71,7 +71,7 @@ public class SearchUtils {
 	public List<BaseEntity> searchBaseEntitys(SearchEntity searchEntity) {
 
 		// build uri, serialize payload and fetch data from fyodor
-		String uri = GennySettings.fyodorServiceUrl() + "/api/search/fetch";
+		String uri = GennySettings.fyodorServiceUrl() + "/api/search";
 		String json = jsonb.toJson(searchEntity);
 		HttpResponse<String> response = HttpUtils.post(uri, json, userToken);
 
@@ -96,43 +96,6 @@ public class SearchUtils {
 			e.printStackTrace();
 			return null;
 		}
-	}
-
-	/**
-	 * Call the Fyodor API to fetch a list of codes
-	 * associated with result entities.
-	 *
-	 * @param searchEntity A {@link SearchEntity} object used to determine the
-	 *                     results
-	 * @return A list of code strings
-	 */
-	public List<String> searchBaseEntityCodes(SearchEntity searchEntity) {
-
-		// build uri, serialize payload and fetch data from fyodor
-		String uri = GennySettings.fyodorServiceUrl() + "/api/search";
-		String json = jsonb.toJson(searchEntity);
-		HttpResponse<String> response = HttpUtils.post(uri, json, userToken);
-
-		if (response == null) {
-			log.error("Null response from " + uri);
-			return null;
-		}
-
-		Integer status = response.statusCode();
-
-		if (Response.Status.Family.familyOf(status) != Response.Status.Family.SUCCESSFUL) {
-			log.error("Bad response status " + status + " from " + uri);
-		}
-
-		try {
-			// deserialise and grab entities
-			Page results = jsonb.fromJson(response.body(), Page.class);
-			return results.getCodes();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return null;
 	}
 
 	/**

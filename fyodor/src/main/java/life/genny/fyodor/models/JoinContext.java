@@ -12,9 +12,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * TolstoysCauldron - A cauldron of query ingredients.
+ * JoinContext - The joins for a query, all stored in one place.
  */
-public class TolstoysCauldron {
+public class JoinContext {
 
 	private SearchEntity searchEntity;
 
@@ -26,10 +26,10 @@ public class TolstoysCauldron {
 	private List<Predicate> predicates = new ArrayList<>();
 	private List<Order> orders = new ArrayList<>();
 
-	public TolstoysCauldron() {
+	public JoinContext() {
 	}
 
-	public TolstoysCauldron(SearchEntity searchEntity) {
+	public JoinContext(SearchEntity searchEntity) {
 		this.searchEntity = searchEntity;
 	}
 

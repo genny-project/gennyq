@@ -16,7 +16,6 @@ import org.jboss.logging.Logger;
 import io.quarkus.runtime.StartupEvent;
 import io.smallrye.reactive.messaging.annotations.Blocking;
 import life.genny.fyodor.utils.FyodorUltra;
-import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.search.SearchEntity;
@@ -84,7 +83,7 @@ public class InternalConsumer {
 
 		log.info("Handling search " + searchEntity.getCode());
 
-		Page page = fyodor.fetch26(searchEntity);
+		Page page = fyodor.fetchWithAttributes(searchEntity);
 
 		Attribute totalResults = attributeUtils.getAttribute(Attribute.PRI_TOTAL_RESULTS, true);
 		searchEntity.addAttribute(new EntityAttribute(searchEntity, totalResults, 1.0, String.valueOf(page.getTotal())));
