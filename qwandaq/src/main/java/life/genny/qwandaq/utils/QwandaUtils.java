@@ -681,6 +681,12 @@ public class QwandaUtils {
 			} else {
 				attribute = ea.getAttribute();
 			}
+
+			if(attribute.getDataType() == null) {
+				log.error("[!] Detected Null DataType for attribute: " + attribute.getCode());
+				continue;
+			}
+
 			String className = attribute.getDataType().getClassName();
 			Object value = ea.getValue();
 
