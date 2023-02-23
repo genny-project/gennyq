@@ -5,6 +5,7 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import static life.genny.qwandaq.entity.BaseEntity.PRI_NAME;
 import life.genny.qwandaq.message.QBaseMSGMessageType;
+import life.genny.qwandaq.message.QMessageGennyMSG;
 import life.genny.qwandaq.models.UserToken;
 
 import life.genny.qwandaq.utils.BaseEntityUtils;

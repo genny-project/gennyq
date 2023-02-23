@@ -18,6 +18,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -26,6 +27,7 @@ import java.util.Map;
 import java.util.UUID;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.stream.Collectors;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
@@ -545,6 +547,59 @@ public class KeycloakUtils {
         HttpResponse<String> response = HttpUtils.put(uri, json, serviceToken);
 
         return response.statusCode();
+    }
+
+    /**
+     * Update a keycloak user password.
+     * @param userToken
+     * @param user
+     * @param password
+     * @param askUserToResetPassword
+     * @return
+     */
+    public static int updateUserPassword(GennyToken userToken, BaseEntity user, String password, Boolean askUserToResetPassword) {
+        log.debug("Setting password: "+ password+ "for: "+ user.getCode());
+        try {
+            String keycloakUrl = GennySettings.keycloakUrl();
+            String realm = userToken.getKeycloakRealm();
+            String uuid = user.getValue("PRI_UUID", null);
+            uuid = uuid.toLowerCase();
+
+            String json = "{\"type\": \"password\", " + "\"temporary\": \"" + (askUserToResetPassword ? "true" : "false") + "\",\"value\": \"" + password + "\"" + "}";
+
+            String requestURL = keycloakUrl + "/auth/admin/realms/" + realm + "/users/" + uuid + "/reset-password";
+
+            HttpResponse<String> response = HttpUtils.put(requestURL, json, userToken);
+
+            return response.statusCode();
+        }catch (Exception ex){
+            log.error("Exception: "+ ex);
+            return Response.Status.INTERNAL_SERVER_ERROR.getStatusCode();
+        }
+    }
+
+    /**
+     * Update a keycloak user password.
+     * @param userToken
+     * @param user
+     * @param askUserToResetPassword
+     * @return
+     */
+    public static String updateUserPassword(GennyToken userToken, BaseEntity user, Boolean askUserToResetPassword){
+        /* Generate a random 15 char password */
+        String newPassword = RandomStringUtils.generateRandomString(15);
+        updateUserPassword(userToken,user, newPassword, askUserToResetPassword);
+        return newPassword;
+    }
+
+    /**
+     * Update a keycloak user password.
+     * @param userToken
+     * @param user
+     * @return
+     */
+    public static String updateUserPassword(GennyToken userToken, BaseEntity user){
+        return updateUserPassword(userToken,user, true);
     }
 
 }
