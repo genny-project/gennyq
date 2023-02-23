@@ -74,8 +74,8 @@ public class EntityAttributeMessageMarshaller implements MessageMarshaller<Entit
 			bea.setValueTime(LocalTime.ofInstant(Instant.ofEpochSecond(valueTimeLong / 1000), ZoneOffset.UTC));
 		}
 		bea.setWeight(reader.readDouble("weight"));
-		bea.setAttributeId(reader.readLong("attribute_id"));
-		bea.setBaseEntityId(reader.readLong("baseentity_id"));
+		bea.setAttributeId(reader.readLong("ATTRIBUTE_ID"));
+		bea.setBaseEntityId(reader.readLong("BASEENTITY_ID"));
 		bea.setConfirmationFlag(reader.readBoolean("confirmationFlag"));
 		bea.setCapabilityRequirements(CapabilityConverter.convertToEA(reader.readString("capreqs")));
 		return bea;
@@ -118,8 +118,8 @@ public class EntityAttributeMessageMarshaller implements MessageMarshaller<Entit
 		writer.writeString("money", moneyStr);
 		writer.writeString("valueString", bea.getValueString());
 		writer.writeDouble("weight", bea.getWeight());
-		writer.writeLong("attribute_id", bea.getAttributeId());
-		writer.writeLong("baseentity_id", bea.getBaseEntityId());
+		writer.writeLong("ATTRIBUTE_ID", bea.getAttributeId());
+		writer.writeLong("BASEENTITY_ID", bea.getBaseEntityId());
 		writer.writeBoolean("confirmationFlag", bea.getConfirmationFlag());
 		writer.writeString("capreqs", CapabilityConverter.convertToDBColumn(bea.getCapabilityRequirements()));
 	}
