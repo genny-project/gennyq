@@ -74,8 +74,8 @@ public class EntityAttributeMessageMarshaller implements MessageMarshaller<Entit
 			bea.setValueTime(LocalTime.ofInstant(Instant.ofEpochSecond(valueTimeLong / 1000), ZoneOffset.UTC));
 		}
 		bea.setWeight(reader.readDouble("weight"));
-		bea.setAttributeId(reader.readLong("ATTRIBUTE_ID"));
-		bea.setBaseEntityId(reader.readLong("BASEENTITY_ID"));
+		bea.setAttributeId(reader.readLong("attribute_id"));
+		bea.setBaseEntityId(reader.readLong("baseentity_id"));
 		bea.setConfirmationFlag(reader.readBoolean("confirmationFlag"));
 		bea.setCapabilityRequirements(CapabilityConverter.convertToEA(reader.readString("capreqs")));
 		return bea;
