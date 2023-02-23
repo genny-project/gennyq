@@ -118,8 +118,8 @@ public class EntityAttributeMessageMarshaller implements MessageMarshaller<Entit
 		writer.writeString("money", moneyStr);
 		writer.writeString("valueString", bea.getValueString());
 		writer.writeDouble("weight", bea.getWeight());
-		writer.writeLong("ATTRIBUTE_ID", bea.getAttributeId());
-		writer.writeLong("BASEENTITY_ID", bea.getBaseEntityId());
+		writer.writeLong("attribute_id", bea.getAttributeId());
+		writer.writeLong("baseentity_id", bea.getBaseEntityId());
 		writer.writeBoolean("confirmationFlag", bea.getConfirmationFlag());
 		writer.writeString("capreqs", CapabilityConverter.convertToDBColumn(bea.getCapabilityRequirements()));
 	}
