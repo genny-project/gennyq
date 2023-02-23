@@ -258,10 +258,11 @@ public class CacheManager {
 	 */
 	public Long getMaxBaseEntityId() {
 		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_BASEENTITY));
-		Query<JsonObject> query = queryFactory
+		Query<Object> query = queryFactory
 				.create("select max(id) from life.genny.qwandaq.persistence.baseentity.BaseEntity");
-		QueryResult<JsonObject> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
-		return queryResult.list().get(0).getJsonNumber("id").longValue();
+		QueryResult<Object> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
+
+		return (Long) queryResult.list().get(0);
 	}
 
     /**
