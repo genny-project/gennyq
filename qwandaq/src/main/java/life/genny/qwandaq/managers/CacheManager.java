@@ -34,6 +34,7 @@ import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import java.lang.reflect.Type;
@@ -251,16 +252,16 @@ public class CacheManager {
 	}
 
 	/**
-	 * Get the max id.
+	 * Get the max entity  id.
 	 *
 	 * @return the max id
 	 */
-	public Long getMaxBaseEntityId(String productCode) {
+	public Long getMaxBaseEntityId() {
 		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_BASEENTITY));
-		Query<Long> query = queryFactory
+		Query<JsonObject> query = queryFactory
 				.create("select max(id) from life.genny.qwandaq.persistence.baseentity.BaseEntity");
-		QueryResult<Long> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
-		return queryResult.list().get(0);
+		QueryResult<JsonObject> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
+		return queryResult.list().get(0).getJsonNumber("id").longValue();
 	}
 
     /**
