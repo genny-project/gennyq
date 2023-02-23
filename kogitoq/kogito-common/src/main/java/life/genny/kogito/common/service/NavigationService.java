@@ -133,7 +133,7 @@ public class NavigationService extends KogitoService {
 		// fetch user's linked summary
 		String userCode = userToken.getUserCode();
 		String productCode = userToken.getProductCode();
-		EntityAttribute summary = beaUtils.getEntityAttribute(productCode, userCode, Attribute.LNK_SUMMARY, true);
+		EntityAttribute summary = beaUtils.getEntityAttribute(productCode, userCode, Attribute.LNK_SUMMARY, true, true);
 		if (summary == null) {
 			throw new ItemNotFoundException(productCode, userCode, Attribute.LNK_SUMMARY);
 		}
