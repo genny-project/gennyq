@@ -4,11 +4,11 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
+import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.attribute.AttributeKey;
 import life.genny.qwandaq.serialization.datatype.DataTypeKey;
-import life.genny.qwandaq.serialization.validation.ValidationKey;
 import life.genny.qwandaq.validation.Validation;
 import org.jboss.logging.Logger;
 
@@ -16,7 +16,6 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-import java.util.Collection;
 import java.util.List;
 
 /**
@@ -98,9 +97,18 @@ public class AttributeUtils {
     }
 
     public DataType getDataType(Attribute attribute, boolean bundleValidationList) {
+        if(attribute == null) {
+            throw new NullParameterException("attribute");
+        }
+
         DataTypeKey key = new DataTypeKey(attribute.getRealm(), attribute.getDttCode());
         DataType dataType = (DataType) cm.getPersistableEntity(GennyConstants.CACHE_NAME_DATATYPE, key);
-        if (bundleValidationList && dataType != null) {
+
+        if(dataType == null) {
+            throw new ItemNotFoundException("DataType attached to Attribute: " + attribute.getCode());
+        }
+
+        if (bundleValidationList) {
             List<Validation> validationList = getValidationList(dataType);
             dataType.setValidationList(validationList);
         }
