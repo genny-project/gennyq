@@ -132,14 +132,15 @@ public class NavigationService extends KogitoService {
 	public void sendSummary() {
 		// fetch user's linked summary
 		String userCode = userToken.getUserCode();
-		EntityAttribute summary = beaUtils.getEntityAttribute(user, Attribute.LNK_SUMMARY, true);
+		String productCode = userToken.getProductCode();
+		EntityAttribute summary = beaUtils.getEntityAttribute(productCode, userCode, Attribute.LNK_SUMMARY, true);
 		if (summary == null) {
 			throw new ItemNotFoundException(productCode, userCode, Attribute.LNK_SUMMARY);
 		}
 		String summaryCode = CommonUtils.cleanUpAttributeValue(summary.getValue());
 		log.debug("Found summary PCM: " + summaryCode);
 
-		log.infof("Dispatching Summary %s for user %s", user.getCode(), pcm.getCode());
+		log.infof("Dispatching Summary %s for user %s", userCode, summaryCode);
 		JsonObject payload = Json.createObjectBuilder()
 				.add("sourceCode", userCode)
 				.add("targetCode", userCode)
