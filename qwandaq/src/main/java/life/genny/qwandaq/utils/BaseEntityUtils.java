@@ -200,6 +200,10 @@ public class BaseEntityUtils {
 	 */
 	public BaseEntity updateBaseEntity(BaseEntity baseEntity, boolean updateBaseEntityAttributes) {
 		BaseEntityKey key = new BaseEntityKey(baseEntity.getRealm(), baseEntity.getCode());
+		if (baseEntity.getId() == null) {
+			Long id = cm.getMaxBaseEntityId(baseEntity.getRealm());
+			baseEntity.setId(id);
+		}
 		boolean savedSuccessfully = cm.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, baseEntity);
 		if (updateBaseEntityAttributes) {
 			baseEntity.getBaseEntityAttributes().forEach(bea -> {
