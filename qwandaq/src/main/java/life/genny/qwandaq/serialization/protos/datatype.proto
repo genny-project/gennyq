@@ -1,0 +1,10 @@
+package life.genny.qwandaq.serialization.datatype;
+
+message DataType {
+  optional string realm = 1;
+  optional string dttcode = 2;
+  optional string classname = 3;
+  optional string component = 4;
+  optional string inputmask = 5;
+  optional string validation_codes = 6;
+}

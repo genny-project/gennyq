@@ -1,7 +1,7 @@
 package life.genny.bridge.exception;
 
 public class ClientIdException extends BridgeException {
-
+    
     public ClientIdException(String message) {
         this(BridgeException.MISSING_PRODUCT_CODE, message);
     }

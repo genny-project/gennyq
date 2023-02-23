@@ -16,13 +16,12 @@
 
 package life.genny.qwandaq;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import javax.json.bind.annotation.JsonbProperty;
-
 import org.apache.commons.lang3.builder.CompareToBuilder;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+
+import javax.xml.bind.annotation.XmlTransient;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * Ask represents the presentation of a Question to a source entity. A Question
@@ -54,6 +53,9 @@ public class Ask extends CoreEntity {
 
 	private static final long serialVersionUID = 1L;
 
+	@XmlTransient
+	/*@ManyToOne(fetch = FetchType.EAGER)
+	@JoinColumn(name = "question_id", nullable = false)*/
 	private Question question;
 	private String questionCode;
 	private String attributeCode;
@@ -70,7 +72,7 @@ public class Ask extends CoreEntity {
 
 	private Double weight = 0.0;
 
-	private List<Ask> childAsks;
+	private LinkedHashSet<Ask> childAsks;
 
 	/**
 	 * Default Constructor.
@@ -122,10 +124,31 @@ public class Ask extends CoreEntity {
 	public int compareTo(Object o) {
 		Ask myClass = (Ask) o;
 		return new CompareToBuilder()
+				.append(question.getRealm(), myClass.getRealm())
 				.append(question.getCode(), myClass.getQuestion().getCode())
 				.append(sourceCode, myClass.getSourceCode())
 				.append(targetCode, myClass.getTargetCode())
+				.append(weight, myClass.getWeight())
 				.toComparison();
+	}
+
+	@Override
+	public int hashCode() {
+		return (question.getRealm() + questionCode + sourceCode + targetCode).hashCode();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if(obj == null || !(obj instanceof Ask)) {
+			return false;
+		}
+		Ask otherAsk = (Ask) obj;
+		EqualsBuilder equalsBuilder = new EqualsBuilder();
+		equalsBuilder.append(this.question.getRealm(), otherAsk.question.getRealm());
+		equalsBuilder.append(this.questionCode, otherAsk.questionCode);
+		equalsBuilder.append(this.sourceCode, otherAsk.sourceCode);
+		equalsBuilder.append(this.targetCode, otherAsk.targetCode);
+		return equalsBuilder.isEquals();
 	}
 
 	/**
@@ -142,7 +165,7 @@ public class Ask extends CoreEntity {
 	 */
 	public void add(Ask child) {
 		if (this.childAsks == null)
-			this.childAsks = new ArrayList<Ask>();
+			this.childAsks = new LinkedHashSet<Ask>();
 		this.childAsks.add(child);
 	}
 
@@ -157,7 +180,7 @@ public class Ask extends CoreEntity {
 	public void setQuestion(Question question) {
 		this.question = question;
 		this.questionCode = question.getCode();
-		this.attributeCode = question.getAttribute().getCode();
+		this.attributeCode = question.getAttributeCode();
 	}
 
 	public String getQuestionCode() {
@@ -248,16 +271,11 @@ public class Ask extends CoreEntity {
 		this.weight = weight;
 	}
 
-	public List<Ask> getChildAsks() {
+	public Set<Ask> getChildAsks() {
 		return childAsks;
 	}
 
-	public void setChildAsks(Ask[] children) {
-		this.setChildAsks(Arrays.asList(children));
-	}
-
-	public void setChildAsks(List<Ask> children) {
+	public void setChildAsks(LinkedHashSet<Ask> children) {
 		this.childAsks = children;
 	}
-
 }

@@ -1,0 +1,6 @@
+package life.genny.qwandaq.serialization.validation;
+
+message ValidationKey {
+  optional string realm = 1;
+  optional string code = 2;
+}

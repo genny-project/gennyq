@@ -60,7 +60,7 @@ import javax.validation.constraints.Size;
 public abstract class CodedEntity extends CoreEntity {
 
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = 1L;
 
@@ -95,9 +95,7 @@ public abstract class CodedEntity extends CoreEntity {
 	 * Constructor.
 	 */
 	protected CodedEntity() {
-		// dummy
-		// super();
-		// setIndex(0);
+		super();
 	}
 
 	/**
@@ -171,9 +169,8 @@ public abstract class CodedEntity extends CoreEntity {
 			EqualsBuilder eb = new EqualsBuilder();
 			eb.append(code, that.getCode());
 			return eb.isEquals();
-		} else {
-			return false;
 		}
+		return false;
 	}
 
 	/**

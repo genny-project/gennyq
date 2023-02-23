@@ -5,6 +5,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -13,7 +14,7 @@ public class QDataBaseEntityMessage extends QDataMessage implements Comparable<Q
 
 	private static final long serialVersionUID = 1L;
 
-	private List<BaseEntity> items;
+	private Collection<BaseEntity> items;
 
 	private static final String DATATYPE_BASEENTITY = BaseEntity.class.getSimpleName();
 	private String parentCode;
@@ -64,7 +65,7 @@ public class QDataBaseEntityMessage extends QDataMessage implements Comparable<Q
 		super(DATATYPE_BASEENTITY);
 		items = new ArrayList<>();
 		items.add(item);
-		setItems(items);
+		setItems((List<BaseEntity>) items);
 		setAliasCode(alias);
 		setTotal(1L);
 	}
@@ -174,7 +175,7 @@ public class QDataBaseEntityMessage extends QDataMessage implements Comparable<Q
 	/**
 	 * @return List&lt;BaseEntity&gt;
 	 */
-	public List<BaseEntity> getItems() {
+	public Collection<BaseEntity> getItems() {
 		return items;
 	}
 
@@ -189,7 +190,7 @@ public class QDataBaseEntityMessage extends QDataMessage implements Comparable<Q
 	/**
 	 * @param items the list of entities to set
 	 */
-	public void setItems(final List<BaseEntity> items) {
+	public void setItems(final Collection<BaseEntity> items) {
         this.items = items;
         setReturnCount(Long.valueOf(items.size()));
 	}

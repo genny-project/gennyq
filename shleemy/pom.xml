@@ -19,7 +19,6 @@
 	<properties>
 		<commons-lang3.version>3.10</commons-lang3.version>
 		<docker-plugin.version>0.33.0</docker-plugin.version>
-		<jandex.version>1.0.7</jandex.version>
 		<keycloak.version>15.0.2</keycloak.version>
 		<keycloak.test.port>8680</keycloak.test.port>
 		<mysql.test.port>3333</mysql.test.port>
@@ -106,7 +105,7 @@
 			<plugin>
 				<groupId>org.jboss.jandex</groupId>
 				<artifactId>jandex-maven-plugin</artifactId>
-				<version>${jandex.version}</version>
+				<version>${jandex-maven.version}</version>
 				<executions>
 					<execution>
 						<id>make-index</id>

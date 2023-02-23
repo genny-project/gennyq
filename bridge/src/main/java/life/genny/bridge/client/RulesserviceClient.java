@@ -11,7 +11,7 @@ import javax.ws.rs.Path;
  * RulesserviceClient --- Make call to wildfly-rulesservice endpoints
  * This class is mostly used to send information to rulesservice which
  * has to be synchronous so kafka or any asyn implementation cannot be
- * used.
+ * used. 
  *
  * @author    hello@gada.io
  */

@@ -3,6 +3,7 @@ package life.genny.qwandaq.utils;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
+import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
@@ -23,12 +24,13 @@ import life.genny.qwandaq.serialization.common.CoreEntityKey;
 import java.util.Objects;
 
 /*
- * A static utility class used for standard read and write 
+ * A static utility class used for standard read and write
  * operations to the cache.
- * 
+ *
  * @author Jasper Robison
  */
 @RegisterForReflection
+@ApplicationScoped
 public class CacheUtils {
 
 	static Jsonb jsonb = JsonbBuilder.create();
@@ -38,7 +40,7 @@ public class CacheUtils {
 	@Inject
 	private static final Logger log = Logger.getLogger(CacheUtils.class);
 
-	/** 
+	/**
 	 * @param gennyCache the gennyCache to set
 	 */
 	public static void init(GennyCache gennyCache) {
@@ -46,9 +48,9 @@ public class CacheUtils {
 	}
 
 	/**
-	* Clear a remote realm cache
-	*
-	* @param realm The realm of the cache to clear
+	 * Clear a remote realm cache
+	 *
+	 * @param realm The realm of the cache to clear
 	 */
 	public static void clear(String realm) {
 		cache.getRemoteCache(realm).clear();
@@ -72,7 +74,7 @@ public class CacheUtils {
 	 * @param realm The realm cache to use.
 	 * @param key   The key to save under.
 	 * @param value The value to save.
-	 * 
+	 *
 	 * @return returns the newly written value
 	 */
 	public static String writeCache(String realm, String key, String value) {
@@ -84,10 +86,10 @@ public class CacheUtils {
 	}
 
 	/**
-	* Remove an entry from a realm cache.
-	*
-	* @param realm The realm cache to remove from.
-	* @param key The key of the entry to remove.
+	 * Remove an entry from a realm cache.
+	 *
+	 * @param realm The realm cache to remove from.
+	 * @param key The key of the entry to remove.
 	 */
 	public static void removeEntry(String realm, String key) {
 		cache.getRemoteCache(realm).remove(key);
@@ -147,17 +149,6 @@ public class CacheUtils {
 	}
 
 	/**
-	* Get a CoreEntity object from the cache using a CoreEntityKey.
-	* 
-	* @param cacheName The cache to read from
-	* @param key The key they item is saved against
-	* @return The CoreEntity returned
-	 */
-	public static CoreEntity getEntity(String cacheName, CoreEntityKey key) {
-		return cache.getEntityFromCache(cacheName, key);
-	}
-
-	/**
 	 * Get a CoreEntity object from the cache using a CoreEntityKey.
 	 *
 	 * @param cacheName The cache to read from
@@ -165,7 +156,7 @@ public class CacheUtils {
 	 * @return The CoreEntity returned
 	 */
 	public static CoreEntitySerializable getSerializableEntity(String cacheName, CoreEntityKey key) {
-		return cache.getSerializableEntityFromCache(cacheName, key);
+		return cache.getEntityFromCache(cacheName, key);
 	}
 
 	/**
@@ -177,18 +168,6 @@ public class CacheUtils {
 	 */
 	public static CoreEntityPersistable getPersistableEntity(String cacheName, CoreEntityKey key) {
 		return cache.getPersistableEntityFromCache(cacheName, key);
-	}
-
-	/**
-	* Save a {@link CoreEntity} to the cache using a CoreEntityKey.
-	*
-	* @param cacheName The cache to save to
-	* @param key The key to save against
-	* @param entity The CoreEntity to save
-	* @return The CoreEntity being saved
-	 */
-	public static CoreEntity saveEntity(String cacheName, CoreEntityKey key, CoreEntity entity) {
-		return cache.putEntityIntoCache(cacheName, key, entity);
 	}
 
 	/**
@@ -209,18 +188,18 @@ public class CacheUtils {
 	 * @param prefix - Prefix of the Core Entity code to use
 	 * @param callback - Callback to construct a {@link CoreEntityKey} for cache retrieval
 	 * @return a list of core entities with matching prefixes
-	 * 
+	 *
 	 * See Also: {@link CoreEntityKey}, {@link FICacheKeyCallback}
 	 */
 	static List<CoreEntity> getEntitiesByPrefix(String cacheName, String prefix, CoreEntityKey keyStruct) {
 		List<CoreEntity> entities = cache.getRemoteCache(cacheName)
-		.entrySet().stream().map((Map.Entry<String, String> entry) -> {
-			String key = entry.getKey();
-			CoreEntityKey currentKey = keyStruct.fromKey(key);
+				.entrySet().stream().map((Map.Entry<String, String> entry) -> {
+					String key = entry.getKey();
+					CoreEntityKey currentKey = keyStruct.fromKey(key);
 
-			return currentKey.getEntityCode().startsWith(prefix) ? jsonb.fromJson(entry.getValue(), CoreEntity.class) : null;
-		})
-		.filter(Objects::nonNull).toList();
+					return currentKey.getEntityCode().startsWith(prefix) ? jsonb.fromJson(entry.getValue(), CoreEntity.class) : null;
+				})
+				.filter(Objects::nonNull).toList();
 
 		return entities;
 	}
@@ -230,11 +209,11 @@ public class CacheUtils {
 	 * @param cacheName - Product Code / Cache to retrieve from
 	 * @param prefix - Prefix of the Core Entity code to use
 	 * @return a list of base entities with matching prefixes
-	 * 
+	 *
 	 * See Also: {@link BaseEntityKey}, {@link CoreEntityKey#fromKey}, {@link CacheUtils#getEntitiesByPrefix}
 	 */
 	public static List<BaseEntity> getBaseEntitiesByPrefix(String cacheName, String prefix) {
-        return getEntitiesByPrefix(cacheName, prefix, new BaseEntityKey())
-                .stream().map(BaseEntity.class::cast).toList();
+		return getEntitiesByPrefix(cacheName, prefix, new BaseEntityKey())
+				.stream().map(BaseEntity.class::cast).toList();
 	}
 }

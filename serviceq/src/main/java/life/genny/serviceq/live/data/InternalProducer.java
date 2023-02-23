@@ -78,4 +78,9 @@ public class InternalProducer {
     return blacklist;
   }
 
+  @Inject @Channel("deadletterqueue") Emitter<String> deadletterqueue;
+  public Emitter<String> getToDeadLetterQueue() {
+    return deadletterqueue;
+  }
+
 }

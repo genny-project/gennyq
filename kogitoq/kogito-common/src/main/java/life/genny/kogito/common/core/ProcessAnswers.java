@@ -9,6 +9,9 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.utils.*;
 import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.service.TaskService;
@@ -17,14 +20,10 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.kafka.KafkaTopic;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.DefUtils;
-import life.genny.qwandaq.utils.KafkaUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.entity.PCM;
-import life.genny.qwandaq.utils.FilterUtils;
 
 /**
  * ProcessAnswers
@@ -40,16 +39,28 @@ public class ProcessAnswers {
 	UserToken userToken;
 
 	@Inject
-	QwandaUtils qwandaUtils;
+	CacheManager cm;
+
+	@Inject
+	TaskService taskService;
+
 	@Inject
 	BaseEntityUtils beUtils;
+
 	@Inject
 	DefUtils defUtils;
 
-	@Inject TaskService taskService;
+	@Inject
+	QwandaUtils qwandaUtils;
 
 	@Inject
 	FilterUtils filter;
+
+	@Inject
+	EntityAttributeUtils beaUtils;
+
+	@Inject
+	AttributeUtils attributeUtils;
 
 	/**
 	 * @param answer
@@ -106,9 +117,8 @@ public class ProcessAnswers {
 
 		// send error for last answer in the list
 		// NOTE: This should be reconsidered
-		Boolean acceptSubmission = true;
 		if (answers.isEmpty())
-			return acceptSubmission;
+			return true;
 
 		// TODO: Might review below in the future
 		if (qwandaUtils.isDuplicate(definitions, null, processEntity, originalTarget)) {
@@ -121,17 +131,20 @@ public class ProcessAnswers {
 					if (definition.findEntityAttribute("UNQ_" + attributeCode).isPresent()) {
 						String questionCode = answer.getCode();
 						PCM mainPcm = beUtils.getPCM(processData.getPcmCode());
-						PCM subPcm = beUtils.getPCM(mainPcm.getLocation(1));
+						EntityAttribute subPcmLocationEA = beaUtils.getEntityAttribute(mainPcm.getRealm(), mainPcm.getCode(), Attribute.PRI_LOC + 1, true, true);
+						String subPcmLocation = subPcmLocationEA.getAsString();
+						PCM subPcm = beUtils.getPCM(subPcmLocation);
 
-						qwandaUtils.sendAttributeErrorMessage(subPcm.getQuestionCode(), questionCode, attributeCode, feedback);
-						acceptSubmission = false;
-						return acceptSubmission;
+						EntityAttribute subPcmQuestionCodeEA = beaUtils.getEntityAttribute(subPcm.getRealm(), subPcm.getCode(), Attribute.PRI_QUESTION_CODE, true, true);
+						String subPcmQuestionCode = subPcmQuestionCodeEA.getAsString();
+						qwandaUtils.sendAttributeErrorMessage(subPcmQuestionCode, questionCode, attributeCode, feedback);
+						return false;
 					}
 				}
 			}
 		}
 
-		return acceptSubmission;
+		return true;
 	}
 
 	/**
@@ -144,9 +157,33 @@ public class ProcessAnswers {
 		// save answers
 		String targetCode = processData.getTargetCode();
 		processData.getAnswers().forEach(a -> a.setTargetCode(targetCode));
+		processData.getAnswers().forEach(a -> a.setTargetCode(targetCode));
 		BaseEntity target = beUtils.getBaseEntity(targetCode);
-		qwandaUtils.saveAnswers(processData.getAnswers(), target);
-		// send target to FE
+		// iterate our stored process updates and create an answer
+		for (Answer answer : processData.getAnswers()) {
+
+			// find the attribute
+			String attributeCode = answer.getAttributeCode();
+			Attribute attribute = attributeUtils.getAttribute(attributeCode, true);
+
+			// check if name needs updating
+			if (Attribute.PRI_NAME.equals(attributeCode)) {
+				String name = answer.getValue();
+				log.debug("Updating BaseEntity Name Value -> " + name);
+				target.setName(name);
+				continue;
+			}
+
+			// update the baseentity
+			target.addAttribute(new EntityAttribute(target, attribute, 1.0, answer.getValue()));
+			String value = target.getValueAsString(answer.getAttributeCode());
+			log.debug("Value Saved -> " + answer.getAttributeCode() + " = " + value);
+		}
+
+		// save these answrs to db and cache
+		beUtils.updateBaseEntity(target);
+		log.info("Saved answers for target " + targetCode);
+
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(target);
 		msg.setToken(userToken.getToken());
 		msg.setReplace(true);

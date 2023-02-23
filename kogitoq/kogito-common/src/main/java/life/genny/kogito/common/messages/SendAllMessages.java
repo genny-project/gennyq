@@ -1,11 +1,6 @@
 package life.genny.kogito.common.messages;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import javax.inject.Inject;
-
+import io.quarkus.arc.Arc;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
@@ -13,11 +8,16 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
-import life.genny.qwandaq.utils.SearchUtils;
 import life.genny.qwandaq.models.ServiceToken;
+import life.genny.qwandaq.utils.AttributeUtils;
+import life.genny.qwandaq.utils.SearchUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
-import io.quarkus.arc.Arc;
+import javax.inject.Inject;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class SendAllMessages extends MessageSendingStrategy {
 
@@ -26,6 +26,9 @@ public class SendAllMessages extends MessageSendingStrategy {
 
     @Inject
     ServiceToken serviceToken;
+
+    @Inject
+    AttributeUtils attributeUtils;
 
     static final Logger log = Logger.getLogger(SendAllMessages.class);
     private final String productCode;
@@ -86,19 +89,23 @@ public class SendAllMessages extends MessageSendingStrategy {
                 BaseEntity message = beUtils.getBaseEntity(messageCode);
 
                 // Determine the recipientBECode
-                String recipientLnkValue = message.getValueAsString(PRI_RECIPIENT_LNK);
-                if (recipientLnkValue != null) {
+                EntityAttribute recipientLink = beaUtils.getEntityAttribute(message.getRealm(), message.getCode(), PRI_RECIPIENT_LNK);
+                if (recipientLink != null) {
+                    String recipientLnkValue = recipientLink.getValueString();
                     determineRecipientLnkValueAndUpdateMap(recipientLnkValue);
                 } else {
                     log.error("NO " + PRI_RECIPIENT_LNK + " present");
                 }
 
                 // Extract all the contexts from the core baseEntity LNKs
-                List<EntityAttribute> lnkEAs = coreBE.findPrefixEntityAttributes(Prefix.LNK_);
+                List<EntityAttribute> lnkEAs = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(coreBE.getRealm(), coreBE.getCode(), Prefix.LNK_);
                 StringBuilder contextMapStr = new StringBuilder();
 
                 lnkEAs.parallelStream().forEach((ea) -> {
-                    String aliasCode = ea.getAttributeCode().substring("LNK_".length());
+                    String attributeCode = ea.getAttributeCode();
+                    Attribute attribute = attributeUtils.getAttribute(attributeCode, true);
+                    ea.setAttribute(attribute);
+                    String aliasCode = attributeCode.substring(Prefix.LNK_.length());
                     String aliasValue = ea.getAsString();
                     aliasValue = aliasValue.replace("\"", "").replace("[", "").replace("]", "");
                     contextMapStr.append(aliasCode).append("=").append(aliasValue).append(",");
@@ -106,9 +113,14 @@ public class SendAllMessages extends MessageSendingStrategy {
                 });
 
                 // Determine the sender
-                String senderLnkValue = message.getValueAsString(PRI_SENDER_LNK);
-                if (senderLnkValue != null) {
-                    determineSenderAndUpdateMap(senderLnkValue);
+                EntityAttribute senderLnkAttribute = beaUtils.getEntityAttribute(message.getRealm(), message.getCode(), PRI_SENDER_LNK);
+                if(senderLnkAttribute != null) {
+                    String senderLnkValue = senderLnkAttribute.getValueString();
+                    if (senderLnkValue != null) {
+                        determineSenderAndUpdateMap(senderLnkValue);
+                    } else {
+                        log.error("NO " + PRI_SENDER_LNK + " present");
+                    }
                 } else {
                     log.error("NO " + PRI_SENDER_LNK + " present");
                 }
@@ -126,7 +138,7 @@ public class SendAllMessages extends MessageSendingStrategy {
     }
 
     private void determineRecipientLnkValueAndUpdateMap(String recipientLnkValue) {
-        if (recipientLnkValue != null) {
+        if (StringUtils.isNotEmpty(recipientLnkValue)) {
             // check the various formats to get the recipientBECode
             if (recipientLnkValue.startsWith(SELF)) { // The coreBE is the recipient
                 ctxMap.put(RECIPIENT, coreBE.getCode());

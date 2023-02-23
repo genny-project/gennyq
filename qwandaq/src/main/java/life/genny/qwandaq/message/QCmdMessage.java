@@ -1,11 +1,5 @@
 package life.genny.qwandaq.message;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-
-import javax.persistence.Embedded;
-import javax.validation.Valid;
-
 public class QCmdMessage extends QMessage {
 
 	private static final String MESSAGE_TYPE = "CMD_MSG";

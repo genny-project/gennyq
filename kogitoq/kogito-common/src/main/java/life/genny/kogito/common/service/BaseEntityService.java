@@ -1,30 +1,61 @@
 package life.genny.kogito.common.service;
 
-import java.util.Optional;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.exception.runtime.DebugException;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
-import life.genny.qwandaq.utils.KeycloakUtils;
+import life.genny.qwandaq.managers.CacheManager;
+import life.genny.qwandaq.models.ServiceToken;
+import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.utils.*;
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
+import java.util.Optional;
 
 @ApplicationScoped
 public class BaseEntityService extends KogitoService {
 
 	@Inject
+	ServiceToken serviceToken;
+
+	@Inject
+	UserToken userToken;
+
+	@Inject
+	BaseEntityUtils beUtils;
+
+	@Inject
+	EntityAttributeUtils beaUtils;
+
+	@Inject
+	QwandaUtils qwandaUtils;
+
+	@Inject
+	KeycloakUtils keycloakUtils;
+
+	@Inject
+	CacheManager cm;
+
+	@Inject
+	DefUtils defUtils;
+
+	@Inject
 	Logger log;
+
+	@Inject
+	AttributeUtils attributeUtils;
 
 	/**
 	 * Send a message to perform an update of a persons summary
@@ -70,6 +101,37 @@ public class BaseEntityService extends KogitoService {
 		// archive the entity
 		baseEntity.setStatus(EEntityStatus.ARCHIVED);
 		beUtils.updateBaseEntity(baseEntity);
+	}
+
+	public String commission(String definitionCode, String processId, EEntityStatus status) {
+
+		if (definitionCode == null)
+			throw new NullParameterException("definitionCode");
+		if (processId == null)
+			throw new NullParameterException("processId");
+		if (status == null)
+			throw new NullParameterException("status");
+		if (!definitionCode.startsWith(Prefix.DEF_))
+			throw new DebugException("Invalid definitionCode: " + definitionCode);
+
+		// fetch the def baseentity
+		Definition definition = beUtils.getDefinition(definitionCode);
+
+		// use entity create function and save to db
+		String defCode = definition.getCode();
+		String defaultName = StringUtils.capitalize(defCode.substring(4));
+		EntityAttribute prefixAttr = beaUtils.getEntityAttribute(definition.getRealm(), defCode, Attribute.PRI_PREFIX, false);
+		if (prefixAttr == null) {
+			throw new ItemNotFoundException(definition.getRealm(), defCode, Attribute.PRI_PREFIX);
+		}
+		String prefixValue = prefixAttr.getValueString();
+		BaseEntity entity = beUtils.create(definition, defaultName, prefixValue + "_" + processId.toUpperCase());
+		log.info("BaseEntity Created: " + entity.getCode());
+
+		entity.setStatus(status);
+		beUtils.updateBaseEntity(entity);
+
+		return entity.getCode();
 	}
 
 	public void delete(String code) {
@@ -130,18 +192,20 @@ public class BaseEntityService extends KogitoService {
 	 */
 	public void updateKeycloak(String userCode) {
 
+		String productCode = userToken.getProductCode();
+		EntityAttribute email = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_EMAIL);
+		EntityAttribute firstName = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_FIRSTNAME);
+		EntityAttribute lastName = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_LASTNAME);
+
 		BaseEntity user = beUtils.getBaseEntity(userCode);
-		String email = user.getValue("PRI_EMAIL", null);
-		String firstName = user.getValue("PRI_FIRSTNAME", null);
-		String lastName = user.getValue("PRI_LASTNAME", null);
 
 		// update user fields
 		// NOTE: this could be turned into a single http request
 		// Could make it a builder pattern to make it a single http request?
-		KeycloakUtils.updateUserEmail(serviceToken, user, email);
-		KeycloakUtils.updateUserField(serviceToken, user, "username", email);
-		KeycloakUtils.updateUserField(serviceToken, user, "firstName", firstName);
-		KeycloakUtils.updateUserField(serviceToken, user, "lastName", lastName);
+		keycloakUtils.updateUserEmail(user, email.getValueString());
+		keycloakUtils.updateUserField(user, "username", email.getValueString());
+		keycloakUtils.updateUserField(user, "firstName", firstName.getValueString());
+		keycloakUtils.updateUserField(user, "lastName", lastName.getValueString());
 	}
 
 	/**
@@ -153,14 +217,11 @@ public class BaseEntityService extends KogitoService {
 		BaseEntity entity = beUtils.getBaseEntity(entityCode);
 
 		// iterate our stored process updates and create an answer
-		for (EntityAttribute ea : processEntity.getBaseEntityAttributes()) {
-
-			if (ea.getAttribute() == null) {
-				log.debug("Attribute is null, fetching " + ea.getAttributeCode());
-				Attribute attribute = qwandaUtils.getAttribute(ea.getAttributeCode());
-				ea.setAttribute(attribute);
-			}
-			ea.setBaseEntity(entity);
+		for (EntityAttribute ea : beaUtils.getAllEntityAttributesForBaseEntity(processEntity)) {
+			Attribute attribute = attributeUtils.getAttribute(ea.getAttributeCode(), true);
+			ea.setAttribute(attribute);
+			ea.setBaseEntityCode(entity.getCode());
+			ea.setBaseEntityId(entity.getId());
 			entity.addAttribute(ea);
 		}
 
@@ -201,10 +262,11 @@ public class BaseEntityService extends KogitoService {
 		BaseEntity be = beUtils.getBaseEntity(baseEntityCode);
 		BaseEntity defBe = defUtils.getDEF(be);
 
-		Optional<EntityAttribute> defEAttribute = defBe.findEntityAttribute("ATT_" + attributeCode);
-		if (defEAttribute.isPresent()) {
+		//Optional<EntityAttribute> defEAttribute = defBe.findEntityAttribute("ATT_" + attributeCode);
+		EntityAttribute defEAttribute = beaUtils.getEntityAttribute(be.getRealm(), baseEntityCode, attributeCode);
+		if (defEAttribute != null) {
 
-			if (attributeCode.startsWith("LNK_")) {
+			if (attributeCode.startsWith(Prefix.LNK_)) {
 				// Check if value is in JsonArray format , otherwise wrap it..
 				if (value != null) {
 					if (!value.startsWith("[")) {

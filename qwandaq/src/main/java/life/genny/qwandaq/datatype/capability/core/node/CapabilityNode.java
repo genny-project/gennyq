@@ -2,6 +2,7 @@ package life.genny.qwandaq.datatype.capability.core.node;
 
 import javax.json.bind.annotation.JsonbTransient;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.jboss.logging.Logger;
 

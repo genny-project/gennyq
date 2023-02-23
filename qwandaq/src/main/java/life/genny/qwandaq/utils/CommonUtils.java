@@ -1,13 +1,8 @@
 package life.genny.qwandaq.utils;
 
 import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
@@ -265,6 +260,39 @@ public class CommonUtils {
         return array;
     }
 
+    public static String getCommaAndSingleQuoteSeparatedString(Collection<String> tokens) {
+        List<String> newList = new CopyOnWriteArrayList<>();
+        tokens.forEach(token -> newList.add("'"+token+"'"));
+        return newList.toString();
+    }
+
+    public static String getCommaSeparatedString(Collection<String> tokens) {
+        return new CopyOnWriteArrayList<>(tokens).toString();
+    }
+
+    public static List<String> getListFromCommaSeparatedString(String arrayString) {
+        List<String> newList;
+        if (StringUtils.isBlank(arrayString)) {
+            return new ArrayList<>(0);
+        }
+        arrayString = arrayString.trim();
+        if (arrayString.startsWith("[") && arrayString.endsWith("]")) {
+            arrayString = arrayString.substring(1, arrayString.length() - 1);
+        }
+        arrayString = arrayString.replaceAll("\"", "").strip();
+        if (StringUtils.isBlank(arrayString))
+            return new ArrayList<>(0);
+        String tokens[] = StringUtils.split(arrayString, ",");
+        newList = new ArrayList<>(tokens.length);
+        for (String token : tokens) {
+            String trimmedToken = token.trim();
+            if(!StringUtils.isBlank(trimmedToken)) {
+                newList.add(trimmedToken);
+            }
+        }
+        return newList;
+    }
+
     /**
      * Assuming arrayString is of the form "[a,b,c,d]"
      * @param <T>
@@ -273,8 +301,10 @@ public class CommonUtils {
      * @return
      */
     public static <T> List<T> getListFromString(String arrayString, FIGetObjectCallback<T> objectCallback) {
+        if(StringUtils.isBlank(arrayString))
+            return new ArrayList<>(0);
+
         arrayString = arrayString.substring(1, arrayString.length() - 1).replaceAll("\"", "").strip();
-        
 
 		if(StringUtils.isBlank(arrayString))
             return new ArrayList<>(0);
