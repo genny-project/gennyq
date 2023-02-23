@@ -20,8 +20,8 @@ message EntityAttribute {
   optional string valueString = 17;
   optional int64 valueTime = 18;
   optional double weight = 19;
-  optional int64 attribute_id = 20;
-  optional int64 baseentity_id = 21;
+  optional int64 ATTRIBUTE_ID = 20;
+  optional int64 BASEENTITY_ID = 21;
   optional string icon = 22;
   optional bool confirmationFlag = 23;
   optional string capreqs = 24;
