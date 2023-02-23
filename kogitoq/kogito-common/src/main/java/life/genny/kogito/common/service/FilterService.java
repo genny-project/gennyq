@@ -3,9 +3,9 @@ package life.genny.kogito.common.service;
 import life.genny.qwandaq.constants.FilterConst;
 import life.genny.qwandaq.entity.search.clause.Or;
 import life.genny.qwandaq.graphql.ProcessData;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.SavedSearch;
 import life.genny.qwandaq.utils.KafkaUtils;
-import life.genny.qwandaq.utils.CacheUtils;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -15,10 +15,7 @@ import org.jboss.logging.Logger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import life.genny.qwandaq.entity.search.trait.Filter;
@@ -39,8 +36,11 @@ import life.genny.qwandaq.constants.Prefix;
 @ApplicationScoped
 public class FilterService extends KogitoService {
 
-	@Inject
-	Logger log;
+    @Inject
+    Logger log;
+
+    @Inject
+    CacheManager cacheManager;
 
     /**
      * Handle quick search
@@ -52,7 +52,7 @@ public class FilterService extends KogitoService {
         String sessionCode = searchUtils.sessionSearchCode(targetCode);
         String cachedKey = FilterConst.LAST_SEARCH + sessionCode;
 
-        SearchEntity searchBE = CacheUtils.getObject(userToken.getProductCode(), cachedKey, SearchEntity.class);
+        SearchEntity searchBE = cacheManager.getObject(userToken.getProductCode(), cachedKey, SearchEntity.class);
         clearFilters(searchBE);
 
         // add definitions
@@ -77,7 +77,7 @@ public class FilterService extends KogitoService {
         searchBE.remove(filter);
         searchBE.add(filter);
 
-        CacheUtils.putObject(userToken.getProductCode(), cachedKey, searchBE);
+        cacheManager.putObject(userToken.getProductCode(), cachedKey, searchBE);
 
         String queCode =  targetCode.replaceFirst(Prefix.SBE_,Prefix.QUE_);
         search.sendTable(queCode);
@@ -124,7 +124,7 @@ public class FilterService extends KogitoService {
      */
     public void sendFilterColumns(String sbeCode) {
         try {
-            SearchEntity searchBE = CacheUtils.getObject(userToken.getProductCode(), sbeCode, SearchEntity.class);
+            SearchEntity searchBE = cacheManager.getObject(userToken.getProductCode(), sbeCode, SearchEntity.class);
 
             if (searchBE != null) {
                 QDataBaseEntityMessage msgColumn = filterUtils.getFilterValuesByColum(searchBE);
@@ -187,7 +187,7 @@ public class FilterService extends KogitoService {
         String sessionCode = searchUtils.sessionSearchCode(sbeCode);
         String cachedKey = FilterConst.LAST_SEARCH + sessionCode;
 
-        SearchEntity searchBE = CacheUtils.getObject(userToken.getProductCode(), cachedKey, SearchEntity.class);
+        SearchEntity searchBE = cacheManager.getObject(userToken.getProductCode(), cachedKey, SearchEntity.class);
         excludeExtraFilterBySearchBE(searchBE);
 
         // add definitions
@@ -204,7 +204,7 @@ public class FilterService extends KogitoService {
         // add conditions by filter parameters
         setFilterParams(searchBE,params);
 
-        CacheUtils.putObject(userToken.getProductCode(), cachedKey, searchBE);
+        cacheManager.putObject(userToken.getProductCode(), cachedKey, searchBE);
 
         String queCode =  sbeCode.replaceFirst(Prefix.SBE_,Prefix.QUE_);
         search.sendTable(queCode);
@@ -377,9 +377,12 @@ public class FilterService extends KogitoService {
      * @param queValCode Question value code
      */
     public void sendPartialPCM(String pcmCode,String loc,String queValCode) {
-        BaseEntity pcm = beUtils.getBaseEntity(pcmCode);
+        BaseEntity pcm = beUtils.getBaseEntity(pcmCode, true);
         for(EntityAttribute ea : pcm.getBaseEntityAttributes()) {
-            if(ea.getAttributeCode().equalsIgnoreCase(loc)) {
+            String attributeCode = ea.getAttributeCode();
+            if(attributeCode.equalsIgnoreCase(loc)) {
+                Attribute attribute = attributeUtils.getAttribute(attributeCode, true);
+                ea.setAttribute(attribute);
                 ea.setValue(queValCode);
                 ea.setValueString(queValCode);
             }
@@ -398,7 +401,7 @@ public class FilterService extends KogitoService {
             String strJson = jsonb.toJson(param.getValue());
             SavedSearch ss = jsonb.fromJson(strJson, SavedSearch.class);
 
-            Attribute att= qwandaUtils.getAttribute(ss.getColumn());
+            Attribute att = attributeUtils.getAttribute(ss.getColumn(), true);
             StringBuilder valBuild = new StringBuilder(ss.getColumn());
             valBuild.append(FilterConst.SEPARATOR+ss.getOperator());
             valBuild.append(FilterConst.SEPARATOR+ss.getValueCode());
@@ -407,7 +410,7 @@ public class FilterService extends KogitoService {
             lblBuild.append(ss.getOperator().replaceFirst(Prefix.SEL_, "").replaceAll("_"," "));
             lblBuild.append(FilterConst.SEPARATOR + ss.getValue().replaceFirst(Prefix.SEL_, ""));
 
-            EntityAttribute ea = new EntityAttribute(base, att, 1.0);
+            EntityAttribute ea = new EntityAttribute(base, att, 1.0, null);
             ea.setAttributeName(lblBuild.toString());
             ea.setValue(valBuild.toString());
             ea.setValueString(valBuild.toString());
@@ -462,7 +465,7 @@ public class FilterService extends KogitoService {
     public void init(String queCode) {
         clearParamsInCache();
         String sbe = queCode.replaceFirst(Prefix.QUE_,Prefix.SBE_);
-        CacheUtils.putObject(userToken.getProductCode(),getCachedSbeTable(), sbe);
+        cacheManager.putObject(userToken.getProductCode(),getCachedSbeTable(), sbe);
 
         sendFilterColumns(sbe);
         sendListSavedSearches(Question.QUE_SAVED_SEARCH_SELECT_GRP,Question.QUE_SAVED_SEARCH_SELECT);
@@ -473,7 +476,7 @@ public class FilterService extends KogitoService {
      */
     public void clearParamsInCache() {
         Map<String, SavedSearch> params = new HashMap<>();
-        CacheUtils.putObject(userToken.getProductCode(),getCachedAnswerKey(),params);
+        cacheManager.putObject(userToken.getProductCode(),getCachedAnswerKey(),params);
     }
 
     /**
@@ -481,7 +484,7 @@ public class FilterService extends KogitoService {
      * @return sbe code from cache
      */
     public String getSbeTableFromCache() {
-        String sbe = CacheUtils.getObject(userToken.getProductCode(),getCachedSbeTable() ,String.class);
+        String sbe = cacheManager.getObject(userToken.getProductCode(),getCachedSbeTable() ,String.class);
         if(sbe == null) {
             return "";
         }
@@ -546,7 +549,7 @@ public class FilterService extends KogitoService {
             String sessionCode = searchUtils.sessionSearchCode(code);
             String cachedKey = FilterConst.LAST_SEARCH + sessionCode;
 
-            SearchEntity searchBE = CacheUtils.getObject(userToken.getProductCode(), cachedKey, SearchEntity.class);
+            SearchEntity searchBE = cacheManager.getObject(userToken.getProductCode(), cachedKey, SearchEntity.class);
             excludeExtraFilterBySearchBE(searchBE);
 
             // add definitions
@@ -563,7 +566,7 @@ public class FilterService extends KogitoService {
             // add conditions by filter parameters
             setFilterParams(searchBE,params);
 
-            CacheUtils.putObject(userToken.getProductCode(), cachedKey, searchBE);
+            cacheManager.putObject(userToken.getProductCode(), cachedKey, searchBE);
 
             searchUtils.searchTable(code);
         }
@@ -582,7 +585,7 @@ public class FilterService extends KogitoService {
             String sessionCode = searchUtils.sessionSearchCode(code);
             String cachedKey = FilterConst.LAST_SEARCH + sessionCode;
 
-            SearchEntity searchBE = CacheUtils.getObject(userToken.getProductCode(), cachedKey, SearchEntity.class);
+            SearchEntity searchBE = cacheManager.getObject(userToken.getProductCode(), cachedKey, SearchEntity.class);
 
             clearFilters(searchBE);
 
@@ -610,7 +613,7 @@ public class FilterService extends KogitoService {
             searchBE.remove(filter);
             searchBE.add(filter);
 
-            CacheUtils.putObject(userToken.getProductCode(), cachedKey, searchBE);
+            cacheManager.putObject(userToken.getProductCode(), cachedKey, searchBE);
 
             searchUtils.searchTable(code);
         }
@@ -627,7 +630,7 @@ public class FilterService extends KogitoService {
         // bucket page
         if (SearchEntity.SBE_PROCESS.equals(sbeCode)) {
             addDefinitionCodeByBucket(definitions);
-        // Table
+            // Table
         } else {
             String defCode = getDefinitionCode(sbeCode);
             if(!defCode.isEmpty()) {
@@ -644,7 +647,7 @@ public class FilterService extends KogitoService {
      * @return definition code
      */
     public String getDefinitionCode(String sbeCode) {
-        SearchEntity search = CacheUtils.getObject(userToken.getProductCode(),sbeCode,SearchEntity.class);
+        SearchEntity search = cacheManager.getObject(userToken.getProductCode(),sbeCode,SearchEntity.class);
         List<ClauseContainer> clauses = search.getClauseContainers();
         for (ClauseContainer clause : clauses) {
             if (clause.getFilter().getCode().equals(Attribute.LNK_DEF)) {
@@ -654,15 +657,17 @@ public class FilterService extends KogitoService {
         return "";
     }
 
-	/**
+    /**
      * Add definition to the list of definition codes
      * @param definitions List of definition codes
      */
     public void addDefinitionCodeByBucket(List<String> definitions) {
         PCM pcm = beUtils.getPCM(PCM.PCM_PROCESS);
 
-        List<EntityAttribute> locations = pcm.findPrefixEntityAttributes(Prefix.PRI_LOC);
+        List<EntityAttribute> locations = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(pcm.getRealm(), pcm.getCode(), Prefix.PRI_LOC);
         for (EntityAttribute entityAttribute : locations) {
+            Attribute attribute = attributeUtils.getAttribute(entityAttribute.getRealm(), entityAttribute.getAttributeCode(), true);
+            entityAttribute.setAttribute(attribute);
             String value = entityAttribute.getAsString();
             if (value.startsWith(Prefix.SBE_)) {
                 String defCode = getDefinitionCode(value);

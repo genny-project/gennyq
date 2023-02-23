@@ -76,6 +76,7 @@ then
    echo "usage: readcache-local.sh <productCode> <key>   e.g.  ./readCache-local.sh internmatch TOKEN:PER_086CDF1F-A98F-4E73-9825-0A4CFE2BB943"
    exit;
 fi
+source ../../../genny-main/genny.env
 productCode=$1
 key=$2
 echo $key
@@ -83,12 +84,12 @@ TOKEN=`./gettoken-prod.sh`
 echo $TOKEN
 echo ""
 echo "******** READ CACHE **********"
-echo "http://alyson.genny.life:4242/cache/${productCode}/${key}/json"
-CACHEREAD=`curl -s -X GET --header 'Content-Type: application/json' --header 'Accept: application/json' --header "Authorization: Bearer $TOKEN"  "http://alyson.genny.life:4242/cache/${productCode}/${key}/json"`
-#CR=`echo "$CACHEREAD" | jq -r '.value'`
-#CR2=`echo "${CR}" | jq .  `
+echo "http://alyson.genny.life:${FYODOR_PORT}/${productCode}/${key}/json"
+CACHEREAD=`curl -s -X GET --header 'Content-Type: application/json' --header 'Accept: application/json' --header "Authorization: Bearer $TOKEN"  "https://alyson.genny.life:${FYODOR_PORT}/${productCode}/${key}/json"`
+CR=`echo "$CACHEREAD" | jq -r '.value'`
+CR2=`echo "${CR}" | jq .  `
 echo -e "${Green}${CACHEREAD}${Color_Off}\n"
 echo ""
-#echo $CR2
+echo $CR2
 echo ""
 

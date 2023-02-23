@@ -15,7 +15,6 @@
 
 	<properties>
 		<jackson.version>2.13.0</jackson.version>
-		<jandex.version>1.0.7</jandex.version>
 		<jjwt.version>0.7.0</jjwt.version>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
@@ -30,6 +29,12 @@
 				<version>${quarkus.platform.version}</version>
 				<type>pom</type>
 				<scope>import</scope>
+				<exclusions>
+					<exclusion>
+						<groupId>com.squareup.okhttp3</groupId>
+						<artifactId>okhttp</artifactId>
+					</exclusion>
+				</exclusions>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -39,6 +44,12 @@
 			<groupId>life.genny</groupId>
 			<artifactId>serviceq</artifactId>
 			<version>${genny.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>com.squareup.okhttp3</groupId>
+					<artifactId>okhttp</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.logmanager</groupId>
@@ -60,6 +71,11 @@
 			<groupId>io.quarkus</groupId>
 			<artifactId>quarkus-junit5</artifactId>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.squareup.okhttp3</groupId>
+			<artifactId>okhttp</artifactId>
+			<version>4.10.0</version>
 		</dependency>
 	</dependencies>
 
@@ -90,7 +106,7 @@
 			<plugin>
 				<groupId>org.jboss.jandex</groupId>
 				<artifactId>jandex-maven-plugin</artifactId>
-				<version>${jandex.version}</version>
+				<version>${jandex-maven.version}</version>
 				<executions>
 					<execution>
 						<id>make-index</id>

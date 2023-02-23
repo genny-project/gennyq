@@ -37,6 +37,7 @@ import life.genny.qwandaq.utils.SecurityUtils;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
 import life.genny.gadaq.search.FilterGroupService;
+import life.genny.gadaq.cache.SearchCaching;
 
 @ApplicationScoped
 public class InternalConsumer implements KogitoServiceConsumerIntf {
@@ -48,13 +49,16 @@ public class InternalConsumer implements KogitoServiceConsumerIntf {
 
 	@Inject
 	GennyScopeInit scope;
+
 	@Inject
 	Service service;
+
 	@Inject
 	UserToken userToken;
 
 	@Inject
 	KogitoUtils kogitoUtils;
+
 	@Inject
 	SearchService search;
 
@@ -70,6 +74,9 @@ public class InternalConsumer implements KogitoServiceConsumerIntf {
 	@Inject
 	FilterGroupService filter;
 
+	@Inject
+	SearchCaching searchCaching;
+
 	/**
 	 * Execute on start up.
 	 *
@@ -78,6 +85,7 @@ public class InternalConsumer implements KogitoServiceConsumerIntf {
 	void onStart(@Observes StartupEvent ev) {
 		KogitoServiceConsumerIntf.initialiseProtobufs();
 		service.fullServiceInit();
+		searchCaching.saveToCache();
 	}
 
 	/**
@@ -156,5 +164,4 @@ public class InternalConsumer implements KogitoServiceConsumerIntf {
 		Instant end = Instant.now();
 		log.trace("Duration = " + Duration.between(start, end).toMillis() + "ms");
 	}
-
 }

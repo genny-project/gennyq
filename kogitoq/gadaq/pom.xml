@@ -10,7 +10,6 @@
   <artifactId>gadaq</artifactId>
   <name>GadaQ Kogito Service</name>
   <properties>
-	<jandex.version>1.0.7</jandex.version>
     <maven.compiler.source>17</maven.compiler.source>
     <maven.compiler.target>17</maven.compiler.target>
     <maven.compiler.release>17</maven.compiler.release>
@@ -23,6 +22,12 @@
         <version>${quarkus.platform.version}</version>
         <type>pom</type>
         <scope>import</scope>
+        <exclusions>
+					<exclusion>
+						<groupId>com.squareup.okhttp3</groupId>
+						<artifactId>okhttp</artifactId>
+					</exclusion>
+				</exclusions>
       </dependency>
       <dependency>
         <groupId>${kogito.bom.group-id}</groupId>
@@ -30,6 +35,12 @@
         <version>${kogito.bom.version}</version>
         <type>pom</type>
         <scope>import</scope>
+        <exclusions>
+					<exclusion>
+						<groupId>com.squareup.okhttp3</groupId>
+						<artifactId>okhttp</artifactId>
+					</exclusion>
+				</exclusions>
       </dependency>
       <dependency>
         <groupId>org.drools</groupId>
@@ -37,6 +48,12 @@
         <version>${version.org.drools}</version>
         <type>pom</type>
         <scope>import</scope>
+        <exclusions>
+					<exclusion>
+						<groupId>com.squareup.okhttp3</groupId>
+						<artifactId>okhttp</artifactId>
+					</exclusion>
+				</exclusions>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -58,6 +75,11 @@
       <artifactId>rest-assured</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+			<groupId>com.squareup.okhttp3</groupId>
+			<artifactId>okhttp</artifactId>
+			<version>4.10.0</version>
+		</dependency>
   </dependencies>
   <build>
     <plugins>
@@ -83,7 +105,7 @@
       <plugin>
         <groupId>org.jboss.jandex</groupId>
         <artifactId>jandex-maven-plugin</artifactId>
-		<version>${jandex.version}</version>
+		<version>${jandex-maven.version}</version>
         <executions>
           <execution>
             <id>make-index</id>

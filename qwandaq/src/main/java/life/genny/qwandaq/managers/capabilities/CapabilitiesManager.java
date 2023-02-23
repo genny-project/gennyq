@@ -4,23 +4,27 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-
 import java.util.List;
-
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 
+import life.genny.qwandaq.Question;
+import life.genny.qwandaq.QuestionQuestion;
+import life.genny.qwandaq.attribute.HEntityAttribute;
+import life.genny.qwandaq.entity.HBaseEntity;
+import life.genny.qwandaq.intf.ICapabilityFilterable;
+import life.genny.qwandaq.utils.*;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
-
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
 
@@ -28,11 +32,10 @@ import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.managers.Manager;
 import life.genny.qwandaq.managers.capabilities.role.RoleManager;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.CacheUtils;
-import life.genny.qwandaq.utils.CommonUtils;
+import life.genny.qwandaq.models.UserToken;
 
 /*
  * A non-static utility class for managing roles and capabilities.
@@ -50,7 +53,16 @@ public class CapabilitiesManager extends Manager {
 	private RoleManager roleMan;
 
 	@Inject
+	CacheManager cm;
+
+	@Inject
 	BaseEntityUtils beUtils;
+
+	@Inject
+	QuestionUtils questionUtils;
+
+	@Inject
+	AttributeUtils attributeUtils;
 
 	public CapabilitiesManager() {
 		super();
@@ -132,13 +144,12 @@ public class CapabilitiesManager extends Manager {
 
 	/**
 	 * Get a single entity's capabilities (excluding roles)
-	 * 
-	 * @param productCode
+	 *
 	 * @param target
 	 * @return
 	 */
 	public CapabilitySet getEntityCapabilities(final BaseEntity target) {
-		Set<EntityAttribute> capabilities = new HashSet<>(target.findPrefixEntityAttributes(Prefix.CAP_));
+		Set<EntityAttribute> capabilities = new HashSet<>(beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(target.getRealm(), target.getCode(), Prefix.CAP_));
 		log.debug("		- " + target.getCode() + "(" + capabilities.size() + " capabilities)");
 		if(capabilities.isEmpty()) {
 			return new CapabilitySet(target);
@@ -158,7 +169,7 @@ public class CapabilitiesManager extends Manager {
 	 * 
 	 * @param productCode The product code
 	 * @param target      The target entity
-	 * @param code        The capability code
+	 * @param capability        The capability attribute
 	 * @param nodes       The nodes to set
 	 */
 	private void updateCapability(String productCode, BaseEntity target, final Attribute capability,
@@ -172,9 +183,8 @@ public class CapabilitiesManager extends Manager {
 			throw new NullParameterException("target");
 		}
 
-		target.addEntityAttribute(capability, 0.0, false, getModeString(nodes));
-		// target.addAttribute(capability, 0.0, getModeString(nodes));
-		// CacheUtils.putObject(productCode, target.getCode() + ":" + capability.getCode(), getModeString(nodes));
+		EntityAttribute addedAttribute = target.addAttribute(capability, 0.0, getModeString(nodes));
+		beaUtils.updateEntityAttribute(addedAttribute);
 		beUtils.updateBaseEntity(target);
 	}
 
@@ -189,7 +199,8 @@ public class CapabilitiesManager extends Manager {
 			throw new NullParameterException("target");
 		}
 
-		target.addEntityAttribute(capability, 0.0, false, getModeString(modeList));
+		EntityAttribute addedAttribute = target.addAttribute(capability, 0.0, getModeString(modeList));
+		beaUtils.updateEntityAttribute(addedAttribute);
 		beUtils.updateBaseEntity(target);
 	}
 
@@ -202,15 +213,16 @@ public class CapabilitiesManager extends Manager {
 		String cleanCapabilityCode = cleanedCode ? rawCapabilityCode : cleanCapabilityCode(rawCapabilityCode);
 		Attribute attribute = null;
 		try {
-			attribute = qwandaUtils.getAttribute(productCode, cleanCapabilityCode);
-		} catch (ItemNotFoundException e) {
+			attribute = attributeUtils.getAttribute(productCode, cleanCapabilityCode, true);
+		} catch(ItemNotFoundException e) {
 			log.debug("Could not find Attribute: " + cleanCapabilityCode + ". Creating new Capability");
 		}
 
 		if (attribute == null) {
 			log.trace("Creating Capability : " + cleanCapabilityCode + " : " + name);
 			attribute = new Attribute(cleanCapabilityCode, name, new DataType(String.class));
-			qwandaUtils.saveAttribute(productCode, attribute);
+			attribute.setRealm(productCode);
+			attributeUtils.saveAttribute(attribute);
 		}
 
 		return attribute;
@@ -254,7 +266,7 @@ public class CapabilitiesManager extends Manager {
 
 
 		targetBe.addAttribute(capabilityAttribute, 0.0, "[]");
-		CacheUtils.putObject(productCode, targetBe.getCode() + ":" + capabilityAttribute.getCode(), "[]");
+		cm.putObject(productCode, targetBe.getCode() + ":" + capabilityAttribute.getCode(), "[]");
 		beUtils.updateBaseEntity(targetBe);
 		return targetBe;
 	}
@@ -290,7 +302,7 @@ public class CapabilitiesManager extends Manager {
 		String cleanCapabilityCode = cleanCapabilityCode(rawCapabilityCode);
 
 		// Don't need to catch here since we don't want to create
-		Attribute attribute = qwandaUtils.getAttribute(productCode, cleanCapabilityCode);
+		Attribute attribute = attributeUtils.getAttribute(productCode, cleanCapabilityCode, true);
 
 		return addCapabilityToBaseEntity(productCode, targetBe, attribute, modes);
 	}
@@ -301,7 +313,7 @@ public class CapabilitiesManager extends Manager {
 		String cleanCapabilityCode = cleanCapabilityCode(rawCapCode);
 
 		// Don't need to catch here since we don't want to create
-		Attribute attribute = qwandaUtils.getAttribute(productCode, cleanCapabilityCode);
+		Attribute attribute = attributeUtils.getAttribute(productCode, cleanCapabilityCode, true);
 		return addCapabilityToBaseEntity(productCode, target, attribute, capabilityList);
 	}
 
@@ -378,7 +390,7 @@ public class CapabilitiesManager extends Manager {
 	/**
 	 * Serialize an array of {@link CapabilityNode}s to a string
 	 * 
-	 * @param modes
+	 * @param capabilities
 	 * @return
 	 */
 	public static String getModeString(CapabilityNode... capabilities) {
@@ -397,5 +409,50 @@ public class CapabilitiesManager extends Manager {
 	// For use in builder patterns
 	public RoleManager getRoleManager() {
 		return roleMan;
+	}
+
+	/**
+	 * @param filterable
+	 * @param capabilityRequirements
+	 * @return
+	 */
+	public boolean updateCapabilityRequirements(String realm, ICapabilityFilterable filterable, Capability... capabilityRequirements) {
+		if(capabilityRequirements == null) {
+			log.error("Attempted to set Capability Requirements to null. Call updateCapabilityRequirements(filterable) instead of updateCapabilityRequirements(filterable, null)");
+			throw new NullParameterException("capabilityRequirements");
+		}
+
+		filterable.setCapabilityRequirements(capabilityRequirements);
+
+		// TODO: Turn this into a sustainable solution
+
+		if(filterable instanceof HBaseEntity) {
+			HBaseEntity be = (HBaseEntity)filterable;
+			log.info("Attaching Capability Requirements: " + CommonUtils.getArrayString(capabilityRequirements) + " to BaseEntity: " + realm + ":" + be.getCode());
+			beUtils.updateBaseEntity(be.toBaseEntity());
+			return true;
+		}
+
+		if(filterable instanceof QuestionQuestion) {
+			QuestionQuestion qq = (QuestionQuestion)filterable;
+			log.info("Attaching Capability Requirements: " + CommonUtils.getArrayString(capabilityRequirements) + " to QuestionQuestion: " + realm + ":" + qq.getParentCode() + ":" + qq.getChildCode());
+			// TODO: Potentially update sub questions
+			return questionUtils.saveQuestionQuestion(qq);
+		}
+
+		if(filterable instanceof Question) {
+			Question q = (Question)filterable;
+			log.info("Attaching Capability Requirements: " + CommonUtils.getArrayString(capabilityRequirements) + " to Question: " + realm + ":" + q.getCode());
+			return questionUtils.saveQuestion(q);
+		}
+
+		if(filterable instanceof HEntityAttribute) {
+			HEntityAttribute ea = (HEntityAttribute)filterable;
+			log.info("Attaching Capability Requirements: " + CommonUtils.getArrayString(capabilityRequirements) + " to EntityAttribute: " + realm + ":" + ea.getBaseEntityCode() + ":" + ea.getAttributeCode());
+			HBaseEntity be = ea.getBaseEntity();
+			beUtils.updateBaseEntity(be.toBaseEntity());
+			return true;
+		}
+		return false;
 	}
 }

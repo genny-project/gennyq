@@ -1,9 +1,6 @@
 package life.genny.lauchy;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+ 
+import java.util.*;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -12,9 +9,12 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.utils.*;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
+
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.attribute.Attribute;
@@ -24,14 +24,11 @@ import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.kafka.KafkaTopic;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.message.QDataAnswerMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.FilterUtils;
-import life.genny.qwandaq.utils.KafkaUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
 
 @ApplicationScoped
 public class Validator {
@@ -48,13 +45,22 @@ public class Validator {
 	UserToken userToken;
 
 	@Inject
+	CacheManager cm;
+
+	@Inject
 	QwandaUtils qwandaUtils;
 
 	@Inject
 	BaseEntityUtils beUtils;
 
 	@Inject
+	EntityAttributeUtils beaUtils;
+
+	@Inject
 	FilterUtils filter;
+
+	@Inject
+	AttributeUtils attributeUtils;
 
 	/**
 	 * @param data
@@ -63,7 +69,7 @@ public class Validator {
 	public String handleDependentDropdowns(String data) {
 
 		QDataAnswerMessage answers = jsonb.fromJson(data, QDataAnswerMessage.class);
-		List<Ask> asksToSend = new ArrayList<>();
+		Set<Ask> asksToSend = new HashSet<>();
 
 		Arrays.stream(answers.getItems())
 				.filter(answer -> answer.getAttributeCode() != null && answer.getAttributeCode().startsWith(Prefix.LNK_))
@@ -73,7 +79,7 @@ public class Validator {
 					// we get
 					ProcessData processData = qwandaUtils.fetchProcessData(processId);
 					if (processData != null) {
-						List<Ask> asks = qwandaUtils.fetchAsks(processData);
+						Set<Ask> asks = qwandaUtils.fetchAsks(processData);
 						Definition definition = beUtils.getDefinition(processData.getDefinitionCode());
 						BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
 
@@ -193,7 +199,7 @@ public class Validator {
 		}
 
 		// TODO: The attribute should be retrieved from askMessage
-		Attribute attribute = qwandaUtils.getAttribute(attributeCode);
+		Attribute attribute = attributeUtils.getAttribute(attributeCode, true, true);
 
 		temporaryBucketSearchHandler(answer, target, attribute);
 
@@ -218,7 +224,7 @@ public class Validator {
 		}
 
 		// blacklist if none of the regex match
-		if (!QwandaUtils.validationsAreMet(attribute, answer.getValue()))
+		if (!qwandaUtils.validationsAreMet(attribute, answer.getValue()))
 			return blacklist("Answer Value is bad: " + answer.getValue());
 		log.info("Answer Value is good: " + answer.getValue());
 
@@ -316,8 +322,12 @@ public class Validator {
 
 			// So send back a dummy empty value for the LNK_PERSON
 			try {
-				target.setValue(attribute, "[]");
-
+				EntityAttribute entityAttribute = beaUtils.getEntityAttribute(target.getRealm(), target.getCode(), attribute.getCode());
+				if (entityAttribute == null) {
+					entityAttribute = new EntityAttribute(target, attribute, 0.0, "[]");
+					beaUtils.updateEntityAttribute(entityAttribute);
+				}
+				target.addAttribute(entityAttribute);
 				QDataBaseEntityMessage responseMsg = new QDataBaseEntityMessage(target);
 				responseMsg.setTotal(1L);
 				responseMsg.setReturnCount(1L);

@@ -7,6 +7,9 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import life.genny.qwandaq.utils.EntityAttributeUtils;
+import org.jboss.logging.Logger;
+
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -28,6 +31,9 @@ public abstract class Manager {
 
 	@Inject
 	protected BaseEntityUtils beUtils;
+
+	@Inject
+	protected EntityAttributeUtils beaUtils;
 
 	@Inject
 	protected DatabaseUtils dbUtils;

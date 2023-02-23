@@ -14,6 +14,10 @@ import javax.json.JsonObjectBuilder;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
+import life.genny.kogito.common.utils.KogitoUtils;
+import life.genny.qwandaq.constants.Prefix;
+import life.genny.qwandaq.managers.capabilities.role.RoleManager;
+import life.genny.qwandaq.utils.*;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.attribute.Attribute;
@@ -26,6 +30,7 @@ import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.response.GennyResponseException;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QEventMessage;
+import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 
@@ -35,6 +40,33 @@ public class NavigationService extends KogitoService {
 	private static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 
 	Jsonb jsonb = JsonbBuilder.create();
+
+	@Inject
+	UserToken userToken;
+
+	@Inject
+	QwandaUtils qwandaUtils;
+
+	@Inject
+	BaseEntityUtils beUtils;
+
+	@Inject
+	EntityAttributeUtils beaUtils;
+
+	@Inject
+	SearchService searchService;
+
+	@Inject
+	KogitoUtils kogitoUtils;
+
+	@Inject
+	SearchUtils searchUtils;
+
+	@Inject
+	RoleManager roleManager;
+
+	@Inject
+	TaskService tasks;
 
 	public static final String PRI_IS_PREFIX = "PRI_IS_";
 
@@ -99,19 +131,20 @@ public class NavigationService extends KogitoService {
 	 */
 	public void sendSummary() {
 		// fetch user's linked summary
-		BaseEntity user = beUtils.getUserBaseEntity();
-		BaseEntity summary = beUtils.getBaseEntityFromLinkAttribute(user, Attribute.LNK_SUMMARY);
-		if (summary == null) {
-			throw new ItemNotFoundException("LNK_SUMMARY for " + user.getCode());
-		}
-		PCM pcm = PCM.from(summary);
 		String userCode = userToken.getUserCode();
+		String productCode = userToken.getProductCode();
+		EntityAttribute summary = beaUtils.getEntityAttribute(productCode, userCode, Attribute.LNK_SUMMARY, true);
+		if (summary == null) {
+			throw new ItemNotFoundException(productCode, userCode, Attribute.LNK_SUMMARY);
+		}
+		String summaryCode = CommonUtils.cleanUpAttributeValue(summary.getValue());
+		log.debug("Found summary PCM: " + summaryCode);
 
-		log.infof("Dispatching Summary %s for user %s", user.getCode(), pcm.getCode());
+		log.infof("Dispatching Summary %s for user %s", userCode, summaryCode);
 		JsonObject payload = Json.createObjectBuilder()
 				.add("sourceCode", userCode)
 				.add("targetCode", userCode)
-				.add("pcmCode", pcm.getCode())
+				.add("pcmCode", summaryCode)
 				.add("parent", PCM_CONTENT)
 				.add("location", PCM.location(1))
 				.build();
@@ -165,9 +198,12 @@ public class NavigationService extends KogitoService {
 		// firstly, check question code
 		try {
 			BaseEntity target = beUtils.getBaseEntity(defCode);
-
-			defaultRedirectCode = target.getValueAsString("DFT_PRI_DEFAULT_REDIRECT");
-			log.info("Actioning redirect for question: " + target.getCode() + " : " + defaultRedirectCode);
+			String targetCode = target.getCode();
+			EntityAttribute priDefaultRedirect = beaUtils.getEntityAttribute(target.getRealm(), targetCode, "DFT_PRI_DEFAULT_REDIRECT", false);
+			if (priDefaultRedirect != null) {
+				defaultRedirectCode = priDefaultRedirect.getValueString();
+			}
+			log.info("Actioning redirect for question: " + targetCode + " : " + defaultRedirectCode);
 		} catch (Exception ex) {
 			log.error(ex);
 		}
@@ -196,14 +232,14 @@ public class NavigationService extends KogitoService {
 		String defCode = "";
 		try {
 			BaseEntity user = beUtils.getUserBaseEntity();
-			List<EntityAttribute> priIsAttributes = user.findPrefixEntityAttributes(PRI_IS_PREFIX);
+			List<EntityAttribute> priIsAttributes = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(user.getRealm(), user.getCode(), PRI_IS_PREFIX);
 			if (priIsAttributes.size() > 0) {
 				EntityAttribute attr = priIsAttributes.get(0);
 				defCode = "DEF_" + attr.getAttributeCode().replaceFirst(PRI_IS_PREFIX, "");
 			}
 
 			BaseEntity target = beUtils.getBaseEntity(defCode);
-			redirectCode = target.getValueAsString("DFT_PRI_DEFAULT_REDIRECT");
+			redirectCode = beaUtils.getEntityAttribute(target.getRealm(), defCode, "DFT_PRI_DEFAULT_REDIRECT", false).getValueString();
 		} catch (Exception ex) {
 			log.error(ex);
 		}

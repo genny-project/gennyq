@@ -1,9 +1,11 @@
 package life.genny.qwandaq.session.bridge;
 
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.GennyToken;
-import life.genny.qwandaq.utils.CacheUtils;
 import org.jboss.logging.Logger;
 
+import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import java.util.HashSet;
@@ -15,6 +17,7 @@ import java.util.Set;
  * @author Byron Aguirre
  * @author Jasper Robison
  */
+@ApplicationScoped
 public class BridgeSwitch {
 
 	static final Logger log = Logger.getLogger(BridgeSwitch.class);
@@ -24,23 +27,25 @@ public class BridgeSwitch {
 	public static String BRIDGE_INFO_PREFIX = "BIF";
 	public static String BRIDGE_SWITCH_KEY = "ACTIVE_BRIDGE_IDS";
 
+	@Inject
+	CacheManager cm;
+
 	/**
 	* Cache active Bridge Ids
 	*
 	* @param gennyToken The users gennyToken
 	* @param bridgeId The id to add to active ids
 	 */
-	public static void addActiveBridgeId(GennyToken gennyToken, String bridgeId) {
+	public void addActiveBridgeId(GennyToken gennyToken, String bridgeId) {
 
 		String product = gennyToken.getProductCode();
-		Set<String> activeBridgeIds = CacheUtils.getObject(product, BRIDGE_SWITCH_KEY, Set.class);
+		Set<String> activeBridgeIds = cm.getObject(product, BRIDGE_SWITCH_KEY, Set.class);
 		// create new set if none found
-		if (activeBridgeIds == null) {
-            activeBridgeIds = new HashSet<>();
-		}
+		if (activeBridgeIds == null)
+			activeBridgeIds = new HashSet<String>();
 
 		activeBridgeIds.add(bridgeId);
-		CacheUtils.putObject(product, BRIDGE_SWITCH_KEY, activeBridgeIds);
+		cm.putObject(product, BRIDGE_SWITCH_KEY, activeBridgeIds);
 	}
 
 	/**
@@ -49,10 +54,10 @@ public class BridgeSwitch {
 	* @param gennyToken Used to find the product
 	* @return String An active Bridge ID
 	 */
-	public static String findActiveBridgeId(GennyToken gennyToken) {
+	public String findActiveBridgeId(GennyToken gennyToken) {
 
 		String product = gennyToken.getProductCode();
-		Set<String> activeBridgeIds = CacheUtils.getObject(product, BRIDGE_SWITCH_KEY, Set.class);
+		Set<String> activeBridgeIds = cm.getObject(product, BRIDGE_SWITCH_KEY, Set.class);
 		// null check
 		if (activeBridgeIds == null)
 			return null;
@@ -69,19 +74,19 @@ public class BridgeSwitch {
 	* @param gennyToken The users GennyToken
 	* @param bridgeId The ID of the bridge used in communication
 	 */
-	public static void put(GennyToken gennyToken, String bridgeId) {
+	public void put(GennyToken gennyToken, String bridgeId) {
 
 		String product = gennyToken.getProductCode();
 		String key = BRIDGE_INFO_PREFIX + "_" + gennyToken.getUserCode();
 		log.debug("Adding Switch to Cache --- " + key + " :: " + bridgeId);
 		// grab from cache or create if null
-		BridgeInfo info = CacheUtils.getObject(product, key, BridgeInfo.class);
+		BridgeInfo info = cm.getObject(product, key, BridgeInfo.class);
 		if (info == null)
 			info = new BridgeInfo();
 		// add entry for jti and update in cache
 		String jti = gennyToken.getJTI();
 		info.mappings.put(jti, bridgeId);
-		CacheUtils.putObject(product, key, info);
+		cm.putObject(product, key, info);
 	}
 
 	/**
@@ -91,12 +96,12 @@ public class BridgeSwitch {
 	* @param gennyToken The users GennyToken
 	* @return String The corresponding bridgeId
 	 */
-	public static String get(GennyToken gennyToken) {
+	public String get(GennyToken gennyToken) {
 
 		String product = gennyToken.getProductCode();
 		String key = BRIDGE_INFO_PREFIX + "_" + gennyToken.getUserCode();
 		// grab from cache
-		BridgeInfo info = CacheUtils.getObject(product, key, BridgeInfo.class);
+		BridgeInfo info = cm.getObject(product, key, BridgeInfo.class);
 		if (info == null) {
 			log.debug("No BridgeInfo object found for user " + gennyToken.getUserCode());
 			return null;

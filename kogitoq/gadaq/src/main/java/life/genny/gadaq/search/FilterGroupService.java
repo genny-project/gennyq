@@ -8,13 +8,12 @@ import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.entity.search.SearchEntity;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.message.QDataAnswerMessage;
 import life.genny.qwandaq.message.QEventMessage;
 import life.genny.qwandaq.models.SavedSearch;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.CacheUtils;
-import life.genny.qwandaq.utils.DatabaseUtils;
-import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.utils.*;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -22,15 +21,9 @@ import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import java.lang.invoke.MethodHandles;
-import java.util.Set;
-import java.util.Optional;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.UUID;
+import java.util.*;
 import javax.inject.Inject;
-import life.genny.qwandaq.utils.BaseEntityUtils;
+
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.constants.Prefix;
@@ -54,7 +47,13 @@ public class FilterGroupService {
     FilterService filterService;
 
     @Inject
-    DatabaseUtils databaseUtils;
+    CacheManager cacheManager;
+
+    @Inject
+    QuestionUtils questionUtils;
+
+    @Inject
+    AttributeUtils attributeUtils;
 
     public static final String PRI_PREFIX = "PRI_PREFIX";
     public  static final DataType DataTypeStr = DataType.getInstance("life.genny.qwanda.entity.BaseEntity");
@@ -299,7 +298,7 @@ public class FilterGroupService {
                 baseEntity = beUtils.create(defBE, nameOrCode, baseCode);
             }
 
-            Attribute attrFound = qwandaUtils.getAttribute(user.getProductCode(),attCode);
+            Attribute attrFound = attributeUtils.getAttribute(user.getProductCode(), attCode, true);
 
             // array of parameters and update main base entity
             List<String> listUUID = getListUUID(prefix + "_",params.entrySet().size());
@@ -376,7 +375,7 @@ public class FilterGroupService {
      * @param code Base entity
      */
     public void deleteSearch(String code) {
-        databaseUtils.deleteBaseEntityAndAttribute(user.getProductCode(), code);
+        beUtils.removeBaseEntity(user.getProductCode(), code);
     }
 
     /**
@@ -435,7 +434,7 @@ public class FilterGroupService {
         filterService.sendPartialPCM(PCM.PCM_SBE_DETAIL_VIEW, PCM.location(1), base.getCode());
         filterService.sendFilterDetailsByBase(base,Question.QUE_SBE_DETAIL_QUESTION_GRP,base.getCode(),params);
 
-        CacheUtils.putObject(user.getProductCode(),filterService.getCachedAnswerKey(),params);
+        cacheManager.putObject(user.getProductCode(),filterService.getCachedAnswerKey(),params);
     }
 
     /**
@@ -447,7 +446,7 @@ public class FilterGroupService {
     public String getValueStringByAttCode(BaseEntity base, String attCode) {
         String value = "";
 
-        Set<EntityAttribute> attributeSet =  base.getBaseEntityAttributes();
+        Collection<EntityAttribute> attributeSet =  base.getBaseEntityAttributes();
         Optional<EntityAttribute> ea = attributeSet.stream().filter(e -> e.getAttributeCode().equalsIgnoreCase(attCode))
                 .findFirst();
         if(ea.isPresent()) {
@@ -480,7 +479,7 @@ public class FilterGroupService {
             log.error(ex);
         }
 
-        CacheUtils.putObject(user.getProductCode(),filterService.getCachedAnswerKey(),result);
+        cacheManager.putObject(user.getProductCode(),filterService.getCachedAnswerKey(),result);
         return result;
     }
 
@@ -545,9 +544,9 @@ public class FilterGroupService {
         SavedSearch savedSearch = new SavedSearch(attCode,value,dataType);
 
         // put saved search to cached
-        Map<String, SavedSearch> params = CacheUtils.getObject(user.getProductCode(),filterService.getCachedAnswerKey() ,Map.class);
+        Map<String, SavedSearch> params = cacheManager.getObject(user.getProductCode(),filterService.getCachedAnswerKey() ,Map.class);
         params.put(UUID.randomUUID().toString() ,savedSearch);
-        CacheUtils.putObject(user.getProductCode(),filterService.getCachedAnswerKey(),params);
+        cacheManager.putObject(user.getProductCode(),filterService.getCachedAnswerKey(),params);
     }
 
     /**
@@ -792,7 +791,7 @@ public class FilterGroupService {
      * @return Parameters from cache
      */
     public Map<String,SavedSearch> getParamsFromCache() {
-        Map<String, SavedSearch> params = CacheUtils.getObject(user.getProductCode(),filterService.getCachedAnswerKey() ,Map.class);
+        Map<String, SavedSearch> params = cacheManager.getObject(user.getProductCode(),filterService.getCachedAnswerKey() ,Map.class);
         if(params == null) params = new HashMap<>();
         return params;
     }
@@ -851,8 +850,8 @@ public class FilterGroupService {
     public String getAttributeDataType(String attrCode) {
         String result = "";
         try {
-            Attribute attribute = databaseUtils.findAttributeByCode(user.getProductCode(), attrCode);
-            if (attribute != null) result = attribute.dataType.getDttCode();
+            Attribute attribute = attributeUtils.getAttribute(user.getProductCode(), attrCode, false);
+            if (attribute != null) result = attribute.getDttCode();
         } catch (Exception ex){
             log.error(ex);
         }
@@ -865,7 +864,7 @@ public class FilterGroupService {
      * @return Filter attribute code for PCM
      */
     public String getFilterAttributeCodeForPCM(String filterQuestion) {
-        Question question = databaseUtils.findQuestionByCode(user.getProductCode(),filterQuestion);
+        Question question = questionUtils.getQuestionFromQuestionCode(user.getProductCode(),filterQuestion);
         return question.getAttributeCode();
     }
 

@@ -1,106 +1,75 @@
 package life.genny.qwandaq;
 
+import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.converter.CapabilityConverter;
+import life.genny.qwandaq.datatype.capability.core.Capability;
+import life.genny.qwandaq.intf.ICapabilityHiddenFilterable;
+import life.genny.qwandaq.serialization.CoreEntitySerializable;
+import org.apache.commons.lang3.builder.CompareToBuilder;
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
+import javax.persistence.PrePersist;
+import javax.persistence.PreUpdate;
+import javax.persistence.Transient;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.json.bind.annotation.JsonbTransient;
-import javax.persistence.AssociationOverride;
-import javax.persistence.AssociationOverrides;
-import javax.persistence.Cacheable;
-import javax.persistence.Column;
-import javax.persistence.Convert;
-import javax.persistence.EmbeddedId;
-import javax.persistence.Entity;
-import javax.persistence.Index;
-import javax.persistence.JoinColumn;
-import javax.persistence.PrePersist;
-import javax.persistence.PreUpdate;
-import javax.persistence.Table;
-import javax.persistence.Transient;
-import javax.persistence.UniqueConstraint;
-
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-import io.quarkus.runtime.annotations.RegisterForReflection;
-import life.genny.qwandaq.converter.CapabilityConverter;
-import life.genny.qwandaq.datatype.capability.core.Capability;
-import life.genny.qwandaq.intf.ICapabilityFilterable;
-import life.genny.qwandaq.intf.ICapabilityHiddenFilterable;
-
-import org.apache.commons.lang3.builder.CompareToBuilder;
-
-@Entity
-@Table(name = "question_question", uniqueConstraints = @UniqueConstraint(columnNames = { "sourceCode", "targetCode",
-		"realm" }), indexes = {
-				@Index(columnList = "sourceCode", name = "source_idx"),
-				@Index(columnList = "realm", name = "code_idx")
-		})
-@AssociationOverrides({ @AssociationOverride(name = "pk.source", joinColumns = @JoinColumn(name = "SOURCE_ID"))
-})
-@Cacheable
 @RegisterForReflection
-public class QuestionQuestion implements java.io.Serializable, Comparable<Object>, ICapabilityHiddenFilterable {
+public class QuestionQuestion implements CoreEntityPersistable, Comparable<Object>, ICapabilityHiddenFilterable {
 
 	private static final long serialVersionUID = 1L;
 
-	@EmbeddedId
-	private QuestionQuestionId pk = new QuestionQuestionId();
+	private String parentCode;
 
-	@Column(name = "created")
+	private String childCode;
+
 	private LocalDateTime created;
 
-	/**
-	 * Stores the Last Modified UMT DateTime that this object was last updated
-	 */
-	@Column(name = "updated")
 	private LocalDateTime updated;
 
-	/**
-	 * Store the relative importance of this question link
-	 */
 	private Double weight;
 
 	private Long version = 1L;
 
-	Boolean mandatory = false;
-
 	// If this is set to true then attribute needs to be set to readonly after value
 	// set.
-	Boolean oneshot = false;
+	private Boolean oneshot = false;
+
+	private Boolean mandatory = false;
 
 	private Boolean disabled = false;
+
 	private Boolean hidden = false;
 
 	private Boolean readonly = false;
 
 	private String realm;
 
-	private Boolean formTrigger;
-
-	private Boolean createOnTrigger;
-
-	private String dependency;
-
 	private String icon;
-	
-	@Column(name = "capreqs")
-	@Convert(converter = CapabilityConverter.class)
-	private Set<Capability> capabilityRequirements;
 
+	private Set<Capability> capabilityRequirements;
 
 	public QuestionQuestion() {
 	}
 
+	public QuestionQuestion(final Question source, final Question target) {
+		this(source, target, 0.0);
+	}
+
+	public QuestionQuestion(final Question source, final Question target, Double weight) {
+		autocreateCreated();
+		this.setParentCode(source.getCode());
+		this.setChildCode(target.getCode());
+		setWeight(weight);
+	}
+
 	/**
 	 * Constructor.
-	 * 
+	 *
 	 * @param source
 	 *                   the source baseEntity
 	 * @param targetCode
@@ -120,10 +89,10 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	 *                   attributes)
 	 */
 	public QuestionQuestion(final Question source, final String targetCode, Double weight, boolean mandatory,
-			boolean disabled, boolean hidden, boolean readonly) {
+							boolean disabled, boolean hidden, boolean readonly) {
 		autocreateCreated();
-		getPk().setSource(source);
-		getPk().setTargetCode(targetCode);
+		setParentCode(source.getCode());
+		setChildCode(targetCode);
 		setMandatory(mandatory);
 		setDisabled(disabled);
 		setHidden(hidden);
@@ -137,7 +106,7 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 
 	/**
 	 * Constructor.
-	 * 
+	 *
 	 * @param source
 	 *                   the source baseEntity
 	 * @param targetCode
@@ -154,13 +123,13 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	 *                   Is the question hidden
 	 */
 	public QuestionQuestion(final Question source, final String targetCode, Double weight, boolean mandatory,
-			boolean disabled, boolean hidden) {
+							boolean disabled, boolean hidden) {
 		this(source, targetCode, weight, mandatory, disabled, hidden, false);
 	}
 
 	/**
 	 * Constructor.
-	 * 
+	 *
 	 * @param source
 	 *                   the source baseEntity
 	 * @param targetCode
@@ -175,13 +144,13 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	 *                   Is the question read only
 	 */
 	public QuestionQuestion(final Question source, final String targetCode, Double weight, boolean mandatory,
-			boolean disabled) {
+							boolean disabled) {
 		this(source, targetCode, weight, mandatory, disabled, false);
 	}
 
 	/**
 	 * Constructor.
-	 * 
+	 *
 	 * @param source
 	 *                   the source baseEntity
 	 * @param targetCode
@@ -197,45 +166,12 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 		this(source, targetCode, weight, mandatory, false);
 	}
 
-	/**
-	 * Constructor.
-	 *
-	 * @param source
-	 *               The Source Question.
-	 * @param target
-	 *               The Target Question.
-	 * @param weight
-	 *               the weighted importance of this attribute (relative to the
-	 *               other
-	 *               attributes)
-	 */
-	public QuestionQuestion(final Question source, final Question target, Double weight) {
-		autocreateCreated();
-
-		this.pk.setSource(source);
-
-		this.pk.setTargetCode(target.getCode());
-
-		if (weight == null) {
-			weight = 0.0; // This permits ease of adding attributes and hides
-							// attribute from scoring.
-		}
-		setWeight(weight);
-
+	public void setParentCode(String parentCode) {
+		this.parentCode = parentCode;
 	}
 
-	/**
-	 * @return QuestionQuestionId
-	 */
-	public QuestionQuestionId getPk() {
-		return pk;
-	}
-
-	/**
-	 * @param pk the pk to set
-	 */
-	public void setPk(final QuestionQuestionId pk) {
-		this.pk = pk;
+	public void setChildCode(String childCode) {
+		this.childCode = childCode;
 	}
 
 	/**
@@ -341,6 +277,7 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 		this.oneshot = oneshot;
 	}
 
+
 	/**
 	 * @return the disabled
 	 */
@@ -444,8 +381,8 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	public int hashCode() {
 
 		HashCodeBuilder hcb = new HashCodeBuilder();
-		hcb.append(pk.getSourceCode());
-		hcb.append(pk.getTargetCode());
+		hcb.append(getParentCode());
+		hcb.append(getChildCode());
 		hcb.append(getRealm());
 		return hcb.toHashCode();
 	}
@@ -466,8 +403,8 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 		}
 		QuestionQuestion that = (QuestionQuestion) obj;
 		EqualsBuilder eb = new EqualsBuilder();
-		eb.append(pk.getSourceCode(), that.pk.getSourceCode());
-		eb.append(pk.getTargetCode(), that.pk.getTargetCode());
+		eb.append(getParentCode(), that.getParentCode());
+		eb.append(getChildCode(), that.getChildCode());
 		eb.append(getRealm(), that.getRealm());
 		return eb.isEquals();
 	}
@@ -501,83 +438,26 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 	}
 
 	/**
-	 * @return the formTrigger
-	 */
-	public Boolean getFormTrigger() {
-		return formTrigger;
-	}
-
-	/**
-	 * @return the formTrigger
-	 */
-	public Boolean isFormTrigger() {
-		return getFormTrigger();
-	}
-
-	/**
-	 * @param formTrigger the formTrigger to set
-	 */
-	public void setFormTrigger(Boolean formTrigger) {
-		this.formTrigger = formTrigger;
-	}
-
-	/**
-	 * @return the createOnTrigger
-	 */
-	public Boolean getCreateOnTrigger() {
-		return createOnTrigger;
-	}
-
-	/**
-	 * @return the createOnTrigger
-	 */
-	public Boolean isCreateOnTrigger() {
-		return getCreateOnTrigger();
-	}
-
-	/**
-	 * @param createOnTrigger the createOnTrigger to set
-	 */
-	public void setCreateOnTrigger(Boolean createOnTrigger) {
-		this.createOnTrigger = createOnTrigger;
-	}
-
-	/**
 	 * @return String
 	 */
 	@Override
 	public String toString() {
-		return "SRC:" + getPk().getSourceCode() + " - " + getPk().getTargetCode() + " "
-				+ (this.getMandatory() ? "MANDATORY" : "OPTIONAL") + " " + (this.getReadonly() ? "RO" : "RW") + " "
-				+ (this.getFormTrigger() ? "FT" : "NFT") + " " + (this.getCreateOnTrigger() ? "COT" : "NCOT");
+		return "SRC:" + getParentCode() + " - " + getChildCode() + " "
+				+ (this.getMandatory() ? "MANDATORY" : "OPTIONAL") + " " + (this.getReadonly() ? "RO" : "RW");
 	}
 
 	/**
 	 * @return String
 	 */
-	public String getSourceCode() {
-		return pk.getSourceCode();
+	public String getParentCode() {
+		return parentCode;
 	}
 
 	/**
 	 * @return String
 	 */
-	public String getTargetCode() {
-		return pk.getTargetCode();
-	}
-
-	/**
-	 * @return String
-	 */
-	public String getDependency() {
-		return dependency;
-	}
-
-	/**
-	 * @param dependency the dependency to set
-	 */
-	public void setDependency(String dependency) {
-		this.dependency = dependency;
+	public String getChildCode() {
+		return childCode;
 	}
 
 	/**
@@ -594,17 +474,31 @@ public class QuestionQuestion implements java.io.Serializable, Comparable<Object
 		return this.icon;
 	}
 
-    @JsonbTransient
-    @JsonIgnore
     public Set<Capability> getCapabilityRequirements() {
 		return this.capabilityRequirements;
 	}
-	
+
 	@Override
-    @JsonbTransient
-    @JsonIgnore
 	public void setCapabilityRequirements(Set<Capability> requirements) {
-		this.capabilityRequirements = requirements;		
+		this.capabilityRequirements = requirements;
 	}
 
+	@Override
+	public CoreEntitySerializable toSerializableCoreEntity() {
+		life.genny.qwandaq.serialization.questionquestion.QuestionQuestion questionQuestion = new life.genny.qwandaq.serialization.questionquestion.QuestionQuestion();
+		questionQuestion.setParentCode(getParentCode());
+		questionQuestion.setChildCode(getChildCode());
+		questionQuestion.setCreated(getCreated());
+		questionQuestion.setDisabled(getDisabled());
+		questionQuestion.setHidden(getHidden());
+		questionQuestion.setIcon(getIcon());
+		questionQuestion.setMandatory(getMandatory());
+		questionQuestion.setReadonly(getReadonly());
+		questionQuestion.setRealm(getRealm());
+		questionQuestion.setUpdated(getUpdated());
+		questionQuestion.setVersion(getVersion());
+		questionQuestion.setWeight(getWeight());
+		questionQuestion.setCapreqs(CapabilityConverter.convertToDBColumn(getCapabilityRequirements()));
+		return questionQuestion;
+	}
 }

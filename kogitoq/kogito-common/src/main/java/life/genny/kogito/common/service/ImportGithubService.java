@@ -1,26 +1,52 @@
 package life.genny.kogito.common.service;
 
-import life.genny.qwandaq.Answer;
-import life.genny.qwandaq.entity.BaseEntity;
-
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.errors.RevisionSyntaxException;
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.List;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
 
+import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.utils.*;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.errors.RevisionSyntaxException;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.entity.Definition;
-import life.genny.qwandaq.utils.GithubUtils;
+import life.genny.qwandaq.Answer;
+import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.managers.CacheManager;
+import life.genny.qwandaq.models.ServiceToken;
 
 @ApplicationScoped
 public class ImportGithubService extends KogitoService {
 
 	@Inject
+	CacheManager cm;
+
+	@Inject
+	BaseEntityUtils beUtils;
+
+	@Inject
+	EntityAttributeUtils beaUtils;
+
+	@Inject
+	ServiceToken serviceToken;
+
+	@Inject
+	DatabaseUtils databaseUtils;
+
+	@Inject
+	DefUtils defUtils;
+
+	@Inject
 	Logger log;
+
+	@Inject
+	AttributeUtils attributeUtils;
 
 	/**
 	 * Import github files
@@ -47,17 +73,20 @@ public class ImportGithubService extends KogitoService {
 			e.printStackTrace();
 		}
 		log.info("bes = " + bes.size());
-		Definition dotDef = Definition.from(beUtils.getBaseEntity(realm, "DEF_DOCUMENT_TEMPLATE"));
+		Definition dotDef = Definition.from(beUtils.getBaseEntity(realm, "DEF_DOCUMENT_TEMPLATE", true));
 		for (BaseEntity be : bes) {
 			if (be != null) {
-				log.info("saving be = " + be.getCode() + ":" + be.getName());
-				BaseEntity newBe = beUtils.create(dotDef, be.getName(), be.getCode());
-				newBe.setRealm(be.getRealm());
+				String beCode = be.getCode();
+				log.info("saving be = " + beCode + ":" + be.getName());
+				BaseEntity newBe = beUtils.create(dotDef, be.getName(), beCode);
+				String productCode = be.getRealm();
+				newBe.setRealm(productCode);
 
-				newBe.addAnswer(new Answer(newBe, newBe, qwandaUtils.getAttribute("PRI_NAME"), be.getName()));
-				newBe.addAnswer(new Answer(newBe, newBe, qwandaUtils.getAttribute("PRI_CODE"), be.getCode()));
-				newBe.addAnswer(new Answer(newBe, newBe, qwandaUtils.getAttribute("PRI_HTML_MERGE"),
-						be.getValueAsString("PRI_HTML_MERGE")));
+				newBe.addAttribute(new EntityAttribute(newBe, attributeUtils.getAttribute("PRI_NAME"), 1.0, be.getName()));
+				newBe.addAttribute(new EntityAttribute(newBe, attributeUtils.getAttribute("PRI_CODE"), 1.0, beCode));
+				newBe.addAttribute(new EntityAttribute(newBe, attributeUtils.getAttribute("PRI_HTML_MERGE"), 1.0,
+						beaUtils.getEntityAttribute(
+								productCode, beCode, "PRI_HTML_MERGE").getValueString()));
 
 				beUtils.updateBaseEntity(newBe);
 			} else {

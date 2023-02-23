@@ -1,11 +1,18 @@
 package life.genny.kogito.common.models;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.jboss.logging.Logger;
+import java.io.Serializable;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 
 import javax.json.bind.annotation.JsonbTransient;
-import java.io.Serializable;
-import java.time.*;
+
+import java.time.ZoneOffset;
+
+import org.jboss.logging.Logger;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class TimerEvent implements Serializable {
 

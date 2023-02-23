@@ -1,11 +1,13 @@
 package life.genny.messages.managers;
 
+import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.utils.MergeUtils;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -17,6 +19,9 @@ import java.util.Map;
 public final class QSlackMessageManager extends QMessageProvider {
 
     private static final Logger log = Logger.getLogger(QSlackMessageManager.class);
+
+    @Inject
+    MergeUtils mergeUtils;
 
     @Override
     public void sendMessage(BaseEntity templateBe, Map<String, Object> contextMap) {
@@ -37,7 +42,8 @@ public final class QSlackMessageManager extends QMessageProvider {
         }
         log.info("Project is " + projectBe.getCode());
 
-        String targetUrl = target.getValue("PRI_URL", null);
+        EntityAttribute targetUrlAttribute = beaUtils.getEntityAttribute(projectBe.getRealm(), projectBe.getCode(), "PRI_URL");
+        String targetUrl = targetUrlAttribute != null ? targetUrlAttribute.getValueString() : null;
         if (targetUrl == null) {
             log.error(ANSIColour.RED + "targetUrl is NULL" + ANSIColour.RESET);
             return;
@@ -47,7 +53,8 @@ public final class QSlackMessageManager extends QMessageProvider {
         if (contextMap.containsKey("BODY")) {
             body = (String) contextMap.get("BODY");
         } else {
-            body = templateBe.getValue("PRI_BODY", null);
+            EntityAttribute bodyAttribute = beaUtils.getEntityAttribute(templateBe.getRealm(), templateBe.getCode(), "PRI_BODY");
+            body = bodyAttribute != null ? bodyAttribute.getValueString() : null;
         }
         if (body == null) {
             log.error(ANSIColour.RED + "Body is NULL" + ANSIColour.RESET);
@@ -56,7 +63,7 @@ public final class QSlackMessageManager extends QMessageProvider {
         log.info("Body is " + body);
 
         // Mail Merging Data
-        body = MergeUtils.merge(body, contextMap);
+        body = mergeUtils.merge(body, contextMap);
 
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()

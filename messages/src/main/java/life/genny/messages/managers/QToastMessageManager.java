@@ -8,12 +8,16 @@ import life.genny.qwandaq.utils.MergeUtils;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.util.Map;
 
 @ApplicationScoped
 public final class QToastMessageManager extends QMessageProvider {
 
     private static final Logger log = Logger.getLogger(QToastMessageManager.class);
+
+    @Inject
+    MergeUtils mergeUtils;
 
     @Override
     public void sendMessage(BaseEntity templateBe, Map<String, Object> contextMap) {
@@ -52,7 +56,7 @@ public final class QToastMessageManager extends QMessageProvider {
         }
 
         // Mail Merging Data
-        body = MergeUtils.merge(body, contextMap);
+        body = mergeUtils.merge(body, contextMap);
 
         // build toast command msg
         QCmdMessage msg = new QCmdMessage("TOAST", style);

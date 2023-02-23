@@ -16,61 +16,25 @@
 
 package life.genny.qwandaq.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-
-import javax.json.bind.annotation.JsonbTransient;
-import javax.persistence.Cacheable;
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Convert;
-import javax.persistence.DiscriminatorColumn;
-import javax.persistence.DiscriminatorType;
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.Index;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
-import javax.persistence.Transient;
-import javax.persistence.UniqueConstraint;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlTransient;
-import life.genny.qwandaq.Answer;
-import life.genny.qwandaq.AnswerLink;
 import life.genny.qwandaq.CodedEntity;
+import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
-
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.converter.CapabilityConverter;
 import life.genny.qwandaq.datatype.capability.core.Capability;
-
-import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.exception.runtime.BadDataException;
-import life.genny.qwandaq.intf.ICapabilityFilterable;
 import life.genny.qwandaq.intf.ICapabilityHiddenFilterable;
-
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.FilterDef;
-import org.hibernate.annotations.FilterDefs;
-import org.hibernate.annotations.Filters;
-import org.hibernate.annotations.ParamDef;
+import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.jboss.logging.Logger;
+
+import javax.json.bind.annotation.JsonbTransient;
+import javax.persistence.Transient;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * BaseEntity represents a base entity that contains many attributes. It is the
@@ -90,28 +54,8 @@ import org.jboss.logging.Logger;
  * @version %I%, %G%
  * @since 1.0
  */
-
-@XmlRootElement
-@XmlAccessorType(value = XmlAccessType.FIELD)
-@Table(name = "baseentity", indexes = { @Index(columnList = "code", name = "code_idx"),
-		@Index(columnList = "realm", name = "code_idx") }, uniqueConstraints = @UniqueConstraint(columnNames = {
-				"code",
-				"realm"
-		}))
-@Entity
-@DiscriminatorColumn(name = "dtype", discriminatorType = DiscriminatorType.STRING)
-@FilterDefs({
-		@FilterDef(name = "filterAttribute", defaultCondition = "attributeCode in (:attributeCodes)", parameters = {
-				@ParamDef(name = "attributeCodes", type = "string")
-		}),
-		@FilterDef(name = "filterAttribute2", defaultCondition = "attributeCode =:attributeCode", parameters = {
-				@ParamDef(name = "attributeCode", type = "string")
-		})
-})
-@Cacheable
 @RegisterForReflection
-@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabilityFilterable {
+public class BaseEntity extends CodedEntity implements CoreEntityPersistable, BaseEntityIntf, ICapabilityHiddenFilterable {
 
 	@Transient
 	private static final long serialVersionUID = 1L;
@@ -119,89 +63,46 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 	private static final Logger log = Logger.getLogger(BaseEntity.class);
 
 	private static final String DEFAULT_CODE_PREFIX = "BAS_";
-
 	public static final String PRI_NAME = "PRI_NAME";
 	public static final String PRI_IMAGE_URL = "PRI_IMAGE_URL";
 	public static final String PRI_PHONE = "PRI_PHONE";
 	public static final String PRI_ADDRESS_FULL = "PRI_ADDRESS_FULL";
 	public static final String PRI_EMAIL = "PRI_EMAIL";
 
-	@XmlTransient
-	@OneToMany(fetch = FetchType.EAGER, mappedBy = "pk.baseEntity", cascade = CascadeType.ALL)
-	@JsonBackReference(value = "entityAttribute")
-	// @Cascade({CascadeType.MERGE, CascadeType.REMOVE})
-	@Filters({
-			@org.hibernate.annotations.Filter(name = "filterAttribute", condition = "attributeCode in (:attributeCodes)"),
-			@org.hibernate.annotations.Filter(name = "filterAttribute2", condition = "attributeCode =:attributeCode")
-	})
-	// TODO: Make this a Hashmap as with Line 736 TODO
-	private Set<EntityAttribute> baseEntityAttributes = new HashSet<EntityAttribute>(0);
+	private Map<String, EntityAttribute> baseEntityAttributes = new HashMap<>(0);
 
-	@XmlTransient
-	@OneToMany(fetch = FetchType.EAGER, mappedBy = "pk.source")
-	@JsonBackReference(value = "entityEntity")
-	// @Cascade({ CascadeType.MERGE, CascadeType.REMOVE })
-	/* Stores the links of BaseEntity to another BaseEntity */
-	private Set<EntityEntity> links = new LinkedHashSet<>();
-
-	@Transient
-	@JsonbTransient
-	private Set<EntityQuestion> questions = new HashSet<EntityQuestion>(0);
-
-	/*
-	 * @JsonIgnore
-	 * 
-	 * @XmlTransient
-	 * 
-	 * @OneToMany(fetch = FetchType.LAZY, mappedBy = "pk.source")
-	 * 
-	 * @Cascade({ CascadeType.MERGE, CascadeType.DELETE })
-	 * 
-	 * @JsonbTransient
-	 */
-	private transient Set<AnswerLink> answers = new HashSet<AnswerLink>(0);
-
-	@XmlTransient
 	@Transient
 	private Boolean fromCache = false;
 
-	@JsonIgnore
-	@JsonbTransient
-	@XmlTransient
-	@Transient
-	private transient Map<String, EntityAttribute> attributeMap = null;
+	private Set<Capability> capabilityRequirements;
+
 	/**
 	 * Constructor.
 	 */
 	public BaseEntity() {
-		// super();
-		// dummy
+		super();
 	}
 
 	/**
 	 * Constructor.
-	 * 
-	 * @param aName the summary name of the core entity
-	 */
-	public BaseEntity(final String aName) {
-		super(getDefaultCodePrefix() + UUID.randomUUID().toString(), aName);
-	}
-
-	/**
-	 * Constructor.
-	 * 
-	 * @param aCode the unique code of the core entity
-	 * @param aName the summary name of the core entity
+	 *
+	 * @param code the unique code of the core entity
 	 */
 	@ProtoFactory
-	public BaseEntity(final String aCode, final String aName) {
-		super(aCode, aName);
+	public BaseEntity(final String code) {
+		super(code, code);
 	}
 
-
-	@Column(name = "capreqs")
-	@Convert(converter = CapabilityConverter.class)
-	private Set<Capability> capabilityRequirements;
+	/**
+	 * Constructor.
+	 * 
+	 * @param code the unique code of the core entity
+	 * @param name the summary name of the core entity
+	 */
+	@ProtoFactory
+	public BaseEntity(final String code, final String name) {
+		super(code, name);
+	}
 
 	@Override
     public Set<Capability> getCapabilityRequirements() {
@@ -213,106 +114,28 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 		this.capabilityRequirements = requirements;
 	}
 
-	/**
-	 * @return Set The Answers.
-	 */
-	public Set<AnswerLink> getAnswers() {
-		return answers;
+	public Collection<EntityAttribute> getBaseEntityAttributes() {
+		return baseEntityAttributes.values();
 	}
 
-	/**
-	 * @param answers the answers to set
-	 */
-	public void setAnswers(final Set<AnswerLink> answers) {
-		this.answers = answers;
-	}
-
-	/**
-	 * @param answers the answers to set
-	 */
-	public void setAnswers(final List<AnswerLink> answers) {
-		this.answers.addAll(answers);
-	}
-
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public Set<EntityAttribute> getBaseEntityAttributes() {
+	@JsonbTransient
+	public Map<String, EntityAttribute> getBaseEntityAttributesMap() {
 		return baseEntityAttributes;
 	}
 
-
-	/**
-	 * @param baseEntityAttributes the baseEntityAttributes to set
-	 */
-	public void setBaseEntityAttributes(final Set<EntityAttribute> baseEntityAttributes) {
-		this.baseEntityAttributes = baseEntityAttributes;
-	}
-
-	/**
-	 * @param baseEntityAttributes the baseEntityAttributes to set
-	 */
-	public void setBaseEntityAttributes(final List<EntityAttribute> baseEntityAttributes) {
-		this.baseEntityAttributes.addAll(baseEntityAttributes);
-	}
-
-	/**
-	 * @return the links
-	 */
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	// @JsonbTransient
-	public Set<EntityEntity> getLinks() {
-		return links;
-	}
-
-	/**
-	 * Sets the Links of the BaseEntity with another BaseEntity
-	 * 
-	 * @param links the links to set
-	 */
-	public void setLinks(final Set<EntityEntity> links) {
-		this.links = links;
-	}
-
-	/**
-	 * @param links the links to set
-	 */
-	public void setLinks(final List<EntityEntity> links) {
-		this.links.addAll(links);
-	}
-
-	/**
-	 * @return the questions
-	 */
-	@JsonInclude(JsonInclude.Include.NON_NULL)
-	public Set<EntityQuestion> getQuestions() {
-		return this.questions;
-	}
-
-	/**
-	 * Sets the Questions of the BaseEntity with another BaseEntity
-	 * 
-	 * @param questions the questions to set
-	 */
-	public void setQuestions(final Set<EntityQuestion> questions) {
-		this.questions = questions;
-	}
-
-	/**
-	 * @param questions the questions to set
-	 */
 	@JsonbTransient
-	public void setQuestions(final List<EntityQuestion> questions) {
-		this.questions.addAll(questions);
+	public void setBaseEntityAttributes(final Map<String, EntityAttribute> baseEntityAttributesMap) {
+		this.baseEntityAttributes = baseEntityAttributesMap;
 	}
 
-	/**
-	 * getDefaultCodePrefix This method is expected to be overridden in specialised
-	 * child classes.
-	 * 
-	 * @return the default Code prefix for this class.
-	 */
+	@JsonbTransient
+	public void setBaseEntityAttributes(final Set<EntityAttribute> baseEntityAttributes) {
+		baseEntityAttributes.forEach(bea -> this.baseEntityAttributes.put(bea.getAttributeCode(), bea));
+	}
 
-	static public String getDefaultCodePrefix() {
-		return DEFAULT_CODE_PREFIX;
+	@JsonbTransient
+	public void setBaseEntityAttributes(final Collection<EntityAttribute> baseEntityAttributes) {
+		baseEntityAttributes.forEach(bea -> this.baseEntityAttributes.put(bea.getAttributeCode(), bea));
 	}
 
 	/**
@@ -322,51 +145,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 	 * @return boolean
 	 */
 	public boolean containsEntityAttribute(final String attributeCode) {
-		boolean ret = false;
-
-		if (attributeMap != null) {
-			return attributeMap.containsKey(attributeCode);
-		}
-		// Check if this code exists in the baseEntityAttributes
-		if (getBaseEntityAttributes().parallelStream().anyMatch(ti -> ti.getAttributeCode().equals(attributeCode))) {
-			ret = true;
-		}
-		return ret;
-	}
-
-	/**
-	 * containsLink This checks if an attribute link code is linked to the
-	 * baseEntity.
-	 * 
-	 * @param linkAttributeCode the linkAttributeCode to check
-	 * @return boolean
-	 */
-	public boolean containsLink(final String linkAttributeCode) {
-		boolean ret = false;
-
-		// Check if this code exists in the baseEntityAttributes
-		if (getLinks().parallelStream().anyMatch(ti -> ti.getPk().getAttribute().getCode().equals(linkAttributeCode))) {
-			ret = true;
-		}
-		return ret;
-	}
-
-	/**
-	 * containsTarget This checks if another baseEntity is linked to the baseEntity.
-	 * 
-	 * @param targetCode        the targetCode to check
-	 * @param linkAttributeCode the linkAttributeCode to check
-	 * @return boolean
-	 */
-	public boolean containsTarget(final String targetCode, final String linkAttributeCode) {
-		boolean ret = false;
-
-		// Check if this code exists in the baseEntityAttributes
-		if (getLinks().parallelStream().anyMatch(ti -> (ti.getLink().getAttributeCode().equals(linkAttributeCode)
-				&& (ti.getLink().getTargetCode().equals(targetCode))))) {
-			ret = true;
-		}
-		return ret;
+		return getBaseEntityAttributesMap().containsKey(attributeCode);
 	}
 
 	/**
@@ -376,22 +155,9 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 	 * @param attributeCode the attributeCode to find with
 	 * @return Optional
 	 */
+	@Deprecated
 	public Optional<EntityAttribute> findEntityAttribute(final String attributeCode) {
-
-		if (attributeMap != null) {
-			return Optional.ofNullable(attributeMap.get(attributeCode));
-		}
-		Optional<EntityAttribute> foundEntity = Optional.empty();
-
-		try {
-			foundEntity = getBaseEntityAttributes().stream()
-					.filter(x -> (x.getAttributeCode().equals(attributeCode)))
-					.findFirst();
-		} catch (Exception e) {
-			log.error("Error in fetching attribute value: " + attributeCode);
-		}
-
-		return foundEntity;
+		return Optional.ofNullable(this.baseEntityAttributes.get(attributeCode));
 	}
 
 	/**
@@ -415,10 +181,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 	 * @return EntityAttribute
 	 */
 	public Optional<EntityAttribute> findEntityAttribute(final Attribute attribute) {
-		final Optional<EntityAttribute> foundEntityOpt = getBaseEntityAttributes().stream()
-				.filter(x -> (x.getAttributeCode().equals(attribute.getCode()))).findFirst();
-
-		return foundEntityOpt;
+		return Optional.ofNullable(getBaseEntityAttributesMap().get(attribute.getCode()));
 	}
 
 	/**
@@ -431,11 +194,9 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 	 * @throws BadDataException if the attribute could not be added
 	 */
 	public EntityAttribute addAttribute(final EntityAttribute ea) throws BadDataException {
-
 		if (ea == null) {
 			throw new BadDataException("missing Attribute");
 		}
-
 		return addAttribute(ea.getAttribute(), ea.getWeight(), ea.getValue());
 	}
 
@@ -449,7 +210,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 	 * @return EntityAttribute
 	 */
 	public EntityAttribute addAttribute(final Attribute attribute) throws BadDataException {
-
 		return addAttribute(attribute, 1.0);
 	}
 
@@ -464,7 +224,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 	 * @return EntityAttribute
 	 */
 	public EntityAttribute addAttribute(final Attribute attribute, final Double weight) throws BadDataException {
-
 		return addAttribute(attribute, weight, null);
 	}
 
@@ -481,29 +240,20 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 	 */
 	public EntityAttribute addAttribute(final Attribute attribute, final Double weight, final Object value)
 			throws BadDataException {
-
 		if (attribute == null)
 			throw new BadDataException("missing Attribute");
 		if (weight == null)
 			throw new BadDataException("missing weight");
-
-		final EntityAttribute entityAttribute = new EntityAttribute(this, attribute, weight, value);
-		Optional<EntityAttribute> existing = findEntityAttribute(attribute.getCode());
-		if (existing.isPresent()) {
-			if (value != null)
-				existing.get().setValue(value);
-			existing.get().setWeight(weight);
-			// removeAttribute(existing.get().getAttributeCode());
-		} else {
-			this.getBaseEntityAttributes().add(entityAttribute);
+		EntityAttribute entityAttribute = this.baseEntityAttributes.get(attribute.getCode());
+		if (entityAttribute == null) {
+			entityAttribute = new EntityAttribute(this, attribute, weight, value);
 		}
-		return updateEntityAttributePk(entityAttribute, attribute);
-	}
-
-	private EntityAttribute updateEntityAttributePk(EntityAttribute entityAttribute, Attribute attribute) {
-		entityAttribute.setBaseEntity(this);
-		entityAttribute.setAttribute(attribute);
-
+		if (value != null) {
+			entityAttribute.setAttribute(attribute);
+			entityAttribute.setValue(value);
+		}
+		entityAttribute.setWeight(weight);
+		this.baseEntityAttributes.put(attribute.getCode(), entityAttribute);
 		return entityAttribute;
 	}
 
@@ -526,7 +276,12 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 			throw new BadDataException("missing weight");
 
 		final EntityAttribute entityAttribute = new EntityAttribute(this, attribute, weight, value);
-		getBaseEntityAttributes().add(entityAttribute);
+		entityAttribute.setRealm(getRealm());
+		entityAttribute.setBaseEntityCode(getCode());
+		entityAttribute.setBaseEntityId(getId());
+		entityAttribute.setAttribute(attribute);
+		entityAttribute.setAttributeId(attribute.getId());
+		this.baseEntityAttributes.put(attribute.getCode(), entityAttribute);
 
 		return entityAttribute;
 	}
@@ -539,127 +294,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 	 * @return Boolean
 	 */
 	public Boolean removeAttribute(final String attributeCode) {
-		Boolean removed = false;
-
-		Iterator<EntityAttribute> i = this.baseEntityAttributes.iterator();
-		while (i.hasNext()) {
-			EntityAttribute ea = i.next();
-			if (ea.getAttributeCode().equals(attributeCode)) {
-				i.remove();
-				removed = true;
-				break;
-			}
-		}
-
-		if (attributeMap != null) {
-			attributeMap.remove(attributeCode);
-		}
-
-		return removed;
-	}
-
-	/**
-	 * addTarget This links this baseEntity to a target BaseEntity and associated
-	 * weight,value to the baseEntity. It auto creates the EntityEntity object and
-	 * sets itself to be the source. For efficiency we assume the link does not
-	 * already exist
-	 * 
-	 * @param target        the target to add
-	 * @param linkAttribute the attribute link
-	 * @param weight        the weight of the target
-	 * @return EntityEntity
-	 * @throws BadDataException if the target could not be added
-	 */
-	public EntityEntity addTarget(final BaseEntity target, final Attribute linkAttribute, final Double weight)
-			throws BadDataException {
-		return addTarget(target, linkAttribute, weight, null);
-	}
-
-	/**
-	 * addTarget This links this baseEntity to a target BaseEntity and associated
-	 * weight,value to the baseEntity. It auto creates the EntityEntity object and
-	 * sets itself to be the source. For efficiency we assume the link does not
-	 * already exist
-	 * 
-	 * @param target        the target to add
-	 * @param linkAttribute the attribute link
-	 * @param weight        the weight of the target
-	 * @param value         the value of the target
-	 * @return EntityEntity
-	 * @throws BadDataException if the target could not be added
-	 */
-	public EntityEntity addTarget(final BaseEntity target, final Attribute linkAttribute, final Double weight,
-			final Object value) throws BadDataException {
-		if (target == null)
-			throw new BadDataException("missing Target Entity");
-		if (linkAttribute == null)
-			throw new BadDataException("missing Link Attribute");
-		if (weight == null)
-			throw new BadDataException("missing weight");
-
-		final EntityEntity entityEntity = new EntityEntity(this, target, linkAttribute, value, weight);
-		getLinks().add(entityEntity);
-		return entityEntity;
-	}
-
-	/**
-	 * addAnswer This links this baseEntity to a target BaseEntity and associated
-	 * Answer. It auto creates the AnswerLink object and sets itself to be the
-	 * source and assumes itself to be the target. For efficiency we assume the link
-	 * does not already exist and weight = 0
-	 * 
-	 * @param answer the answer to add
-	 * @return AnswerLink
-	 * @throws BadDataException if answer could not be added
-	 */
-	public AnswerLink addAnswer(final Answer answer) throws BadDataException {
-		return addAnswer(this, answer, 0.0);
-	}
-
-	/**
-	 * addAnswer This links this baseEntity to a target BaseEntity and associated
-	 * Answer. It auto creates the AnswerLink object and sets itself to be the
-	 * source and assumes itself to be the target. For efficiency we assume the link
-	 * does not already exist
-	 * 
-	 * @param answer the answer to add
-	 * @param weight the weight of the answer
-	 * @return AnswerLink
-	 * @throws BadDataException if answer could not be added
-	 */
-	public AnswerLink addAnswer(final Answer answer, final Double weight) throws BadDataException {
-		return addAnswer(this, answer, weight);
-	}
-
-	/**
-	 * addAnswer This links this baseEntity to a target BaseEntity and associated
-	 * Answer. It auto creates the AnswerLink object and sets itself to be the
-	 * source. For efficiency we assume the link does not already exist
-	 * 
-	 * @param source the source entity
-	 * @param answer the answer to add
-	 * @param weight the weight of the answer
-	 * @return AnswerLink
-	 * @throws BadDataException if answer could not be added
-	 */
-	public AnswerLink addAnswer(final BaseEntity source, final Answer answer, final Double weight)
-			throws BadDataException {
-		if (source == null)
-			throw new BadDataException("missing Target Entity");
-		if (answer == null)
-			throw new BadDataException("missing Answer");
-		if (weight == null)
-			throw new BadDataException("missing weight");
-
-		final AnswerLink answerLink = new AnswerLink(source, this, answer, weight);
-		if (answer.getAskId() != null) {
-			answerLink.setAskId(answer.getAskId());
-		}
-
-		// Update the EntityAttribute
-		addEntityAttribute(answerLink.getAttribute(), weight, answer.getInferred(), answerLink.getValue());
-
-		return answerLink;
+		return this.getBaseEntityAttributesMap().remove(attributeCode) != null ? true : false;
 	}
 
 	/**
@@ -679,14 +314,20 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 		if (eaOpt.isPresent()) {
 			ea = eaOpt.get();
 			// modify
+			ea.setAttribute(attribute);
 			ea.setValue(value);
 			ea.setInferred(inferred);
 			ea.setWeight(weight);
-			ea.setBaseEntity(this);
+			ea.setRealm(getRealm());
+			ea.setBaseEntityCode(getCode());
+			ea.setBaseEntityId(getId());
 		} else {
 			ea = new EntityAttribute(this, attribute, weight, value);
+			ea.setRealm(getRealm());
+			ea.setBaseEntityCode(getCode());
+			ea.setAttributeCode(attribute.getCode());
 			ea.setInferred(inferred);
-			this.baseEntityAttributes.add(ea);
+			this.baseEntityAttributes.put(attribute.getCode(), ea);
 		}
 
 		return ea;
@@ -699,11 +340,10 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 	 * @return Set
 	 */
 	@Transient
-	@XmlTransient
 	@JsonIgnore
 	@JsonbTransient
 	public Set<EntityAttribute> merge(final BaseEntity entity) {
-		final Set<EntityAttribute> changes = new HashSet<EntityAttribute>();
+		final Set<EntityAttribute> changes = new HashSet<>();
 
 		// go through the attributes in the entity and check if already existing , if so
 		// then check the
@@ -748,14 +388,10 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	private <T> T getValue(final Attribute attribute) {
-		// TODO Dumb find for attribute. needs a hashMap
-
-		for (final EntityAttribute ea : this.getBaseEntityAttributes()) {
-			if (ea.getAttribute().getCode().equalsIgnoreCase(attribute.getCode())) {
-				return getValue(ea);
-			}
+		EntityAttribute entityAttribute = this.baseEntityAttributes.get(attribute.getCode());
+		if (entityAttribute != null) {
+			return getValue(entityAttribute);
 		}
 		return null;
 	}
@@ -768,7 +404,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	private <T> T getValue(final EntityAttribute ea) {
 		return ea.getValue();
 
@@ -782,7 +417,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	public <T> Optional<T> getValue(final String attributeCode) {
 
 		Optional<EntityAttribute> ea = this.findEntityAttribute(attributeCode);
@@ -806,7 +440,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	public <T> Optional<T> getLoopValue(final String attributeCode) {
 
 		Optional<EntityAttribute> ea = this.findEntityAttribute(attributeCode);
@@ -825,7 +458,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	public String getValueAsString(final String attributeCode) {
 
 		Optional<EntityAttribute> ea = this.findEntityAttribute(attributeCode);
@@ -851,7 +483,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	public <T> T getValue(final String attributeCode, T defaultValue) {
 
 		Optional<T> result = getValue(attributeCode);
@@ -874,7 +505,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	public <T> T getLoopValue(final String attributeCode, T defaultValue) {
 
 		Optional<T> result = getLoopValue(attributeCode);
@@ -893,7 +523,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	public Boolean is(final String attributeCode) {
 
 		Optional<EntityAttribute> ea = this.findEntityAttribute(attributeCode);
@@ -922,7 +551,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	public <T> Optional<T> setValue(final Attribute attribute, T value, Double weight) throws BadDataException {
 
 		Optional<EntityAttribute> oldValue = this.findEntityAttribute(attribute.getCode());
@@ -933,6 +561,7 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 				result = Optional.of(oldValue.get().getLoopValue());
 			}
 			EntityAttribute ea = oldValue.get();
+			ea.setAttribute(attribute);
 			ea.setValue(value);
 			ea.setWeight(weight);
 		} else {
@@ -953,7 +582,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	public <T> Optional<T> setValue(final Attribute attribute, T value) throws BadDataException {
 		return setValue(attribute, value, 0.0);
 	}
@@ -970,7 +598,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	public <T> Optional<T> setValue(final String attributeCode, T value) throws BadDataException {
 		return setValue(attributeCode, value, 0.0);
 	}
@@ -988,7 +615,6 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	@XmlTransient
 	public <T> Optional<T> setValue(final String attributeCode, T value, Double weight) throws BadDataException {
 		Optional<EntityAttribute> oldValue = this.findEntityAttribute(attributeCode);
 
@@ -1038,6 +664,68 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 	}
 
 	/**
+	 * @return the fromCache
+	 */
+	public Boolean getFromCache() {
+		return fromCache;
+	}
+
+	/**
+	 * @return Boolean
+	 */
+	public Boolean isFromCache() {
+		return getFromCache();
+	}
+
+	/**
+	 * @param fromCache the fromCache to set
+	 */
+	public void setFromCache(Boolean fromCache) {
+		this.fromCache = fromCache;
+	}
+
+	/**
+	 * @return String[]
+	 */
+	@Transient
+	@JsonbTransient
+	public String[] getPushCodes() {
+		return getPushCodes(new String[0]);
+	}
+
+	/**
+	 * @param initialCodes the initialCodes to set
+	 * @return String[]
+	 */
+	@Transient
+	@JsonbTransient
+	public String[] getPushCodes(String... initialCodes) {
+		// go through all the links
+		Set<String> codes = new HashSet<>();
+		codes.addAll(new HashSet<>(Arrays.asList(initialCodes)));
+		if ((this.baseEntityAttributes != null) && (!this.baseEntityAttributes.isEmpty())) {
+			for (EntityAttribute ea : getBaseEntityAttributes()) {
+				// if (ea.getAttributeCode().startsWith("LNK_")) {
+				String value = ea.getValueString();
+				if (value != null) {
+					if (value.startsWith("[") && !value.equals("[]")) {
+						value = value.substring(2, value.length() - 2);
+					}
+					if (value.startsWith("PER") || (value.startsWith("CPY"))) {
+						codes.add(value);
+					}
+				}
+			}
+			// }
+			if (this.getCode().startsWith("PER") || (this.getCode().startsWith("CPY"))) {
+				codes.add(this.getCode());
+			}
+		}
+
+		return codes.toArray(new String[0]);
+	}
+
+	/**
 	 * Force private
 	 *
 	 * @param attributeCode the code of the attribute to force
@@ -1082,66 +770,23 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 		}
 	}
 
-	/**
-	 * @return the fromCache
-	 */
-	public Boolean getFromCache() {
-		return fromCache;
-	}
-
-	/**
-	 * @return Boolean
-	 */
-	public Boolean isFromCache() {
-		return getFromCache();
-	}
-
-	/**
-	 * @param fromCache the fromCache to set
-	 */
-	public void setFromCache(Boolean fromCache) {
-		this.fromCache = fromCache;
-	}
-
-	/**
-	 * @return String[]
-	 */
-	@Transient
 	@JsonbTransient
-	public String[] getPushCodes() {
-		return getPushCodes(new String[0]);
+	public boolean isPerson() {
+		return getCode().startsWith(Prefix.PER_);
 	}
 
-	/**
-	 * @param initialCodes the initialCodes to set
-	 * @return String[]
-	 */
-	@Transient
-	@JsonbTransient
-	public String[] getPushCodes(String... initialCodes) {
-		// go through all the links
-		Set<String> codes = new HashSet<String>();
-		codes.addAll(new HashSet<>(Arrays.asList(initialCodes)));
-		if ((this.baseEntityAttributes != null) && (!this.baseEntityAttributes.isEmpty())) {
-			for (EntityAttribute ea : this.baseEntityAttributes) {
-				// if (ea.getAttributeCode().startsWith("LNK_")) {
-				String value = ea.getValueString();
-				if (value != null) {
-					if (value.startsWith("[") && !value.equals("[]")) {
-						value = value.substring(2, value.length() - 2);
-					}
-					if (value.startsWith("PER") || (value.startsWith("CPY"))) {
-						codes.add(value);
-					}
-				}
-			}
-			// }
-			if (this.getCode().startsWith("PER") || (this.getCode().startsWith("CPY"))) {
-				codes.add(this.getCode());
-			}
-		}
-
-		return codes.toArray(new String[0]);
+	@Override
+	public CoreEntitySerializable toSerializableCoreEntity() {
+		life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntitySerializable = new life.genny.qwandaq.serialization.baseentity.BaseEntity();
+		baseEntitySerializable.setCode(getCode());
+		baseEntitySerializable.setCreated(getCreated());
+		// baseEntitySerializable.setDtype();
+		baseEntitySerializable.setName(getName());
+		baseEntitySerializable.setRealm(getRealm());
+		baseEntitySerializable.setStatus(getStatus().ordinal());
+		baseEntitySerializable.setUpdated(getUpdated());
+		baseEntitySerializable.setCapreqs(CapabilityConverter.convertToDBColumn(getCapabilityRequirements()));
+		return baseEntitySerializable;
 	}
 
 	/**
@@ -1156,57 +801,59 @@ public class BaseEntity extends CodedEntity implements BaseEntityIntf, ICapabili
 		Double weight = -1000.0;
 
 		if ((this.baseEntityAttributes != null) && (!this.baseEntityAttributes.isEmpty())) {
-			for (EntityAttribute ea : this.baseEntityAttributes) {
+			for (EntityAttribute ea : getBaseEntityAttributes()) {
 				if (ea.getAttributeCode().startsWith(prefix)) {
 					if (ea.getWeight() > weight) {
 						highest = Optional.of(ea);
 						weight = ea.getWeight();
 					}
-
 				}
 			}
-
 		}
-
 		return highest;
 	}
 
-	/**
-	 * @param fastMode the fastMode to set
-	 */
-	@Transient
-	@JsonbTransient
-	public void setFastAttributes(Boolean fastMode) {
-		if (fastMode) {
-			attributeMap = new ConcurrentHashMap<String, EntityAttribute>();
-			// Grab all the entityAttributes and create a fast HashMap lookup
-			for (EntityAttribute ea : this.baseEntityAttributes) {
-				attributeMap.put(ea.getAttributeCode(), ea);
+	@Override
+	public int hashCode() {
+		return (this.getRealm()+this.getCode()).hashCode();
+	}
+
+	@Override
+	public boolean equals(Object otherObject) {
+		return this.getRealm().equals(((BaseEntity) otherObject).getRealm())
+				&& this.getCode().equals(((BaseEntity) otherObject).getCode());
+	}
+
+	public HBaseEntity toHBaseEntity() {
+		HBaseEntity hBaseEntity = new HBaseEntity();
+		hBaseEntity.setCode(getCode());
+		hBaseEntity.setCreated(getCreated());
+		// hBaseEntity.setDtype();
+		hBaseEntity.setName(getName());
+		hBaseEntity.setRealm(getRealm());
+		hBaseEntity.setStatus(getStatus());
+		hBaseEntity.setUpdated(getUpdated());
+		return hBaseEntity;
+	}
+
+	public BaseEntity clone(boolean includeAttributes) {
+		BaseEntity clone = new BaseEntity();
+		clone.setCode(getCode());
+		clone.setCreated(getCreated());
+		clone.setName(getName());
+		clone.setRealm(getRealm());
+		clone.setStatus(getStatus());
+		clone.setUpdated(getUpdated());
+		clone.setCapabilityRequirements(getCapabilityRequirements());
+		if(includeAttributes) {
+			Map<String, EntityAttribute> baseEntityAttributesMap = getBaseEntityAttributesMap();
+			Map<String, EntityAttribute> clonedBaseEntityAttributesMap = new HashMap<>(baseEntityAttributesMap.size());
+			clone.setBaseEntityAttributes(clonedBaseEntityAttributesMap);
+			for(Map.Entry<String, EntityAttribute> entry : baseEntityAttributesMap.entrySet()) {
+				clonedBaseEntityAttributesMap.put(entry.getKey(), entry.getValue().clone());
 			}
-		} else {
-			attributeMap = null;
 		}
-
-	}
-
-	/**
-	 * @return Map&lt;String, EntityAttribute&gt; the attributeMap
-	 */
-	public Map<String, EntityAttribute> getAttributeMap() {
-		return attributeMap;
-	}
-
-	/**
-	 * @param attributeMap the attributeMap to set
-	 */
-	public void setAttributeMap(Map<String, EntityAttribute> attributeMap) {
-		this.attributeMap = attributeMap;
-	}
-
-
-	@JsonbTransient
-	public boolean isPerson() {
-		return getCode().startsWith(Prefix.PER_);
+		return clone;
 	}
 
 	/**

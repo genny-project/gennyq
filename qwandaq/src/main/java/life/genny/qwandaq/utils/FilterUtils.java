@@ -46,6 +46,12 @@ public class FilterUtils {
     BaseEntityUtils beUtils;
 
     @Inject
+    EntityAttributeUtils beaUtils;
+
+    @Inject
+    AttributeUtils attributeUtils;
+
+    @Inject
     SearchUtils searchUtils;
 
     @Inject
@@ -79,9 +85,10 @@ public class FilterUtils {
         Ask ask = new Ask();
         ask.setName(FilterConst.FILTERS);
 
-        Attribute attribute = new Attribute(Attribute.QQQ_QUESTION_GROUP,Attribute.QQQ_QUESTION_GROUP,new DataType());
+        Attribute attribute = new Attribute(Attribute.QQQ_QUESTION_GROUP,Attribute.QQQ_QUESTION_GROUP,new DataType(String.class));
         Question question = new Question(questionCode,questionCode,attribute);
         question.setAttributeCode(Attribute.QQQ_QUESTION_GROUP);
+		question.setAttribute(attribute);
         ask.setQuestion(question);
 
         Ask addFilterAsk = getAddFilterGroupBySearchBE(questionCode);
@@ -141,33 +148,35 @@ public class FilterUtils {
 
         List<BaseEntity> baseEntities = new ArrayList<>();
 
-        searchBE.getBaseEntityAttributes().stream()
-            .filter(e -> e.getAttributeCode().startsWith(Prefix.FLC_))
-            .forEach(e -> {
-                BaseEntity baseEntity = new BaseEntity();
-                List<EntityAttribute> entityAttributes = new ArrayList<>();
+        beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(searchBE.getRealm(), searchBE.getCode(),
+                        Prefix.FLC_).forEach(e -> {
+                    BaseEntity baseEntity = new BaseEntity();
+                    List<EntityAttribute> entityAttributes = new ArrayList<>();
 
-                EntityAttribute ea = new EntityAttribute();
-                String attrCode = e.getAttributeCode().replaceFirst(Prefix.FLC_, "");
-                ea.setAttributeName(e.getAttributeName());
-                ea.setAttributeCode(attrCode);
+                    EntityAttribute ea = new EntityAttribute();
+                    String attrCode = e.getAttributeCode().replaceFirst(Prefix.FLC_, "");
+                    ea.setAttributeName(e.getAttributeName());
+                    ea.setAttributeCode(attrCode);
+					Attribute attr = attributeUtils.getAttribute(attrCode, true, true);
+					ea.setAttribute(attr);
 
-                String baseCode = FilterConst.FILTER_SEL + Prefix.FLC_ + attrCode;
-                ea.setBaseEntityCode(baseCode);
-                ea.setValueString(e.getAttributeName());
+                    String baseCode = FilterConst.FILTER_SEL + Prefix.FLC_ + attrCode;
+                    ea.setBaseEntityCode(baseCode);
+                    ea.setBaseEntityId(baseEntity.getId());
+                    ea.setValueString(e.getAttributeName());
 
-                entityAttributes.add(ea);
+                    entityAttributes.add(ea);
 
-                baseEntity.setCode(baseCode);
-                baseEntity.setName(e.getAttributeName());
+                    baseEntity.setCode(baseCode);
+                    baseEntity.setName(e.getAttributeName());
 
-                baseEntity.setBaseEntityAttributes(entityAttributes);
-                baseEntities.add(baseEntity);
-            });
+                    baseEntity.setBaseEntityAttributes(entityAttributes);
+                    baseEntities.add(baseEntity);
+                });
 
         List<BaseEntity> basesSorted =  baseEntities.stream()
-            .sorted(Comparator.comparing(BaseEntity::getName))
-            .collect(Collectors.toList());
+                .sorted(Comparator.comparing(BaseEntity::getName))
+                .collect(Collectors.toList());
 
         msg.setItems(basesSorted);
 

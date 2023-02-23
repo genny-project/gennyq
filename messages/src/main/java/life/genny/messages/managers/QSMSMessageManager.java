@@ -3,12 +3,14 @@ package life.genny.messages.managers;
 import com.twilio.Twilio;
 import com.twilio.rest.api.v2010.account.Message;
 import com.twilio.type.PhoneNumber;
+import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.utils.MergeUtils;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
+import javax.inject.Inject;
 import java.util.Map;
 
 @ApplicationScoped
@@ -17,6 +19,9 @@ public final class QSMSMessageManager extends QMessageProvider {
     public static final String MESSAGE_BOTH_DRIVER_OWNER = "BOTH";
 
     private static final Logger log = Logger.getLogger(QSMSMessageManager.class);
+
+    @Inject
+    MergeUtils mergeUtils;
 
     @Override
     public void sendMessage(BaseEntity templateBe, Map<String, Object> contextMap) {
@@ -53,12 +58,17 @@ public final class QSMSMessageManager extends QMessageProvider {
         }
 
         // Mail Merging Data
-        body = MergeUtils.merge(body, contextMap);
+        body = mergeUtils.merge(body, contextMap);
 
         //target is toPhoneNumber, Source is the fromPhoneNumber
-        String accountSID = projectBe.getValue("ENV_TWILIO_ACCOUNT_SID", null);
-        String sourcePhone = projectBe.getValue("ENV_TWILIO_SOURCE_PHONE", null);
-        String twilioAuthToken = projectBe.getValue("ENV_TWILIO_AUTH_TOKEN", null);
+        String productCode = projectBe.getRealm();
+        String projectBeCode = projectBe.getCode();
+        EntityAttribute twilioAccountSidAttribute = beaUtils.getEntityAttribute(productCode, projectBeCode, "ENV_TWILIO_ACCOUNT_SID");
+        String accountSID = twilioAccountSidAttribute != null ? twilioAccountSidAttribute.getValueString() : null;
+        EntityAttribute twilioSourcePhoneAttribute = beaUtils.getEntityAttribute(productCode, projectBeCode, "ENV_TWILIO_SOURCE_PHONE");
+        String sourcePhone = twilioSourcePhoneAttribute != null ? twilioSourcePhoneAttribute.getValueString() : null;
+        EntityAttribute twilioAuthTokenAttribute = beaUtils.getEntityAttribute(productCode, projectBeCode, "ENV_TWILIO_AUTH_TOKEN");
+        String twilioAuthToken = twilioAuthTokenAttribute != null ? twilioAuthTokenAttribute.getValueString() : null;
 
         // Debug logs for devs
         log.debug("accountSID = " + accountSID);
