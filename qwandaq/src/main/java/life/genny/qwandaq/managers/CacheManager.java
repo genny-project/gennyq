@@ -257,9 +257,9 @@ public class CacheManager {
 	 */
 	public Long getMaxBaseEntityId(String productCode) {
 		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_BASEENTITY));
-		Query<life.genny.qwandaq.serialization.baseentity.BaseEntity> query = queryFactory
+		Query<BaseEntity> query = queryFactory
 				.create("select max(id) from life.genny.qwandaq.persistence.baseentity.BaseEntity where realm = '" + productCode + "'");
-		QueryResult<life.genny.qwandaq.serialization.baseentity.BaseEntity> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
+		QueryResult<BaseEntity> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
 		return queryResult.list().get(0).getId();
 	}
 
