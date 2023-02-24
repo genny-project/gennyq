@@ -62,7 +62,9 @@ public class BaseEntityService extends KogitoService {
 	 */
 	public void updateSummary(String personCode, String summaryCode) {
 
-		qwandaUtils.saveAnswer(new Answer(personCode, personCode, Attribute.LNK_SUMMARY, summaryCode));
+		BaseEntity person = beUtils.getBaseEntity(personCode);
+		Attribute attribute = attributeUtils.getAttribute(Attribute.LNK_SUMMARY, true);
+		beaUtils.updateEntityAttribute(new EntityAttribute(person, attribute, 1.0, "[\""+summaryCode+"\"]"));
 		log.info("Summary updated -> " + personCode + " : " + summaryCode);
 	}
 
