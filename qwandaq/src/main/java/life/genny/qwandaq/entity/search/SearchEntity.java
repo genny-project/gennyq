@@ -653,7 +653,10 @@ public class SearchEntity extends BaseEntity {
 	@JsonbTransient
 	public <T extends Trait> List<T> getTraits(Class<T> traitType) {
 		List<T> t = traits.get(traitType);
-		if(t == null) return new ArrayList<>();
+		if(t == null){
+			t = new ArrayList<>();
+			traits.put(traitType, t);
+		}
 		return t;
 	}
 

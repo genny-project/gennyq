@@ -147,7 +147,7 @@ public class InternalConsumer {
 			target = qwandaUtils.generateProcessEntity(processData);
 			List<String> defCodes = processData.getDefCodes();
 			for (String defCode : defCodes) {
-				BaseEntity def = beUtils.getBaseEntity(defCode);
+				BaseEntity def = beUtils.getBaseEntity(defCode, true);
 				definitions.add(def);
 			}
 		} else {
