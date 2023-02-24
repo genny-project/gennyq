@@ -34,6 +34,7 @@ import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import java.lang.reflect.Type;
@@ -248,6 +249,20 @@ public class CacheManager {
 	public List<BaseEntity> getBaseEntitiesByPrefix(String cacheName, String prefix) {
 		return getEntitiesByPrefix(cacheName, prefix, new BaseEntityKey())
 		.stream().map((CoreEntity entity) -> (BaseEntity)entity).collect(Collectors.toList());
+	}
+
+	/**
+	 * Get the max entity  id.
+	 *
+	 * @return the max id
+	 */
+	public Long getMaxBaseEntityId() {
+		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_BASEENTITY));
+		Query<BaseEntity> query = queryFactory
+				.create("from life.genny.qwandaq.persistence.baseentity.BaseEntity order by id desc");
+		QueryResult<BaseEntity> queryResult = query.maxResults(1).execute();
+
+		return queryResult.list().get(0).getId();
 	}
 
     /**
