@@ -60,9 +60,6 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 	@Transient
 	private static final long serialVersionUID = 1L;
 
-	private static final Logger log = Logger.getLogger(BaseEntity.class);
-
-	private static final String DEFAULT_CODE_PREFIX = "BAS_";
 	public static final String PRI_NAME = "PRI_NAME";
 	public static final String PRI_IMAGE_URL = "PRI_IMAGE_URL";
 	public static final String PRI_PHONE = "PRI_PHONE";
@@ -154,6 +151,7 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 	 * 
 	 * @param attributeCode the attributeCode to find with
 	 * @return Optional
+	 * 
 	 */
 	@Deprecated
 	public Optional<EntityAttribute> findEntityAttribute(final String attributeCode) {

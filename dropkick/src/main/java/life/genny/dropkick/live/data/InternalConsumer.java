@@ -11,6 +11,7 @@ import life.genny.qwandaq.entity.search.clause.Or;
 import life.genny.qwandaq.entity.search.trait.Column;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
+import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.graphql.ProcessData;
@@ -183,16 +184,16 @@ public class InternalConsumer {
 		String productCode = userToken.getProductCode();
 		String searchAttributeCode = new StringBuilder("SBE_SER_").append(attrCode).toString();
 		String key = new StringBuilder(definition.getCode()).append(":").append(searchAttributeCode).toString();
-		log.info("key="+key);
+		log.info("cache key = " + key);
 		SearchEntity searchEntity = cm.getObject(productCode, key, SearchEntity.class);
 
 		if (searchEntity == null) {
 			String valueString = null;
-			log.info("try third way to build searchEntity");
+			log.info("Could not find in Cache. Constructing searchEntity from Definition");
 
-			log.info("searching attribute by code :"+"SER_" + attrCode);
+			log.info("searching attribute by code : SER_" + attrCode);
 			for (EntityAttribute attr : definition.getBaseEntityAttributes()) {
-				log.info("--> Available attr: "+attr.getAttributeCode());
+				log.info("--> Available attr: " + attr.getAttributeCode());
 				if (attr.getAttributeCode().equals("SER_" + attrCode)) {
 					valueString = attr.getValueString();
 					break;
@@ -200,7 +201,8 @@ public class InternalConsumer {
 			}
 
 			if (valueString != null) {
-				log.info("SER_"+attrCode+" : "+valueString);
+				log.info("Found search JSON in EntityAttribute: SER_" + attrCode);
+				log.info("Search JSON: " + valueString);
 				// {"search":"","parms":[{"attributeCode":"LNK_CORE","value":"DOCUMENT_TYPES"}],"name":"PRI_NAME","enabled":true}
 				Map<String, Object> result = jsonb.fromJson(valueString, new TypeToken<Map<String, Object>>(){}.getType());
 				Object parms = result.get("parms");
@@ -222,8 +224,29 @@ public class InternalConsumer {
 					searchEntity.setLinkCode(code);
 					searchEntity.setLinkValue(name);
 					cm.putObject(productCode, key, searchEntity);
+				} else {
+					// should never get here
+					StringBuilder sb = new StringBuilder("Got null ");
+
+					// mutually exclusive set of events. If not code null then name null (vice versa)
+					if(code == null) {
+						sb.append("code");
+					} else {
+						sb.append("name");
+					}
+					sb.append(" from Search JSON in Entity Attribute SER_")
+						.append(attrCode);
+
+					throw new BadDataException(sb.toString());
 				}
+			} else {
+				log.error("Could not find Search JSON in Attribute: SER_" + attrCode + " or related SearchEntity in Cache");
+				// TODO: Remove this log when bootstrap project is released
+				log.error("Please Check The Related Sheets");
 			}
+		} else {
+			log.info("Found Search Entity: " + searchEntity.getCode() + " in the cache with aforementioned key");
+			CommonUtils.printCollection(searchEntity.getBaseEntityAttributes(), log::debug, (ea) -> ea.getAttributeCode() + " = " + ea.getValueString());
 		}
 
 		if (searchEntity == null)
