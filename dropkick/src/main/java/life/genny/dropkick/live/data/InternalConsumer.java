@@ -117,6 +117,8 @@ public class InternalConsumer {
 
 		JsonObject dataJson = jsonStr.getJsonObject("data");
 
+		log.debug("Data Json: " + dataJson.toString());
+
 		// grab necessarry info
 		String attrCode = jsonStr.getString("attributeCode");
 		String sourceCode = dataJson.getString("sourceCode");
@@ -199,6 +201,7 @@ public class InternalConsumer {
 
 			if (valueString != null) {
 				log.info("SER_"+attrCode+" : "+valueString);
+				// {"search":"","parms":[{"attributeCode":"LNK_CORE","value":"DOCUMENT_TYPES"}],"name":"PRI_NAME","enabled":true}
 				Map<String, Object> result = jsonb.fromJson(valueString, new TypeToken<Map<String, Object>>(){}.getType());
 				Object parms = result.get("parms");
 				String code = null, name = null;

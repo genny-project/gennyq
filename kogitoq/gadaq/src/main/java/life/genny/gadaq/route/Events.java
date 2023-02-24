@@ -84,6 +84,10 @@ public class Events {
 
 		String code = data.getCode();
 
+		// If the event is a Dropdown then leave it for DropKick
+		if ("DD".equals(msg.getEvent_type()))
+			return;
+
 		if (StringUtils.isEmpty(code)) {
 			log.errorf("'code' is missing from the QEventMessage %s . Sending the event to dead letter queue...", jsonb.toJson(msg, QEventMessage.class));
 			KafkaUtils.writeMsg(KafkaTopic.DEAD_LETTER_QUEUE, msg);
@@ -101,10 +105,6 @@ public class Events {
             return;
         }
 
-
-		// If the event is a Dropdown then leave it for DropKick
-		if ("DD".equals(msg.getEvent_type()))
-			return;
 
         // auth init
         if (AUTH_INIT.equals(code)) {
