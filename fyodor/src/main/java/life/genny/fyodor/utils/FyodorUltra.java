@@ -114,7 +114,7 @@ public class FyodorUltra {
 					ea = getAssociatedColumnValue(baseEntity, attributeCode);
 				} else {
 					// otherwise fetch entity attribute
-					ea = beaUtils.getEntityAttribute(baseEntity.getRealm(), baseEntity.getCode(), attributeCode);
+					ea = beaUtils.getEntityAttribute(baseEntity.getRealm(), baseEntity.getCode(), attributeCode, true, true);
 				}
 				if (ea != null) {
 					baseEntity.addAttribute(ea);
