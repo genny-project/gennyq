@@ -110,8 +110,8 @@ public class Dispatch {
 		String productCode = userToken.getProductCode();
 		String sourceCode = processData.getSourceCode();
 		String targetCode = processData.getTargetCode();
-		BaseEntity source = beUtils.getBaseEntity(productCode, sourceCode, true);
-		BaseEntity target = beUtils.getBaseEntity(productCode, targetCode, true);
+		BaseEntity source = beUtils.getBaseEntity(productCode, sourceCode, false);
+		BaseEntity target = beUtils.getBaseEntity(productCode, targetCode, false);
 		CapabilitySet userCapabilities = capMan.getUserCapabilities(target);
 
 		pcm = (pcm == null ? beUtils.getPCM(processData.getPcmCode()) : pcm);
@@ -268,7 +268,6 @@ public class Dispatch {
 				ctxMap.put("TARGET", target);
 				targetCode = mergeUtils.merge(targetCode, ctxMap);
 				// update targetCode so it does not re-trigger merging
-				pcm.setTargetCode(targetCode);
 				JsonObject payload = Json.createObjectBuilder()
 						.add("sourceCode", source.getCode())
 						.add("targetCode", targetCode)
