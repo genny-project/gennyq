@@ -171,6 +171,7 @@ public class FyodorUltra {
 		query.multiselect(baseEntity.get("code")).distinct(true);
 		query.where(jctx.getPredicates().toArray(Predicate[]::new));
 		query.orderBy(jctx.getOrders().toArray(Order[]::new));
+		query.orderBy(cb.asc(baseEntity.get("weight")));
 
 		// page start and page size
 		Integer defaultPageSize = 20;

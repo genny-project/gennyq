@@ -1,6 +1,7 @@
 package life.genny.messages.managers;
 
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QCmdMessage;
 import life.genny.qwandaq.utils.KafkaUtils;
@@ -44,14 +45,15 @@ public final class QToastMessageManager extends QMessageProvider {
         }
 
         // Check for Toast Style
-        String style = null;
+        String style;
         if (contextMap.containsKey("STYLE")) {
             style = (String) contextMap.get("STYLE");
         } else {
-            style = beaUtils.getValue(templateBe, "PRI_STYLE");
-        }
-        if (style == null) {
-			style = "INFO";
+			try {
+				style = beaUtils.getValue(templateBe, "PRI_STYLE");
+			} catch (ItemNotFoundException e) {
+				style = "INFO";
+			}
         }
 
         // Mail Merging Data
