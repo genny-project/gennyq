@@ -170,8 +170,14 @@ public class FyodorUltra {
 		// build query
 		query.multiselect(baseEntity.get("code")).distinct(true);
 		query.where(jctx.getPredicates().toArray(Predicate[]::new));
-		query.orderBy(jctx.getOrders().toArray(Order[]::new));
-		query.orderBy(cb.asc(baseEntity.get("weight")));
+		if (!jctx.getOrders().isEmpty()) {
+			query.orderBy(jctx.getOrders().toArray(Order[]::new));
+		} else {
+			// else, order by weight of entity attributes
+			for (Join<HBaseEntity, HEntityAttribute> join : jctx.getJoinMap().values()) {
+				query.orderBy(cb.asc(join.get("weight")));
+			}
+		}
 
 		// page start and page size
 		Integer defaultPageSize = 20;
