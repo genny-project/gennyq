@@ -50,6 +50,7 @@ import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.entity.search.trait.Ord;
 import life.genny.qwandaq.entity.search.trait.Sort;
 import life.genny.qwandaq.exception.runtime.DebugException;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.exception.runtime.QueryBuilderException;
 import life.genny.qwandaq.managers.CacheManager;
@@ -183,6 +184,18 @@ public class FyodorUltra {
 				.setMaxResults(pageSize)
 				.getResultList();
 
+		List<String> codes = tuples.stream().map(t -> (String) t.get(0)).collect(Collectors.toList());
+		
+		List<BaseEntity> items = new ArrayList<>();
+		for (String code : codes) {
+			try {
+				BaseEntity be = beUtils.getBaseEntity(code);
+				items.add(be);
+			} catch (ItemNotFoundException e) {
+				e.printStackTrace();
+			}
+		}
+
 		// build count query
 		CriteriaQuery<Long> count = cb.createQuery(Long.class);
 		Root<HBaseEntity> countBaseEntity = count.from(HBaseEntity.class);
@@ -205,6 +218,7 @@ public class FyodorUltra {
 
 		Page page = new Page();
 		page.setTotal(total);
+		page.setItems(items);
 		page.setPageSize(pageSize);
 		page.setPageStart(Long.valueOf(pageStart));
 
@@ -627,8 +641,6 @@ public class FyodorUltra {
 
 		// update attribute code for frontend
 		ea.setAttributeCode(code);
-		/*ea.setAttribute(attributeUtils.getAttribute(code));
-		ea.getAttribute().setCode(code);*/
 
 		return ea;
 	}
