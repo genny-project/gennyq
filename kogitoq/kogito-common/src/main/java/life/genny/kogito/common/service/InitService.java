@@ -102,6 +102,8 @@ public class InitService extends KogitoService {
 
 		// fetch the users baseentity, and names
 		BaseEntity user = beUtils.getBaseEntity(userCode);
+		EntityAttribute name = new EntityAttribute(user, attributeUtils.getAttribute(Attribute.PRI_NAME, true), 1.0, user.getName());
+		user.addAttribute(name);
 		EntityAttribute firstName = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_FIRSTNAME, true, true);
 		user.addAttribute(firstName);
 		EntityAttribute lastName = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_LASTNAME, true, true);

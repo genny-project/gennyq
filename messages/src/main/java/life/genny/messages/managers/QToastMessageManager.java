@@ -36,7 +36,7 @@ public final class QToastMessageManager extends QMessageProvider {
         if (contextMap.containsKey("BODY")) {
             body = (String) contextMap.get("BODY");
         } else {
-            body = templateBe.getValue("PRI_BODY", null);
+            body = beaUtils.getValue(templateBe, "PRI_BODY");
         }
         if (body == null) {
             log.error("body is NULL");
@@ -48,11 +48,10 @@ public final class QToastMessageManager extends QMessageProvider {
         if (contextMap.containsKey("STYLE")) {
             style = (String) contextMap.get("STYLE");
         } else {
-            style = templateBe.getValue("PRI_STYLE", "INFO");
+            style = beaUtils.getValue(templateBe, "PRI_STYLE");
         }
         if (style == null) {
-            log.error("style is NULL");
-            return;
+			style = "INFO";
         }
 
         // Mail Merging Data
