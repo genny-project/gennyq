@@ -9,7 +9,6 @@ import life.genny.qwandaq.entity.BaseEntity;
  */
 public class Page {
 
-	List<String> codes;
 	List<BaseEntity> items;
 	Long total;
 
@@ -18,14 +17,6 @@ public class Page {
 	Long pageStart;
 
 	public Page() {
-	}
-
-	public List<String> getCodes() {
-		return codes;
-	}
-
-	public void setCodes(List<String> codes) {
-		this.codes = codes;
 	}
 
 	public List<BaseEntity> getItems() {
