@@ -113,6 +113,8 @@ public class FyodorUltra {
 					// handle asociated columns
 					ea = getAssociatedColumnValue(baseEntity, attributeCode);
 					ea.setAttributeCode(attributeCode);
+					ea.getAttribute().setCode(attributeCode);
+					log.info("ATTR = " + jsonb.toJson(ea));
 				} else {
 					// otherwise fetch entity attribute
 					ea = beaUtils.getEntityAttribute(baseEntity.getRealm(), baseEntity.getCode(), attributeCode, true, true);
