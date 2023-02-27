@@ -116,7 +116,6 @@ public class QwandaUtils {
 	 * @return
 	 */
 	public Set<Ask> fetchAsks(ProcessData processData) {
-		Set<Ask> asks = new HashSet<>();
 		String key = String.format(QwandaUtils.ASK_CACHE_KEY_FORMAT, processData.getProcessId());
 		Ask[] asksArr = cm.getObject(userToken.getProductCode(), key, Ask[].class);
 		return Arrays.stream(asksArr).collect(Collectors.toSet());
@@ -845,9 +844,11 @@ public class QwandaUtils {
 		String targetCode = baseEntity.getCode();
 
 		String name = baseEntity.getName();
-		Optional<EntityAttribute> optName = baseEntity.findEntityAttribute(Attribute.PRI_NAME);
-		if(optName.isPresent() && !StringUtils.isBlank(optName.get().getValueString())) {
-			name = optName.get().getValueString();
+		EntityAttribute entityAttribute = beaUtils.getEntityAttribute(baseEntity.getRealm(), targetCode, Attribute.PRI_NAME, true, true);
+		if (entityAttribute != null) {
+			String value = entityAttribute.getValueString();
+			if (!StringUtils.isBlank(value))
+				name = value;
 		}
 
 		// create GRP ask
@@ -863,13 +864,13 @@ public class QwandaUtils {
 		entityMessage.setReplace(true);
 
 		// create a child ask for every valid attribute
-		definition.getBaseEntityAttributes().forEach(entityAttribute -> {
-			String attributeCode = entityAttribute.getAttributeCode();
+		definition.getBaseEntityAttributes().forEach(ea -> {
+			String attributeCode = ea.getAttributeCode();
 			if (!attributeCode.startsWith(Prefix.ATT_)) {
 				return;
 			}
 			String strippedAttributeCode = StringUtils.removeStart(attributeCode, Prefix.ATT_);
-			Attribute attribute = attributeUtils.getAttribute(baseEntity.getRealm(), strippedAttributeCode);
+			Attribute attribute = attributeUtils.getAttribute(baseEntity.getRealm(), strippedAttributeCode, true);
 
 					String questionCode = Prefix.QUE_
 							+ StringUtils.removeStart(StringUtils.removeStart(attribute.getCode(),
@@ -907,7 +908,7 @@ public class QwandaUtils {
 	/**
 	 * Check if a baseentity satisfies a definitions uniqueness checks.
 	 * 
-	 * @param definition The definitions to check against
+	 * @param definitions The list of definitions to check against
 	 * @param answer     An incoming answer
 	 * @param targets    The target entities to check, usually processEntity and
 	 *                   original target
