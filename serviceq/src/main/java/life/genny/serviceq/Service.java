@@ -216,7 +216,6 @@ public class Service {
 		initToken();
 		initCache();
 		initKafka();
-		initDefinitions();
 
 		initialised = true;
 		log.info("[@] Service Initialised!");

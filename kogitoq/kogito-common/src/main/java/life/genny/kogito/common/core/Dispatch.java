@@ -1,14 +1,16 @@
 package life.genny.kogito.common.core;
 
 import static life.genny.kogito.common.utils.KogitoUtils.UseService.GADAQ;
-import static life.genny.kogito.common.utils.KogitoUtils.UseService.GADAQ;
 import static life.genny.qwandaq.entity.PCM.PCM_TREE;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-import java.util.stream.Collectors;
-
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.Json;
@@ -16,12 +18,10 @@ import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
-import life.genny.qwandaq.utils.*;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.service.TaskService;
-import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.kogito.common.utils.KogitoUtils;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
@@ -29,11 +29,11 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
-import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
 import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.entity.PCM;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.managers.CacheManager;
@@ -42,6 +42,13 @@ import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.AttributeUtils;
+import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.EntityAttributeUtils;
+import life.genny.qwandaq.utils.KafkaUtils;
+import life.genny.qwandaq.utils.MergeUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.utils.SearchUtils;
 
 /**
  * Dispatch
@@ -103,8 +110,8 @@ public class Dispatch {
 		String productCode = userToken.getProductCode();
 		String sourceCode = processData.getSourceCode();
 		String targetCode = processData.getTargetCode();
-		BaseEntity source = beUtils.getBaseEntity(productCode, sourceCode, true);
-		BaseEntity target = beUtils.getBaseEntity(productCode, targetCode, true);
+		BaseEntity source = beUtils.getBaseEntity(productCode, sourceCode, false);
+		BaseEntity target = beUtils.getBaseEntity(productCode, targetCode, false);
 		CapabilitySet userCapabilities = capMan.getUserCapabilities(target);
 
 		pcm = (pcm == null ? beUtils.getPCM(processData.getPcmCode()) : pcm);
@@ -248,33 +255,31 @@ public class Dispatch {
 		String pcmCode = pcm.getCode();
 		log.debug("Traversing " + pcmCode);
 		if (!pcm.requirementsMet(userCapabilities)) {
-			log.warn("User " + source.getCode() + " Capability requirements not met for pcm: " + pcmCode);
+			log.debug("User " + source.getCode() + " Capability requirements not met for pcm: " + pcmCode);
 			return;
 		}
 
 		// use pcm target if one is specified
-		String targetCode = null;
-		EntityAttribute targetCodeEA = beaUtils.getEntityAttribute(pcm.getRealm(), pcm.getCode(), Attribute.PRI_TARGET_CODE, true, true);
-		if (targetCodeEA != null) {
-			targetCode = targetCodeEA.getAsString();
-		}
-		if (targetCode != null && !targetCode.equals(target.getCode())) {
-			// merge targetCode
-			Map<String, Object> ctxMap = new HashMap<>();
-			ctxMap.put("TARGET", target);
-			targetCode = mergeUtils.merge(targetCode, ctxMap);
-			// update targetCode so it does not re-trigger merging
-			pcm.setTargetCode(targetCode);
-			log.debug("Parent = " + parent + ", location = " + location);
-			JsonObject payload = Json.createObjectBuilder()
-					.add("sourceCode", source.getCode())
-					.add("targetCode", targetCode)
-					.add("pcmCode", pcmCode)
-					.add("parent", parent)
-					.add("location", location)
-					.build();
-			kogitoUtils.triggerWorkflow(GADAQ, "processQuestions", payload);
-			return;
+		try {
+			String targetCode = beaUtils.getValue(pcm, Attribute.PRI_TARGET_CODE);
+			if (!targetCode.equals(target.getCode())) {
+				// merge targetCode
+				Map<String, Object> ctxMap = new HashMap<>();
+				ctxMap.put("TARGET", target);
+				targetCode = mergeUtils.merge(targetCode, ctxMap);
+				// update targetCode so it does not re-trigger merging
+				JsonObject payload = Json.createObjectBuilder()
+						.add("sourceCode", source.getCode())
+						.add("targetCode", targetCode)
+						.add("pcmCode", pcmCode)
+						.add("parent", parent)
+						.add("location", location)
+						.build();
+				kogitoUtils.triggerWorkflow(GADAQ, "processQuestions", payload);
+				return;
+			}
+		} catch (ItemNotFoundException e) {
+			log.trace("No target code found for " + pcm.getCode());
 		}
 
 		// iterate locations
@@ -283,7 +288,7 @@ public class Dispatch {
 		List<EntityAttribute> filteredLocations = new ArrayList<>(locations.size());
 		for (EntityAttribute entityAttribute : locations) {
 			if(!entityAttribute.requirementsMet(userCapabilities)) {
-				log.warn("capability requirements not met for location: " + entityAttribute.getAttributeCode() + " (" + entityAttribute.getValueString() + ")");
+				log.trace("capability requirements not met for location: " + entityAttribute.getAttributeCode() + " (" + entityAttribute.getValueString() + ")");
 				filteredLocations.add(entityAttribute);
 				continue;
 			}
@@ -305,29 +310,21 @@ public class Dispatch {
 
 		// ensure these don't go out to frontend
 		for(EntityAttribute badlocation : filteredLocations) {
-			log.debug("Removing: " + badlocation.getAttributeCode() + " from " + badlocation.getBaseEntityCode());
+			log.trace("Removing: " + badlocation.getAttributeCode() + " from " + badlocation.getBaseEntityCode());
 			pcm.getBaseEntityAttributes().removeIf(loc -> loc.getAttributeCode().equals(badlocation.getAttributeCode()));
 		}
 
 		msg.add(pcm);
 
 		// check for a question code
-		EntityAttribute pcmQuestionCodeEA = beaUtils.getEntityAttribute(pcm.getRealm(), pcm.getCode(), Attribute.PRI_QUESTION_CODE, true, true);
 		String questionCode = null;
-		if (pcmQuestionCodeEA != null) {
-			questionCode = pcmQuestionCodeEA.getAsString();
-		}
-		if (questionCode == null) {
+		try {
+			questionCode = beaUtils.getValue(pcm, Attribute.PRI_QUESTION_CODE);
+		} catch (ItemNotFoundException e) {
 			log.warn("Question Code is null for " + pcmCode + ". Checking ProcessData");
-			questionCode = processData.getQuestionCode();
-			if(questionCode == null) {
-				log.warn("Question Code not set in ProcessData either");
-			}
 		}
-
 		if (!Question.QUE_EVENTS.equals(questionCode) && !StringUtils.isBlank(questionCode)) {
 			// add ask to bulk message
-			log.info("PCM code = " + pcmCode + ", questionCode = " + pcm.getQuestionCode());
 			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target, userCapabilities, new ReqConfig());
 			msg.add(ask);
 		}
