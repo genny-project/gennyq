@@ -88,7 +88,6 @@ public class SearchEntity extends BaseEntity {
 		super(code, name);
 		setPageStart(0);
 		setPageSize(20);
-		setTitle(name);
 	}
 
 	/*
@@ -211,20 +210,6 @@ public class SearchEntity extends BaseEntity {
 	}
 
 	/**
-	 * This method allows to set the title of the results data to be sent
-	 * 
-	 * @param title The page title
-	 * @return SearchEntity
-	 */
-	public SearchEntity setTitle(final String title) {
-
-		Attribute attribute = new Attribute("SCH_TITLE", "Title", new DataType(String.class));
-		addAttribute(attribute, 5.0, title);
-
-		return this;
-	}
-
-	/**
 	 * This method allows to set the parentCode of the SearchEntity
 	 * 
 	 * @param parentCode the parent entity code
@@ -248,7 +233,7 @@ public class SearchEntity extends BaseEntity {
 	public SearchEntity setPageStart(final Integer pageStart) {
 
 		Attribute attribute = new Attribute("SCH_PAGE_START", "PageStart", new DataType(Integer.class));
-		addAttribute(attribute, 3.0, pageStart);
+		addAttribute(attribute, 1.0, pageStart);
 
 		return this;
 	}
@@ -576,12 +561,17 @@ public class SearchEntity extends BaseEntity {
 			log.info(msg);
 			for(int i = 0; i < list.size(); i++) {
 				Trait trait = list.get(i);
+				log.info("Code = " + trait.getCode() + ", i = " + i);
 				Attribute attribute = new Attribute(traitEntry.getValue() + trait.getCode(), trait.getName(),
 						new DataType(String.class));
 				EntityAttribute ea = this.addAttribute(attribute, Double.valueOf(i));
 				ea.setIndex(i);
 			}
 		}
+
+		// add title
+		Attribute attribute = new Attribute("SCH_TITLE", "Title", new DataType(String.class));
+		addAttribute(attribute, 1.0, getName());
 
 		// ensure trait data doesn't get sent out to FE
 		traits.clear();
