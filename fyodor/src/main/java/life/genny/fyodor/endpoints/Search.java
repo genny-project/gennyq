@@ -55,38 +55,6 @@ public class Search {
 	Jsonb jsonb = JsonbBuilder.create();
 
 	/**
-	 * A POST request for search results based on a
-	 * {@link SearchEntity}. Will only fetch codes.
-	 *
-	 * @return Success
-	 */
-	@POST
-	@Path("/api/search")
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response search(SearchEntity searchEntity) {
-
-		log.info("Search POST received..");
-		
-		if (userToken == null) {
-			log.error("Bad or no header token in Search POST provided");
-			return Response.status(Response.Status.BAD_REQUEST).build();
-		}
-
-		// Process search
-		try {
-			Page page = fyodor.search26(searchEntity);
-			String json = jsonb.toJson(page);
-			log.info("Found " + page.getTotal() + " results!");
-
-			return Response.ok().entity(json).build();
-
-		} catch (ItemNotFoundException e) {
-			log.error("Got ItemNotFound! " + e.getMessage(), e);
-			return Response.serverError().entity(HttpUtils.error(e.getMessage())).build();
-		}
-	}
-
-	/**
 	 * 
 	 * A POST request for search results based on a
 	 * {@link SearchEntity}. Will fetch complete entities.
@@ -94,9 +62,9 @@ public class Search {
 	 * @return Success
 	 */
 	@POST
-	@Path("/api/search/fetch")
+	@Path("/api/search")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response fetch(SearchEntity searchEntity) {
+	public Response search(SearchEntity searchEntity) {
 
 		log.info("Fetch POST received..");
 
@@ -107,7 +75,7 @@ public class Search {
 
 		// Process search
 		try {
-			Page page = fyodor.fetch26(searchEntity);
+			Page page = fyodor.fetchWithAttributes(searchEntity);
 			String json = jsonb.toJson(page);
 			log.info("Found " + page.getTotal() + " results!");
 
@@ -117,14 +85,6 @@ public class Search {
 			log.error(e.getMessage(), e);
 			return Response.serverError().entity(HttpUtils.error(e.getMessage())).build();
 		}
-	}
-
-	@POST
-	@Path("/count25")
-	@Produces(MediaType.APPLICATION_JSON)
-	public String count25(SearchEntity searchEntity) {
-		// TODO: Remove this endpoint
-		return count(searchEntity);
 	}
 
 	@POST
@@ -138,7 +98,7 @@ public class Search {
 		}
 
 		try {
-			Page page = fyodor.search26(searchEntity);
+			Page page = fyodor.fetchBaseEntities(searchEntity);
 
 			Long count = page.getTotal();
 			log.infof("Found %s entities", count);

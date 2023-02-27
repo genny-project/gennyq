@@ -10,6 +10,7 @@ import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
 import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
@@ -52,7 +53,7 @@ public class InitService extends KogitoService {
 	 */
 	public void sendProject() {
 
-		BaseEntity project = beUtils.getProjectBaseEntity();
+		BaseEntity project = beUtils.getBaseEntity(Prefix.PRJ_.concat(userToken.getProductCode().toUpperCase()));
 		log.info("Sending Project " + project.getCode());
 
 		// configure msg and send
@@ -67,11 +68,20 @@ public class InitService extends KogitoService {
 	 */
 	public void sendUser() {
 
-		// fetch the users baseentity
-		BaseEntity user = beUtils.getUserBaseEntity();
-		log.info("Sending User " + user.getCode());
+		String userCode = userToken.getUserCode();
+		String productCode = userToken.getProductCode();
+
+		// fetch the users baseentity, and names
+		BaseEntity user = beUtils.getBaseEntity(userCode);
+		EntityAttribute name = new EntityAttribute(user, attributeUtils.getAttribute(Attribute.PRI_NAME, true), 1.0, user.getName());
+		user.addAttribute(name);
+		EntityAttribute firstName = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_FIRSTNAME, true, true);
+		user.addAttribute(firstName);
+		EntityAttribute lastName = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_LASTNAME, true, true);
+		user.addAttribute(lastName);
 
 		// configure msg and send
+		log.info("Sending User " + user.getCode());
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(user);
 		msg.setToken(userToken.getToken());
 		msg.setAliasCode("USER");
@@ -126,6 +136,13 @@ public class InitService extends KogitoService {
 		}
 	}
 
+	/**
+	 * Dispatch a batch of attributes.
+	 *
+	 * @param attributesBatch
+	 * @param batchNum
+	 * @param totalBatches
+	 */
 	private void dispatchAttributesToKafka(List<Attribute> attributesBatch, int batchNum, int totalBatches) {
 		QDataAttributeMessage msg = new QDataAttributeMessage();
 		msg.add(attributesBatch);
@@ -133,19 +150,6 @@ public class InitService extends KogitoService {
 		// set token and send
 		msg.setToken(userToken.getToken());
 		msg.setAliasCode("ATTRIBUTE_MESSAGE_BATCH_" + batchNum + "_OF_" + totalBatches);
-		KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
-	}
-
-	public void sendDrafts() {
-
-		BaseEntity user = beUtils.getUserBaseEntity();
-		Ask ask = qwandaUtils.generateAskFromQuestionCode("QUE_DRAFTS_GRP", user, user, new CapabilitySet(user), new ReqConfig());
-
-		// configure msg and send
-		QDataAskMessage msg = new QDataAskMessage(ask);
-		msg.setToken(userToken.getToken());
-		msg.setReplace(true);
-
 		KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
 	}
 

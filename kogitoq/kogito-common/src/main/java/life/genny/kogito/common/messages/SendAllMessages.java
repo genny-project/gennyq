@@ -80,13 +80,12 @@ public class SendAllMessages extends MessageSendingStrategy {
 
             searchUtils = Arc.container().select(SearchUtils.class).get();
         }
-        List<String> messageCodes = searchUtils.searchBaseEntityCodes(searchEntity);
+        List<BaseEntity> messages = searchUtils.searchBaseEntitys(searchEntity);
 
-        if (messageCodes != null) {
-            log.info("messages : " + messageCodes.size());
-            messageCodes.parallelStream().forEach((messageCode) -> {
-                log.info("messageCode : " + messageCode);
-                BaseEntity message = beUtils.getBaseEntity(messageCode);
+        if (messages != null) {
+            log.info("messages : " + messages.size());
+            messages.parallelStream().forEach((message) -> {
+                log.info("message : " + message);
 
                 // Determine the recipientBECode
                 EntityAttribute recipientLink = beaUtils.getEntityAttribute(message.getRealm(), message.getCode(), PRI_RECIPIENT_LNK);
