@@ -4,6 +4,7 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
@@ -33,6 +34,32 @@ public class EntityAttributeUtils {
 
 	@Inject
 	AttributeUtils attributeUtils;
+
+	/**
+	 * Fetch an EntityAttribute value from the cache.
+	 *
+	 * @param pcm        The BaseEntity to fetch for
+	 * @param attributeCode        The Attribute code of the EntityAttribute to fetch
+	 * @return The corresponding EntityAttribute with embedded "Attribute", or null if not found.
+	 */
+	public <T> T getValue(PCM pcm, String attributeCode) {
+		return getValue((BaseEntity) pcm, attributeCode);
+	}
+
+	/**
+	 * Fetch an EntityAttribute value from the cache.
+	 *
+	 * @param baseEntity        The BaseEntity to fetch for
+	 * @param attributeCode        The Attribute code of the EntityAttribute to fetch
+	 * @return The corresponding EntityAttribute with embedded "Attribute", or null if not found.
+	 */
+	public <T> T getValue(BaseEntity baseEntity, String attributeCode) {
+		EntityAttribute ea = getEntityAttribute(baseEntity.getRealm(), baseEntity.getCode(), attributeCode, false);
+		if (ea == null) {
+			throw new ItemNotFoundException(baseEntity.getRealm(), baseEntity.getCode(), attributeCode);
+		}
+		return ea.getValue();
+	}
 
 	/**
 	 * Fetch a {@link EntityAttribute} from the cache using a realm:baseEntityCode:attributeCode.
