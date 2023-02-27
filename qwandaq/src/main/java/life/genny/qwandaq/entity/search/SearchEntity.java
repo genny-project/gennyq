@@ -578,8 +578,8 @@ public class SearchEntity extends BaseEntity {
 				Trait trait = list.get(i);
 				Attribute attribute = new Attribute(traitEntry.getValue() + trait.getCode(), trait.getName(),
 						new DataType(String.class));
-				EntityAttribute ea = this.addAttribute(attribute, Double.valueOf(i));
-				ea.setIndex(i);
+				EntityAttribute ea = this.addAttribute(attribute, Double.valueOf(i+1));
+				ea.setIndex(i+1);
 			}
 		}
 
