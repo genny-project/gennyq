@@ -680,15 +680,7 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 
 					} else if (className
 							.equalsIgnoreCase(LocalDate.class.getCanonicalName())) {
-						Date olddate = null;
-						try {
-							olddate = DateUtils.parseDate(result, "M/y", "yyyy-MM-dd", "yyyy/MM/dd",
-									"yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-						} catch (java.text.ParseException e) {
-							olddate = DateUtils.parseDate(result, "yyyy-MM-dd", "yyyy-MM-dd'T'HH:mm:ss",
-									"yyyy-MM-dd HH:mm:ss",
-									"yyyy-MM-dd'T'HH:mm:ss.SSSZ", "yyyy-MM-dd HH:mm:ss.SSSZ");
-						}
+						Date olddate = DateUtils.parseDate(result, "M/y", "yyyy-MM-dd", "yyyy/MM/dd", "yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 						final LocalDate date = olddate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 						setValueDate(date);
 					} else if (className
@@ -726,8 +718,9 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 						setValueString(result);
 					}
 				} catch (Exception e) {
-					log.error("Conversion Error :" + value + " for attribute " + attribute + " and SourceCode:"
+					log.error("Conversion Error: " + value + " for attribute " + attribute + " and SourceCode:"
 							+ this.baseEntityCode);
+					e.printStackTrace();
 				}
 			} else {
 

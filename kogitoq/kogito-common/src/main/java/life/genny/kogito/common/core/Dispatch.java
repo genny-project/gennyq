@@ -284,6 +284,7 @@ public class Dispatch {
 
 		// iterate locations
 		List<EntityAttribute> locations = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(pcm.getRealm(), pcmCode, Prefix.PRI_LOC);
+		log.info("Number of Locations = " + locations.size());
 
 		List<EntityAttribute> filteredLocations = new ArrayList<>(locations.size());
 		for (EntityAttribute entityAttribute : locations) {
