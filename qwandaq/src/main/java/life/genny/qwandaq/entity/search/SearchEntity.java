@@ -88,7 +88,6 @@ public class SearchEntity extends BaseEntity {
 		super(code, name);
 		setPageStart(0);
 		setPageSize(20);
-		setTitle(name);
 	}
 
 	/*
@@ -206,20 +205,6 @@ public class SearchEntity extends BaseEntity {
 
 		Attribute attribute = new Attribute("BKL_" + code, code, new DataType(String.class));
 		addAttribute(attribute, 1.0, code);
-
-		return this;
-	}
-
-	/**
-	 * This method allows to set the title of the results data to be sent
-	 * 
-	 * @param title The page title
-	 * @return SearchEntity
-	 */
-	public SearchEntity setTitle(final String title) {
-
-		Attribute attribute = new Attribute("SCH_TITLE", "Title", new DataType(String.class));
-		addAttribute(attribute, 1.0, title);
 
 		return this;
 	}
@@ -583,6 +568,10 @@ public class SearchEntity extends BaseEntity {
 				ea.setIndex(i);
 			}
 		}
+
+		// add title
+		Attribute attribute = new Attribute("SCH_TITLE", "Title", new DataType(String.class));
+		addAttribute(attribute, 1.0, getName());
 
 		// ensure trait data doesn't get sent out to FE
 		traits.clear();
