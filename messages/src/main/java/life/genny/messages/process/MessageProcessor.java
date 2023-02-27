@@ -299,7 +299,7 @@ public class MessageProcessor {
                     log.info("Fetching contextCodeArray :: " + Arrays.toString(codeArr));
                     // Convert to BEs
                     BaseEntity[] beArray = Arrays.stream(codeArr)
-                            .map(itemCode -> beUtils.getBaseEntity(itemCode, true))
+                            .map(itemCode -> beUtils.getBaseEntity(itemCode))
                             .toArray(BaseEntity[]::new);
 
                     if (beArray.length == 1) {
