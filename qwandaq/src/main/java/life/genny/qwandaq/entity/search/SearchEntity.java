@@ -576,11 +576,11 @@ public class SearchEntity extends BaseEntity {
 			log.info(msg);
 			for(int i = 0; i < list.size(); i++) {
 				Trait trait = list.get(i);
+				log.info("Code = " + trait.getCode() + ", i = " + i);
 				Attribute attribute = new Attribute(traitEntry.getValue() + trait.getCode(), trait.getName(),
 						new DataType(String.class));
-				EntityAttribute ea = new EntityAttribute(this, attribute, Double.valueOf(i), null);
+				EntityAttribute ea = this.addAttribute(attribute, Double.valueOf(i));
 				ea.setIndex(i);
-				this.addAttribute(ea);
 			}
 		}
 
