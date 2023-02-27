@@ -53,6 +53,14 @@ public class QuestionQuestion implements CoreEntityPersistable, Comparable<Objec
 
 	private Set<Capability> capabilityRequirements;
 
+	private Set<String> parentQuestionCodes = new HashSet<>(0);
+
+	private Set<String> childQuestionCodes = new HashSet<>(0);
+
+	private Set<QuestionQuestion> parentQuestionQuestions = new HashSet<>(0);
+
+	private Set<QuestionQuestion> childQuestionQuestions = new HashSet<>(0);
+
 	public QuestionQuestion() {
 	}
 
@@ -472,6 +480,38 @@ public class QuestionQuestion implements CoreEntityPersistable, Comparable<Objec
 	 */
 	public String getIcon() {
 		return this.icon;
+	}
+
+	public Set<String> getParentQuestionCodes() {
+		return parentQuestionCodes;
+	}
+
+	public void setParentQuestionCodes(Set<String> parentQuestionCodes) {
+		this.parentQuestionCodes = parentQuestionCodes;
+	}
+
+	public Set<String> getChildQuestionCodes() {
+		return childQuestionCodes;
+	}
+
+	public void setChildQuestionCodes(Set<String> childQuestionCodes) {
+		this.childQuestionCodes = childQuestionCodes;
+	}
+
+	public Set<QuestionQuestion> getParentQuestionQuestions() {
+		return parentQuestionQuestions;
+	}
+
+	public void setParentQuestionQuestions(Set<QuestionQuestion> parentQuestionQuestions) {
+		this.parentQuestionQuestions = parentQuestionQuestions;
+	}
+
+	public Set<QuestionQuestion> getChildQuestionQuestions() {
+		return childQuestionQuestions;
+	}
+
+	public void setChildQuestionQuestions(Set<QuestionQuestion> childQuestionQuestions) {
+		this.childQuestionQuestions = childQuestionQuestions;
 	}
 
     public Set<Capability> getCapabilityRequirements() {

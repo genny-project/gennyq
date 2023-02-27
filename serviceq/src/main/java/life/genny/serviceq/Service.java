@@ -152,6 +152,35 @@ public class Service {
 	}
 
 	/**
+	 * Initialize the Attribute cache for each allowed productCode.
+	 */
+	public void initAttributes() {
+
+		// null check the allowed codes
+		String[] allowedProducts = serviceToken.getAllowedProducts();
+		if (allowedProducts == null) {
+			log.error("You must set up the PRODUCT_CODES environment variable!");
+		}
+	}
+
+	/**
+	 * Initialize BaseEntity Definitions for each allowed productCode.
+	 */
+	public void initDefinitions() {
+
+		// null check the allowed codes
+		String[] allowedProducts = serviceToken.getAllowedProducts();
+		if (allowedProducts == null) {
+			log.error("You must set up the PRODUCT_CODES environment variable!");
+		}
+
+		for (String productCode : allowedProducts) {
+			defUtils.initializeDefPrefixs(productCode);
+		}
+	}
+
+
+	/**
 	 * log the service confiduration details.
 	 */
 	public void showConfiguration() {
@@ -187,6 +216,7 @@ public class Service {
 		initToken();
 		initCache();
 		initKafka();
+		initDefinitions();
 
 		initialised = true;
 		log.info("[@] Service Initialised!");
