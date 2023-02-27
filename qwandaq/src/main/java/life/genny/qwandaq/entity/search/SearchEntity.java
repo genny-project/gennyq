@@ -219,7 +219,7 @@ public class SearchEntity extends BaseEntity {
 	public SearchEntity setTitle(final String title) {
 
 		Attribute attribute = new Attribute("SCH_TITLE", "Title", new DataType(String.class));
-		addAttribute(attribute, 5.0, title);
+		addAttribute(attribute, 1.0, title);
 
 		return this;
 	}
@@ -248,7 +248,7 @@ public class SearchEntity extends BaseEntity {
 	public SearchEntity setPageStart(final Integer pageStart) {
 
 		Attribute attribute = new Attribute("SCH_PAGE_START", "PageStart", new DataType(Integer.class));
-		addAttribute(attribute, 3.0, pageStart);
+		addAttribute(attribute, 1.0, pageStart);
 
 		return this;
 	}
@@ -578,8 +578,9 @@ public class SearchEntity extends BaseEntity {
 				Trait trait = list.get(i);
 				Attribute attribute = new Attribute(traitEntry.getValue() + trait.getCode(), trait.getName(),
 						new DataType(String.class));
-				EntityAttribute ea = this.addAttribute(attribute, Double.valueOf(i+1));
-				ea.setIndex(i+1);
+				EntityAttribute ea = new EntityAttribute(this, attribute, Double.valueOf(i), null);
+				ea.setIndex(i);
+				this.addAttribute(ea);
 			}
 		}
 
