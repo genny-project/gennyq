@@ -680,8 +680,8 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 
 					} else if (className
 							.equalsIgnoreCase(LocalDate.class.getCanonicalName())) {
-						Date olddate = DateUtils.parseDate(result, "M/y", "yyyy-MM-dd", "yyyy/MM/dd", "yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-						final LocalDate date = olddate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+						DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSz");
+						LocalDate date = LocalDate.parse(result, formatter);
 						setValueDate(date);
 					} else if (className
 							.equalsIgnoreCase(LocalTime.class.getCanonicalName())) {

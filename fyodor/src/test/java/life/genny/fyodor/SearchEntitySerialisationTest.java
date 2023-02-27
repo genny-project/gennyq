@@ -1,6 +1,9 @@
 package life.genny.fyodor;
 
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import javax.json.bind.Jsonb;
+import javax.json.bind.JsonbBuilder;
 
 import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Action;
@@ -10,11 +13,6 @@ import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Sort;
 import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.entity.search.trait.Ord;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
 
 public class SearchEntitySerialisationTest {
 	public static final String SBE_TABLE_APPLICATIONS = "SBE_TABLE_APPLICATIONS";
