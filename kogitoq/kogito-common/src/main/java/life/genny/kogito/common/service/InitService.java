@@ -2,47 +2,27 @@ package life.genny.kogito.common.service;
 
 import java.util.*;
 
-import java.util.stream.Collectors;
-
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
-import life.genny.qwandaq.constants.GennyConstants;
-import life.genny.qwandaq.converter.ValidationListConverter;
 import life.genny.qwandaq.datatype.DataType;
-import life.genny.qwandaq.validation.Validation;
-import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Ask;
-import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
 import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
-import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.entity.search.SearchEntity;
-import life.genny.qwandaq.entity.search.trait.Filter;
-import life.genny.qwandaq.entity.search.trait.Operator;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.managers.CacheManager;
-import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.*;
-import org.jboss.logging.Logger;
-import org.jbpm.process.core.datatype.DataTypeUtils;
-
-import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import java.util.Arrays;
-import java.util.stream.Collectors;
 
 /**
  * A Service class used for Auth Init operations.
@@ -54,9 +34,6 @@ import java.util.stream.Collectors;
 public class InitService extends KogitoService {
 
 	@Inject
-	private CacheManager cm;
-
-	@Inject
 	private BaseEntityUtils beUtils;
 
 	@Inject
@@ -64,12 +41,6 @@ public class InitService extends KogitoService {
 
 	@Inject
 	private QwandaUtils qwandaUtils;
-
-	@Inject
-	private SearchUtils searchUtils;
-
-	@Inject
-	private CapabilitiesManager capMan;
 
 	@Inject
 	CacheManager cacheManager;
@@ -142,9 +113,13 @@ public class InitService extends KogitoService {
 			if (attributeCode.startsWith(Prefix.CAP_)) {
 				continue;
 			}
-			DataType dataType = attributeUtils.getDataType(attribute, true);
-			if (dataType != null) {
+			// see if dtt exists
+			try {
+				DataType dataType = attributeUtils.getDataType(attribute, true);
 				attribute.setDataType(dataType);
+			} catch (ItemNotFoundException e) {
+				e.printStackTrace();
+				continue;
 			}
 			attributesBatch.add(attribute);
 			count++;
