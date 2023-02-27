@@ -1,4 +1,4 @@
-`package life.genny.qwandaq.serialization.question;
+package life.genny.qwandaq.serialization.question;
 
 message Question {
   optional string dtype = 1;
@@ -21,4 +21,3 @@ message Question {
   optional int64 attribute_id = 18;
   optional string capreqs = 19;
 }
-`

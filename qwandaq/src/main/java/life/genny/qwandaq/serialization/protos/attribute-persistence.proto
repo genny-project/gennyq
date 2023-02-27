@@ -5,6 +5,7 @@ message AttributeKey {
   optional string code = 2;
 }
 
+/* @Indexed */
 message Attribute {
   optional string dtype = 1;
   optional int64 id = 2;
