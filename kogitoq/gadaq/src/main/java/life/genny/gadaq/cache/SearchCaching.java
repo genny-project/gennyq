@@ -4,11 +4,10 @@ import static life.genny.qwandaq.attribute.Attribute.LNK_MESSAGE_TYPE;
 import static life.genny.qwandaq.attribute.Attribute.PRI_BODY;
 import static life.genny.qwandaq.attribute.Attribute.PRI_CODE;
 import static life.genny.qwandaq.attribute.Attribute.PRI_NAME;
-
+import static life.genny.qwandaq.attribute.Attribute.LNK_PARENT;
 import java.lang.invoke.MethodHandles;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.entity.search.trait.*;
 import org.jboss.logging.Logger;
@@ -114,6 +113,10 @@ public class SearchCaching {
 		cacheDropdown("DEF_BUILDING",
 				new SearchEntity("SBE_SER_LNK_AREA_UNIT", "Area Unit Dropdown")
 						.setLinkValue("AREA_UNIT"));
+						cacheDropdown("DEF_DOCUMENT",
+
+		new SearchEntity("SBE_SER_LNK_MESSAGE_TYPE", "Message Types Dropdown")
+				.add(new Filter(LNK_PARENT, Operator.CONTAINS, "GRP_MESSAGE_TYPES")));			
 
 		// DEF_MESSAGE
 		cacheSearch(
