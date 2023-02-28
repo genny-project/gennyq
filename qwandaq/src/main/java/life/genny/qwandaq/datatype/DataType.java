@@ -19,12 +19,10 @@
 
 package life.genny.qwandaq.datatype;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import javax.json.bind.annotation.JsonbTransient;
 import javax.money.Monetary;
 import javax.persistence.Column;
 import javax.persistence.Convert;
@@ -38,8 +36,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
-import life.genny.qwandaq.utils.CommonUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.javamoney.moneta.Money;
 import org.jboss.logging.Logger;
 
