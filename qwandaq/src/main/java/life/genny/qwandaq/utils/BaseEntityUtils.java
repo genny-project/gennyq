@@ -109,10 +109,7 @@ public class BaseEntityUtils {
 	 * @return
 	 */
 	public Definition getDefinition(String code) {
-		BaseEntity baseEntity = getBaseEntity(code, true);
-		Definition definition = Definition.from(baseEntity);
-		definition.setBaseEntityAttributes(beaUtils.getAllEntityAttributesForBaseEntity(baseEntity));
-		return definition;
+		return Definition.from(getBaseEntity(code, true));
 	}
 
 	/**
