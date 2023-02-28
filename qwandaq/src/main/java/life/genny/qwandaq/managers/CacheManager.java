@@ -21,7 +21,6 @@ import life.genny.qwandaq.serialization.entityattribute.EntityAttributeKey;
 import life.genny.qwandaq.serialization.question.QuestionKey;
 import life.genny.qwandaq.serialization.questionquestion.QuestionQuestionKey;
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.QuestionUtils;
 import life.genny.qwandaq.validation.Validation;
 import org.apache.commons.lang3.StringUtils;
@@ -34,7 +33,6 @@ import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import java.lang.reflect.Type;
@@ -214,6 +212,17 @@ public class CacheManager {
 	 */
 	public boolean saveEntity(String cacheName, CoreEntityKey key, CoreEntityPersistable entity) {
 		return cache.putEntityIntoCache(cacheName, key, entity);
+	}
+
+	/**
+	 * Save a map of {@link CoreEntity} to the cache using a CoreEntityKey.
+	 * 
+	 * @param cacheName
+	 * @param entities
+	 * @return
+	 */
+	public boolean saveEntities(String cacheName, Map<CoreEntityKey, CoreEntityPersistable> entities) {
+		return cache.putEntitiesIntoCache(cacheName, entities);
 	}
 
 	/**

@@ -222,8 +222,8 @@ public class BaseEntityUtils {
 					Attribute attribute = attributeUtils.getAttribute(baseEntity.getRealm(), bea.getAttributeCode());
 					bea.setAttribute(attribute);
 				}
-				beaUtils.updateEntityAttribute(bea);
 			});
+			beaUtils.updateEntityAttributes(new ArrayList<>(baseEntity.getBaseEntityAttributes()));
 		}
 		return savedSuccessfully ? baseEntity : null;
 	}

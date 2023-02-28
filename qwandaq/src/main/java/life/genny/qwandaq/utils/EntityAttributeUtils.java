@@ -1,5 +1,6 @@
 package life.genny.qwandaq.utils;
 
+import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.GennyConstants;
@@ -10,14 +11,16 @@ import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.serialization.common.CoreEntityKey;
 import life.genny.qwandaq.serialization.entityattribute.EntityAttributeKey;
-import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A non-static utility class used for standard
@@ -139,6 +142,22 @@ public class EntityAttributeUtils {
 	public boolean updateEntityAttribute(EntityAttribute baseEntityAttribute) {
 		EntityAttributeKey key = new EntityAttributeKey(baseEntityAttribute.getRealm(), baseEntityAttribute.getBaseEntityCode(), baseEntityAttribute.getAttributeCode());
 		return cm.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, key, baseEntityAttribute);
+	}
+
+	/**
+	 * Update a map of {@link EntityAttribute} in the cache
+	 *
+	 * @param baseEntityAttributes        The list of BaseEntityAttribute to be updated
+	 * @return True if update is successful, false otherwise.
+	 */
+	public boolean updateEntityAttributes(List<EntityAttribute> baseEntityAttributes) {
+		log.debug("Saving EntityAttribute in bulk. Size: " + baseEntityAttributes.size());
+		Map<CoreEntityKey, CoreEntityPersistable> entityCaches = new HashMap<>(baseEntityAttributes.size());
+		for (EntityAttribute ea : baseEntityAttributes) {
+			EntityAttributeKey key = new EntityAttributeKey(ea.getRealm(), ea.getBaseEntityCode(), ea.getAttributeCode());
+			entityCaches.put(key, ea);
+		}
+		return cm.saveEntities(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, entityCaches);
 	}
 
     /**

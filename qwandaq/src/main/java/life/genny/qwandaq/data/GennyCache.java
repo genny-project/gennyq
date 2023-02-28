@@ -47,9 +47,9 @@ public class GennyCache {
 
 	static final Logger log = Logger.getLogger(GennyCache.class);
 
-    private final Set<String> realms = new HashSet<>();
+	private final Set<String> realms = new HashSet<>();
 
-    private final Map<String, RemoteCache> caches = new HashMap<>();
+	private final Map<String, RemoteCache> caches = new HashMap<>();
 
 	private RemoteCacheManager remoteCacheManager;
 
@@ -85,7 +85,7 @@ public class GennyCache {
 		}
 
 		// create cache manager
-        getAllSerializationContextInitializers().forEach(builder::addContextInitializer);
+		getAllSerializationContextInitializers().forEach(builder::addContextInitializer);
 		Configuration config = builder.build();
 		if (remoteCacheManager == null) {
 			remoteCacheManager = new RemoteCacheManager(config);
@@ -180,9 +180,9 @@ public class GennyCache {
 	 * Return a remote cache for the given entity.
 	 *
 	 * @param entityName
-	 * 		the name of the associated entity the desired cache
+	 *                   the name of the associated entity the desired cache
 	 * @return RemoteCache&lt;String, String&gt;
-	 * 		the remote cache associated with the entity
+	 *         the remote cache associated with the entity
 	 */
 	public RemoteCache<CoreEntityKey, CoreEntityPersistable> getRemoteCacheForEntity(final String entityName) {
 		if (remoteCacheManager == null) {
@@ -210,7 +210,7 @@ public class GennyCache {
 	 * Get a CoreEntity from the cache.
 	 *
 	 * @param cacheName The cache to get from
-	 * @param key The key to the entity to fetch
+	 * @param key       The key to the entity to fetch
 	 * @return The persistable core entity
 	 */
 	public CoreEntityPersistable getPersistableEntityFromCache(String cacheName, CoreEntityKey key) {
@@ -247,7 +247,7 @@ public class GennyCache {
 			throw new NullPointerException("Cache not found: " + cacheName);
 		}
 		try {
-			if(value != null) {
+			if (value != null) {
 				cache.put(key, value);
 			} else {
 				log.warn("[" + cacheName + "]: Value for " + key.getKeyString() + " is null, nothing to be added.");
@@ -262,12 +262,46 @@ public class GennyCache {
 	}
 
 	/**
+	 * Put Map of CoreEntity into the cache.
+	 * 
+	 * @param cacheName    The cache to get from
+	 * @param entityCaches The Map of CoreEntity
+	 * @return
+	 */
+	public boolean putEntitiesIntoCache(String cacheName, Map<CoreEntityKey, CoreEntityPersistable> entityCaches) {
+		if (remoteCacheManager == null) {
+			initRemoteCacheManager();
+		}
+		RemoteCache<CoreEntityKey, CoreEntityPersistable> cache = remoteCacheManager.getCache(cacheName);
+		if (cache == null) {
+			throw new NullPointerException("Cache not found: " + cacheName);
+		}
+		if (entityCaches == null) {
+			throw new NullPointerException("dataChace is null. Please contact the developer.");
+		}
+		try {
+			if (entityCaches.size() < 1) {
+				cache.putAll(entityCaches);
+			} else {
+				log.warn("[" + cacheName + "]: Entity map size is less than 1, nothing to be added.");
+			}
+		} catch (Exception e) {
+			log.error("Exception when inserting entity into cache: " + e.getMessage());
+			log.error(e.getStackTrace());
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+
+	/**
 	 * Put a CoreEntity into the cache.
 	 *
 	 * @param cacheName The cache to get from
-	 * @param key The key to put the entity under
-	 * @param value The serializable entity
-	 * @return True if the entity is successfully inserted into cache, False otherwise
+	 * @param key       The key to put the entity under
+	 * @param value     The serializable entity
+	 * @return True if the entity is successfully inserted into cache, False
+	 *         otherwise
 	 */
 	public boolean putEntityIntoCache(String cacheName, CoreEntityKey key, CoreEntitySerializable value) {
 		return putEntityIntoCache(cacheName, key, value.toPersistableCoreEntity());
@@ -277,7 +311,7 @@ public class GennyCache {
 	 * Remove CoreEntity from the cache.
 	 *
 	 * @param cacheName The cache to get from
-	 * @param key The key to the entity to remove
+	 * @param key       The key to the entity to remove
 	 * @return The removed persistable core entity
 	 */
 	public CoreEntityPersistable removeEntityFromCache(String cacheName, CoreEntityKey key) {
