@@ -396,6 +396,7 @@ public class DataType implements CoreEntityPersistable {
 		dataType.setRealm(getRealm());
 		dataType.setDttCode(getDttCode());
 		dataType.setClassName(getClassName());
+		dataType.setTypeName(getTypeName());
 		dataType.setComponent(getComponent());
 		dataType.setInputMask(getInputmask());
 		dataType.setValidationCodes(getValidationCodes());
