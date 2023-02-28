@@ -13,6 +13,7 @@ import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
@@ -115,7 +116,7 @@ public class MergeUtils {
 	 */
 	public Object wordMerge(String mergeText, Map<String, Object> entitymap) {
 
-		if (mergeText == null || mergeText.isEmpty())
+		if (StringUtils.isBlank(mergeText))
 			return DEFAULT;
 
 		// we split the text to merge into 2 components: BE.PRI... becomes [BE, PRI...]
@@ -123,11 +124,15 @@ public class MergeUtils {
 		String keyCode = entityArr[0];
 		log.debug("looking for key in map: " + keyCode);
 
-		if ((entityArr.length == 0))
+		if ((entityArr.length == 0)) {
+			log.debug("Not a valid merge text: " + mergeText);
 			return DEFAULT;
+		}
 
-		if (!entitymap.containsKey(keyCode))
+		if (!entitymap.containsKey(keyCode)) {
+			log.debug("Context Map does not contain: " + keyCode);
 			return DEFAULT;
+		}
 
 		Object value = entitymap.get(keyCode);
 
@@ -137,7 +142,7 @@ public class MergeUtils {
 		}
 
 		if (value.getClass().equals(BaseEntity.class)) {
-
+			log.debug("Got Base Entity in Value");
 			BaseEntity be = (BaseEntity) value;
 			String attributeCode = entityArr[1];
 
@@ -146,7 +151,7 @@ public class MergeUtils {
 				return be.getCode();
 			}
 
-			EntityAttribute ea = beaUtils.getEntityAttribute(be.getRealm(), be.getCode(), attributeCode, true);
+			EntityAttribute ea = beaUtils.getEntityAttribute(be.getRealm(), be.getCode(), attributeCode);
 			Object attributeValue = ea.getValue();
 			log.debug("context: " + keyCode + ", attr: " + attributeCode + ", value: " + attributeValue);
 
