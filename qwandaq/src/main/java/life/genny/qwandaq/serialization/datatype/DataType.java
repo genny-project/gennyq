@@ -26,20 +26,24 @@ public class DataType implements CoreEntitySerializable {
 	private String className;
 
 	@ProtoField(4)
-	private String component;
+	private String typeName;
 
 	@ProtoField(5)
-	private String inputMask;
+	private String component;
 
 	@ProtoField(6)
+	private String inputMask;
+
+	@ProtoField(7)
 	private String validationCodes;
 
 	@ProtoFactory
-	public DataType(String realm, String dttCode, String className, String component, String inputMask) {
+	public DataType(String realm, String dttCode, String className, String typeName, String component, String inputMask) {
 		super();
 		this.realm = realm;
 		this.dttCode = dttCode;
 		this.className = className;
+		this.typeName = typeName;
 		this.component = component;
 		this.inputMask = inputMask;
 	}
@@ -69,6 +73,14 @@ public class DataType implements CoreEntitySerializable {
 
 	public void setClassName(String className) {
 		this.className = className;
+	}
+
+	public String getTypeName() {
+		return typeName;
+	}
+
+	public void setTypeName(String typeName) {
+		this.typeName = typeName;
 	}
 
 	public String getComponent() {
@@ -101,6 +113,7 @@ public class DataType implements CoreEntitySerializable {
 		dataType.setRealm(getRealm());
 		dataType.setDttCode(getDttCode());
 		dataType.setClassName(getClassName());
+		dataType.setTypeName(getTypeName());
 		dataType.setComponent(getComponent());
 		dataType.setInputmask(getInputMask());
 		dataType.setValidationCodes(getValidationCodes());
