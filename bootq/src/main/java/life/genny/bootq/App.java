@@ -2,7 +2,7 @@ package life.genny.bootq;
 
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
-import io.vertx.core.json.JsonObject;
+import life.genny.bootq.models.BatchLoading;
 import life.genny.bootq.models.Realm;
 import life.genny.bootq.models.RealmUnit;
 import life.genny.qwandaq.entity.search.SearchEntity;
@@ -102,7 +102,7 @@ public class App {
                 if (!realmUnit.getDisable() && !realmUnit.getSkipGoogleDoc()) {
                     log.info("Starting batch loading for sheet:" + realmUnit.getUri()
                             + ", realm:" + realmUnit.getName());
-                    BatchLoading bl = new BatchLoading(repo);
+                    BatchLoading bl = new BatchLoading();
                     bl.persistProjectOptimization(realmUnit);
                     log.info("Finished batch loading for sheet:" + realmUnit.getUri()
                             + ", realm:" + realmUnit.getName() + ", now syncing be, attr and questions");

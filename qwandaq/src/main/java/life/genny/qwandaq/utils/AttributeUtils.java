@@ -97,6 +97,24 @@ public class AttributeUtils {
         return attribute;
     }
 
+    /**
+	 * Get the datatype for an attribute using an attribute code.
+	 *
+     * @param attributeCode
+     * @param bundleValidationList
+     * @return
+     */
+    public DataType getDataType(String attributeCode, boolean bundleValidationList) {
+		return getDataType(getAttribute(attributeCode), bundleValidationList);
+	}
+
+    /**
+	 * Get the datatype for an attribute using an attribute.
+	 *
+     * @param attribute
+     * @param bundleValidationList
+     * @return
+     */
     public DataType getDataType(Attribute attribute, boolean bundleValidationList) {
         if(attribute == null) {
             throw new NullParameterException("attribute");

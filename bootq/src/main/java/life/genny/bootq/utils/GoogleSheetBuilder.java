@@ -41,57 +41,6 @@ public class GoogleSheetBuilder {
     private GoogleSheetBuilder() {
     }
 
-    private static boolean isDouble(String doubleStr) {
-        final String Digits = "(\\p{Digit}+)";
-        final String HexDigits = "(\\p{XDigit}+)";
-        // an exponent is 'e' or 'E' followed by an optionally
-        // signed decimal integer.
-        final String Exp = "[eE][+-]?" + Digits;
-        final String fpRegex =
-                ("[\\x00-\\x20]*" +  // Optional leading "whitespace"
-                        "[+-]?(" + // Optional sign character
-                        "NaN|" +           // "NaN" string
-                        "Infinity|" +      // "Infinity" string
-
-                        // A decimal floating-point string representing a finite positive
-                        // number without a leading sign has at most five basic pieces:
-                        // Digits . Digits ExponentPart FloatTypeSuffix
-                        //
-                        // Since this method allows integer-only strings as input
-                        // in addition to strings of floating-point literals, the
-                        // two sub-patterns below are simplifications of the grammar
-                        // productions from section 3.10.2 of
-                        // The Java Language Specification.
-
-                        // Digits ._opt Digits_opt ExponentPart_opt FloatTypeSuffix_opt
-                        "(((" + Digits + "(\\.)?(" + Digits + "?)(" + Exp + ")?)|" +
-
-                        // . Digits ExponentPart_opt FloatTypeSuffix_opt
-                        "(\\.(" + Digits + ")(" + Exp + ")?)|" +
-
-                        // Hexadecimal strings
-                        "((" +
-                        // 0[xX] HexDigits ._opt BinaryExponent FloatTypeSuffix_opt
-                        "(0[xX]" + HexDigits + "(\\.)?)|" +
-
-                        // 0[xX] HexDigits_opt . HexDigits BinaryExponent FloatTypeSuffix_opt
-                        "(0[xX]" + HexDigits + "?(\\.)" + HexDigits + ")" +
-
-                        ")[pP][+-]?" + Digits + "))" +
-                        "[fFdD]?))" +
-                        "[\\x00-\\x20]*");// Optional trailing "whitespace"
-
-        boolean result = false;
-        
-        try {
-			result = Pattern.matches(fpRegex, doubleStr);
-		} catch (Exception e) {
-			log.error("Error in isDouble ->"+doubleStr);
-		}
-        
-        return result;
-    }
-
     public static boolean toBoolean(final String booleanString) {
         if (booleanString == null) {
             return false;
@@ -106,6 +55,13 @@ public class GoogleSheetBuilder {
         return Double.parseDouble(doubleString);
     }
 
+    /**
+	 * Build a Validation object from a row.
+	 *
+     * @param row The row from the sheets
+     * @param realmName The realm
+     * @return A Validation object
+     */
     public static Validation buildValidation(Map<String, String> row, String realmName) {
 		String code = row.get("code");
 		String name = row.get("name");
@@ -116,6 +72,13 @@ public class GoogleSheetBuilder {
         return validation;
     }
 
+    /**
+	 * Build a DataType object from a row.
+	 *
+     * @param row THe row from the sheets
+     * @param realmName The realm
+     * @return A DataType object
+     */
 	public static DataType buildDataType(Map<String, String> row, String realmName) {
 		DataType dataType = new DataType();
 		dataType.setDttCode(row.get("code"));
@@ -126,13 +89,23 @@ public class GoogleSheetBuilder {
 		return dataType;
 	}
 
+    /**
+	 * Build a Attribute object from a row.
+	 *
+     * @param row THe row from the sheets
+     * @param realmName The realm
+     * @return A Attribute object
+     */
     public static Attribute buildAttribute(Map<String, String> row, String realmName) {
 
         String code = row.get("code");
         String name = row.get("name");
         String dttCode = row.get("datatype");
 
-        Attribute attr = new Attribute(code, name);
+        Attribute attr = new Attribute();
+		attr.setCode(code);
+		attr.setName(name);
+		attr.setDttCode(dttCode);
         attr.setDefaultPrivacyFlag(toBoolean(row.get("privacy")));
         attr.setDescription(row.get("description"));
         attr.setHelp(row.get("help"));
@@ -143,6 +116,13 @@ public class GoogleSheetBuilder {
         return attr;
     }
 
+    /**
+	 * Build a BaseEntity object from a row.
+	 *
+     * @param row THe row from the sheets
+     * @param realmName The realm
+     * @return A BaseEntity object
+     */
     public static BaseEntity buildBaseEntity(Map<String, String> row, String realmName) {
 
         String code = row.get("code");
@@ -152,17 +132,28 @@ public class GoogleSheetBuilder {
         return baseEntity;
     }
 
+    /**
+	 * Build a EntityAttribute object from a row.
+	 *
+     * @param row THe row from the sheets
+     * @param realmName The realm
+     * @return A EntityAttribute object
+     */
     public static EntityAttribute buildEntityAttribute(Map<String, String> row, String realmName) {
+		return buildEntityAttribute(row, realmName, row.get("attributeCode"));
+	}
+
+    public static EntityAttribute buildEntityAttribute(Map<String, String> row, String realmName, String attributeCode) {
 
 		EntityAttribute entityAttribute = new EntityAttribute();
 		entityAttribute.setBaseEntityCode(row.get("baseEntityCode"));
-		entityAttribute.setAttributeCode(row.get("attributeCode"));
+		entityAttribute.setAttributeCode(attributeCode);
 		entityAttribute.setRealm(realmName);
         
         String valueString = row.get(VALUESTRING);
-        Integer valueInt = row.get(VALUEINTEGER);
-        Long valueLong = row.get(VALUELONG);
-        Double valueDouble = row.get(VALUEDOUBLE);
+        Integer valueInt = Integer.valueOf(row.get(VALUEINTEGER));
+        Long valueLong = Long.valueOf(row.get(VALUELONG));
+        Double valueDouble = Double.valueOf(row.get(VALUEDOUBLE));
         Boolean valueBoolean = toBoolean(row.get(VALUEBOOLEAN));
 
         Double weight = toDouble(row.get(WEIGHT));
@@ -183,149 +174,70 @@ public class GoogleSheetBuilder {
         return entityAttribute;
     }
 
+    /**
+	 * Build a Question object from a row.
+	 *
+     * @param row The row from the sheet
+     * @param realmName the realm
+     * @return A Question
+     */
+    public static Question buildQuestion(Map<String, String> row, String realmName) {
 
-    private static QuestionQuestion hasChild(Question sourceQuestion, String targetCode) {
-        for (QuestionQuestion qq : sourceQuestion.getChildQuestions()) {
-            if (qq.getPk().getTargetCode().equals(targetCode)) {
-            return qq;
-            }
-        }
-        return null;
-    }
+        String code = row.get("code");
+        String name = row.get("name");
+        String attributeCode = row.get("attribute_code");
+        String html = row.get("html");
+        String placeholder = row.get("placeholder");
+        boolean readonly = toBoolean(row.get(READONLY));
+        boolean mandatory = toBoolean(row.get(MANDATORY));
+        String icon = row.get("icon");
 
-    public static QuestionQuestion buildQuestionQuestion(Map<String, String> queQues,
-                                                         String realmName,
-                                                         Map<String, Question> questionHashMap) {
-
-        String parentCode = queQues.get("parentCode".toLowerCase().replaceAll("^\"|\"$|_|-", ""));
-        if (parentCode == null) {
-            parentCode = queQues.get("sourceCode".toLowerCase().replaceAll("^\"|\"$|_|-", ""));
-        }
-
-        String targetCode = queQues.get("targetCode".toLowerCase().replaceAll("^\"|\"$|_|-", ""));
-
-        String weightStr = queQues.get(WEIGHT);
-        String mandatoryStr = queQues.get(MANDATORY);
-        String readonlyStr = queQues.get(READONLY);
-        Boolean readonly = "TRUE".equalsIgnoreCase(readonlyStr);
-        Boolean formTrigger = queQues.get("formtrigger") != null && "TRUE".equalsIgnoreCase(queQues.get("formtrigger"));
-        Boolean createOnTrigger = queQues.get("createontrigger") != null && "TRUE".equalsIgnoreCase(queQues.get("createontrigger"));
-        String dependency = queQues.get("dependency");
-        String icon = queQues.get("icon");
-        Boolean disabled = queQues.get("disabled") != null && "TRUE".equalsIgnoreCase(queQues.get("disabled"));
-        Boolean hidden = queQues.get("hidden") != null && "TRUE".equalsIgnoreCase(queQues.get("hidden"));
-
-        double weight = 0.0;
-        if(weightStr == null || weightStr.isBlank())
-            log.error("Weight for QuestionQuestion: " + parentCode + "//" + targetCode + " is missing!");
-
-        if (isDouble(weightStr)) {
-            weight = Double.parseDouble(weightStr);
-        }
-
-        Boolean mandatory = "TRUE".equalsIgnoreCase(mandatoryStr);
-
-        Question sbe = questionHashMap.get(parentCode.toUpperCase());
-        Question tbe = questionHashMap.get(targetCode.toUpperCase());
-        if (sbe == null) {
-            log.error("QuestionQuesiton parent code:" + parentCode + " doesn't exist in Question table.");
-            return null;
-        } else if (tbe == null) {
-            log.error("QuestionQuesiton target Code:" + targetCode + " doesn't exist in Question table.");
-            return null;
-        }
-
-        // Icon will default to Target Question's icon if null
-        if (icon == null) {
-            icon = tbe.getIcon();
-        }
-
-        String oneshotStr = queQues.get("oneshot");
-        Boolean oneshot = false;
-        if (oneshotStr == null) {
-            // Set the oneshot to be that of the targetquestion
-            oneshot = tbe.getOneshot();
-        } else {
-            oneshot = "TRUE".equalsIgnoreCase(oneshotStr);
-        }
-
-        try {
-            QuestionQuestion qq  = hasChild(sbe, tbe.getCode()) ;
-            if(qq == null) {
-                qq = sbe.addChildQuestion(tbe.getCode(), weight, mandatory);
-            }
-            qq.setOneshot(oneshot);
-            qq.setReadonly(readonly);
-            qq.setCreateOnTrigger(createOnTrigger);
-            qq.setFormTrigger(formTrigger);
-            qq.setRealm(realmName);
-            qq.setDependency(dependency);
-            qq.setIcon(icon);
-            qq.setDisabled(disabled);
-            qq.setHidden(hidden);
-            qq.setMandatory(mandatory);
-            return qq;
-        } catch (BadDataException be) {
-            log.error("Should never reach here, got BadDataException when process sourceCode: " + sbe.getCode() + ", targetCode:" + tbe.getCode());
-        }
-        return null;
-    }
-
-    public static Question buildQuestion(Map<String, String> questions,
-                                         Map<String, Attribute> attributeHashMap,
-                                         String realmName) {
-        String code = questions.get("code");
-        String name = questions.get("name");
-        String placeholder = questions.get("placeholder");
-        String directions = questions.get("directions");
-        String attrCode = questions.get("attribute_code".toLowerCase().replaceAll("^\"|\"$|_|-", ""));
-        String html = questions.get("html");
-        String oneshotStr = questions.get("oneshot");
-        String readonlyStr = questions.get(READONLY);
-        String mandatoryStr = questions.get(MANDATORY);
-        String helper = questions.get("helper");
-        String icon = questions.get("icon");
-
-        Boolean oneshot = toBoolean(oneshotStr);
-        Boolean readonly = toBoolean(readonlyStr);
-        Boolean mandatory = toBoolean(mandatoryStr);
-
-        Attribute attr = attributeHashMap.get(attrCode.toUpperCase());
-        if (attr == null) {
-			if (attrCode.contains(".")) {
-				String[] attributeFields = attrCode.toUpperCase().split("\\.");
-				attr = attributeHashMap.get(attributeFields[attributeFields.length-1]);
-				if (attr == null) {
-					log.error(String.format("Question: %s can not find Attribute:%s in database!", code, attrCode.toUpperCase()));
-					return null;
-				}
-				log.info(String.format("Question: %s using linked Attribute:%s", code, attr.getCode()));
-			} else {
-				log.error(String.format("Question: %s can not find Attribute:%s in database!", code, attrCode.toUpperCase()));
-				return null;
-			}
-        }
-
-        // Icon will default to Attribute's icon if null
-        if ( (icon == null) || (icon.equals("null")) ) {
-            icon = attr.getIcon();
-        }
-
-        Question q = null;
-        if (placeholder != null) {
-            q = new Question(code, name, attr, placeholder);
-        } else {
-            q = new Question(code, name, attr);
-        }
-		q.setAttributeCode(attrCode.toUpperCase());
-        q.setOneshot(oneshot);
+        Question q = new Question();
+		q.setCode(code);
+		q.setName(name);
+		q.setAttributeCode(attributeCode);
         q.setHtml(html);
+		q.setPlaceholder(placeholder);
         q.setReadonly(readonly);
         q.setMandatory(mandatory);
-        q.setRealm(realmName);
-        q.setDirections(directions);
-        q.setHelper(helper);
         q.setIcon(icon);
+        q.setRealm(realmName);
+
         return q;
     }
+
+    /**
+	 * Build a QuestionQuestion object from a row.
+	 *
+     * @param row THe row from the sheets
+     * @param realmName The realm
+     * @return A QuestionQuestion object
+     */
+    public static QuestionQuestion buildQuestionQuestion(Map<String, String> row, String realmName) {
+
+        String parentCode = row.get("parentCode");
+        String targetCode = row.get("targetCode");
+
+        Double weight = toDouble(row.get(WEIGHT));
+        boolean mandatory = toBoolean(row.get(MANDATORY));
+        boolean readonly = toBoolean(row.get(READONLY));
+
+        String icon = row.get("icon");
+        boolean disabled = toBoolean(row.get("disabled"));
+        boolean hidden = toBoolean(row.get("hidden"));
+
+		QuestionQuestion questionQuestion = new QuestionQuestion();
+		questionQuestion.setParentCode(parentCode);
+		questionQuestion.setChildCode(targetCode);
+		questionQuestion.setWeight(weight);
+		questionQuestion.setMandatory(mandatory);
+		questionQuestion.setReadonly(readonly);
+		questionQuestion.setDisabled(disabled);
+		questionQuestion.setHidden(hidden);
+		questionQuestion.setIcon(icon);
+		questionQuestion.setRealm(realmName);
+
+		return questionQuestion;
+    }
+
 }
