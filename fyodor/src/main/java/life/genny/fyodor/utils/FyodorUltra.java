@@ -55,6 +55,7 @@ import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.exception.runtime.QueryBuilderException;
 import life.genny.qwandaq.managers.CacheManager;
+import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.Page;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -113,7 +114,7 @@ public class FyodorUltra {
 			for (String attributeCode : allowed) {
 				EntityAttribute ea;
 				if (attributeCode.startsWith("_")) {
-					log.debug("Getting associated column value of: " + attributeCode);
+					log.debug(ANSIColour.RED + "Getting associated column value of: " + attributeCode + ANSIColour.RESET);
 					// handle asociated columns
 					try {
 						ea = getAssociatedColumnValue(baseEntity, attributeCode);
