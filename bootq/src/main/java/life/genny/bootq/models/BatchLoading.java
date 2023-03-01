@@ -173,8 +173,8 @@ public class BatchLoading {
      */
     public void persistDefBaseEntityAttributes(Map<String, Map<String, String>> project, String realmName) {
 
-		DataType dttBoolean = attributeUtils.getDataType("DTT_BOOLEAN", false);
-		DataType dttText = attributeUtils.getDataType("DTT_TEXT", false);
+		DataType dttBoolean = attributeUtils.getDataType(realmName, "DTT_BOOLEAN", false);
+		DataType dttText = attributeUtils.getDataType(realmName, "DTT_TEXT", false);
 
 		Map<String, DataType> dttPrefixMap = Map.of(
 			Prefix.ATT_, dttBoolean,
