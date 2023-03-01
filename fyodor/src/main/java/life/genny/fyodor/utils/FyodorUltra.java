@@ -115,11 +115,17 @@ public class FyodorUltra {
 				if (attributeCode.startsWith("_")) {
 					log.debug("Getting associated column value of: " + attributeCode);
 					// handle asociated columns
-					ea = getAssociatedColumnValue(baseEntity, attributeCode);
-					if(ea == null) {
-						log.warn("Got bad ea: " + baseEntity.getCode() + ":" + attributeCode + ". Skipping");
+					try {
+						ea = getAssociatedColumnValue(baseEntity, attributeCode);
+						// De-escalate the known issue and skip the bad ea
+					} catch(BadDataException e) {
+						log.error(e.getMessage());
 						continue;
 					}
+					// if(ea == null) {
+					// 	log.warn("Got bad ea: " + baseEntity.getCode() + ":" + attributeCode + ". Skipping");
+					// 	continue;
+					// }
 					// set attr codes to associated code
 					ea.setAttributeCode(attributeCode);
 					ea.getAttribute().setCode(attributeCode);
