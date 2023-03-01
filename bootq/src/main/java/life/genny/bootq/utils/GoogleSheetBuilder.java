@@ -143,6 +143,15 @@ public class GoogleSheetBuilder {
         return attr;
     }
 
+    public static BaseEntity buildBaseEntity(Map<String, String> row, String realmName) {
+
+        String code = row.get("code");
+        String name = row.get("name");
+        BaseEntity baseEntity = new BaseEntity(code, name);
+        baseEntity.setRealm(realmName);
+        return baseEntity;
+    }
+
     public static EntityAttribute buildEntityAttribute(Map<String, String> row, String realmName) {
 
 		EntityAttribute entityAttribute = new EntityAttribute();
