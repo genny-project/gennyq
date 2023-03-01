@@ -164,4 +164,17 @@ public class AttributeUtils {
     public List<Attribute> getAttributesWithPrefixForProduct(String productCode, String prefix) {
         return cm.getAttributesWithPrefixForProduct(productCode, prefix);
     }
+
+    public Long getAttributesLastUpdatedAt() {
+        Long entityLastUpdatedAt = cm.getEntityLastUpdatedAt(GennyConstants.CACHE_NAME_ATTRIBUTE);
+        if(entityLastUpdatedAt != null)
+            return entityLastUpdatedAt;
+        entityLastUpdatedAt = System.currentTimeMillis();
+        updateAttributesLastUpdatedAt(entityLastUpdatedAt);
+        return entityLastUpdatedAt;
+    }
+
+    public void updateAttributesLastUpdatedAt(Long updatedTime) {
+        cm.updateEntityLastUpdatedAt(GennyConstants.CACHE_NAME_ATTRIBUTE, updatedTime);
+    }
 }
