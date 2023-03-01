@@ -4,11 +4,11 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class DataKeyColumn {
-    protected static final Set<String> CODE = new HashSet<>();
-    protected static final Set<String> CODE_BA = new HashSet<>();
-    protected static final Set<String> CODE_TARGET_PARENT_LINK = new HashSet<>();
-    protected static final Set<String> CODE_TARGET_PARENT = new HashSet<>();
-    protected static final Set<String> CODE_QUESTION_SOURCE_TARGET = new HashSet<>();
+    public static final Set<String> CODE = new HashSet<>();
+    public static final Set<String> CODE_BA = new HashSet<>();
+    public static final Set<String> CODE_TARGET_PARENT_LINK = new HashSet<>();
+    public static final Set<String> CODE_TARGET_PARENT = new HashSet<>();
+    public static final Set<String> CODE_QUESTION_SOURCE_TARGET = new HashSet<>();
     private static String regExString = "^\"|\"$|_|-";
     private static String targetCodeStr = "targetCode";
 

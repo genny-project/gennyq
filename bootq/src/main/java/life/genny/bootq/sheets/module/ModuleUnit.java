@@ -3,9 +3,9 @@ package life.genny.bootq.sheets.module;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.*;
 
-import life.genny.bootq.models.DataKeyColumn;
 import life.genny.bootq.sheets.DataUnit;
-import life.genny.bootq.sheets.XlsxImportOnline;
+import life.genny.bootq.sheets.ESheetTitle;
+import life.genny.bootq.utils.xlsx.XlsxImportOnline;
 import life.genny.bootq.utils.GoogleImportService;
 import org.apache.logging.log4j.Logger;
 
@@ -26,61 +26,7 @@ public class ModuleUnit extends DataUnit {
     
     private static final String RANGE = "!A1:Z";
 
-    // valid sheet titles
-    private 
-    private static final String DATATYPE = "DataType";
-    private static final String ATTRIBUTE = "Attribute";
-    private static final String ATTRIBUTE_LINK = "AttributeLink";
-    private static final String BASE_ENTITY = "BaseEntity";
-    private static final String QUESTION_QUESTION = "QuestionQuestion";
-    private static final String QUESTION = "Question";
-    private static final String ASK = "Ask";
-    private static final String NOTIFICATION = "Notifications";
-    private static final String MESSAGE = "Messages";
-    private static final String ENTITY_ATTRIBUTE= "EntityAttribute";
-    private static final String ENTITY_ENTITY= "EntityEntity";
-    private static final String DEF_BASE_ENTITY = "DEF_BaseEntity";
-    private static final String DEF_ENTITY_ATTRIBUTE = "DEF_EntityAttribute";
-
-    private Set<String> initValidTitles() {
-        Set<String> validSheetsTitle = new HashSet<>();
-        validSheetsTitle.add(DATATYPE);
-        validSheetsTitle.add(ATTRIBUTE);
-        validSheetsTitle.add(BASE_ENTITY);
-        validSheetsTitle.add(QUESTION_QUESTION);
-        validSheetsTitle.add(QUESTION);
-        validSheetsTitle.add(ASK);
-        validSheetsTitle.add(NOTIFICATION);
-        validSheetsTitle.add(MESSAGE);
-        validSheetsTitle.add(ENTITY_ATTRIBUTE);
-        validSheetsTitle.add(DEF_BASE_ENTITY);
-        validSheetsTitle.add(DEF_ENTITY_ATTRIBUTE);
-        return validSheetsTitle;
-    }
-
-    private Map<String, Set<String>> initKeyColumnsMapping() {
-        Map<String, Set<String>> keyColumnsMapping = new HashMap<>();
-        keyColumnsMapping.put(VALIDATION, DataKeyColumn.CODE);
-        keyColumnsMapping.put(DATATYPE, DataKeyColumn.CODE);
-        keyColumnsMapping.put(ATTRIBUTE, DataKeyColumn.CODE);
-        keyColumnsMapping.put(ATTRIBUTE_LINK, DataKeyColumn.CODE);
-        keyColumnsMapping.put(BASE_ENTITY, DataKeyColumn.CODE);
-        keyColumnsMapping.put(QUESTION_QUESTION,  DataKeyColumn.CODE_TARGET_PARENT);
-        keyColumnsMapping.put(QUESTION, DataKeyColumn.CODE);
-        keyColumnsMapping.put(ASK, DataKeyColumn.CODE_QUESTION_SOURCE_TARGET);
-        keyColumnsMapping.put(NOTIFICATION, DataKeyColumn.CODE);
-        keyColumnsMapping.put(MESSAGE, DataKeyColumn.CODE);
-        keyColumnsMapping.put(ENTITY_ATTRIBUTE, DataKeyColumn.CODE_BA);
-        keyColumnsMapping.put(ENTITY_ENTITY, DataKeyColumn.CODE_TARGET_PARENT_LINK);
-        keyColumnsMapping.put(DEF_BASE_ENTITY, DataKeyColumn.CODE);
-        keyColumnsMapping.put(DEF_ENTITY_ATTRIBUTE, DataKeyColumn.CODE_BA);
-        return keyColumnsMapping;
-    }
-
     public ModuleUnit(String sheetURI) {
-        Set<String> validSheetsTitle = initValidTitles();
-        Map<String, Set<String>> keyColumnsMapping  = initKeyColumnsMapping();
-
         log.info("Processing spreadsheet:" + sheetURI);
         Sheets sheetsService = GoogleImportService.getInstance().getService();
         ArrayList<Sheet> sheets = getSheets(sheetsService,sheetURI);
@@ -90,33 +36,14 @@ public class ModuleUnit extends DataUnit {
         for (Sheet sheet : sheets) {
             SheetProperties sheetProperties = (SheetProperties)sheet.get("properties");
             String title = sheetProperties.getTitle();
-            if (validSheetsTitle.contains(title))
+            if (ESheetTitle.isValidTitle(title))
                 titles.add(title);
         }
 
         ArrayList<ValueRange> valueRanges = getValueRanges(sheetsService, sheetURI, titles);
 
-        processValues(sheetsService, titles, valueRanges, sheetURI, keyColumnsMapping);
-    /*
-        this.validations = service.fetchValidation(sheetURI);
-        this.dataTypes = service.fetchDataType(sheetURI);
-        this.attributes = service.fetchAttribute(sheetURI);
-        this.attributeLinks = service.fetchAttributeLink(sheetURI);
-
-        this.baseEntitys = service.fetchBaseEntity(sheetURI);
-        this.questionQuestions = service.fetchQuestionQuestion(sheetURI);
-        this.questions = service.fetchQuestion(sheetURI);
-        this.asks = service.fetchAsk(sheetURI);
-        this.notifications = service.fetchNotifications(sheetURI);
-
-        this.messages = service.fetchMessages(sheetURI);
-        this.entityAttributes = service.fetchEntityAttribute(sheetURI);
-        this.entityEntitys = service.fetchEntityEntity(sheetURI);
-
-        this.def_baseEntitys = service.fetchDefBaseEntity(sheetURI);
-        this.def_entityAttributes = service.fetchDefEntityAttribute(sheetURI);
-         */
-        }
+        processValues(sheetsService, titles, valueRanges, sheetURI);
+    }
 
     // Get all sheets from spreadSheet
     private ArrayList<Sheet> getSheets(Sheets service, String spreadsheetId) {
@@ -138,7 +65,7 @@ public class ModuleUnit extends DataUnit {
             log.error("IOException occurred when fetch SpreadSheets:" + spreadsheetId);
         }
         return sheets;
-    }
+    }    
 
     private ArrayList<ValueRange> getValueRanges(Sheets service, String spreadsheetId, Set<String> titles) {
         // The ranges to retrieve from the spreadsheet.
@@ -156,70 +83,65 @@ public class ModuleUnit extends DataUnit {
             request.setRanges(ranges);
             BatchGetValuesResponse response = request.execute();
             valueRanges = (ArrayList<ValueRange>) response.get("valueRanges");
-        } catch (IOException io  case ENTITY_ENTITY:
-        this.entityEntitys= getData(sheetsService, title, values, keyColumnsMapping, sheetURI);
-        break;
-    private Map<String, Map<String, String>> getData(Sheets sheetsService, String title,
-    List<List<Object>> values, Map<String, Set<String>> keyColumnsMapping, String sheetURI) {
+        } catch (IOException ioe) {
+            log.error("IOException occurred when fetch SpreadSheets:" + spreadsheetId + ", exception msg:" + ioe.getMessage());
+        }
+        return valueRanges;
+    }
+
+    private Map<String, Map<String, String>> getData(Sheets sheetsService, ESheetTitle titleData,
+    List<List<Object>> values, String sheetURI) {
         XlsxImportOnline xlsxImportOnline = new XlsxImportOnline(sheetsService);
         Map<String, Map<String, String>> tmp =  new HashMap<>();
 
         try {
-            /*
-             DataKeyColumn.CODE_TARGET_PARENT for question_question
-             DataKeyColumn.CODE_QUESTION_SOURCE_TARGET for ask
-             DataKeyColumn.CODE_BA for entity_attribute
-             DataKeyColumn.CODE_TARGET_PARENT_LINK for entity_entity
-             DataKeyColumn.CODE_BA for def_baseentity_attribute
-             */
-            tmp = xlsxImportOnline.mappingKeyHeaderToHeaderValues(values, keyColumnsMapping.get(title));
+            tmp = xlsxImportOnline.mappingKeyHeaderToHeaderValues(values, titleData.getDataKeyColumns());
         } catch (Exception ex) {
-            logFetchExceptionForSheets(ex.getMessage(), title, sheetURI);
+            logFetchExceptionForSheets(ex.getMessage(), titleData.getTitle(), sheetURI);
         }
         return tmp;
     }
 
     private void processValues (Sheets sheetsService, Set<String> titles, ArrayList<ValueRange> valueRanges,
-                                String sheetURI, Map<String, Set<String>> keyColumnsMapping) {
+                                String sheetURI) {
     	if (valueRanges == null) {
     		return;
     	}
         for (ValueRange valueRange : valueRanges) {
             String title = valueRange.getRange().split("!")[0];
+
             if (titles.contains(title)) {
+                ESheetTitle titleData = ESheetTitle.getByTitle(title);
+
                 List<List<Object>> values = valueRange.getValues();
                 log.info("processing " + title + ", value size:" + values.size());
-                switch (title) {
+                switch (titleData) {
                     case VALIDATION:
-                        this.validations = getData(sheetsService, title, values, keyColumnsMapping, sheetURI);
+                        this.validations = getData(sheetsService, titleData, values, sheetURI);
                         break;
                     case DATATYPE:
-                        this.dataTypes= getData(sheetsService, title, values, keyColumnsMapping, sheetURI);
+                        this.dataTypes= getData(sheetsService, titleData, values, sheetURI);
                         break;
                     case ATTRIBUTE:
-                        this.attributes= getData(sheetsService, title, values, keyColumnsMapping, sheetURI);
+                        this.attributes= getData(sheetsService, titleData, values, sheetURI);
                         break;
-                    
                     case BASE_ENTITY:
-                        this.baseEntitys= getData(sheetsService, title, values, keyColumnsMapping, sheetURI);
+                        this.baseEntitys= getData(sheetsService, titleData, values, sheetURI);
                         break;
                     case QUESTION_QUESTION:
-                        this.questionQuestions= getData(sheetsService, title, values, keyColumnsMapping, sheetURI);
+                        this.questionQuestions= getData(sheetsService, titleData, values, sheetURI);
                         break;
                     case QUESTION:
-                        this.questions= getData(sheetsService, title, values, keyColumnsMapping, sheetURI);
-                        break;
-                    case MESSAGE:
-                        this.messages= getData(sheetsService, title, values, keyColumnsMapping, sheetURI);
+                        this.questions= getData(sheetsService, titleData, values, sheetURI);
                         break;
                     case ENTITY_ATTRIBUTE:
-                        this.entityAttributes= getData(sheetsService, title, values, keyColumnsMapping, sheetURI);
+                        this.entityAttributes= getData(sheetsService, titleData, values, sheetURI);
                         break;
                     case DEF_BASE_ENTITY:
-                        this.def_baseEntitys= getData(sheetsService, title, values, keyColumnsMapping, sheetURI);
+                        this.def_baseEntitys= getData(sheetsService, titleData, values, sheetURI);
                         break;
                     case DEF_ENTITY_ATTRIBUTE:
-                        this.def_entityAttributes= getData(sheetsService, title, values, keyColumnsMapping, sheetURI);
+                        this.def_entityAttributes= getData(sheetsService, titleData, values, sheetURI);
                         break;
                     default:
                         break;
