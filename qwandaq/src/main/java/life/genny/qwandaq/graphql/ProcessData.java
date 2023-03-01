@@ -4,7 +4,6 @@ import java.util.List;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import javax.json.bind.annotation.JsonbTransient;
-import java.util.ArrayList;
 import java.util.Arrays;
 import life.genny.qwandaq.Answer;
 
