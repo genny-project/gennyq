@@ -22,7 +22,7 @@ public abstract class DataUnit {
     protected Map<String, Map<String, String>> questions = new HashMap<>();
     protected Map<String, Map<String, String>> entityAttributes = new HashMap<>();
     protected Map<String, Map<String, String>> baseEntitys = new HashMap<>();
-    protected Map<String, Map<String, String>> messages = new HashMap<>();
+    // protected Map<String, Map<String, String>> messages = new HashMap<>();
     protected Map<String, Map<String, String>> def_baseEntitys = new HashMap<>();
     protected Map<String, Map<String, String>> def_entityAttributes = new HashMap<>();
 
@@ -54,9 +54,9 @@ public abstract class DataUnit {
         this.baseEntitys = baseEntitys;
     }
 
-    public void setMessages(Map<String, Map<String, String>> messages) {
-        this.messages = messages;
-    }
+    // public void setMessages(Map<String, Map<String, String>> messages) {
+    //     this.messages = messages;
+    // }
 
     public Map<String, Map<String, String>> getAttributes() {
         return attributes;
@@ -94,9 +94,9 @@ public abstract class DataUnit {
         return def_entityAttributes;
     }
 
-    public Map<String, Map<String, String>> getMessages() {
-        return messages;
-    }
+    // public Map<String, Map<String, String>> getMessages() {
+    //     return messages;
+    // }
 
     public String getName() {
         return name;

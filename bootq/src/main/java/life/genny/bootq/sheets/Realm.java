@@ -1,4 +1,6 @@
-package life.genny.bootq.models;
+package life.genny.bootq.sheets;
+
+import life.genny.bootq.models.SheetReferralType;
 
 public class Realm extends SheetReferralType<RealmUnit> {
 

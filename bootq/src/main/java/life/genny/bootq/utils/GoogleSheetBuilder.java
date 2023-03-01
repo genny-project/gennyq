@@ -9,6 +9,7 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.validation.Validation;
 
 import java.lang.invoke.MethodHandles;
@@ -264,10 +265,10 @@ public class GoogleSheetBuilder {
             }
             qq.setOneshot(oneshot);
             qq.setReadonly(readonly);
-            qq.setCreateOnTrigger(createOnTrigger);
-            qq.setFormTrigger(formTrigger);
+            // qq.setCreateOnTrigger(createOnTrigger);
+            // qq.setFormTrigger(formTrigger);
             qq.setRealm(realmName);
-            qq.setDependency(dependency);
+            // qq.setDependency(dependency);
             qq.setIcon(icon);
             qq.setDisabled(disabled);
             qq.setHidden(hidden);

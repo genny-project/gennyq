@@ -2,13 +2,10 @@ package life.genny.bootq;
 
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
-import io.vertx.core.json.JsonObject;
 import life.genny.bootq.models.BatchLoading;
-import life.genny.bootq.models.Realm;
+import life.genny.bootq.sheets.Realm;
 import life.genny.bootq.sheets.RealmUnit;
-import life.genny.qwandaq.entity.search.SearchEntity;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
@@ -33,9 +30,13 @@ public class Endpoints {
     @ConfigProperty(name = "quarkus.oidc.auth-server-url")
     String authUrl;
 
+
+    // TODO: Move this off to CM
     @Inject
     EntityManager em;
 
+
+    // TODO: Make this a full Genny Token
     @Inject
     JsonWebToken accessToken;
 
@@ -103,7 +104,7 @@ public class Endpoints {
                 if (!realmUnit.getDisable() && !realmUnit.getSkipGoogleDoc()) {
                     log.info("Starting batch loading for sheet:" + realmUnit.getUri()
                             + ", realm:" + realmUnit.getName());
-                    BatchLoading bl = new BatchLoading(repo);
+                    BatchLoading bl = new BatchLoading();
                     bl.persistProjectOptimization(realmUnit);
                     log.info("Finished batch loading for sheet:" + realmUnit.getUri()
                             + ", realm:" + realmUnit.getName() + ", now syncing be, attr and questions");

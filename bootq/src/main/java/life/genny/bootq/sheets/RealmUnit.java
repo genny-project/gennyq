@@ -187,10 +187,10 @@ public class RealmUnit extends DataUnit {
                     .reduce(overrideByPrecedence);
             tmpOptional.ifPresent(stringMapHashMap -> super.dataTypes = stringMapHashMap);
 
-            tmpOptional = module.getDataUnits().stream()
-                    .map(mm -> Maps.newHashMap(mm.messages))
-                    .reduce(overrideByPrecedence);
-            tmpOptional.ifPresent(stringMapHashMap -> super.messages = stringMapHashMap);
+            // tmpOptional = module.getDataUnits().stream()
+            //         .map(mm -> Maps.newHashMap(mm.messages))
+            //         .reduce(overrideByPrecedence);
+            // tmpOptional.ifPresent(stringMapHashMap -> super.messages = stringMapHashMap);
         }
     }
 
@@ -200,7 +200,7 @@ public class RealmUnit extends DataUnit {
         entityAttributes.clear();
         attributes.clear();
         dataTypes.clear();
-        messages.clear();
+        // messages.clear();
         questionQuestions.clear();
         questions.clear();
         validations.clear();

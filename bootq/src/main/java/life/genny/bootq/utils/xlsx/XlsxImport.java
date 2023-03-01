@@ -1,4 +1,4 @@
-package life.genny.bootq.models;
+package life.genny.bootq.utils.xlsx;
 
 import java.lang.invoke.MethodHandles;
 import java.util.List;
