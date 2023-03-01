@@ -105,7 +105,7 @@ public class AttributeUtils {
         DataType dataType = (DataType) cm.getPersistableEntity(GennyConstants.CACHE_NAME_DATATYPE, key);
 
         if(dataType == null) {
-            throw new ItemNotFoundException("DataType attached to Attribute: " + attribute.getCode());
+            throw new ItemNotFoundException("DataType attached to Attribute: " + attribute.getCode() + ". DataType Code: " + attribute.getDttCode());
         }
 
         if (bundleValidationList) {
