@@ -1,6 +1,7 @@
 package life.genny.qwandaq.data;
 
 import life.genny.qwandaq.CoreEntityPersistable;
+import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import life.genny.qwandaq.serialization.attribute.AttributeInitializerImpl;
 import life.genny.qwandaq.serialization.attribute.AttributeKeyInitializerImpl;
@@ -291,4 +292,27 @@ public class GennyCache {
 		return cache.remove(key);
 	}
 
+	public Long getEntityLastUpdatedAt(String entityName) {
+		RemoteCache<String, Long> entityLastUpdatedAtCache = remoteCacheManager.getCache(GennyConstants.CACHE_NAME_ENTITY_LAST_UPDATED_AT);
+		if (entityLastUpdatedAtCache == null) {
+			log.debugf("$$$$$$$$$$$$$$$$$$$$$ Cache doesn't exist.. Creating...");
+			entityLastUpdatedAtCache = createEntityLastUpdatedAtCache();
+			if (entityLastUpdatedAtCache == null) {
+				log.debugf("$$$$$$$$$$$$$$$$$$$$$ Cache creation failed for some reason!!");
+			}
+		}
+		return entityLastUpdatedAtCache.get(entityName);
+	}
+
+	private RemoteCache<String, Long> createEntityLastUpdatedAtCache() {
+		return remoteCacheManager.administration().withFlags(CacheContainerAdmin.AdminFlag.VOLATILE).createCache(GennyConstants.CACHE_NAME_ENTITY_LAST_UPDATED_AT, DefaultTemplate.DIST_SYNC);
+	}
+
+	public void updateEntityLastUpdatedAt(String entityName, Long updatedTime) {
+		RemoteCache<String, Long> entityLastUpdatedAtCache = remoteCacheManager.getCache(GennyConstants.CACHE_NAME_ENTITY_LAST_UPDATED_AT);
+		if (entityLastUpdatedAtCache == null) {
+			entityLastUpdatedAtCache = createEntityLastUpdatedAtCache();
+		}
+		entityLastUpdatedAtCache.put(entityName, updatedTime);
+	}
 }
