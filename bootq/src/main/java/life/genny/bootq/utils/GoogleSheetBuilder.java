@@ -1,23 +1,16 @@
 package life.genny.bootq.utils;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
-import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.validation.Validation;
 
 import java.lang.invoke.MethodHandles;
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.regex.Pattern;
-import javax.ws.rs.NotFoundException;
+
+import java.util.Map;
 
 public class GoogleSheetBuilder {
     private static final org.apache.logging.log4j.Logger log = org.apache.logging.log4j.LogManager

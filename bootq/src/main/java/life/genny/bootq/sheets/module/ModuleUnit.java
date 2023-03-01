@@ -5,8 +5,9 @@ import com.google.api.services.sheets.v4.model.*;
 
 import life.genny.bootq.sheets.DataUnit;
 import life.genny.bootq.sheets.ESheetTitle;
-import life.genny.bootq.utils.xlsx.XlsxImportOnline;
 import life.genny.bootq.utils.GoogleImportService;
+import life.genny.bootq.utils.XlsxImport;
+
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
@@ -91,7 +92,7 @@ public class ModuleUnit extends DataUnit {
 
     private Map<String, Map<String, String>> getData(Sheets sheetsService, ESheetTitle titleData,
     List<List<Object>> values, String sheetURI) {
-        XlsxImportOnline xlsxImportOnline = new XlsxImportOnline(sheetsService);
+        XlsxImport xlsxImportOnline = new XlsxImport(sheetsService);
         Map<String, Map<String, String>> tmp =  new HashMap<>();
 
         try {

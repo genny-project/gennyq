@@ -2,18 +2,17 @@ package life.genny.bootq.models;
 
 import org.apache.logging.log4j.Logger;
 
+import life.genny.bootq.sheets.ESheetTitle;
 import life.genny.bootq.sheets.RealmUnit;
 import life.genny.bootq.sheets.module.ModuleUnit;
 import life.genny.bootq.utils.GoogleImportService;
-import life.genny.bootq.utils.xlsx.XlsxImport;
-import life.genny.bootq.utils.xlsx.XlsxImportOnline;
+import life.genny.bootq.utils.XlsxImport;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class ImportService {
     private final Logger log = org.apache.logging.log4j.LogManager
@@ -22,7 +21,7 @@ public class ImportService {
 
     public XlsxImport createXlsImport(String key) {
         if (SheetState.getUpdateState().contains(key)) {
-            XlsxImportOnline xlsxImportOnline = new XlsxImportOnline(GoogleImportService.getInstance().getService());
+            XlsxImport xlsxImportOnline = new XlsxImport(GoogleImportService.getInstance().getService());
             state.put(key, xlsxImportOnline);
             SheetState.removeUpdateState(key);
             log.info("The state it is being updated... " + key);
@@ -33,7 +32,7 @@ public class ImportService {
 		}
 
 		log.info("Creating a new Import service for " + key);
-		XlsxImportOnline xlsxImportOnline = new XlsxImportOnline(GoogleImportService.getInstance().getService());
+		XlsxImport xlsxImportOnline = new XlsxImport(GoogleImportService.getInstance().getService());
 		state.put(key, xlsxImportOnline);
 		return xlsxImportOnline;
     }
@@ -45,6 +44,7 @@ public class ImportService {
     public List<RealmUnit> fetchRealmUnit(String sheetURI) {
         String projects = "Projects";
         String key = sheetURI + projects;
+        
         XlsxImport createXlsImport = createXlsImport(key);
         List<RealmUnit> list = new ArrayList<>();
         for (Map<String, String> rawData : createXlsImport
@@ -58,186 +58,28 @@ public class ImportService {
     }
 
     public List<ModuleUnit> fetchModuleUnit(String sheetURI) {
-        String modules = "Modules";
-        String key = sheetURI + modules;
+        String key = sheetURI + "Modules";
         XlsxImport createXlsImport = createXlsImport(key);
-        return createXlsImport.mappingRawToHeaderAndValuesFmt(sheetURI, modules)
-                .stream()
-                .filter(rawData -> !rawData.isEmpty())
-                .map(d1 -> {
-                    ModuleUnit moduleUnit = new ModuleUnit(d1.get("sheetID".toLowerCase()));
-                    moduleUnit.setName(d1.get("name"));
-                    return moduleUnit;
-                })
-                .collect(Collectors.toList());
-    }
+        List<Map<String, String>> data = createXlsImport.mappingRawToHeaderAndValuesFmt(sheetURI, "Modules");
+        List<ModuleUnit> modules = new ArrayList<>();
 
-    public Map<String, Map<String, String>> fetchBaseEntity(String sheetURI) {
-        String baseEntity = "BaseEntity";
-        String key = sheetURI + baseEntity;
-        XlsxImport createXlsImport = createXlsImport(key);
-        try {
-            return createXlsImport.mappingRawToHeaderAndValuesFmt(sheetURI, baseEntity, DataKeyColumn.CODE);
-        } catch (Exception e1) {
-            logFetchExceptionForSheets(e1.getMessage(), baseEntity, sheetURI);
-            return new HashMap<>();
+        for(Map<String, String> module : data) {
+            if(module.isEmpty())
+                continue;
+            ModuleUnit moduleUnit = new ModuleUnit(module.get("sheetid"));
+            moduleUnit.setName(module.get("name"));
         }
+
+        return modules;
     }
 
-    public Map<String, Map<String, String>> fetchAttribute(String sheetURI) {
-        String attribute = "Attribute";
-        String key = sheetURI + attribute;
+    public Map<String, Map<String, String>> fetchEntitiesFromSheet(String sheetURI, ESheetTitle sheetData) {
+        String key = sheetURI + sheetData.getTitle();
         XlsxImport createXlsImport = createXlsImport(key);
         try {
-            return createXlsImport.mappingRawToHeaderAndValuesFmt(sheetURI, attribute, DataKeyColumn.CODE);
+            return createXlsImport.mappingRawToHeaderAndValuesFmt(sheetURI, sheetData.getTitle(), sheetData.getDataKeyColumns());
         } catch (Exception e1) {
-            logFetchExceptionForSheets(e1.getMessage(), attribute, sheetURI);
-            return new HashMap<>();
-        }
-    }
-
-    public Map<String, Map<String, String>> fetchAttributeLink(String sheetURI) {
-        String attributeLink = "AttributeLink";
-        String key = sheetURI + attributeLink;
-        XlsxImport createXlsImport = createXlsImport(key);
-        try {
-            return createXlsImport.mappingRawToHeaderAndValuesFmt(sheetURI, attributeLink, DataKeyColumn.CODE);
-        } catch (Exception e1) {
-            logFetchExceptionForSheets(e1.getMessage(), attributeLink, sheetURI);
-            return new HashMap<>();
-        }
-    }
-
-    public Map<String, Map<String, String>> fetchQuestionQuestion(String sheetURI) {
-        String questionQuestion = "QuestionQuestion";
-        String key = sheetURI + questionQuestion;
-        XlsxImport createXlsImport = createXlsImport(key);
-        try {
-            return createXlsImport.mappingRawToHeaderAndValuesFmt(sheetURI, questionQuestion, DataKeyColumn.CODE_TARGET_PARENT);
-        } catch (Exception e1) {
-            logFetchExceptionForSheets(e1.getMessage(), questionQuestion, sheetURI);
-            return new HashMap<>();
-        }
-    }
-
-    public Map<String, Map<String, String>> fetchValidation(String sheetURI) {
-        String validation = "Validation";
-        String key = sheetURI + validation;
-        XlsxImport createXlsImport = createXlsImport(key);
-        try {
-            return createXlsImport.mappingRawToHeaderAndValuesFmt(sheetURI, validation, DataKeyColumn.CODE);
-        } catch (Exception e1) {
-            logFetchExceptionForSheets(e1.getMessage(), validation, sheetURI);
-            return new HashMap<>();
-        }
-    }
-
-    public Map<String, Map<String, String>> fetchDataType(String sheetURI) {
-        String dataType = "DataType";
-        String key = sheetURI + dataType;
-        XlsxImport createXlsImport = createXlsImport(key);
-        try {
-            return createXlsImport.mappingRawToHeaderAndValuesFmt(sheetURI, dataType, DataKeyColumn.CODE);
-        } catch (Exception e1) {
-            logFetchExceptionForSheets(e1.getMessage(), dataType, sheetURI);
-            return new HashMap<>();
-        }
-    }
-
-    public Map<String, Map<String, String>> fetchQuestion(String sheetURI) {
-        String question = "Question";
-        String key = sheetURI + question;
-        XlsxImport createXlsImport = createXlsImport(key);
-        try {
-            return createXlsImport.mappingRawToHeaderAndValuesFmt(sheetURI, question, DataKeyColumn.CODE);
-        } catch (Exception e1) {
-            logFetchExceptionForSheets(e1.getMessage(), question, sheetURI);
-            return new HashMap<>();
-        }
-    }
-
-    public Map<String, Map<String, String>> fetchAsk(String sheetURI) {
-        String ask = "Ask";
-        String key = sheetURI + ask;
-        XlsxImport createXlsImport = createXlsImport(key);
-        try {
-            return createXlsImport.mappingRawToHeaderAndValuesFmt(sheetURI, ask, DataKeyColumn.CODE_QUESTION_SOURCE_TARGET);
-        } catch (Exception e1) {
-            logFetchExceptionForSheets(e1.getMessage(), ask, sheetURI);
-            return new HashMap<>();
-        }
-    }
-
-    public Map<String, Map<String, String>> fetchNotifications(String sheetURI) {
-        String notifications = "Notifications";
-        String key = sheetURI + notifications;
-        XlsxImport createXlsImport = createXlsImport(key);
-        try {
-            return createXlsImport.mappingRawToHeaderAndValuesFmt(sheetURI, notifications, DataKeyColumn.CODE);
-        } catch (Exception e1) {
-            logFetchExceptionForSheets(e1.getMessage(), notifications, sheetURI);
-            return new HashMap<>();
-        }
-    }
-
-    public Map<String, Map<String, String>> fetchMessages(String sheetURI) {
-        String messages = "Messages";
-        String key = sheetURI + messages;
-        XlsxImport createXlsImport = createXlsImport(key);
-        try {
-            return createXlsImport.mappingRawToHeaderAndValuesFmt(sheetURI, messages, DataKeyColumn.CODE);
-        } catch (Exception e1) {
-            logFetchExceptionForSheets(e1.getMessage(), messages, sheetURI);
-            return new HashMap<>();
-        }
-    }
-
-    public Map<String, Map<String, String>> fetchEntityAttribute(String sheetURI) {
-        String entityAttribute = "EntityAttribute";
-        String key = sheetURI + entityAttribute;
-        XlsxImport createXlsImport = createXlsImport(key);
-        try {
-            return createXlsImport.mappingRawToHeaderAndValuesFmt(sheetURI, entityAttribute, DataKeyColumn.CODE_BA);
-        } catch (Exception e1) {
-            logFetchExceptionForSheets(e1.getMessage(), entityAttribute, sheetURI);
-            return new HashMap<>();
-        }
-    }
-
-    public Map<String, Map<String, String>> fetchEntityEntity(String sheetURI) {
-        String entityEntity = "EntityEntity";
-        String key = sheetURI + entityEntity;
-        XlsxImport createXlsImport = createXlsImport(key);
-        try {
-            return createXlsImport.mappingRawToHeaderAndValuesFmt(sheetURI, entityEntity, DataKeyColumn.CODE_TARGET_PARENT_LINK);
-        } catch (Exception e1) {
-            logFetchExceptionForSheets(e1.getMessage(), entityEntity, sheetURI);
-            return new HashMap<>();
-        }
-    }
-
-    // Baseentity Definition
-    public Map<String, Map<String, String>> fetchDefBaseEntity(String sheetURI) {
-        String baseEntity = "DEF_BaseEntity";
-        String key = sheetURI + baseEntity;
-        XlsxImport createXlsImport = createXlsImport(key);
-        try {
-            return createXlsImport.mappingRawToHeaderAndValuesFmt(sheetURI, baseEntity, DataKeyColumn.CODE);
-        } catch (Exception e1) {
-            logFetchExceptionForSheets(e1.getMessage(), baseEntity, sheetURI);
-            return new HashMap<>();
-        }
-    }
-
-    // EntityAttribute Definition
-    public Map<String, Map<String, String>> fetchDefEntityAttribute(String sheetURI) {
-        String entityAttribute = "DEF_EntityAttribute";
-        String key = sheetURI + entityAttribute;
-        XlsxImport createXlsImport = createXlsImport(key);
-        try {
-            return createXlsImport.mappingRawToHeaderAndValuesFmt(sheetURI, entityAttribute, DataKeyColumn.CODE_BA);
-        } catch (Exception e1) {
-            logFetchExceptionForSheets(e1.getMessage(), entityAttribute, sheetURI);
+            logFetchExceptionForSheets(e1.getMessage(), sheetData.getTitle(), sheetURI);
             return new HashMap<>();
         }
     }

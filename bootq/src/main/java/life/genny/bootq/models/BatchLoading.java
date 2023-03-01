@@ -1,58 +1,38 @@
 package life.genny.bootq.models;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
 
 import life.genny.bootq.sheets.RealmUnit;
 import life.genny.bootq.utils.GoogleSheetBuilder;
-import life.genny.qwandaq.CodedEntity;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.models.GennySettings;
 import life.genny.qwandaq.utils.AttributeUtils;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.EntityAttributeUtils;
 import life.genny.qwandaq.utils.QuestionUtils;
 import life.genny.qwandaq.validation.Validation;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Logger;
-import javax.crypto.Cipher;
-import javax.crypto.spec.IvParameterSpec;
-import javax.crypto.spec.SecretKeySpec;
+
+import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.persistence.NoResultException;
-import javax.validation.ConstraintViolation;
-import javax.validation.Validator;
-import javax.validation.ValidatorFactory;
-import java.lang.invoke.MethodHandles;
-import java.math.BigDecimal;
+
+import org.jboss.logging.Logger;
+
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 
+@ApplicationScoped
 public class BatchLoading {
 
     private static boolean isSynchronise;
-
-    private static final String ATT_PREFIX= "ATT_";
-    private static final String SER_PREFIX= "SER_";
-    private static final String DFT_PREFIX= "DFT_";
-    private static final String DEP_PREFIX= "DEP_";
-    private static final String UNQ_PREFIX= "UNQ_";
-
-    private final Logger log = org.apache.logging.log4j.LogManager
-            .getLogger(MethodHandles.lookup().lookupClass().getCanonicalName());
+    
+    @Inject
+    Logger log;
 
 	@Inject
 	AttributeUtils attributeUtils;
@@ -71,32 +51,6 @@ public class BatchLoading {
 
     public static boolean isSynchronise() {
         return isSynchronise;
-    }
-
-    public String constructKeycloakJson(final RealmUnit realm) {
-        String clientId= realm.getCode();
-        String masterRealm = "internmatch";
-        String keycloakUrl = null;
-        String keycloakSecret = null;
-        String keycloakJson = null;
-
-        keycloakUrl = realm.getKeycloakUrl();
-        keycloakSecret = realm.getClientSecret();
-        if ("internmatch".equals(clientId)) {
-        keycloakJson = "{\n" + "  \"realm\": \"" + masterRealm + "\",\n" + "  \"auth-server-url\": \"" + keycloakUrl
-                + "/auth\",\n" + "  \"ssl-required\": \"external\",\n" + "  \"resource\": \"" + clientId + "\",\n"
-                + "  \"credentials\": {\n" + "    \"secret\": \"" + keycloakSecret + "\" \n" + "  },\n"
-                + "  \"policy-enforcer\": {}\n" + "}";
-
-        } else {
-                   keycloakJson = "{\n" + "  \"realm\": \"" + masterRealm + "\",\n" + "  \"auth-server-url\": \"" + keycloakUrl
-                + "/auth\",\n" + "  \"ssl-required\": \"external\",\n" + "  \"resource\": \"" + clientId + "\",\n"
-                + "     \"public-client\": true,\n"
-                + "  \"confidential-port\": 0\n" + "}";
-        }
-
-        log.info(String.format("[%s] Loaded keycloak.json:%s ", clientId, keycloakJson));
-        return keycloakJson;
     }
 
     public void persistProjectOptimization(RealmUnit rx) {
@@ -223,11 +177,11 @@ public class BatchLoading {
 		DataType dttText = attributeUtils.getDataType("DTT_TEXT", false);
 
 		Map<String, DataType> dttPrefixMap = Map.of(
-			ATT_PREFIX, dttBoolean,
-			SER_PREFIX, dttText,
-			DFT_PREFIX, dttText,
-			DEP_PREFIX, dttText,
-			UNQ_PREFIX, dttText
+			Prefix.ATT_, dttBoolean,
+			Prefix.SER_, dttText,
+			Prefix.DFT_, dttText,
+			Prefix.DEP_, dttText,
+			Prefix.UNQ_, dttText
 		);
 
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
@@ -236,7 +190,17 @@ public class BatchLoading {
 			if (Attribute.LNK_INCLUDE.equals(attributeCode)) {
 				String[] codes = CommonUtils.cleanUpAttributeValue(row.get("valueString")).split(",");
 				for (String code : codes) {
-				// handle
+                // 1. Fetch base entity pertaining to code
+                    // a. Check Cache first
+                    // b. if missing check sheets
+                    // If missing report and continue
+                // 2. For each Entity Attribute in DEF_code
+                    // 1. Fetch Attribute
+                        // a. Check Cache first
+                        // b. if missing check sheets
+                        // If still missing report and continue (should never reach here)
+                    // 2. Add Attribute to current DEF (denoted by row.get("baseEntityCode"))
+                // 3. Profit    
 				}
 				continue;
 			}

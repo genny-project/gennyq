@@ -22,7 +22,6 @@ public abstract class DataUnit {
     protected Map<String, Map<String, String>> questions = new HashMap<>();
     protected Map<String, Map<String, String>> entityAttributes = new HashMap<>();
     protected Map<String, Map<String, String>> baseEntitys = new HashMap<>();
-    // protected Map<String, Map<String, String>> messages = new HashMap<>();
     protected Map<String, Map<String, String>> def_baseEntitys = new HashMap<>();
     protected Map<String, Map<String, String>> def_entityAttributes = new HashMap<>();
 
