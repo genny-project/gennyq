@@ -99,6 +99,13 @@ public class GoogleSheetBuilder {
         return "TRUE".equalsIgnoreCase(booleanString.toUpperCase());
     }
 
+    public static Double toDouble(final String doubleString) {
+        if (doubleString == null) {
+            return 0.0;
+        }
+        return Double.parseDouble(doubleString);
+    }
+
     public static Validation buildValidation(Map<String, String> row, String realmName) {
 		String code = row.get("code");
 		String name = row.get("name");
@@ -136,156 +143,35 @@ public class GoogleSheetBuilder {
         return attr;
     }
 
-    public static BaseEntity buildEntityAttribute(Map<String, String> row, String realmName) {
+    public static EntityAttribute buildEntityAttribute(Map<String, String> row, String realmName) {
+
+		EntityAttribute entityAttribute = new EntityAttribute();
+		entityAttribute.setBaseEntityCode(row.get("baseEntityCode"));
+		entityAttribute.setAttributeCode(row.get("attributeCode"));
+		entityAttribute.setRealm(realmName);
         
-        // Check if attribute code exist in Attribute table, foreign key restriction
-        Attribute attribute = attrHashMap.get(attributeCode.toUpperCase());
-        if (attribute == null) {
-            log.error(String.format("Invalid EntityAttribute record, AttributeCode:%s is not in the Attribute Table!!!", attributeCode));
-            return null;
-        }
+        String valueString = row.get(VALUESTRING);
+        Integer valueInt = row.get(VALUEINTEGER);
+        Long valueLong = row.get(VALUELONG);
+        Double valueDouble = row.get(VALUEDOUBLE);
+        Boolean valueBoolean = toBoolean(row.get(VALUEBOOLEAN));
 
-        List<String> asList = Collections.singletonList("valuestring");
-        Optional<String> valueString = Optional.empty();
-        try {
-			valueString = asList.stream().map(row::get).findFirst();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-//			e.printStackTrace();
-			//log.error("NULL ERROR: "+baseEntityAttr.get("baseentitycode")+":"+attributeCode + " doesn't have column valuestring.");
-		}
-        Integer valueInt = null;
-        Optional<String> ofNullable = Optional.ofNullable(row.get(VALUEINTEGER));
-        if (ofNullable.isPresent() && !row.get(VALUEINTEGER).matches("\\s*") && (attribute.getDataType().getClassName().contains("Integer"))) {
-            BigDecimal big = new BigDecimal(row.get(VALUEINTEGER));
-            Optional<String[]> nullableVal = Optional.of(big.toPlainString().split("[.]"));
-            valueInt = nullableVal.filter(d -> d.length > 0).map(d -> Integer.valueOf(d[0])).get();
-        }
+        Double weight = toDouble(row.get(WEIGHT));
 
-        Long valueLong = null;
-        Optional<String> ofNullableLong = Optional.ofNullable(row.get(VALUELONG));
-        if (ofNullableLong.isPresent() && !row.get(VALUELONG).matches("\\s*") && (attribute.getDataType().getClassName().contains("Long"))) {
-            BigDecimal big = new BigDecimal(row.get(VALUELONG));
-            Optional<String[]> nullableVal = Optional.of(big.toPlainString().split("[.]"));
-            valueLong = nullableVal.filter(d -> d.length > 0).map(d -> Long.valueOf(d[0])).get();
-        }
+        boolean privacy = toBoolean(row.get(PRIVACY));
+        boolean confirmation = toBoolean(row.get(CONFIRMATION));
 
-        Double valueDouble = null;
-        Optional<String> ofNullableDouble = Optional.ofNullable(row.get(VALUEDOUBLE));
-        if (ofNullableDouble.isPresent() && !row.get(VALUEDOUBLE).matches("\\s*") && (attribute.getDataType().getClassName().contains("Double"))) {
-            BigDecimal big = null;
-            try {
-				big = new BigDecimal(row.get(VALUEDOUBLE));
-				Optional<String[]> nullableVal = Optional.of(big.toPlainString().split("[.]"));
-				valueDouble = nullableVal.filter(d -> d.length > 0).map(d -> Double.valueOf(d[0])).get();
-			} catch (Exception e) {
-				log.error("Bad fDouble format "+attributeCode);
-			}
-        }
+		entityAttribute.setValueString(valueString);
+		entityAttribute.setValueInteger(valueInt);
+		entityAttribute.setValueLong(valueLong);
+		entityAttribute.setValueDouble(valueDouble);
+		entityAttribute.setValueBoolean(valueBoolean);
 
-        Boolean valueBoolean = null;
-        if(row.containsKey(VALUEBOOLEAN) && attribute.getDataType().getClassName().contains("Boolean")) {
-            Optional<Boolean> ofNullableBoolean = Optional.ofNullable("TRUE".equalsIgnoreCase(row.get(VALUEBOOLEAN))
-                                                               && (attribute.getDataType().getClassName().contains("Boolean")));
-            valueBoolean = ofNullableBoolean.get();
-        }
+		entityAttribute.setWeight(weight);
+		entityAttribute.setPrivacyFlag(privacy);
+		entityAttribute.setConfirmationFlag(confirmation);
 
-        String valueStr = null;
-        if (valueString.isPresent()) {
-            valueStr = valueString.get().replaceAll(REGEX_1, "");
-        }
-
-        String baseEntityCode = getBaseEntityCodeFromBaseEntityAttribute(row, userCodeUUIDMapping);
-        if (baseEntityCode == null) return null;
-
-        String weight = row.get(WEIGHT);
-        String privacyStr = row.get(PRIVACY);
-        Boolean privacy = "TRUE".equalsIgnoreCase(privacyStr);
-
-        String confirmationStr= row.get(CONFIRMATION);
-        Boolean confirmation = "TRUE".equalsIgnoreCase(confirmationStr);
-
-//        String valueBooleanStr = baseEntityAttr.get(VALUEBOOLEAN);
-//        Boolean valueBoolean= "TRUE".equalsIgnoreCase(valueBooleanStr);
-
- 
-        // Check if baseEntity code exist in BaseEntity table, foreign key restriction
-        BaseEntity baseEntity = beHashMap.get(baseEntityCode.toUpperCase());
-        if (baseEntity == null) {
-            log.error(String.format("Invalid EntityAttribute record, BaseEntityCode:%s is not in the BaseEntity Table!!!", baseEntityCode));
-            return null;
-        }
-
-        double weightField = 0.0;
-        if (isDouble(weight)) {
-            weightField = Double.parseDouble(weight);
-        }
-
-        EntityAttribute ea = null;
-        if (valueString.isPresent()) {
-        	 try {
-                 ea = baseEntity.addAttribute(attribute, weightField, valueStr);
-             } catch (BadDataException be) {
-                 log.error(String.format("Should never reach here!, Error:%s", be.getMessage()));
-             }
-        	 valueBoolean = null; // force
-        } else
-        if (valueLong != null) {
-            try {
-                ea = baseEntity.addAttribute(attribute, weightField, valueLong);
-            } catch (BadDataException be) {
-                log.error(String.format("Should never reach here!, Error:%s", be.getMessage()));
-            }
-        } else if (valueDouble != null) {
-            try {
-                ea = baseEntity.addAttribute(attribute, weightField, valueDouble);
-            } catch (BadDataException be) {
-                log.error(String.format("Should never reach here!, Error:%s", be.getMessage()));
-            }
-        } else if (valueInt != null) {
-            try {
-                ea = baseEntity.addAttribute(attribute, weightField, valueInt);
-            } catch (BadDataException be) {
-                log.error(String.format("Should never reach here!, Error:%s", be.getMessage()));
-            }
-        } else if (Boolean.TRUE.equals(valueBoolean)) {
-            try {
-            	if (!attribute.getDataType().getClassName().equalsIgnoreCase("java.lang.Boolean")) {
-            		attribute.setDataType(new DataType(Boolean.class));
-                    log.error("Attribute dataType is not Boolean, updated to Boolean, "
-                    + "attributeCode:" + attributeCode + ", dttType:" + attribute.getDataType().getClassName()
-                    + ", baseentityCode:" + baseEntityCode);
-            	}
-                ea = baseEntity.addAttribute(attribute, weightField, valueBoolean);
-            } catch (BadDataException be) {
-                log.error(String.format("Should never reach here!, Error:%s", be.getMessage()));
-            }
-        } else {
-            try {
-                ea = baseEntity.addAttribute(attribute, weightField, valueStr);
-            } catch (BadDataException be) {
-                log.error(String.format("Should never reach here!, Error:%s", be.getMessage()));
-            }
-        }
-
-        if (ea != null) {
-            if (privacy || attribute.getDefaultPrivacyFlag()) {
-                ea.setPrivacyFlag(true);
-            }
-
-            if (confirmation) {
-                ea.setConfirmationFlag(true);
-            }
-
-            if (valueBoolean!= null) {
-                ea.setValueBoolean(valueBoolean);
-            }
-
-            ea.setRealm(realmName);
-        }
-
-        baseEntity.setRealm(realmName);
-        return baseEntity;
+        return entityAttribute;
     }
 
 
@@ -432,25 +318,5 @@ public class GoogleSheetBuilder {
         q.setHelper(helper);
         q.setIcon(icon);
         return q;
-    }
-
-    private static String getNameFromMap(Map<String, String> baseEntitys, String defaultString) {
-        String key = "name";
-        String ret = defaultString;
-        if (baseEntitys.containsKey(key)) {
-            if (baseEntitys.get(key) != null) {
-                ret = baseEntitys.get(key).replaceAll("^\"|\"$", "");
-            }
-        }
-        return ret;
-    }
-
-    public static BaseEntity buildBaseEntity(Map<String, String> baseEntitys, String realmName) {
-
-        String code = baseEntitys.get("code").replaceAll("^\"|\"$", "");
-        String name = getNameFromMap(baseEntitys, code);
-        BaseEntity be = new BaseEntity(code, name);
-        be.setRealm(realmName);
-        return be;
     }
 }
