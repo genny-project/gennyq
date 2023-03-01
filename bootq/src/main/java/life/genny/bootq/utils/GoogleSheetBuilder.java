@@ -9,8 +9,11 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.validation.Validation;
 
 import java.lang.invoke.MethodHandles;
-
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+import org.apache.commons.lang3.StringUtils;
 
 public class GoogleSheetBuilder {
     private static final org.apache.logging.log4j.Logger log = org.apache.logging.log4j.LogManager
@@ -62,6 +65,12 @@ public class GoogleSheetBuilder {
 		String regex = row.get("regex");
 		Validation validation = new Validation(code, name, regex);
 		validation.setErrormsg(row.get("error_message"));
+		
+		// handle the group codes
+		String group_codes = row.get("group_codes");
+		List<String> groups = StringUtils.isBlank(group_codes) ? new ArrayList<>() : Arrays.asList(group_codes.replaceAll(" ", "").split(","));
+		validation.setSelectionBaseEntityGroupList(groups);
+
 		validation.setRealm(realmName);
         return validation;
     }
