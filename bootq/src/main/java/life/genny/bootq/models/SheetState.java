@@ -3,8 +3,8 @@ package life.genny.bootq.models;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import life.genny.bootq.sheets.Realm;
-import life.genny.bootq.sheets.RealmUnit;
+import life.genny.bootq.sheets.realm.Realm;
+import life.genny.bootq.sheets.realm.RealmUnit;
 import life.genny.bootq.utils.XlsxImport;
 
 import java.util.HashMap;

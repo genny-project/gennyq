@@ -3,6 +3,8 @@ package life.genny.bootq.models;
 import java.util.ArrayList;
 import java.util.List;
 
+import life.genny.bootq.service.ImportService;
+
 public abstract class SheetReferralType<T> {
 
     protected List<T> units = new ArrayList<>();

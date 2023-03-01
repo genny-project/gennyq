@@ -4,7 +4,7 @@ import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.*;
 
 import life.genny.bootq.sheets.DataUnit;
-import life.genny.bootq.sheets.ESheetTitle;
+import life.genny.bootq.sheets.ESheetConfiguration;
 import life.genny.bootq.utils.GoogleImportService;
 import life.genny.bootq.utils.XlsxImport;
 
@@ -20,6 +20,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * A POJO representation of a Google Doc and 
+ */
 public class ModuleUnit extends DataUnit {
     protected static final Logger log = org.apache.logging.log4j.LogManager
             .getLogger(MethodHandles.lookup().lookupClass().getCanonicalName());
@@ -37,7 +40,7 @@ public class ModuleUnit extends DataUnit {
         for (Sheet sheet : sheets) {
             SheetProperties sheetProperties = (SheetProperties)sheet.get("properties");
             String title = sheetProperties.getTitle();
-            if (ESheetTitle.isValidTitle(title))
+            if (ESheetConfiguration.isValidTitle(title))
                 titles.add(title);
         }
 
@@ -90,13 +93,21 @@ public class ModuleUnit extends DataUnit {
         return valueRanges;
     }
 
-    private Map<String, Map<String, String>> getData(Sheets sheetsService, ESheetTitle titleData,
+    /**
+     * Get all rows for all sheets within this Google Doc/Module
+     * @param sheetsService - {@link Sheets Google Sheets Service}
+     * @param titleData - 
+     * @param values
+     * @param sheetURI
+     * @return
+     */
+    private Map<String, Map<String, String>> getData(Sheets sheetsService, ESheetConfiguration titleData,
     List<List<Object>> values, String sheetURI) {
         XlsxImport xlsxImportOnline = new XlsxImport(sheetsService);
         Map<String, Map<String, String>> tmp =  new HashMap<>();
 
         try {
-            tmp = xlsxImportOnline.mappingKeyHeaderToHeaderValues(values, titleData.getDataKeyColumns());
+            tmp = xlsxImportOnline.mappingKeyHeaderToHeaderValues(values, titleData.getHeaderRow());
         } catch (Exception ex) {
             logFetchExceptionForSheets(ex.getMessage(), titleData.getTitle(), sheetURI);
         }
@@ -112,10 +123,11 @@ public class ModuleUnit extends DataUnit {
             String title = valueRange.getRange().split("!")[0];
 
             if (titles.contains(title)) {
-                ESheetTitle titleData = ESheetTitle.getByTitle(title);
+                ESheetConfiguration titleData = ESheetConfiguration.getByTitle(title);
 
                 List<List<Object>> values = valueRange.getValues();
-                log.info("processing " + title + ", value size:" + values.size());
+                log.info("processing " + titleData.name() + ", value size:" + values.size());
+                
                 switch (titleData) {
                     case VALIDATION:
                         this.validations = getData(sheetsService, titleData, values, sheetURI);
@@ -145,6 +157,7 @@ public class ModuleUnit extends DataUnit {
                         this.def_entityAttributes= getData(sheetsService, titleData, values, sheetURI);
                         break;
                     default:
+                        log.error("Unhandled ESheetTitle!: " + title);
                         break;
                 }
             }

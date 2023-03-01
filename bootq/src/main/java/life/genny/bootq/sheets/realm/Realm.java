@@ -1,4 +1,4 @@
-package life.genny.bootq.sheets;
+package life.genny.bootq.sheets.realm;
 
 import life.genny.bootq.models.SheetReferralType;
 

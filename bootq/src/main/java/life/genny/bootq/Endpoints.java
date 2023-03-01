@@ -2,19 +2,26 @@ package life.genny.bootq;
 
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
+
 import life.genny.bootq.models.BatchLoading;
-import life.genny.bootq.sheets.Realm;
-import life.genny.bootq.sheets.RealmUnit;
+import life.genny.bootq.sheets.realm.Realm;
+import life.genny.bootq.sheets.realm.RealmUnit;
+import life.genny.qwandaq.models.UserToken;
+import life.genny.serviceq.Service;
+
 import java.util.List;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
-import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
-import javax.ws.rs.*;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.jboss.logging.Logger;
 
 @Path("/bootq/")
@@ -30,15 +37,8 @@ public class Endpoints {
     @ConfigProperty(name = "quarkus.oidc.auth-server-url")
     String authUrl;
 
-
-    // TODO: Move this off to CM
     @Inject
-    EntityManager em;
-
-
-    // TODO: Make this a full Genny Token
-    @Inject
-    JsonWebToken accessToken;
+    UserToken userToken;
 
     public boolean getIsTaskRunning() {
         return isBatchLoadingRunning;
@@ -78,7 +78,6 @@ public class Endpoints {
     public Response loadSheetsById(@PathParam("sheetid") final String sheetId) {
         log.info("Loading in sheet " + sheetId);
         String msg = "";
-        String authToken = accessToken.getRawToken();
 
         if (getIsTaskRunning()) {
             log.error("Batch loading task is running, please try later or force restart pod");
