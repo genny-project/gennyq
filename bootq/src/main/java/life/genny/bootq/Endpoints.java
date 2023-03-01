@@ -5,10 +5,10 @@ import io.quarkus.runtime.StartupEvent;
 import life.genny.bootq.models.BatchLoading;
 import life.genny.bootq.sheets.Realm;
 import life.genny.bootq.sheets.RealmUnit;
+import life.genny.serviceq.Service;
 import java.util.List;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
-import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
@@ -20,8 +20,6 @@ import org.jboss.logging.Logger;
 @Path("/bootq/")
 public class Endpoints {
 
-    private static final Logger log = Logger.getLogger(Endpoints.class);
-
     private boolean isBatchLoadingRunning = false;
 
     @ConfigProperty(name = "quarkus.application.version")
@@ -30,15 +28,17 @@ public class Endpoints {
     @ConfigProperty(name = "quarkus.oidc.auth-server-url")
     String authUrl;
 
+	@Inject
+    Logger log;
 
-    // TODO: Move this off to CM
-    @Inject
-    EntityManager em;
+	@Inject
+	Service service;
 
-
-    // TODO: Make this a full Genny Token
     @Inject
     JsonWebToken accessToken;
+
+	@Inject
+	BatchLoading bl;
 
     public boolean getIsTaskRunning() {
         return isBatchLoadingRunning;
@@ -46,6 +46,18 @@ public class Endpoints {
 
     public void setIsTaskRunning(boolean isTaskRunning) {
         this.isBatchLoadingRunning = isTaskRunning;
+    }
+
+	void onStart(@Observes StartupEvent ev) {
+		service.showConfiguration();
+		service.initToken();
+		service.initCache();
+		log.info("[*] Finished Startup!");
+	}
+
+    @Transactional
+    void onShutdown(@Observes ShutdownEvent ev) {
+        log.info("Bootq Endpoint Shutting down");
     }
 
     @GET
@@ -104,7 +116,7 @@ public class Endpoints {
                 if (!realmUnit.getDisable() && !realmUnit.getSkipGoogleDoc()) {
                     log.info("Starting batch loading for sheet:" + realmUnit.getUri()
                             + ", realm:" + realmUnit.getName());
-                    BatchLoading bl = new BatchLoading();
+                    // BatchLoading bl = new BatchLoading();
                     bl.persistProjectOptimization(realmUnit);
                     log.info("Finished batch loading for sheet:" + realmUnit.getUri()
                             + ", realm:" + realmUnit.getName() + ", now syncing be, attr and questions");
@@ -115,6 +127,7 @@ public class Endpoints {
                 msg = "Finished batch loading for all realms in google sheets";
             }
         } catch (Exception ex) {
+			ex.printStackTrace();
             msg = "Exception:" + ex.getMessage() + " occurred when batch loading";
         } finally {
             setIsTaskRunning(false);
@@ -123,14 +136,4 @@ public class Endpoints {
         return Response.ok().entity(msg).build();
     }
 
-    @Transactional
-    void onStart(@Observes StartupEvent ev) {
-        log.info("Bootq Endpoint starting with auth Server " + authUrl);
-
-    }
-
-    @Transactional
-    void onShutdown(@Observes ShutdownEvent ev) {
-        log.info("Bootq Endpoint Shutting down");
-    }
 }
