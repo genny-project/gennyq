@@ -173,6 +173,10 @@ public class Attribute extends CodedEntity implements CoreEntityPersistable {
 	public Attribute() {
 	}
 
+	public Attribute(String code, String name) {
+		super(code, name);
+	}
+
 	public Attribute(String code, String name, DataType dataType) {
 		super(code, name);
 		setDataType(dataType);

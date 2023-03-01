@@ -2,6 +2,7 @@ package life.genny.bootq.models;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+import life.genny.bootq.utils.GoogleSheetBuilder;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
@@ -181,13 +182,7 @@ public class BatchLoading {
     public Map<String, DataType> datatypeOptimization(Map<String, Map<String, String>> project, String realmName) {
         final Map<String, DataType> dataTypeMap = new HashMap<>();
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
-            Map<String, String> row = entry.getValue();
-            DataType dataType = new DataType();
-			dataType.setDttCode(row.get("code"));
-			dataType.setClassName(row.get("classname"));
-			dataType.setInputmask(row.get("inputmask"));
-			dataType.setComponent(row.get("component"));
-			dataType.setValidationCodes(row.get("validations"));
+			DataType dataType = GoogleSheetBuilder.buildDataType(entry.getValue(), realmName);
 			beaUtils.saveDataType(dataType);
 		}
     }
@@ -195,7 +190,7 @@ public class BatchLoading {
     public void attributesOptimization(Map<String, Map<String, String>> project, String realmName) {
 
         for (Map.Entry<String, Map<String, String>> data : project.entrySet()) {
-            Attribute attribute = GoogleSheetBuilder.buildAttrribute(entry.getValue(), realmName);
+            Attribute attribute = GoogleSheetBuilder.buildAttribute(entry.getValue(), realmName);
 			attributeUtils.saveAttribute(attribute);
         }
         log.info("Handled " + project.entrySet().size() + " Attributes");
