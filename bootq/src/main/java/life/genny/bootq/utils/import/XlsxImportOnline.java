@@ -1,4 +1,4 @@
-package life.genny.bootq.models;
+package life.genny.bootq.sheets;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;

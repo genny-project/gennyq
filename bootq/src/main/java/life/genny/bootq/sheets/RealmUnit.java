@@ -1,4 +1,4 @@
-package life.genny.bootq.models;
+package life.genny.bootq.sheets;
 
 import java.lang.invoke.MethodHandles;
 import java.util.HashMap;
@@ -8,13 +8,14 @@ import java.util.function.BinaryOperator;
 
 import com.google.common.collect.Maps;
 
+import life.genny.bootq.sheets.module.GennyModule;
+
 public class RealmUnit extends DataUnit {
     private final org.apache.logging.log4j.Logger log = org.apache.logging.log4j.LogManager
             .getLogger(MethodHandles.lookup().lookupClass().getCanonicalName());
 
     private String code;
-    private String name;
-    private Module module;
+    private GennyModule module;
     private String urlList;
     private String clientSecret;
     private String keycloakUrl;
@@ -23,15 +24,6 @@ public class RealmUnit extends DataUnit {
     private String securityKey;
     private String servicePassword;
     private String uri;
-
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
 
     public String getUrlList() {
         return urlList;
@@ -106,11 +98,11 @@ public class RealmUnit extends DataUnit {
     }
 
 
-    public Module getModule() {
+    public GennyModule getModule() {
         return module;
     }
 
-    public void setModule(Module module) {
+    public void setModule(GennyModule module) {
         this.module = module;
     }
 
@@ -148,7 +140,7 @@ public class RealmUnit extends DataUnit {
         if (skipgoogledoc) {
             log.info("Skipping google doc for realm " + this.name);
         } else {
-            module = new Module(realm.get("sheetID".toLowerCase()));
+            module = new GennyModule(realm.get("sheetID".toLowerCase()));
             Optional<HashMap<String, Map<String, String>>> tmpOptional = module.getDataUnits().stream()
                     .map(moduleUnit -> Maps.newHashMap(moduleUnit.baseEntitys))
                     .reduce(overrideByPrecedence);
@@ -171,22 +163,6 @@ public class RealmUnit extends DataUnit {
             tmpOptional.ifPresent(stringMapHashMap -> super.def_entityAttributes= stringMapHashMap);
 
             tmpOptional = module.getDataUnits().stream()
-                    .map(mm -> Maps.newHashMap(mm.attributeLinks))
-                    .reduce(overrideByPrecedence);
-            tmpOptional.ifPresent(stringMapHashMap -> super.attributeLinks = stringMapHashMap);
-
-
-            tmpOptional = module.getDataUnits().stream()
-                    .map(mm -> Maps.newHashMap(mm.notifications))
-                    .reduce(overrideByPrecedence);
-            tmpOptional.ifPresent(stringMapHashMap -> super.notifications = stringMapHashMap);
-
-            tmpOptional = module.getDataUnits().stream()
-                    .map(mm -> Maps.newHashMap(mm.entityEntitys))
-                    .reduce(overrideByPrecedence);
-            tmpOptional.ifPresent(stringMapHashMap -> super.entityEntitys = stringMapHashMap);
-
-            tmpOptional = module.getDataUnits().stream()
                     .map(mm -> Maps.newHashMap(mm.questions))
                     .reduce(overrideByPrecedence);
             tmpOptional.ifPresent(stringMapHashMap -> super.questions = stringMapHashMap);
@@ -195,11 +171,6 @@ public class RealmUnit extends DataUnit {
                     .map(mm -> Maps.newHashMap(mm.entityAttributes))
                     .reduce(overrideByPrecedence);
             tmpOptional.ifPresent(stringMapHashMap -> super.entityAttributes = stringMapHashMap);
-
-            tmpOptional = module.getDataUnits().stream()
-                    .map(mm -> Maps.newHashMap(mm.asks))
-                    .reduce(overrideByPrecedence);
-            tmpOptional.ifPresent(stringMapHashMap -> super.asks = stringMapHashMap);
 
             tmpOptional = module.getDataUnits().stream()
                     .map(mm -> Maps.newHashMap(mm.questionQuestions))
@@ -225,14 +196,11 @@ public class RealmUnit extends DataUnit {
 
 
     public void clearAll() {
-        asks.clear();
         baseEntitys.clear();
         entityAttributes.clear();
-        attributeLinks.clear();
         attributes.clear();
         dataTypes.clear();
         messages.clear();
-        notifications.clear();
         questionQuestions.clear();
         questions.clear();
         validations.clear();

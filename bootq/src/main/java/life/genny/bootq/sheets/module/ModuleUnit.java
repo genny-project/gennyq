@@ -1,19 +1,33 @@
-package life.genny.bootq.models;
+package life.genny.bootq.sheets.module;
 
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.*;
+
+import life.genny.bootq.models.DataKeyColumn;
+import life.genny.bootq.sheets.DataUnit;
+import life.genny.bootq.sheets.XlsxImportOnline;
 import life.genny.bootq.utils.GoogleImportService;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class ModuleUnit extends DataUnit {
     protected static final Logger log = org.apache.logging.log4j.LogManager
             .getLogger(MethodHandles.lookup().lookupClass().getCanonicalName());
+
+    
     private static final String RANGE = "!A1:Z";
-    private static final String VALIDATION = "Validation";
+
+    // valid sheet titles
+    private 
     private static final String DATATYPE = "DataType";
     private static final String ATTRIBUTE = "Attribute";
     private static final String ATTRIBUTE_LINK = "AttributeLink";
@@ -28,22 +42,10 @@ public class ModuleUnit extends DataUnit {
     private static final String DEF_BASE_ENTITY = "DEF_BaseEntity";
     private static final String DEF_ENTITY_ATTRIBUTE = "DEF_EntityAttribute";
 
-    private String name;
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
     private Set<String> initValidTitles() {
         Set<String> validSheetsTitle = new HashSet<>();
-        validSheetsTitle.add(VALIDATION);
         validSheetsTitle.add(DATATYPE);
         validSheetsTitle.add(ATTRIBUTE);
-        validSheetsTitle.add(ATTRIBUTE_LINK);
         validSheetsTitle.add(BASE_ENTITY);
         validSheetsTitle.add(QUESTION_QUESTION);
         validSheetsTitle.add(QUESTION);
@@ -51,7 +53,6 @@ public class ModuleUnit extends DataUnit {
         validSheetsTitle.add(NOTIFICATION);
         validSheetsTitle.add(MESSAGE);
         validSheetsTitle.add(ENTITY_ATTRIBUTE);
-        validSheetsTitle.add(ENTITY_ENTITY);
         validSheetsTitle.add(DEF_BASE_ENTITY);
         validSheetsTitle.add(DEF_ENTITY_ATTRIBUTE);
         return validSheetsTitle;
@@ -155,12 +156,9 @@ public class ModuleUnit extends DataUnit {
             request.setRanges(ranges);
             BatchGetValuesResponse response = request.execute();
             valueRanges = (ArrayList<ValueRange>) response.get("valueRanges");
-        } catch (IOException ioe) {
-            log.error("IOException occurred when fetch SpreadSheets:" + spreadsheetId + ", exception msg:" + ioe.getMessage());
-        }
-        return valueRanges;
-    }
-
+        } catch (IOException io  case ENTITY_ENTITY:
+        this.entityEntitys= getData(sheetsService, title, values, keyColumnsMapping, sheetURI);
+        break;
     private Map<String, Map<String, String>> getData(Sheets sheetsService, String title,
     List<List<Object>> values, Map<String, Set<String>> keyColumnsMapping, String sheetURI) {
         XlsxImportOnline xlsxImportOnline = new XlsxImportOnline(sheetsService);
@@ -201,9 +199,7 @@ public class ModuleUnit extends DataUnit {
                     case ATTRIBUTE:
                         this.attributes= getData(sheetsService, title, values, keyColumnsMapping, sheetURI);
                         break;
-                    case ATTRIBUTE_LINK:
-                        this.attributeLinks= getData(sheetsService, title, values, keyColumnsMapping, sheetURI);
-                        break;
+                    
                     case BASE_ENTITY:
                         this.baseEntitys= getData(sheetsService, title, values, keyColumnsMapping, sheetURI);
                         break;
@@ -213,20 +209,11 @@ public class ModuleUnit extends DataUnit {
                     case QUESTION:
                         this.questions= getData(sheetsService, title, values, keyColumnsMapping, sheetURI);
                         break;
-                    case ASK:
-                        this.asks= getData(sheetsService, title, values, keyColumnsMapping, sheetURI);
-                        break;
-                    case NOTIFICATION:
-                        this.notifications= getData(sheetsService, title, values, keyColumnsMapping, sheetURI);
-                        break;
                     case MESSAGE:
                         this.messages= getData(sheetsService, title, values, keyColumnsMapping, sheetURI);
                         break;
                     case ENTITY_ATTRIBUTE:
                         this.entityAttributes= getData(sheetsService, title, values, keyColumnsMapping, sheetURI);
-                        break;
-                    case ENTITY_ENTITY:
-                        this.entityEntitys= getData(sheetsService, title, values, keyColumnsMapping, sheetURI);
                         break;
                     case DEF_BASE_ENTITY:
                         this.def_baseEntitys= getData(sheetsService, title, values, keyColumnsMapping, sheetURI);

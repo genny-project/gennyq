@@ -3,8 +3,9 @@ package life.genny.bootq;
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
 import io.vertx.core.json.JsonObject;
+import life.genny.bootq.models.BatchLoading;
 import life.genny.bootq.models.Realm;
-import life.genny.bootq.models.RealmUnit;
+import life.genny.bootq.sheets.RealmUnit;
 import life.genny.qwandaq.entity.search.SearchEntity;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,9 +21,9 @@ import org.eclipse.microprofile.jwt.JsonWebToken;
 import org.jboss.logging.Logger;
 
 @Path("/bootq/")
-public class App {
+public class Endpoints {
 
-    private static final Logger log = Logger.getLogger(App.class);
+    private static final Logger log = Logger.getLogger(Endpoints.class);
 
     private boolean isBatchLoadingRunning = false;
 

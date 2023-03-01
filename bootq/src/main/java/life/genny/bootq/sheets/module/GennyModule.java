@@ -1,6 +1,11 @@
-package life.genny.bootq.models;
+package life.genny.bootq.sheets.module;
 
-public class Module extends SheetReferralType<ModuleUnit> {
+import life.genny.bootq.models.SheetReferralType;
+
+/**
+ * A Genny Module, not to be confused with {@link java.lang.Module}
+ */
+public class GennyModule extends SheetReferralType<ModuleUnit> {
 
     private String name;
 
@@ -12,7 +17,7 @@ public class Module extends SheetReferralType<ModuleUnit> {
         this.name = name;
     }
 
-    public Module(String sheetURI) {
+    public GennyModule(String sheetURI) {
         super(sheetURI);
     }
 
