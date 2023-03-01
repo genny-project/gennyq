@@ -64,7 +64,7 @@ public class AttributeMessageMarshaller implements MessageMarshaller<Attribute> 
 		Long updatedLong = created != null ? updated.toEpochSecond(ZoneOffset.UTC) * 1000 : null;
 		writer.writeLong("updated", updatedLong);
 		writer.writeString("dttCode", att.getDttCode());
-		writer.writeString("validation_list", new ValidationListConverter().convertToDatabaseColumn(att.getDataType().getValidationList()));
+		// writer.writeString("validation_list", new ValidationListConverter().convertToDatabaseColumn(att.getDataType().getValidationList()));
 		writer.writeBoolean("defaultPrivacyFlag", att.getDefaultPrivacyFlag());
 		writer.writeString("defaultValue", att.getDefaultValue());
 		writer.writeString("description", att.getDescription());
