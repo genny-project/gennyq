@@ -49,6 +49,7 @@ import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.entity.search.trait.Ord;
 import life.genny.qwandaq.entity.search.trait.Sort;
+import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
@@ -102,6 +103,8 @@ public class FyodorUltra {
 		// find codes and total
 		Page page = fetchBaseEntities(searchEntity);
 		Set<String> allowed = searchEntity.allowedColumns();
+		log.debug("Got: " + CommonUtils.getArrayString(allowed, String::toString) + " as allowedColumns");
+
 		// apply filter
 		int index = 0;
 		for (BaseEntity baseEntity : page.getItems()) {
@@ -110,8 +113,13 @@ public class FyodorUltra {
 			for (String attributeCode : allowed) {
 				EntityAttribute ea;
 				if (attributeCode.startsWith("_")) {
+					log.debug("Getting associated column value of: " + attributeCode);
 					// handle asociated columns
 					ea = getAssociatedColumnValue(baseEntity, attributeCode);
+					if(ea == null) {
+						log.warn("Got bad ea: " + baseEntity.getCode() + ":" + attributeCode + ". Skipping");
+						continue;
+					}
 					// set attr codes to associated code
 					ea.setAttributeCode(attributeCode);
 					ea.getAttribute().setCode(attributeCode);
@@ -646,7 +654,7 @@ public class FyodorUltra {
 		// recursively find value
 		EntityAttribute ea = getRecursiveColumnLink(entity, cleanCode);
 		if (ea == null) {
-			return null;
+			throw new BadDataException("Null EntityAttribute when parsing: " + entity.getCode() + ":" + cleanCode);
 		}
 
 		// update attribute code for frontend
@@ -666,7 +674,7 @@ public class FyodorUltra {
 	public EntityAttribute getRecursiveColumnLink(BaseEntity entity, String code) {
 
 		if (entity == null)
-			return null;
+			throw new NullParameterException("entity");
 
 		// split code to find next attribute in line
 		String[] array = code.split("__");
@@ -675,10 +683,12 @@ public class FyodorUltra {
 
 		// recursion
 		if (array.length > 1) {
+			String entityCode = entity.getCode();
 			entity = beUtils.getBaseEntityFromLinkAttribute(entity, attributeCode);
 			if (entity == null) {
-				return null;
+				throw new BadDataException("BaseEntity fetched from " + entityCode + ":" + attributeCode + " is null");
 			}
+			
 			return getRecursiveColumnLink(entity, code);
 		}
 
