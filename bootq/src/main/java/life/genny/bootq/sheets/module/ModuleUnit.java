@@ -65,7 +65,7 @@ public class ModuleUnit extends DataUnit {
             log.error("IOException occurred when fetch SpreadSheets:" + spreadsheetId);
         }
         return sheets;
-    }    
+    }
 
     private ArrayList<ValueRange> getValueRanges(Sheets service, String spreadsheetId, Set<String> titles) {
         // The ranges to retrieve from the spreadsheet.

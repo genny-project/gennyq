@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.ValueRange;
-import com.google.common.collect.Lists;
 import io.vavr.Function2;
 import io.vavr.Function3;
 import io.vavr.Tuple2;
@@ -27,10 +26,10 @@ public class XlsxImportOnline extends XlsxImport {
 
     private Function2<String, String, List<Map<String, String>>> mappingAndCacheHeaderToValues =
             (sheetURI, sheetName) -> {
-                log.info("Function2: not memoized for SheetID: " + sheetURI + ",sheetName: " + sheetName);
                 List<List<Object>> data;
                 try {
-                    data = Lists.newArrayList(fetchSpreadSheet(sheetURI, sheetName));
+                    data = fetchSpreadSheet(sheetURI, sheetName);
+                    data = new ArrayList<>(data);
                 } catch (IOException e) {
                     log.error("Function2: There was a Error " + e.getMessage() + " in SheetName:" + sheetName + " and SheetID:" + sheetURI);
                     return new ArrayList<>();
@@ -42,8 +41,7 @@ public class XlsxImportOnline extends XlsxImport {
             (sheetURI, sheetName, keys) -> {
                 List<List<Object>> data;
                 try {
-                    data = Lists.newArrayList(fetchSpreadSheet(sheetURI, sheetName));
-                    log.info("Function3: not memoized for sheetID:" + sheetURI + ", SheetName:" + sheetName + ", Value size:" + data.size());
+                    data = new ArrayList<>(fetchSpreadSheet(sheetURI, sheetName));
 
                 } catch (IOException e) {
                     log.error("Function3: There was a Error " + e.getMessage() + " in SheetName:" + sheetName + " and SheetID:" + sheetURI);
