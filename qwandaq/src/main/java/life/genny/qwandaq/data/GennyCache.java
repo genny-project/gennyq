@@ -295,10 +295,10 @@ public class GennyCache {
 	public Long getEntityLastUpdatedAt(String entityName) {
 		RemoteCache<String, Long> entityLastUpdatedAtCache = remoteCacheManager.getCache(GennyConstants.CACHE_NAME_ENTITY_LAST_UPDATED_AT);
 		if (entityLastUpdatedAtCache == null) {
-			log.debugf("$$$$$$$$$$$$$$$$$$$$$ Cache doesn't exist.. Creating...");
+			log.debugf("Cache doesn't exist.. Creating...");
 			entityLastUpdatedAtCache = createEntityLastUpdatedAtCache();
 			if (entityLastUpdatedAtCache == null) {
-				log.debugf("$$$$$$$$$$$$$$$$$$$$$ Cache creation failed for some reason!!");
+				log.debugf("Cache creation failed for some reason!!");
 			}
 		}
 		return entityLastUpdatedAtCache.get(entityName);
