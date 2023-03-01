@@ -9,6 +9,7 @@ import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.attribute.AttributeKey;
 import life.genny.qwandaq.serialization.datatype.DataTypeKey;
+import life.genny.qwandaq.serialization.validation.ValidationKey;
 import life.genny.qwandaq.validation.Validation;
 import org.jboss.logging.Logger;
 
@@ -120,12 +121,30 @@ public class AttributeUtils {
     }
 
     /**
+     * @param validation
+     */
+    public void saveValidation(Validation validation) {
+        ValidationKey key = new ValidationKey(validation.getRealm(), validation.getCode());
+        cm.saveEntity(GennyConstants.CACHE_NAME_VALIDATION, key, validation);
+    }
+
+    /**
+     * @param dataType
+     */
+    public void saveDataType(DataType dataType) {
+        DataTypeKey key = new DataTypeKey(dataType.getRealm(), dataType.getDttCode());
+        cm.saveEntity(GennyConstants.CACHE_NAME_DATATYPE, key, dataType);
+    }
+
+    /**
      * @param attribute
      */
     public void saveAttribute(Attribute attribute) {
         AttributeKey key = new AttributeKey(attribute.getRealm(), attribute.getCode());
         cm.saveEntity(GennyConstants.CACHE_NAME_ATTRIBUTE, key, attribute);
-    }/**
+    }
+
+	/**
      * Fetch all attributes for a product.
      *
      * @return Collection of all attributes in the system across all products
