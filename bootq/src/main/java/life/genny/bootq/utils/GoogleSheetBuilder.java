@@ -113,8 +113,6 @@ public class GoogleSheetBuilder {
 			// create new validation if not found
 			validation = new Validation();
 			validation.setCode(code);
-			Long id = cm.getMaxValidationId();
-			validation.setId(id+1);
 		}
 
 		String name = row.get("name");
