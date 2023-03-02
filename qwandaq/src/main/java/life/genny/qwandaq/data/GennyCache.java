@@ -2,6 +2,7 @@ package life.genny.qwandaq.data;
 
 import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import life.genny.qwandaq.serialization.attribute.AttributeInitializerImpl;
 import life.genny.qwandaq.serialization.attribute.AttributeKeyInitializerImpl;
@@ -20,6 +21,8 @@ import life.genny.qwandaq.serialization.userstore.UserStoreInitializerImpl;
 import life.genny.qwandaq.serialization.userstore.UserStoreKeyInitializerImpl;
 import life.genny.qwandaq.serialization.validation.ValidationInitializerImpl;
 import life.genny.qwandaq.serialization.validation.ValidationKeyInitializerImpl;
+import life.genny.qwandaq.utils.CommonUtils;
+
 import org.infinispan.client.hotrod.DefaultTemplate;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
@@ -237,7 +240,7 @@ public class GennyCache {
 	 * @param cacheName The cache to get from
 	 * @param key       The key to put the entity under
 	 * @param value     The entity
-	 * @return The Entity
+	 * @return <b>true</b> if value was persisted successfully or value passed was null, <b>false</b>
 	 */
 	public boolean putEntityIntoCache(String cacheName, CoreEntityKey key, CoreEntityPersistable value) {
 		if (remoteCacheManager == null) {
@@ -247,18 +250,21 @@ public class GennyCache {
 		if (cache == null) {
 			throw new NullPointerException("Cache not found: " + cacheName);
 		}
+		if(value == null) {
+			log.warn("[" + cacheName + "]: Value for " + key.getKeyString() + " is null, nothing to be added.");
+			return true;
+		}
+
 		try {
-			if(value != null) {
-				cache.put(key, value);
-			} else {
-				log.warn("[" + cacheName + "]: Value for " + key.getKeyString() + " is null, nothing to be added.");
-			}
+			cache.put(key, value);
 		} catch (Exception e) {
-			log.error("Exception when inserting entity into cache: " + e.getMessage());
-			log.error(e.getStackTrace());
-			e.printStackTrace();
+			log.error(ANSIColour.RED + "Exception when inserting entity (key=" + key.getKeyString() + ") into cache: " + cacheName);
+			log.error("Value: " + (value != null ? value.toString() : "null"));
+			log.error(e.getMessage());
+			CommonUtils.printCollection(e.getStackTrace(), log::error, (stack) -> ANSIColour.RED + stack.toString() + ANSIColour.RESET);
 			return false;
 		}
+		
 		return true;
 	}
 

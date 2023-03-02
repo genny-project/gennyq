@@ -1,3 +1,3 @@
 #!/bin/bash
-jps -l | grep fyodor | cut -d" " -f1 | xargs kill -9
+jps -l | grep bootq | cut -d" " -f1 | xargs kill -9
 

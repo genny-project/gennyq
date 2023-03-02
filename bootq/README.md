@@ -1,10 +1,5 @@
-# fyodor
+# bootq
 
-A Genny search service interested in "The Search For Truth".
+A Genny boot importer
 
 
-## Contents
-
-- `search_events` consumer
-- Search API Endpoint
-- Generic Database Search Class

@@ -252,20 +252,6 @@ public class CacheManager {
 	}
 
 	/**
-	 * Get the max validation id.
-	 *
-	 * @return the max id
-	 */
-	public Long getMaxValidationId() {
-		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_VALIDATION));
-		Query<Validation> query = queryFactory
-				.create("from life.genny.qwandaq.persistence.validation.Validation order by id desc");
-		QueryResult<Validation> queryResult = query.maxResults(1).execute();
-
-		return queryResult.list().get(0).getId();
-	}
-
-	/**
 	 * Get the max attribute id.
 	 *
 	 * @return the max id
@@ -275,8 +261,17 @@ public class CacheManager {
 		Query<Attribute> query = queryFactory
 				.create("from life.genny.qwandaq.persistence.attribute.Attribute order by id desc");
 		QueryResult<Attribute> queryResult = query.maxResults(1).execute();
+		
+		List<Attribute> attributes = queryResult.list();
+		if(attributes.isEmpty())
+			return 0L;
+		
+		Attribute attribute = queryResult.list().get(0);
+		if (attribute != null) {
+			return attribute.getId();
+		}
 
-		return queryResult.list().get(0).getId();
+		return 0L;
 	}
 
 	/**
@@ -289,8 +284,15 @@ public class CacheManager {
 		Query<BaseEntity> query = queryFactory
 				.create("from life.genny.qwandaq.persistence.baseentity.BaseEntity order by id desc");
 		QueryResult<BaseEntity> queryResult = query.maxResults(1).execute();
-
-		return queryResult.list().get(0).getId();
+		List<BaseEntity> baseEntities = queryResult.list();
+		if(baseEntities.isEmpty())
+			return 0L;
+		
+		BaseEntity baseEntity = baseEntities.get(0);
+		if (baseEntity != null) {
+			return baseEntity.getId();
+		}
+		return 0L;
 	}
 
     /**

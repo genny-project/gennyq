@@ -4,12 +4,20 @@ import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
 
 import life.genny.bootq.models.BatchLoading;
+<<<<<<< HEAD
 import life.genny.bootq.sheets.realm.Realm;
 import life.genny.bootq.sheets.realm.RealmUnit;
 import life.genny.qwandaq.models.UserToken;
+=======
+import life.genny.bootq.sheets.Realm;
+import life.genny.bootq.sheets.RealmUnit;
+import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.CommonUtils;
+>>>>>>> bootq
 import life.genny.serviceq.Service;
 
 import java.util.List;
+
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.transaction.Transactional;
@@ -21,6 +29,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.jboss.logging.Logger;
 
@@ -32,14 +41,14 @@ public class Endpoints {
     @ConfigProperty(name = "quarkus.application.version")
     String version;
 
-    @Inject
-    UserToken userToken;
-
 	@Inject
     Logger log;
 
 	@Inject
 	Service service;
+
+    @Inject
+    UserToken userToken;
 
 	@Inject
 	BatchLoading bl;
@@ -77,9 +86,9 @@ public class Endpoints {
     @Produces(MediaType.TEXT_PLAIN)
     @Transactional
     public Response loadSheetsUsingDefaultSheetId() {
-        String defaultSheetId = System.getenv("GOOGLE_HOSTING_SHEET_ID");
+        String defaultSheetId = CommonUtils.getSystemEnv("GOOGLE_HOSTING_SHEET_ID", false);
         if (defaultSheetId != null) {
-            return Response.ok().entity(loadSheetsById(defaultSheetId)).build();
+            return loadSheetsById(defaultSheetId);
         } else {
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity("Can't find default google sheetId, please set environment variable GOOGLE_HOSTING_SHEET_ID, or call /loadsheets/{sheetid}")
@@ -149,8 +158,8 @@ public class Endpoints {
                     .build();
         }
 
-        if (sheetId == null) {
-            msg = "Can't find env GOOGLE_SHEETS_ID!!!";
+        if (StringUtils.isBlank(sheetId)) {
+            msg = "Sheet Id not supplied as path param!";
             log.error(msg);
             return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
         }

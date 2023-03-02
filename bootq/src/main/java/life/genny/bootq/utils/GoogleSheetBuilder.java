@@ -67,6 +67,12 @@ public class GoogleSheetBuilder {
 
     public GoogleSheetBuilder() { }
 
+    /**
+	 * Convert a String to a Boolean
+	 *
+     * @param booleanString
+     * @return Boolean or null.
+     */
     public static Boolean toBoolean(final String booleanString) {
         if (StringUtils.isBlank(booleanString)) {
             return null;
@@ -74,6 +80,12 @@ public class GoogleSheetBuilder {
         return "TRUE".equalsIgnoreCase(booleanString);
     }
 
+    /**
+	 * Convert a String to a Double
+	 *
+     * @param doubleString
+     * @return Double or null.
+     */
     public static Double toDouble(final String doubleString) {
         if (StringUtils.isBlank(doubleString)) {
             return null;
@@ -81,6 +93,12 @@ public class GoogleSheetBuilder {
         return Double.parseDouble(doubleString);
     }
 
+    /**
+	 * Convert a String to a Integer
+	 *
+     * @param intString
+     * @return Integer or null.
+     */
     public static Integer toInt(final String intString) {
         if (StringUtils.isBlank(intString)) {
 			return null;
@@ -88,6 +106,12 @@ public class GoogleSheetBuilder {
         return Integer.valueOf(intString);
 	}
 
+    /**
+	 * Convert a String to a Long
+	 *
+     * @param longString
+     * @return Double or null.
+     */
     public static Long toLong(final String longString) {
         if (StringUtils.isBlank(longString)) {
 			return null;
@@ -112,8 +136,6 @@ public class GoogleSheetBuilder {
 			// create new validation if not found
 			validation = new Validation();
 			validation.setCode(code);
-			Long id = cm.getMaxValidationId();
-			validation.setId(id+1);
 		}
 
 		String name = row.get("name");
@@ -135,7 +157,7 @@ public class GoogleSheetBuilder {
     /**
 	 * Build a DataType object from a row.
 	 *
-     * @param row THe row from the sheets
+     * @param row The row from the sheets
      * @param realmName The realm
      * @return A DataType object
      */
@@ -161,7 +183,7 @@ public class GoogleSheetBuilder {
     /**
 	 * Build a Attribute object from a row.
 	 *
-     * @param row THe row from the sheets
+     * @param row The row from the sheets
      * @param realmName The realm
      * @return An Attribute object
      */
@@ -170,15 +192,20 @@ public class GoogleSheetBuilder {
         String code = row.get("code");
         String name = row.get("name");
 
-		Attribute attribute = attributeUtils.getAttribute(realmName, code, false);
-		// create new attribute if not found
-		if (attribute == null) {
+		Attribute attribute;
+		try {
+			attribute = attributeUtils.getAttribute(realmName, code, false);
+			log.debug("Found Attribute: " + attribute.getCode());
+		} catch(ItemNotFoundException e) {
+			log.trace("Creating new Attribute: " + code);
+			// create new attribute if not found
 			attribute = new Attribute();
 			attribute.setCode(code);
 			attribute.setName(name);
 			Long id = cm.getMaxAttributeId();
 			attribute.setId(id+1);
 		}
+		
 		attribute.setDttCode(row.get("datatype"));
         attribute.setDefaultPrivacyFlag(toBoolean(row.get("privacy")));
         attribute.setDescription(row.get("description"));
@@ -238,14 +265,10 @@ public class GoogleSheetBuilder {
 
 		EntityAttribute entityAttribute = new EntityAttribute();
 		String baseEntityCode = row.get("baseentitycode");
-        BaseEntity baseEntity = beUtils.getBaseEntity(realmName, baseEntityCode, false);
-		if (baseEntity == null) {
-			log.error("BaseEntity " + baseEntityCode + " does NOT exist!");
-		}
+
+		// No need to NPE check here. Both methods throw ItemNotFound
+		BaseEntity baseEntity = beUtils.getBaseEntity(realmName, baseEntityCode, false);
 		Attribute attribute = attributeUtils.getAttribute(realmName, attributeCode, false);
-		if (attribute == null) {
-			log.error("Attribute " + attributeCode + " does NOT exist!");
-		}
 
 		entityAttribute.setBaseEntityCode(baseEntityCode);
 		entityAttribute.setBaseEntityId(baseEntity.getId());

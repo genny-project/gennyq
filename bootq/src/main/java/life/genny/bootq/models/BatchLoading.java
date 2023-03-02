@@ -67,7 +67,7 @@ public class BatchLoading {
         persistAttributes(rx.getAttributes(), rx.getCode());
         persistDefBaseEntitys(rx.getDef_baseEntitys(), rx.getCode());
         persistBaseEntitys(rx.getBaseEntitys(), rx.getCode());
-        // persistDefBaseEntityAttributes(rx.getDef_entityAttributes(), rx.getCode());
+        persistDefBaseEntityAttributes(rx.getDef_entityAttributes(), rx.getCode());
         persistBaseEntityAttributes(rx.getEntityAttributes(), rx.getCode());
         persistQuestions(rx.getQuestions(), rx.getCode());
         persistQuestionQuestions(rx.getQuestionQuestions(), rx.getCode());
@@ -159,12 +159,8 @@ public class BatchLoading {
     public void persistAttributes(Map<String, Map<String, String>> project, String realmName) {
         Instant start = Instant.now();
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
-			try {
-				Attribute attribute = googleSheetBuilder.buildAttribute(entry.getValue(), realmName);
-				attributeUtils.saveAttribute(attribute);
-			} catch (ItemNotFoundException e) {
-				log.warn(e.getMessage());
-			}
+            Attribute attribute = googleSheetBuilder.buildAttribute(entry.getValue(), realmName);
+            attributeUtils.saveAttribute(attribute);
         }
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
@@ -271,8 +267,10 @@ public class BatchLoading {
 			try {
 				EntityAttribute entityAttribute = googleSheetBuilder.buildEntityAttribute(entry.getValue(), realmName);
 				beaUtils.updateEntityAttribute(entityAttribute);
-			} catch (ItemNotFoundException e) {
-				log.warn(e.getMessage());
+			} catch (ItemNotFoundException e) { // ensure to print beCode and eaCode
+				log.error(new StringBuilder("Error occurred when building ")
+                    .append(entry.getValue().get("baseentitycode")).append(":").append(entry.getValue().get("attributecode"))
+                    .append(" - ").append(e.getMessage()).toString());
 			}
         }
         Instant end = Instant.now();
