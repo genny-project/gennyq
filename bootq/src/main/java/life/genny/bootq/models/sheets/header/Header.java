@@ -1,5 +1,8 @@
 package life.genny.bootq.models.sheets.header;
 
+/** Package private class containing constant of header values 
+ * Prepended with HD_ to avoid name conflicts when in use with {@link ESheetHeader}
+*/
 class Header {
     public static final String HD_TARGET_CODE = "targetCode";
     public static final String HD_CODE = "code";
@@ -11,7 +14,6 @@ class Header {
     public static final String HD_QUESTION_CODE = "question_code";
     public static final String HD_CAP_REQS = "capreqs";
 
-    //clientSecret	keycloakUrl	disable	skipGoogleDoc	ENV_SECURITY_KEY	ENV_SERVICE_PASSWORD	prjGitUrl	CLIENT_BACKEND_KEYCLOAK_SECRET
     public static final String HD_NAME = "name";
     public static final String HD_SHEET_ID = "sheetID";
     public static final String HD_INGRESS_LIST = "ingressList";
@@ -28,6 +30,8 @@ class Header {
     public static final String HD_PRJ_GIT_URL = "prjGitUrl";
 
     public static final String HD_CLIENT_BACKEND_KEYCLOAK_SECRET = "CLIENT_BACKEND_KEYCLOAK_SECRET";
+
+    public static final String HD_MODULE = "module";
 
 
     private Header() { /* constants class */}

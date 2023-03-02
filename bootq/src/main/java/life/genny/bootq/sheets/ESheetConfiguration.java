@@ -22,7 +22,8 @@ public enum ESheetConfiguration {
     ENTITY_ATTRIBUTE("EntityAttribute", ESheetHeader.CODE_BA),
     DEF_BASE_ENTITY("DEF_BaseEntity"),
     DEF_ENTITY_ATTRIBUTE("DEF_EntityAttribute", ESheetHeader.CODE_BA),
-    PROJECTS("Projects", ESheetHeader.PROJECTS);
+    PROJECTS("Projects", ESheetHeader.PROJECTS),
+    MODULES("Modules", ESheetHeader.MODULES);
 
     private ESheetConfiguration(String title) {
         this(title, ESheetHeader.CODE);
