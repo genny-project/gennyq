@@ -4,16 +4,10 @@ import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
 
 import life.genny.bootq.models.BatchLoading;
-<<<<<<< HEAD
 import life.genny.bootq.sheets.realm.Realm;
 import life.genny.bootq.sheets.realm.RealmUnit;
 import life.genny.qwandaq.models.UserToken;
-=======
-import life.genny.bootq.sheets.Realm;
-import life.genny.bootq.sheets.RealmUnit;
-import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.CommonUtils;
->>>>>>> bootq
 import life.genny.serviceq.Service;
 
 import java.util.List;
