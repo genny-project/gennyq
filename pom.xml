@@ -140,7 +140,6 @@
 				<module>dropkick</module>
 				<module>lauchy</module>
 				<module>messages</module>
-				<module>shleemy</module>
 				<module>bootq</module>
 			</modules>
 		</profile>
@@ -168,7 +167,6 @@
 				<module>dropkick</module>
 				<module>lauchy</module>
 				<module>messages</module>
-				<module>shleemy</module>
 			</modules>
 		</profile>
 		<profile>
