@@ -133,7 +133,8 @@ public class XlsxImport {
             String join = row.keySet().stream()
                     .filter(sheetHeaders::contains).map(row::get).collect(Collectors.joining());
             
-            log.info("Adding " + join + " to k (whatever this map is)");
+            // TODO: Consider Removing the first Key of this Key/Key/Value map
+            log.trace("Adding " + join + " to k (whatever this map is)");
             k.put(join, row);
         }
         return k;
