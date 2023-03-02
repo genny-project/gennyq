@@ -270,8 +270,10 @@ public class BatchLoading {
 			try {
 				EntityAttribute entityAttribute = googleSheetBuilder.buildEntityAttribute(entry.getValue(), realmName);
 				beaUtils.updateEntityAttribute(entityAttribute);
-			} catch (ItemNotFoundException e) {
-				log.warn(e.getMessage());
+			} catch (ItemNotFoundException e) { // ensure to print beCode and eaCode
+				log.error(new StringBuilder("Error occurred when building ")
+                    .append(entry.getValue().get("baseentitycode")).append(":").append(entry.getValue().get("attributeCode"))
+                    .append(" - ").append(e.getMessage()).toString());
 			}
         }
         Instant end = Instant.now();

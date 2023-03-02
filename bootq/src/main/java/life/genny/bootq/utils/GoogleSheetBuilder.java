@@ -241,14 +241,10 @@ public class GoogleSheetBuilder {
 
 		EntityAttribute entityAttribute = new EntityAttribute();
 		String baseEntityCode = row.get("baseentitycode");
-        BaseEntity baseEntity = beUtils.getBaseEntity(realmName, baseEntityCode, false);
-		if (baseEntity == null) {
-			log.error("BaseEntity " + baseEntityCode + " does NOT exist!");
-		}
+
+		// No need to NPE check here. Both methods throw ItemNotFound
+		BaseEntity baseEntity = beUtils.getBaseEntity(realmName, baseEntityCode, false);
 		Attribute attribute = attributeUtils.getAttribute(realmName, attributeCode, false);
-		if (attribute == null) {
-			log.error("Attribute " + attributeCode + " does NOT exist!");
-		}
 
 		entityAttribute.setBaseEntityCode(baseEntityCode);
 		entityAttribute.setBaseEntityId(baseEntity.getId());
