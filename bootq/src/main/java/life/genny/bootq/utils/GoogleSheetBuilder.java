@@ -92,9 +92,11 @@ public class GoogleSheetBuilder {
     public Validation buildValidation(Map<String, String> row, String realmName) {
 
 		String code = row.get("code");
-		Validation validation = attributeUtils.getValidation(realmName, code);
-		// create new validation if not found
-		if (validation == null) {
+		Validation validation;
+		try {
+			validation = attributeUtils.getValidation(realmName, code);
+		} catch (ItemNotFoundException e) {
+			// create new validation if not found
 			validation = new Validation();
 			validation.setCode(code);
 			Long id = cm.getMaxValidationId();

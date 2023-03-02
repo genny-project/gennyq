@@ -122,12 +122,8 @@ public class BatchLoading {
 
         Instant start = Instant.now();
         for (Map<String, String> row : project.values()) {
-			try {
-				Validation validation = googleSheetBuilder.buildValidation(row, realmName);
-				attributeUtils.saveValidation(validation);
-			} catch (ItemNotFoundException e) {
-				log.warn(e.getMessage());
-			}
+			Validation validation = googleSheetBuilder.buildValidation(row, realmName);
+			attributeUtils.saveValidation(validation);
         }
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
