@@ -1,7 +1,7 @@
 #!/bin/bash
 PROJECT_VERSION=$(cd ../ && mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 project=`echo "${PWD##*/}" | tr '[:upper:]' '[:lower:]'`
-project=fyodor
+project=bootq
 file="src/main/resources/${project}-git.properties"
 org=gennyproject
 function prop() {

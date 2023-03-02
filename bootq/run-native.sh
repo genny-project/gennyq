@@ -15,4 +15,4 @@ export GENNY_KEYCLOAK_URL=${GENNY_KEYCLOAK_URL:https://keycloak.gada.io/auth}
 export GENNY_API_URL=http://internmatch.genny.life:8280
 export GENNY_SHOW_VALUES=TRUE; 
 
-./target/fyodor-9.10.0-runner
+./target/bootq-9.10.0-runner
