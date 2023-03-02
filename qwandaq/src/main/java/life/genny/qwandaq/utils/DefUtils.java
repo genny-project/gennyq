@@ -199,13 +199,15 @@ public class DefUtils {
 		// just make use of the faster attribute lookup
 		EntityAttribute ea = beaUtils.getEntityAttribute(definition.getRealm(), definition.getCode(), Prefix.ATT_ + attributeCode);
 		if (ea != null) {
-			List<String> parentCodes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(definition, Attribute.LNK_INCLUDE);
-			if (parentCodes != null) {
-				for (String code : parentCodes) {
-					Definition parent = beUtils.getDefinition(code, false);
-					if (answerValidForDEF(parent, answer)) {
-						return true;
-					}
+			return true;
+		}
+		// if not found, we can check in the parent defs
+		List<String> parentCodes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(definition, Attribute.LNK_INCLUDE);
+		if (parentCodes != null) {
+			for (String code : parentCodes) {
+				Definition parent = beUtils.getDefinition(code, false);
+				if (answerValidForDEF(parent, answer)) {
+					return true;
 				}
 			}
 		}
