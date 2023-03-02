@@ -291,8 +291,6 @@ public class GoogleSheetBuilder {
 		if (question == null) {
 			question = new Question();
 			question.setCode(code);
-			Long id = cm.getMaxQuestionId();
-			question.setId(id+1);
 		}
         String attributeCode = row.get("attributecode");
 

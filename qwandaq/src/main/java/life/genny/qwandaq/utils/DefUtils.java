@@ -197,12 +197,22 @@ public class DefUtils {
 		}
 
 		// just make use of the faster attribute lookup
-		if (!definition.containsEntityAttribute(Prefix.ATT_ + attributeCode)) {
-			log.error(ANSIColour.RED + "Invalid attribute " + attributeCode + " for " + answer.getTargetCode()
-					+ " with def= " + definition.getCode() + ANSIColour.RESET);
-			return false;
+		EntityAttribute ea = beaUtils.getEntityAttribute(definition.getRealm(), definition.getCode(), Prefix.ATT_ + attributeCode);
+		if (ea != null) {
+			List<String> parentCodes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(definition, Attribute.LNK_INCLUDE);
+			if (parentCodes != null) {
+				for (String code : parentCodes) {
+					Definition parent = beUtils.getDefinition(code, false);
+					if (answerValidForDEF(parent, answer)) {
+						return true;
+					}
+				}
+			}
 		}
-		return true;
+		log.error(ANSIColour.RED + "Invalid attribute " + attributeCode + " for " + answer.getTargetCode()
+				+ " with def= " + definition.getCode() + ANSIColour.RESET);
+			
+		return false;
 	}
 
 	/**
