@@ -152,6 +152,7 @@ public class GoogleSheetBuilder {
 		dataType.setClassName(row.get("classname"));
 		dataType.setInputmask(row.get("inputmask"));
 		dataType.setComponent(row.get("component"));
+		dataType.setTypeName(row.get("name"));
 		dataType.setValidationCodes(row.get("validations"));
 		dataType.setRealm(realmName);
 		return dataType;
