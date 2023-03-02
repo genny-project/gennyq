@@ -77,7 +77,7 @@ public class GoogleSheetBuilder {
         if (StringUtils.isBlank(booleanString)) {
             return null;
         }
-        return "TRUE".equalsIgnoreCase(booleanString.toUpperCase());
+        return "TRUE".equalsIgnoreCase(booleanString);
     }
 
     /**

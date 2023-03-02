@@ -1,6 +1,5 @@
 package life.genny.qwandaq.utils;
 
-import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.constants.Prefix;
@@ -26,11 +25,16 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-import java.lang.invoke.MethodHandles;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.util.*;
+
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
 import static life.genny.qwandaq.attribute.Attribute.*;
 
@@ -46,7 +50,8 @@ public class BaseEntityUtils {
 
 	Jsonb jsonb = JsonbBuilder.create();
 
-	private static Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
+	@Inject
+	Logger log;
 
 	@Inject
 	ServiceToken serviceToken;
@@ -102,30 +107,35 @@ public class BaseEntityUtils {
 	 * Get a Definition using a code, but throw an
 	 * ItemNotFoundException if the entity does not exist.
 	 * 
-	 * @param code
-	 * @return
+	 * @param code the code of the {@link Definition} BaseEntity
+	 * @return a Definition with all entity attributes based on the base entity found with the code
+	 * 
+	 * @throws {@link ItemNotFoundException} if entity linked to code is not persisted/cannot be found
 	 */
 	public Definition getDefinition(String code) {
-		return Definition.from(getDefinition(code, true));
+		return getDefinition(code, true);
 	}
 
 	/**
-	 * Get a Definition using a code, but throw an
-	 * ItemNotFoundException if the entity does not exist.
+	 * Get a {@link Definition} using a code and optionally include all EntityAttributes
 	 * 
-	 * @param code
-	 * @return
+	 * @param code - the code of the Definition BaseEntity
+	 * @param bundleAttributes - whether or not to include all the BaseEntity's {@link EntityAttribute EntityAttributes}
+	 * @return a Definition with all entity attributes based on the base entity found with the code
+	 * 
+	 * @throws {@link ItemNotFoundException} if entity linked to the code is not persisted/cannot be found
 	 */
 	public Definition getDefinition(String code, boolean bundleAttributes) {
 		return Definition.from(getBaseEntity(code, bundleAttributes));
 	}
 
 	/**
-	 * Get a base entity using a code, but throw an
-	 * ItemNotFoundException if the entity does not exist.
+	 * Get a base entity using a code
 	 * 
 	 * @param code The code of the entity to fetch
-	 * @return The BaseEntity
+	 * @return The BaseEntity without its {@link EntityAttribute EntityAttributes}
+	 * 
+	 * @throws {@link ItemNotFoundException} if entity linked to the code is not persisted/cannot be found
 	 */
 	public BaseEntity getBaseEntity(String code) {
 		return getBaseEntity(userToken.getProductCode(), code); // watch out for no userToken
@@ -133,36 +143,40 @@ public class BaseEntityUtils {
 
 	
 	/**
-	 * Get a base entity using a code, but throw an
-	 * ItemNotFoundException if the entity does not exist.
+	 * Get a base entity using a code
 	 *
 	 * @param code The code of the entity to fetch
-	 * @return The BaseEntity
+	 * @param bundleAttributes whether or not to bundle the BaseEntity's {@link EntityAttribute EntityAttributes}
+	 * @return The BaseEntity with its EntityAttributes if bundleAttributes is <b>true</b>
+	 * 
+	 * @throws {@link ItemNotFoundException} if entity linked to the code is not persisted/cannot be found
 	 */
 	public BaseEntity getBaseEntity(String code, boolean bundleAttributes) {
 		return getBaseEntity(userToken.getProductCode(), code, bundleAttributes); // watch out for no userToken
 	}
 
 	/**
-	 * Get a base entity using a code, but throw an
-	 * ItemNotFoundException if the entitiy does not exist.
+	 * Get a base entity using a code,
 	 * 
 	 * @param productCode The product to search in
 	 * @param code        The code of the entity to fetch
-	 * @return The BaseEntity
+	 * @return The BaseEntity without its {@link EntityAttribute EntityAttributes}
+	 * 
+	 * @throws {@link ItemNotFoundException} if entity linked to the code is not persisted/cannot be found
 	 */
 	public BaseEntity getBaseEntity(String productCode, String code) {
 		return getBaseEntity(productCode, code, false);
 	}
 
 	/**
-	 * Get a base entity using a code, but throw an
-	 * ItemNotFoundException if the entitiy does not exist.
+	 * Get a base entity using a code from a specific product and optionally bundling its {@link EntityAttribute EntityAttributes}
 	 *
-	 * @param productCode
-	 * @param code
-	 * @param bundleAttributes
-	 * @return
+	 * @param productCode - the product the BaseEntity belongs to
+	 * @param code - The code of the base entity
+	 * @param bundleAttributes - whether or not to bundle the EntityAttributes
+	 * @return The BaseEntity with its EntityAttributes if bundleAttributes is <b>true</b>
+	 * 
+	 * @throws {@link ItemNotFoundException} if entity linked to the code is not persisted/cannot be found
 	 */
 	public BaseEntity getBaseEntity(String productCode, String code, boolean bundleAttributes) {
 		// fetch entity
@@ -187,21 +201,21 @@ public class BaseEntityUtils {
 	}
 
 	/**
-	 * Update a {@link BaseEntity} in the database and the cache.
+	 * Update a {@link BaseEntity} and all of its {@link EntityAttribute EntityAttributes} in the database and the cache.
 	 *
 	 * @param baseEntity  The BaseEntity to update
-	 * @return the newly cached BaseEntity
+	 * @return the newly cached BaseEntity and any linked EntityAttributes
 	 */
 	public BaseEntity updateBaseEntity(BaseEntity baseEntity) {
 		return updateBaseEntity(baseEntity, true);
 	}
 
 	/**
-	 * Update a {@link BaseEntity} in the database and the cache.
+	 * Update a {@link BaseEntity} and (optionally) its {@link EntityAttribute EntityAttributes} in the database and the cache.
 	 *
 	 * @param baseEntity The BaseEntity to update
 	 * @param updateBaseEntityAttributes  Defines whether the BaseEntityAttributes need to be updated
-	 * @return the newly cached BaseEntity
+	 * @return the newly cached BaseEntity and any linked EntityAttributes
 	 */
 	public BaseEntity updateBaseEntity(BaseEntity baseEntity, boolean updateBaseEntityAttributes) {
 		BaseEntityKey key = new BaseEntityKey(baseEntity.getRealm(), baseEntity.getCode());
@@ -526,8 +540,6 @@ public class BaseEntityUtils {
 				code = (prefix + "_" + UUID.randomUUID().toString().substring(0, 32)).toUpperCase();
 			}
 
-			if (StringUtils.isBlank(code))
-				code = prefix + "_" + UUID.randomUUID().toString().substring(0, 32).toUpperCase();
 			if (StringUtils.isBlank(name))
 				name = definition.getName();
 
