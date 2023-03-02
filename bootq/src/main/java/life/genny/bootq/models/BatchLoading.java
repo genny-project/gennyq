@@ -272,7 +272,7 @@ public class BatchLoading {
 				beaUtils.updateEntityAttribute(entityAttribute);
 			} catch (ItemNotFoundException e) { // ensure to print beCode and eaCode
 				log.error(new StringBuilder("Error occurred when building ")
-                    .append(entry.getValue().get("baseentitycode")).append(":").append(entry.getValue().get("attributeCode"))
+                    .append(entry.getValue().get("baseentitycode")).append(":").append(entry.getValue().get("attributecode"))
                     .append(" - ").append(e.getMessage()).toString());
 			}
         }
