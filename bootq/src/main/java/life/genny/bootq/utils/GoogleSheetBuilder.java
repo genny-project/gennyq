@@ -125,7 +125,7 @@ public class GoogleSheetBuilder {
 		validation.setErrormsg(error);
 		
 		// handle the group codes
-		String group_codes = row.get("group_codes");
+		String group_codes = row.get("groupcodes");
 		List<String> groups = StringUtils.isBlank(group_codes) ? new ArrayList<>() : Arrays.asList(group_codes.replaceAll(" ", "").split(","));
 		validation.setSelectionBaseEntityGroupList(groups);
 
@@ -184,7 +184,7 @@ public class GoogleSheetBuilder {
         attribute.setDescription(row.get("description"));
         attribute.setHelp(row.get("help"));
         attribute.setPlaceholder(row.get("placeholder"));
-        attribute.setDefaultValue(row.get("defaultValue"));
+        attribute.setDefaultValue(row.get("defaultvalue"));
         attribute.setIcon(row.get("icon"));
         attribute.setRealm(realmName);
         return attribute;
@@ -200,8 +200,10 @@ public class GoogleSheetBuilder {
     public BaseEntity buildBaseEntity(Map<String, String> row, String realmName) {
 
         String code = row.get("code");
-        BaseEntity baseEntity = beUtils.getBaseEntity(realmName, code, false);
-		if (baseEntity == null) {
+		BaseEntity baseEntity;
+		try {
+			baseEntity = beUtils.getBaseEntity(realmName, code, false);
+		} catch (ItemNotFoundException e) {
 			baseEntity = new BaseEntity();
 			baseEntity.setCode(code);
 			Long id = cm.getMaxBaseEntityId();

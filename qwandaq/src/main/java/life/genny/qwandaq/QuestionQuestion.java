@@ -23,6 +23,8 @@ public class QuestionQuestion implements CoreEntityPersistable, Comparable<Objec
 
 	private static final long serialVersionUID = 1L;
 
+	private Long parentId;
+
 	private String parentCode;
 
 	private String childCode;
@@ -164,6 +166,14 @@ public class QuestionQuestion implements CoreEntityPersistable, Comparable<Objec
 	 */
 	public QuestionQuestion(final Question source, final String targetCode, Double weight, boolean mandatory) {
 		this(source, targetCode, weight, mandatory, false);
+	}
+
+	public void setParentId(Long parentId) {
+		this.parentId = parentId;
+	}
+
+	public Long getParentId() {
+		return parentId;
 	}
 
 	public void setParentCode(String parentCode) {

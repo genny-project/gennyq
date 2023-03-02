@@ -68,7 +68,7 @@ public class BatchLoading {
         persistAttributes(rx.getAttributes(), rx.getCode());
         persistDefBaseEntitys(rx.getDef_baseEntitys(), rx.getCode());
         persistBaseEntitys(rx.getBaseEntitys(), rx.getCode());
-        persistDefBaseEntityAttributes(rx.getDef_entityAttributes(), rx.getCode());
+        // persistDefBaseEntityAttributes(rx.getDef_entityAttributes(), rx.getCode());
         persistBaseEntityAttributes(rx.getEntityAttributes(), rx.getCode());
         persistQuestions(rx.getQuestions(), rx.getCode());
         persistQuestionQuestions(rx.getQuestionQuestions(), rx.getCode());
@@ -210,7 +210,7 @@ public class BatchLoading {
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
 			try {
 				BaseEntity baseEntity = googleSheetBuilder.buildBaseEntity(entry.getValue(), realmName);
-				beUtils.updateBaseEntity(baseEntity);
+				beUtils.updateBaseEntity(baseEntity, false);
 			} catch (ItemNotFoundException e) {
 				log.warn(e.getMessage());
 			}
@@ -249,10 +249,14 @@ public class BatchLoading {
 				}
 				String[] codes = CommonUtils.cleanUpAttributeValue(valueString).split(",");
 				for (String code : codes) {
-                // 1. Fetch base entity pertaining to code
+					// 1. Fetch base entity pertaining to code
                     // a. Check Cache first
                     // b. if missing check sheets
+					// BaseEntity baseEntity = defMap.get(realm+":"+code);
                     // If missing report and continue
+					// if (baseEntity == null) {
+					// 	log.warn("No entity found for " + code);
+					// }
                 // 2. For each Entity Attribute in DEF_code
                     // 1. Fetch Attribute
                         // a. Check Cache first
