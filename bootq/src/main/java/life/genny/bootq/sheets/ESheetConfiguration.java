@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Set;
 
 import life.genny.bootq.models.sheets.header.ESheetHeader;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 
 /**
  * An enumerator containing essential static data for parsing data from the
@@ -58,11 +59,17 @@ public enum ESheetConfiguration {
     /**
      * Get a Valid {@link ESheetConfiguration SheetTitle} from a predefined 
      * set of sheet titles within {@link ESheetConfiguration}
-     * @param title
-     * @return
+     * @param title the title of the Sheet to target (within a google doc)
+     * @return a valid ESheetConfiguration
+     * 
+     * @throws {@link ItemNotFoundException} when there is not ESheetConfiguration for the specified title
      */
     public static ESheetConfiguration getByTitle(String title) {
-        return titleCacheMap.get(title);
+        ESheetConfiguration sheetConfig = titleCacheMap.get(title);
+        if(sheetConfig == null)
+            throw new ItemNotFoundException("ESheetConfiguration with title: " + title);
+
+        return sheetConfig;
     }
 
     public static boolean isValidTitle(String title) {
