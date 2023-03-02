@@ -299,8 +299,11 @@ public class BatchLoading {
                     .append(" - ").append(e.getMessage()).toString());
                 continue;
             }
-
-            beaUtils.updateEntityAttribute(entityAttribute);
+            
+            boolean success = beaUtils.updateEntityAttribute(entityAttribute);
+            if(!success) {
+                log.error("Error occured when persisting EntityAttribute: " + combined);
+            }
         }
 
         Instant end = Instant.now();
