@@ -53,7 +53,7 @@ public class AttributeMessageMarshaller implements MessageMarshaller<Attribute> 
 
 	// @Override
 	public void writeTo(ProtoStreamWriter writer, Attribute att) throws IOException {
-		// writer.writeLong("id", be.getId());
+		writer.writeLong("id", att.getId());
 		writer.writeString("code", att.getCode());
 		LocalDateTime created = att.getCreated();
 		Long createdLong = created != null ? created.toEpochSecond(ZoneOffset.UTC) * 1000 : null;
