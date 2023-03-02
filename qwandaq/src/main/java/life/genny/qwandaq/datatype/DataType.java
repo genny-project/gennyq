@@ -72,6 +72,8 @@ public class DataType implements CoreEntityPersistable {
 	public static final String DTT_LINK = "LNK_ATTRIBUTE"; // This datatype classname indicates the datatype belongs to
 															// the BaseEntity set with parent
 
+	public static final String DTT_EVENT = "DTT_EVENT";
+
 	@NotNull
 	@Size(max = 120)
 	private String realm;

@@ -352,7 +352,7 @@ public class Dispatch {
 		for (String name : buttonEvents.split(",")) {
 			String code = name.toUpperCase().replaceAll(" ", "_");
 			// create child and add to ask
-			Attribute attribute = qwandaUtils.createButtonEvent(code, name);
+			Attribute attribute = qwandaUtils.createButtonEvent(ask.getRealm(), code, name);
 			Question question = new Question(Prefix.QUE_ + code, name, attribute);
 			Ask child = new Ask(question, sourceCode, targetCode);
 			ask.add(child);

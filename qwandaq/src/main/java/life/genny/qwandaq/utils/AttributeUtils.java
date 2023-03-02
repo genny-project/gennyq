@@ -96,16 +96,12 @@ public class AttributeUtils {
         return attribute;
     }
 
-    public DataType getDataType(Attribute attribute, boolean bundleValidationList) {
-        if(attribute == null) {
-            throw new NullParameterException("attribute");
-        }
-
-        DataTypeKey key = new DataTypeKey(attribute.getRealm(), attribute.getDttCode());
+    public DataType getDataType(String productCode, String dataTypeCode, boolean bundleValidationList) {
+        DataTypeKey key = new DataTypeKey(productCode, dataTypeCode);
         DataType dataType = (DataType) cm.getPersistableEntity(GennyConstants.CACHE_NAME_DATATYPE, key);
 
         if(dataType == null) {
-            throw new ItemNotFoundException("DataType attached to Attribute: " + attribute.getCode() + ". DataType Code: " + attribute.getDttCode());
+            throw new ItemNotFoundException("[" +  productCode + "] DataType not in DataType cache: " + dataTypeCode);
         }
 
         if (bundleValidationList) {
@@ -113,6 +109,14 @@ public class AttributeUtils {
             dataType.setValidationList(validationList);
         }
         return dataType;
+    }
+
+    public DataType getDataType(Attribute attribute, boolean bundleValidationList) {
+        if(attribute == null) {
+            throw new NullParameterException("attribute");
+        }
+        
+        return getDataType(attribute.getRealm(), attribute.getDttCode(), bundleValidationList);
     }
 
     public List<Validation> getValidationList(DataType dataType) {

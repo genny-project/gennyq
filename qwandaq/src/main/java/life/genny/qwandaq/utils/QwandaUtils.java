@@ -246,11 +246,11 @@ public class QwandaUtils {
 	 * @param name
 	 * @return
 	 */
-	public Attribute createButtonEvent(String code, final String name) {
+	public Attribute createButtonEvent(String productCode, String code, final String name) {
 		if (!code.startsWith(Prefix.EVT_))
 			code = Prefix.EVT_.concat(code);
 		code = code.toUpperCase();
-		DataType DTT_EVENT = attributeUtils.getAttribute(userToken.getProductCode(), Attribute.EVT_SUBMIT, true).getDataType();
+		DataType DTT_EVENT = attributeUtils.getDataType(productCode, DataType.DTT_EVENT, true);
 		return new Attribute(code, name.concat(" Event"), DTT_EVENT);
 	}
 
