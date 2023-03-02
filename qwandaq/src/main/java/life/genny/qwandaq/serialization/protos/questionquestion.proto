@@ -19,4 +19,5 @@ message QuestionQuestion {
   optional double weight = 16;
   optional int64 source_id = 17;
   optional string capreqs = 18;
+  optional string capreqs = 19;
 }

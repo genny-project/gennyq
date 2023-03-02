@@ -252,7 +252,35 @@ public class CacheManager {
 	}
 
 	/**
-	 * Get the max entity  id.
+	 * Get the max validation id.
+	 *
+	 * @return the max id
+	 */
+	public Long getMaxValidationId() {
+		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_VALIDATION));
+		Query<Validation> query = queryFactory
+				.create("from life.genny.qwandaq.persistence.validation.Validation order by id desc");
+		QueryResult<Validation> queryResult = query.maxResults(1).execute();
+
+		return queryResult.list().get(0).getId();
+	}
+
+	/**
+	 * Get the max attribute id.
+	 *
+	 * @return the max id
+	 */
+	public Long getMaxAttributeId() {
+		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_ATTRIBUTE));
+		Query<Attribute> query = queryFactory
+				.create("from life.genny.qwandaq.persistence.attribute.Attribute order by id desc");
+		QueryResult<Attribute> queryResult = query.maxResults(1).execute();
+
+		return queryResult.list().get(0).getId();
+	}
+
+	/**
+	 * Get the max entity id.
 	 *
 	 * @return the max id
 	 */
@@ -261,6 +289,20 @@ public class CacheManager {
 		Query<BaseEntity> query = queryFactory
 				.create("from life.genny.qwandaq.persistence.baseentity.BaseEntity order by id desc");
 		QueryResult<BaseEntity> queryResult = query.maxResults(1).execute();
+
+		return queryResult.list().get(0).getId();
+	}
+
+	/**
+	 * Get the max entity id.
+	 *
+	 * @return the max id
+	 */
+	public Long getMaxQuestionId() {
+		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_QUESTION));
+		Query<Question> query = queryFactory
+				.create("from life.genny.qwandaq.persistence.question.Question order by id desc");
+		QueryResult<Question> queryResult = query.maxResults(1).execute();
 
 		return queryResult.list().get(0).getId();
 	}
@@ -543,6 +585,14 @@ public class CacheManager {
 			EntityAttributeKey beak = new EntityAttributeKey(baseEntityAttribute.getRealm(), baseEntityAttribute.getBaseEntityCode(), baseEntityAttribute.getAttributeCode());
 			cache.putEntityIntoCache(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, beak, baseEntityAttribute);
 		});
+	}
+
+	public Long getEntityLastUpdatedAt(String entityName) {
+		return cache.getEntityLastUpdatedAt(entityName);
+	}
+
+	public void updateEntityLastUpdatedAt(String entityName, Long updatedTime) {
+		cache.updateEntityLastUpdatedAt(entityName, updatedTime);
 	}
 }
 

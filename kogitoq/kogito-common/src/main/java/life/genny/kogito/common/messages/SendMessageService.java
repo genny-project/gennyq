@@ -1,7 +1,6 @@
 package life.genny.kogito.common.messages;
 
 import static life.genny.qwandaq.attribute.Attribute.LNK_MESSAGE_TYPE;
-import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import static life.genny.qwandaq.entity.BaseEntity.PRI_NAME;
 import life.genny.qwandaq.message.QBaseMSGMessageType;
@@ -81,6 +80,17 @@ public class SendMessageService {
 		}
 	}
 
+	public void send(String templateCode, String recipientBECode, String entityCode, Map<String, String> ctxMap){
+		BaseEntity baseEntity = baseEntityUtils.getBaseEntity(templateCode);
+		if(baseEntity != null){
+			String msgType = baseEntityUtils.getBaseEntityFromLinkAttribute(baseEntity, LNK_MESSAGE_TYPE).getValue(PRI_NAME, null);
+			log.info("Triggering message!");
+			sendMessage(templateCode,recipientBECode,entityCode, msgType, ctxMap);
+		}else{
+			log.error("Message templateCode not found!");
+		}
+	}
+
 	/**
 	 * Send a toast message and cannot use message type as a parameter via kogito
 	 *
@@ -92,7 +102,10 @@ public class SendMessageService {
 	 */
 	public void sendMessage(String templateCode,String recipientBECode,String entityCode,String msgType) {
 		Map<String, String> ctxMap = new HashMap<>();
+		sendMessage(templateCode, recipientBECode, entityCode, msgType, ctxMap);
+	}
 
+	public void sendMessage(String templateCode,String recipientBECode,String entityCode,String msgType, Map<String, String> ctxMap) {
 		if(msgType.contains(QBaseMSGMessageType.TOAST.name())) {
 			ctxMap.put(SOURCE,recipientBECode);
 			ctxMap.put(TARGET,entityCode);

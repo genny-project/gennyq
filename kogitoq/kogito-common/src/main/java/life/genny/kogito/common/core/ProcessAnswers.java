@@ -95,10 +95,7 @@ public class ProcessAnswers {
 	/**
 	 * Check that uniqueness of BE (if required) is satisifed .
 	 *
-	 * @param processBE.        The target BE containing the answer data
-	 * @param defCode.          The baseentity type code of the processBE
-	 * @param acceptSubmission. This is modified to reflect whether the submission
-	 *                          is valid or not.
+	 * @param processData        The target BE containing the answer data
 	 * @return Boolean representing whether uniqueness is satisifed
 	 */
 	public Boolean checkUniqueness(ProcessData processData) {
@@ -150,13 +147,11 @@ public class ProcessAnswers {
 	/**
 	 * Save all answers gathered in the processBE.
 	 * 
-	 * @param targetCode    The target of the answers
-	 * @param processBEJson The process entity that is storing the answer data
+	 * @param processData The process entity that is storing the answer data
 	 */
 	public void saveAllAnswers(ProcessData processData) {
 		// save answers
 		String targetCode = processData.getTargetCode();
-		processData.getAnswers().forEach(a -> a.setTargetCode(targetCode));
 		processData.getAnswers().forEach(a -> a.setTargetCode(targetCode));
 		BaseEntity target = beUtils.getBaseEntity(targetCode);
 		// iterate our stored process updates and create an answer
@@ -175,13 +170,13 @@ public class ProcessAnswers {
 			}
 
 			// update the baseentity
-			target.addAttribute(new EntityAttribute(target, attribute, 1.0, answer.getValue()));
-			String value = target.getValueAsString(answer.getAttributeCode());
-			log.debug("Value Saved -> " + answer.getAttributeCode() + " = " + value);
+			EntityAttribute entityAttribute = new EntityAttribute(target, attribute, 1.0, answer.getValue());
+			target.addAttribute(entityAttribute);
+			beaUtils.updateEntityAttribute(entityAttribute);
 		}
 
 		// save these answrs to db and cache
-		beUtils.updateBaseEntity(target);
+		beUtils.updateBaseEntity(target, false);
 		log.info("Saved answers for target " + targetCode);
 
 		QDataBaseEntityMessage msg = new QDataBaseEntityMessage(target);
