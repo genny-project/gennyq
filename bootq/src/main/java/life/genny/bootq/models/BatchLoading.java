@@ -225,6 +225,12 @@ public class BatchLoading {
 		DataType dttBoolean = attributeUtils.getDataType(realmName, "DTT_BOOLEAN", false);
 		DataType dttText = attributeUtils.getDataType(realmName, "DTT_TEXT", false);
 
+        // above methods have a chance of returning null
+        if(dttBoolean == null)
+            throw new ItemNotFoundException("Missing DTT_BOOLEAN in " + realmName + " when persisting DEF_BaseEntityAttributes");
+        if(dttText == null)
+            throw new ItemNotFoundException("Missing DTT_TEXT in " + realmName + " when persisting DEF_BaseEntityAttributes");
+
 		Map<String, DataType> dttPrefixMap = Map.of(
 			Prefix.ATT_, dttBoolean,
 			Prefix.SER_, dttText,
