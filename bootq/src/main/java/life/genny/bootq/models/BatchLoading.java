@@ -162,12 +162,8 @@ public class BatchLoading {
     public void persistAttributes(Map<String, Map<String, String>> project, String realmName) {
         Instant start = Instant.now();
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
-			try {
-				Attribute attribute = googleSheetBuilder.buildAttribute(entry.getValue(), realmName);
-				attributeUtils.saveAttribute(attribute);
-			} catch (ItemNotFoundException e) {
-				log.warn(e.getMessage());
-			}
+            Attribute attribute = googleSheetBuilder.buildAttribute(entry.getValue(), realmName);
+            attributeUtils.saveAttribute(attribute);
         }
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);

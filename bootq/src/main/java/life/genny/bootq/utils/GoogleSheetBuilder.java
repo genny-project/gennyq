@@ -171,15 +171,19 @@ public class GoogleSheetBuilder {
         String code = row.get("code");
         String name = row.get("name");
 
-		Attribute attribute = attributeUtils.getAttribute(realmName, code, false);
-		// create new attribute if not found
-		if (attribute == null) {
+		Attribute attribute;
+		try {
+			attribute = attributeUtils.getAttribute(realmName, code, false);
+			log.warn("Preexisting Attribute found: " + attribute.getCode() + ". Updating data");
+		} catch(ItemNotFoundException e) {
+			// create new attribute if not found
 			attribute = new Attribute();
 			attribute.setCode(code);
 			attribute.setName(name);
 			Long id = cm.getMaxAttributeId();
 			attribute.setId(id+1);
 		}
+		
 		attribute.setDttCode(row.get("datatype"));
         attribute.setDefaultPrivacyFlag(toBoolean(row.get("privacy")));
         attribute.setDescription(row.get("description"));
