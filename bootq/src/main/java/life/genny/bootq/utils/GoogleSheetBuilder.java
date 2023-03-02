@@ -67,6 +67,12 @@ public class GoogleSheetBuilder {
 
     public GoogleSheetBuilder() { }
 
+    /**
+	 * Convert a String to a Boolean
+	 *
+     * @param booleanString
+     * @return Boolean or null.
+     */
     public static Boolean toBoolean(final String booleanString) {
         if (StringUtils.isBlank(booleanString)) {
             return null;
@@ -74,6 +80,12 @@ public class GoogleSheetBuilder {
         return "TRUE".equalsIgnoreCase(booleanString.toUpperCase());
     }
 
+    /**
+	 * Convert a String to a Double
+	 *
+     * @param doubleString
+     * @return Double or null.
+     */
     public static Double toDouble(final String doubleString) {
         if (StringUtils.isBlank(doubleString)) {
             return null;
@@ -81,6 +93,12 @@ public class GoogleSheetBuilder {
         return Double.parseDouble(doubleString);
     }
 
+    /**
+	 * Convert a String to a Integer
+	 *
+     * @param intString
+     * @return Integer or null.
+     */
     public static Integer toInt(final String intString) {
         if (StringUtils.isBlank(intString)) {
 			return null;
@@ -88,6 +106,12 @@ public class GoogleSheetBuilder {
         return Integer.valueOf(intString);
 	}
 
+    /**
+	 * Convert a String to a Long
+	 *
+     * @param longString
+     * @return Double or null.
+     */
     public static Long toLong(final String longString) {
         if (StringUtils.isBlank(longString)) {
 			return null;
@@ -133,7 +157,7 @@ public class GoogleSheetBuilder {
     /**
 	 * Build a DataType object from a row.
 	 *
-     * @param row THe row from the sheets
+     * @param row The row from the sheets
      * @param realmName The realm
      * @return A DataType object
      */
@@ -159,7 +183,7 @@ public class GoogleSheetBuilder {
     /**
 	 * Build a Attribute object from a row.
 	 *
-     * @param row THe row from the sheets
+     * @param row The row from the sheets
      * @param realmName The realm
      * @return An Attribute object
      */

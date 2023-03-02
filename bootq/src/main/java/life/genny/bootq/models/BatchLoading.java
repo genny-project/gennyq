@@ -70,7 +70,7 @@ public class BatchLoading {
         persistAttributes(rx.getAttributes(), rx.getCode());
         persistDefBaseEntitys(rx.getDef_baseEntitys(), rx.getCode());
         persistBaseEntitys(rx.getBaseEntitys(), rx.getCode());
-        // persistDefBaseEntityAttributes(rx.getDef_entityAttributes(), rx.getCode());
+        persistDefBaseEntityAttributes(rx.getDef_entityAttributes(), rx.getCode());
         persistBaseEntityAttributes(rx.getEntityAttributes(), rx.getCode());
         persistQuestions(rx.getQuestions(), rx.getCode());
         persistQuestionQuestions(rx.getQuestionQuestions(), rx.getCode());
