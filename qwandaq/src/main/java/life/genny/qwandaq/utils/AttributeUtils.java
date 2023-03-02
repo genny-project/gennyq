@@ -38,6 +38,20 @@ public class AttributeUtils {
     CacheManager cm;
 
     /**
+     * @param productCode
+     * @param code
+     * @return
+     */
+    public Validation getValidation(String productCode, String code) {
+        ValidationKey key = new ValidationKey(productCode, code);
+        Validation validation = (Validation) cm.getPersistableEntity(GennyConstants.CACHE_NAME_VALIDATION, key);
+        if (validation == null) {
+            throw new ItemNotFoundException(productCode, code);
+        }
+        return validation;
+    }
+
+    /**
      * @param code
      * @return
      */
