@@ -25,7 +25,9 @@ import org.jboss.logging.Logger;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 @ApplicationScoped
 public class BatchLoading {
@@ -240,33 +242,6 @@ public class BatchLoading {
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
             Map<String, String> row = entry.getValue();
 			String attributeCode = row.get("attributecode").replaceAll("^\"|\"$", "");
-			String baseEntityCode = row.get("baseEntityCode").replaceAll("^\"|\"$", "");
-			if (Attribute.LNK_INCLUDE.equals(attributeCode)) {
-				String valueString = row.get("valueString");
-				if (valueString == null) {
-					log.warn("valueString is null for LNK_INCLUDE in " + baseEntityCode);
-					continue;
-				}
-				String[] codes = CommonUtils.cleanUpAttributeValue(valueString).split(",");
-				for (String code : codes) {
-					// 1. Fetch base entity pertaining to code
-                    // a. Check Cache first
-                    // b. if missing check sheets
-					// BaseEntity baseEntity = defMap.get(realm+":"+code);
-                    // If missing report and continue
-					// if (baseEntity == null) {
-					// 	log.warn("No entity found for " + code);
-					// }
-                // 2. For each Entity Attribute in DEF_code
-                    // 1. Fetch Attribute
-                        // a. Check Cache first
-                        // b. if missing check sheets
-                        // If still missing report and continue (should never reach here)
-                    // 2. Add Attribute to current DEF (denoted by row.get("baseEntityCode"))
-                // 3. Profit    
-				}
-				continue;
-			}
 			try {
 				// find or create attribute
 				Attribute defAttr = attributeUtils.getAttribute(attributeCode);

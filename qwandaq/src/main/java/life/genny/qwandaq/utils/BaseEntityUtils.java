@@ -106,7 +106,18 @@ public class BaseEntityUtils {
 	 * @return
 	 */
 	public Definition getDefinition(String code) {
-		return Definition.from(getBaseEntity(code, true));
+		return Definition.from(getDefinition(code, true));
+	}
+
+	/**
+	 * Get a Definition using a code, but throw an
+	 * ItemNotFoundException if the entity does not exist.
+	 * 
+	 * @param code
+	 * @return
+	 */
+	public Definition getDefinition(String code, boolean bundleAttributes) {
+		return Definition.from(getBaseEntity(code, bundleAttributes));
 	}
 
 	/**

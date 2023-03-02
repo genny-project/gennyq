@@ -293,20 +293,6 @@ public class CacheManager {
 		return queryResult.list().get(0).getId();
 	}
 
-	/**
-	 * Get the max entity id.
-	 *
-	 * @return the max id
-	 */
-	public Long getMaxQuestionId() {
-		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_QUESTION));
-		Query<Question> query = queryFactory
-				.create("from life.genny.qwandaq.persistence.question.Question order by id desc");
-		QueryResult<Question> queryResult = query.maxResults(1).execute();
-
-		return queryResult.list().get(0).getId();
-	}
-
     /**
      * @param code
      * @return
