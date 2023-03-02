@@ -113,8 +113,6 @@ public class GoogleSheetBuilder {
 			// create new validation if not found
 			validation = new Validation();
 			validation.setCode(code);
-			Long id = cm.getMaxValidationId();
-			validation.setId(id+1);
 		}
 
 		String name = row.get("name");
@@ -153,6 +151,7 @@ public class GoogleSheetBuilder {
 		dataType.setClassName(row.get("classname"));
 		dataType.setInputmask(row.get("inputmask"));
 		dataType.setComponent(row.get("component"));
+		dataType.setTypeName(row.get("name"));
 		dataType.setValidationCodes(row.get("validations"));
 		dataType.setRealm(realmName);
 		return dataType;
@@ -170,15 +169,19 @@ public class GoogleSheetBuilder {
         String code = row.get("code");
         String name = row.get("name");
 
-		Attribute attribute = attributeUtils.getAttribute(realmName, code, false);
-		// create new attribute if not found
-		if (attribute == null) {
+		Attribute attribute;
+		try {
+			attribute = attributeUtils.getAttribute(realmName, code, false);
+			log.warn("Preexisting Attribute found: " + attribute.getCode() + ". Updating data");
+		} catch(ItemNotFoundException e) {
+			// create new attribute if not found
 			attribute = new Attribute();
 			attribute.setCode(code);
 			attribute.setName(name);
 			Long id = cm.getMaxAttributeId();
 			attribute.setId(id+1);
 		}
+		
 		attribute.setDttCode(row.get("datatype"));
         attribute.setDefaultPrivacyFlag(toBoolean(row.get("privacy")));
         attribute.setDescription(row.get("description"));
@@ -291,8 +294,6 @@ public class GoogleSheetBuilder {
 		if (question == null) {
 			question = new Question();
 			question.setCode(code);
-			Long id = cm.getMaxQuestionId();
-			question.setId(id+1);
 		}
         String attributeCode = row.get("attributecode");
 
