@@ -14,7 +14,6 @@ import life.genny.qwandaq.utils.EntityAttributeUtils;
 import life.genny.qwandaq.utils.QuestionUtils;
 import life.genny.qwandaq.validation.Validation;
 
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -172,8 +171,9 @@ public class GoogleSheetBuilder {
 		Attribute attribute;
 		try {
 			attribute = attributeUtils.getAttribute(realmName, code, false);
-			log.warn("Preexisting Attribute found: " + attribute.getCode() + ". Updating data");
+			log.debug("Found Attribute: " + attribute.getCode());
 		} catch(ItemNotFoundException e) {
+			log.trace("Creating new Attribute: " + code);
 			// create new attribute if not found
 			attribute = new Attribute();
 			attribute.setCode(code);
