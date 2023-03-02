@@ -14,7 +14,6 @@ import life.genny.qwandaq.utils.EntityAttributeUtils;
 import life.genny.qwandaq.utils.QuestionUtils;
 import life.genny.qwandaq.validation.Validation;
 
-import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -72,7 +71,7 @@ public class GoogleSheetBuilder {
         if (StringUtils.isBlank(booleanString)) {
             return null;
         }
-        return "TRUE".equalsIgnoreCase(booleanString.toUpperCase());
+        return "TRUE".equalsIgnoreCase(booleanString);
     }
 
     public static Double toDouble(final String doubleString) {
