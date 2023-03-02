@@ -94,22 +94,22 @@ public class ModuleUnit extends DataUnit {
     }
 
     /**
-     * Get all rows for all sheets within this Google Doc/Module
+     * Get all rows for a sheet within this Google Doc/Module
      * @param sheetsService - {@link Sheets Google Sheets Service}
-     * @param titleData - 
-     * @param values
-     * @param sheetURI
+     * @param sheetConfiguration - sheet metadata including the title of the sheet to target
+     * @param values - the values to map
+     * @param sheetId - the id of the google doc to import from 
      * @return
      */
-    private Map<String, Map<String, String>> getData(Sheets sheetsService, ESheetConfiguration titleData,
-    List<List<Object>> values, String sheetURI) {
+    private Map<String, Map<String, String>> parseRows(Sheets sheetsService, ESheetConfiguration sheetConfiguration,
+    List<List<Object>> values, String sheetId) {
         XlsxImport xlsxImportOnline = new XlsxImport(sheetsService);
         Map<String, Map<String, String>> tmp =  new HashMap<>();
 
         try {
-            tmp = xlsxImportOnline.mappingKeyHeaderToHeaderValues(values, titleData.getHeaderRow());
+            tmp = xlsxImportOnline.mappingKeyHeaderToHeaderValues(values, sheetConfiguration.getHeaderRow());
         } catch (Exception ex) {
-            logFetchExceptionForSheets(ex.getMessage(), titleData.getTitle(), sheetURI);
+            logFetchExceptionForSheets(ex.getMessage(), sheetConfiguration.getTitle(), sheetId);
         }
         return tmp;
     }
@@ -130,31 +130,31 @@ public class ModuleUnit extends DataUnit {
                 
                 switch (titleData) {
                     case VALIDATION:
-                        this.validations = getData(sheetsService, titleData, values, sheetURI);
+                        this.validations = parseRows(sheetsService, titleData, values, sheetURI);
                         break;
                     case DATATYPE:
-                        this.dataTypes= getData(sheetsService, titleData, values, sheetURI);
+                        this.dataTypes= parseRows(sheetsService, titleData, values, sheetURI);
                         break;
                     case ATTRIBUTE:
-                        this.attributes= getData(sheetsService, titleData, values, sheetURI);
+                        this.attributes= parseRows(sheetsService, titleData, values, sheetURI);
                         break;
                     case BASE_ENTITY:
-                        this.baseEntitys= getData(sheetsService, titleData, values, sheetURI);
+                        this.baseEntitys= parseRows(sheetsService, titleData, values, sheetURI);
                         break;
                     case QUESTION_QUESTION:
-                        this.questionQuestions= getData(sheetsService, titleData, values, sheetURI);
+                        this.questionQuestions= parseRows(sheetsService, titleData, values, sheetURI);
                         break;
                     case QUESTION:
-                        this.questions= getData(sheetsService, titleData, values, sheetURI);
+                        this.questions= parseRows(sheetsService, titleData, values, sheetURI);
                         break;
                     case ENTITY_ATTRIBUTE:
-                        this.entityAttributes= getData(sheetsService, titleData, values, sheetURI);
+                        this.entityAttributes= parseRows(sheetsService, titleData, values, sheetURI);
                         break;
                     case DEF_BASE_ENTITY:
-                        this.def_baseEntitys= getData(sheetsService, titleData, values, sheetURI);
+                        this.def_baseEntitys= parseRows(sheetsService, titleData, values, sheetURI);
                         break;
                     case DEF_ENTITY_ATTRIBUTE:
-                        this.def_entityAttributes= getData(sheetsService, titleData, values, sheetURI);
+                        this.def_entityAttributes= parseRows(sheetsService, titleData, values, sheetURI);
                         break;
                     default:
                         log.error("Unhandled ESheetTitle!: " + title);
