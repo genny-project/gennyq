@@ -284,8 +284,9 @@ public class GoogleSheetBuilder {
 
 		entityAttribute.setBaseEntityCode(baseEntityCode);
 		entityAttribute.setBaseEntityId(baseEntity.getId());
-		entityAttribute.setAttributeCode(attributeCode);
-		entityAttribute.setAttributeId(attribute.getId());
+		entityAttribute.setAttribute(attribute);
+		// entityAttribute.setAttributeCode(attributeCode);
+		// entityAttribute.setAttributeId(attribute.getId());
 		entityAttribute.setRealm(realmName);
         
         String valueString = row.get(VALUESTRING);

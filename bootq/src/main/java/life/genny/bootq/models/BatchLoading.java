@@ -235,22 +235,30 @@ public class BatchLoading {
 
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
             Map<String, String> row = entry.getValue();
-			String attributeCode = row.get("attributecode").replaceAll("^\"|\"$", "");
-			try {
+			
+            String baseEntityCode = row.get("baseentitycode");
+            String attributeCode = row.get("attributecode");
+
+            String combined = new StringBuilder(baseEntityCode).append(":").append(attributeCode).toString();
 				// find or create attribute
-				Attribute defAttr = attributeUtils.getAttribute(attributeCode);
-				if (defAttr == null) {
-					DataType dataType = dttPrefixMap.get(attributeCode.substring(0, 4));
-					defAttr = new Attribute(attributeCode, attributeCode, dataType);
-					defAttr.setRealm(realmName);
-					attributeUtils.saveAttribute(defAttr);
-				}
-				EntityAttribute entityAttribute = googleSheetBuilder.buildEntityAttribute(row, realmName, defAttr.getCode());
-				beaUtils.updateEntityAttribute(entityAttribute);
-			} catch (ItemNotFoundException e) {
-				log.warn(e.getMessage());
-			}
+            
+            Attribute defAttr;
+            try {
+                defAttr = attributeUtils.getAttribute(attributeCode);
+            } catch (ItemNotFoundException e) {
+                log.warn(new StringBuilder("Missing attribute ")
+                    .append(attributeCode).append(" when building ").append(combined).toString());
+                
+                DataType dataType = dttPrefixMap.get(attributeCode.substring(0, 4));                    
+                defAttr = new Attribute(attributeCode, attributeCode, dataType);
+                defAttr.setRealm(realmName);
+                attributeUtils.saveAttribute(defAttr);
+            }
+
+            EntityAttribute entityAttribute = googleSheetBuilder.buildEntityAttribute(row, realmName, defAttr.getCode());
+            beaUtils.updateEntityAttribute(entityAttribute);
         }
+
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
         log.info("Finished definition entity attributes, cost:" + timeElapsed.toMillis() + " millSeconds, items: " + project.entrySet().size());
@@ -266,19 +274,25 @@ public class BatchLoading {
         Instant start = Instant.now();
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
 			
+            String baseEntityCode = entry.getValue().get("baseentitycode");
+            String attributeCode = entry.getValue().get("attributecode");
+
+            String combined = new StringBuilder(baseEntityCode).append(":").append(attributeCode).toString();
+
             EntityAttribute entityAttribute;
             try {
+                log.trace("Building " + combined + " entityAttribute");
                 entityAttribute = googleSheetBuilder.buildEntityAttribute(entry.getValue(), realmName);
             } catch (BadDataException e) {
                 log.error(new StringBuilder("Error occurred when building EA ")
-                    .append(entry.getValue().get("baseentitycode")).append(":").append(entry.getValue().get("attributecode"))
+                    .append(combined)
                     .append(" - ").append(e.getMessage()).toString());
                 continue;
             }
 
             beaUtils.updateEntityAttribute(entityAttribute);
         }
-        
+
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
         log.info("Finished entity attributes, cost:" + timeElapsed.toMillis() + " millSeconds, items: " + project.entrySet().size());
