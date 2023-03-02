@@ -11,6 +11,10 @@ public class BadDataException extends GennyRuntimeException {
 		super();
 	}
 
+	public BadDataException(String message, Throwable cause) {
+		super(message, cause);
+	}
+
 	public BadDataException(String message) {
 		super(message);
 	}

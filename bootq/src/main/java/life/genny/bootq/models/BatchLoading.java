@@ -10,6 +10,7 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.utils.AttributeUtils;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -264,15 +265,20 @@ public class BatchLoading {
     public void persistBaseEntityAttributes(Map<String, Map<String, String>> project, String realmName) {
         Instant start = Instant.now();
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
-			try {
-				EntityAttribute entityAttribute = googleSheetBuilder.buildEntityAttribute(entry.getValue(), realmName);
-				beaUtils.updateEntityAttribute(entityAttribute);
-			} catch (ItemNotFoundException e) { // ensure to print beCode and eaCode
-				log.error(new StringBuilder("Error occurred when building ")
+			
+            EntityAttribute entityAttribute;
+            try {
+                entityAttribute = googleSheetBuilder.buildEntityAttribute(entry.getValue(), realmName);
+            } catch (BadDataException e) {
+                log.error(new StringBuilder("Error occurred when building EA ")
                     .append(entry.getValue().get("baseentitycode")).append(":").append(entry.getValue().get("attributecode"))
                     .append(" - ").append(e.getMessage()).toString());
-			}
+                continue;
+            }
+
+            beaUtils.updateEntityAttribute(entityAttribute);
         }
+        
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
         log.info("Finished entity attributes, cost:" + timeElapsed.toMillis() + " millSeconds, items: " + project.entrySet().size());
