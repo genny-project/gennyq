@@ -200,10 +200,12 @@ public class DefUtils {
 		EntityAttribute ea = beaUtils.getEntityAttribute(definition.getRealm(), definition.getCode(), Prefix.ATT_ + attributeCode);
 		if (ea != null) {
 			List<String> parentCodes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(definition, Attribute.LNK_INCLUDE);
-			for (String code : parentCodes) {
-				Definition parent = beUtils.getDefinition(code, false);
-				if (answerValidForDEF(parent, answer)) {
-					return true;
+			if (parentCodes != null) {
+				for (String code : parentCodes) {
+					Definition parent = beUtils.getDefinition(code, false);
+					if (answerValidForDEF(parent, answer)) {
+						return true;
+					}
 				}
 			}
 		}
