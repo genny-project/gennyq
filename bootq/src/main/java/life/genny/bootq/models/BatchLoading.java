@@ -252,17 +252,21 @@ public class BatchLoading {
             try {
                 defAttr = attributeUtils.getAttribute(attributeCode);
             } catch (ItemNotFoundException e) {
-                log.warn(new StringBuilder("Missing attribute ")
-                    .append(attributeCode).append(" when building ").append(combined).toString());
+                log.trace(new StringBuilder("Missing attribute ")
+                    .append(attributeCode).append(" when building ").append(combined).append("! Creating!").toString());
                 
                 DataType dataType = dttPrefixMap.get(attributeCode.substring(0, 4));                    
                 defAttr = new Attribute(attributeCode, attributeCode, dataType);
                 defAttr.setRealm(realmName);
                 attributeUtils.saveAttribute(defAttr);
+                log.trace("Saving attribute: " + defAttr + " successful");
             }
-
-            EntityAttribute entityAttribute = googleSheetBuilder.buildEntityAttribute(row, realmName, defAttr.getCode());
-            beaUtils.updateEntityAttribute(entityAttribute);
+            try {
+                EntityAttribute entityAttribute = googleSheetBuilder.buildEntityAttribute(row, realmName, defAttr.getCode());
+                beaUtils.updateEntityAttribute(entityAttribute);
+            } catch(BadDataException e) {
+                log.error("Error occurred when persisting: " + combined + ". " + e.getMessage());
+            }
         }
 
         Instant end = Instant.now();
