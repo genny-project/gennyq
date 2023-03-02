@@ -196,9 +196,9 @@ public class GoogleSheetBuilder {
 		Attribute attribute;
 		try {
 			attribute = attributeUtils.getAttribute(realmName, code, false);
-			log.debug("Found Attribute: " + attribute.getCode());
+			log.trace("Found Attribute: " + attribute.getCode());
 		} catch(ItemNotFoundException e) {
-			log.trace("Creating new Attribute: " + code);
+			log.trace("[!] Creating new Attribute: " + code);
 			// create new attribute if not found
 			attribute = new Attribute();
 			attribute.setCode(code);
