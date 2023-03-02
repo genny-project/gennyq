@@ -586,5 +586,13 @@ public class CacheManager {
 			cache.putEntityIntoCache(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, beak, baseEntityAttribute);
 		});
 	}
+
+	public Long getEntityLastUpdatedAt(String entityName) {
+		return cache.getEntityLastUpdatedAt(entityName);
+	}
+
+	public void updateEntityLastUpdatedAt(String entityName, Long updatedTime) {
+		cache.updateEntityLastUpdatedAt(entityName, updatedTime);
+	}
 }
 

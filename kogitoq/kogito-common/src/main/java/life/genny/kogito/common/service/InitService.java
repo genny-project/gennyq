@@ -48,6 +48,10 @@ public class InitService extends KogitoService {
 	@Inject
 	Logger log;
 
+	private static List<List<Attribute>> batchedAttributesList = new LinkedList<>();
+
+	private static Long attributesLastUpdatedAt = Long.valueOf(0);
+
 	/**
 	 * Send the Project BaseEntity.
 	 */
@@ -96,8 +100,25 @@ public class InitService extends KogitoService {
 		log.info("Sending Attributes for " + userToken.getProductCode());
 		String productCode = userToken.getProductCode();
 
-		Collection<Attribute> allAttributes = attributeUtils.getAttributesForProduct(productCode);
+		Long attributesUpdatedAt = attributeUtils.getAttributesLastUpdatedAt();
+		if (this.attributesLastUpdatedAt.compareTo(attributesUpdatedAt) >= 0 && !batchedAttributesList.isEmpty()) {
+			log.debugf("No change to attributes since previous read. Sending out the locally cached batch of attributes...");
+			long start = System.nanoTime();
+			int batchNum = 0;
+			for (List<Attribute> attributesBatch : batchedAttributesList) {
+				dispatchAttributesToKafka(attributesBatch, batchNum++, batchedAttributesList.size());
+			}
+			long end = System.nanoTime();
+			log.debugf("Time taken to send out the locally cached batch of attributes: %s (nanos)", end-start);
+			return;
+		}
 
+		long start = System.nanoTime();
+		Collection<Attribute> allAttributes = attributeUtils.getAttributesForProduct(productCode);
+		long end = System.nanoTime();
+		log.debugf("Time taken to read all attributes: %s (nanos)", end-start);
+
+		batchedAttributesList.clear();
 		int BATCH_SIZE = 500;
 		int count = 0;
 		int batchNum = 1;
@@ -109,6 +130,8 @@ public class InitService extends KogitoService {
 		log.infof("%s Attribute(s) to be sent in %s batch(es).", totalAttributesCount, totalBatches);
 		List<Attribute> attributesBatch = new LinkedList<>();
 		for(Attribute attribute : allAttributes) {
+			if (attribute == null)
+				continue;
 			String attributeCode = attribute.getCode();
 			if (attributeCode.startsWith(Prefix.CAP_)) {
 				continue;
@@ -128,12 +151,17 @@ public class InitService extends KogitoService {
 				attributesBatch.clear();
 				count = 0;
 				batchNum++;
+				batchedAttributesList.add(attributesBatch);
 			}
 		}
 		// Dispatch the last batch, if any
 		if (!attributesBatch.isEmpty()) {
 			dispatchAttributesToKafka(attributesBatch, batchNum, totalBatches);
 		}
+		end = System.nanoTime();
+		log.debugf("Total time taken to send out the attributes (for the first time): %s (nanos)", end-start);
+		batchedAttributesList.add(attributesBatch);
+		this.attributesLastUpdatedAt = attributesUpdatedAt;
 	}
 
 	/**

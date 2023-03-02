@@ -139,7 +139,7 @@ public class AttributeUtils {
         DataType dataType = (DataType) cm.getPersistableEntity(GennyConstants.CACHE_NAME_DATATYPE, key);
 
         if(dataType == null) {
-            throw new ItemNotFoundException("DataType attached to Attribute: " + attribute.getCode());
+            throw new ItemNotFoundException("DataType attached to Attribute: " + attribute.getCode() + ". DataType Code: " + attribute.getDttCode());
         }
 
         if (bundleValidationList) {
@@ -215,5 +215,18 @@ public class AttributeUtils {
      */
     public List<Attribute> getAttributesWithPrefixForProduct(String productCode, String prefix) {
         return cm.getAttributesWithPrefixForProduct(productCode, prefix);
+    }
+
+    public Long getAttributesLastUpdatedAt() {
+        Long entityLastUpdatedAt = cm.getEntityLastUpdatedAt(GennyConstants.CACHE_NAME_ATTRIBUTE);
+        if(entityLastUpdatedAt != null)
+            return entityLastUpdatedAt;
+        entityLastUpdatedAt = System.currentTimeMillis();
+        updateAttributesLastUpdatedAt(entityLastUpdatedAt);
+        return entityLastUpdatedAt;
+    }
+
+    public void updateAttributesLastUpdatedAt(Long updatedTime) {
+        cm.updateEntityLastUpdatedAt(GennyConstants.CACHE_NAME_ATTRIBUTE, updatedTime);
     }
 }
