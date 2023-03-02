@@ -112,12 +112,9 @@ public class Endpoints {
                 log.info("Importing from sheet " + realmUnit.getUri() + " for realm " + realmUnit.getName());
 
                 if (!realmUnit.getDisable() && !realmUnit.getSkipGoogleDoc()) {
-                    log.info("Starting batch loading for sheet:" + realmUnit.getUri()
-                            + ", realm:" + realmUnit.getName());
+                    log.info("Persisting project...");
                     bl.persistProject(realmUnit);
-                    log.info("Finished batch loading for sheet:" + realmUnit.getUri()
-                            + ", realm:" + realmUnit.getName() + ", now syncing be, attr and questions");
-
+                    log.info("Finished Persisting project");
                 } else {
                     log.info("SKIPPING sheet " + realmUnit.getUri() + " for realm " + realmUnit.getName());
                 }
@@ -162,12 +159,9 @@ public class Endpoints {
                 log.info("Importing from sheet " + realmUnit.getUri() + " for realm " + realmUnit.getName());
 
                 if (!realmUnit.getDisable() && !realmUnit.getSkipGoogleDoc()) {
-                    log.info("Starting batch loading for sheet:" + realmUnit.getUri()
-                            + ", realm:" + realmUnit.getName());
+                    log.info("Persisting table " + table + "...");
                     bl.persistTable(realmUnit, table);
-                    log.info("Finished batch loading for sheet:" + realmUnit.getUri()
-                            + ", realm:" + realmUnit.getName() + ", now syncing be, attr and questions");
-
+                    log.info("Finished Persisting table " + table);
                 } else {
                     log.info("SKIPPING sheet " + realmUnit.getUri() + " for realm " + realmUnit.getName());
                 }
