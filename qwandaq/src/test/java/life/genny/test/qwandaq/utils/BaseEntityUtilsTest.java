@@ -5,7 +5,6 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.DatabaseUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -17,7 +16,6 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.testsuite.JUnitTester;
 
@@ -36,9 +34,6 @@ public class BaseEntityUtilsTest extends BaseTestCase {
 	@InjectMocks
 	BaseEntityUtils beUtils;
 
-	@InjectMocks
-	DatabaseUtils dbUtils;
-
 	// @Test
 	public void nullInputTest() {
 		// TODO
@@ -47,7 +42,6 @@ public class BaseEntityUtilsTest extends BaseTestCase {
 	// @Test
 	public void getBaseEntityTest() {
 		
-        DatabaseUtils dbUtils = Mockito.mock(DatabaseUtils.class);
         BaseEntityUtils beUtils = Mockito.mock(BaseEntityUtils.class);
 
 		BaseEntity baseEntity = new BaseEntity(ENTITY_CODE, "Test Entity");

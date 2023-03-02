@@ -27,18 +27,22 @@ import org.jboss.logging.Logger;
 @Path("/bootq/")
 public class Endpoints {
 
-    private static final Logger log = Logger.getLogger(Endpoints.class);
-
     private boolean isBatchLoadingRunning = false;
 
     @ConfigProperty(name = "quarkus.application.version")
     String version;
 
-    @ConfigProperty(name = "quarkus.oidc.auth-server-url")
-    String authUrl;
-
     @Inject
     UserToken userToken;
+
+	@Inject
+    Logger log;
+
+	@Inject
+	Service service;
+
+	@Inject
+	BatchLoading bl;
 
     public boolean getIsTaskRunning() {
         return isBatchLoadingRunning;
@@ -46,6 +50,18 @@ public class Endpoints {
 
     public void setIsTaskRunning(boolean isTaskRunning) {
         this.isBatchLoadingRunning = isTaskRunning;
+    }
+
+	void onStart(@Observes StartupEvent ev) {
+		service.showConfiguration();
+		service.initToken();
+		service.initCache();
+		log.info("[*] Finished Startup!");
+	}
+
+    @Transactional
+    void onShutdown(@Observes ShutdownEvent ev) {
+        log.info("Bootq Endpoint Shutting down");
     }
 
     @GET
@@ -103,7 +119,7 @@ public class Endpoints {
                 if (!realmUnit.getDisable() && !realmUnit.getSkipGoogleDoc()) {
                     log.info("Starting batch loading for sheet:" + realmUnit.getUri()
                             + ", realm:" + realmUnit.getName());
-                    BatchLoading bl = new BatchLoading();
+                    // BatchLoading bl = new BatchLoading();
                     bl.persistProjectOptimization(realmUnit);
                     log.info("Finished batch loading for sheet:" + realmUnit.getUri()
                             + ", realm:" + realmUnit.getName() + ", now syncing be, attr and questions");
@@ -114,6 +130,7 @@ public class Endpoints {
                 msg = "Finished batch loading for all realms in google sheets";
             }
         } catch (Exception ex) {
+			ex.printStackTrace();
             msg = "Exception:" + ex.getMessage() + " occurred when batch loading";
         } finally {
             setIsTaskRunning(false);
@@ -122,14 +139,4 @@ public class Endpoints {
         return Response.ok().entity(msg).build();
     }
 
-    @Transactional
-    void onStart(@Observes StartupEvent ev) {
-        log.info("Bootq Endpoint starting with auth Server " + authUrl);
-
-    }
-
-    @Transactional
-    void onShutdown(@Observes ShutdownEvent ev) {
-        log.info("Bootq Endpoint Shutting down");
-    }
 }

@@ -48,9 +48,6 @@ public class Entities {
 	CacheManager cm;
 
 	@Inject
-	DatabaseUtils databaseUtils;
-
-	@Inject
 	UserToken userToken;
 
 	@Inject

@@ -58,9 +58,6 @@ public class BaseEntityUtils {
 	CacheManager cm;
 
 	@Inject
-	DatabaseUtils databaseUtils;
-
-	@Inject
 	EntityAttributeUtils beaUtils;
 
 	@Inject

@@ -37,9 +37,6 @@ public class ImportGithubService extends KogitoService {
 	ServiceToken serviceToken;
 
 	@Inject
-	DatabaseUtils databaseUtils;
-
-	@Inject
 	DefUtils defUtils;
 
 	@Inject

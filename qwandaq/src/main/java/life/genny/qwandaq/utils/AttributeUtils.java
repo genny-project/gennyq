@@ -104,8 +104,9 @@ public class AttributeUtils {
      * @param bundleValidationList
      * @return
      */
-    public DataType getDataType(String attributeCode, boolean bundleValidationList) {
-		return getDataType(getAttribute(attributeCode), bundleValidationList);
+    public DataType getDataType(String productCode, String dttCode, boolean bundleValidationList) {
+        DataTypeKey key = new DataTypeKey(productCode, dttCode);
+        return (DataType) cm.getPersistableEntity(GennyConstants.CACHE_NAME_DATATYPE, key);
 	}
 
     /**

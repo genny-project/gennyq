@@ -16,7 +16,6 @@ import javax.ws.rs.core.Response;
 
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.HttpUtils;
 import life.genny.qwandaq.utils.SecurityUtils;
 import life.genny.serviceq.Service;
@@ -39,9 +38,6 @@ public class UtilsResource {
 
 	@Context
 	HttpServerRequest request;
-
-	@Inject
-	DatabaseUtils databaseUtils;
 
 	@Inject
 	ServiceToken serviceToken;
