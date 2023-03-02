@@ -180,8 +180,8 @@ public class BatchLoading {
      */
     public void persistDefBaseEntitys(Map<String, Map<String, String>> project, String realmName) {
         Instant start = Instant.now();
-        Instant end = Instant.now();
 		persistEntitys(project, realmName);
+        Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
         log.info("Finished definition baseentitys, cost:" + timeElapsed.toMillis() + " millSeconds, items: " + project.entrySet().size());
 	}
@@ -194,8 +194,8 @@ public class BatchLoading {
      */
     public void persistBaseEntitys(Map<String, Map<String, String>> project, String realmName) {
         Instant start = Instant.now();
-        Instant end = Instant.now();
 		persistEntitys(project, realmName);
+        Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
         log.info("Finished baseentitys, cost:" + timeElapsed.toMillis() + " millSeconds, items: " + project.entrySet().size());
 	}
