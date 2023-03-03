@@ -351,7 +351,10 @@ public class BatchLoading {
             Long realAttributeId = attribute.getId();
             
             if(question.getAttributeId() != realAttributeId) {
-                log.error("Found attribute ID mismatch for Question: " + question.getCode() + " and attribute: " + attribute.getCode() + ". Setting Question AttrID to Attribute ID: " + realAttributeId);
+                log.error("Found attribute ID mismatch for Question: " + question.getCode() + " and attribute: " + attribute.getCode() + ".\n" + 
+                "\t- Question's Current Attribute ID: " + question.getAttributeId() +
+                "\n\t- Attribute's Actual ID: " + realAttributeId +
+                "\nSetting Question AttrID to Attribute ID: " + realAttributeId);
                 question.setAttributeId(realAttributeId);
             }
 
