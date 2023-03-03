@@ -681,7 +681,7 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 
 					} else if (className
 							.equalsIgnoreCase(LocalDate.class.getCanonicalName())) {
-						DateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+						DateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
 						Date olddate = format.parse(result);
 						final LocalDate date = olddate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 						setValueDate(date);
