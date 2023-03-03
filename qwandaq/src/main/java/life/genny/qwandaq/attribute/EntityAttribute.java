@@ -33,7 +33,6 @@ import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.time.DateUtils;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.javamoney.moneta.Money;
 import org.jboss.logging.Logger;
 import com.fasterxml.jackson.annotation.JsonIgnore;
