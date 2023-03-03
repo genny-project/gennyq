@@ -340,7 +340,14 @@ public class BatchLoading {
 			}
             
             // Verify question attribute id. The attribute tied to question at this point will exist (from buildQuestion)
-            Attribute attribute = attributeUtils.getAttribute(question.getRealm(), question.getAttributeCode());
+            Attribute attribute;
+            try {
+                attribute = attributeUtils.getAttribute(question.getRealm(), question.getAttributeCode());
+            } catch(ItemNotFoundException e) {
+                log.error("Could not find attribute for question: " + question.getCode());
+                log.error("Trying with question's attribute");
+                attribute = question.getAttribute();
+            }
             Long realAttributeId = attribute.getId();
             
             if(question.getAttributeId() != realAttributeId) {
