@@ -100,8 +100,8 @@ public class InitService extends KogitoService {
 		log.info("Sending Attributes for " + userToken.getProductCode());
 		String productCode = userToken.getProductCode();
 
-		Long attributesUpdatedAt = attributeUtils.getAttributesLastUpdatedAt();
-		if (this.attributesLastUpdatedAt.compareTo(attributesUpdatedAt) >= 0 && !batchedAttributesList.isEmpty()) {
+		/*Long attributesUpdatedAt = attributeUtils.getAttributesLastUpdatedAt();
+		if (this.attributesLastUpdatedAt.compareTo(attributesUpdatedAt) >= 0) {
 			log.debugf("No change to attributes since previous read. Sending out the locally cached batch of attributes...");
 			long start = System.nanoTime();
 			int batchNum = 0;
@@ -111,7 +111,7 @@ public class InitService extends KogitoService {
 			long end = System.nanoTime();
 			log.debugf("Time taken to send out the locally cached batch of attributes: %s (nanos)", end-start);
 			return;
-		}
+		}*/
 
 		long start = System.nanoTime();
 		Collection<Attribute> allAttributes = attributeUtils.getAttributesForProduct(productCode);
@@ -161,7 +161,7 @@ public class InitService extends KogitoService {
 		end = System.nanoTime();
 		log.debugf("Total time taken to send out the attributes (for the first time): %s (nanos)", end-start);
 		batchedAttributesList.add(attributesBatch);
-		this.attributesLastUpdatedAt = attributesUpdatedAt;
+		// this.attributesLastUpdatedAt = attributesUpdatedAt;
 	}
 
 	/**
