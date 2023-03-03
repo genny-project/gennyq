@@ -168,7 +168,7 @@ public class BatchLoading {
             if(attribute.getId() == null) {
                 Long maxId = cm.getMaxAttributeId();
                 log.error("Detected null attribute id for: " + attribute.getCode() + ". Setting to: " + maxId);
-                attribute.setId(maxId);
+                attribute.setId(maxId + 1);
             }
             attributeUtils.saveAttribute(attribute);
         }
@@ -302,12 +302,6 @@ public class BatchLoading {
             try {
                 log.trace("Building " + combined + " entityAttribute");
                 entityAttribute = googleSheetBuilder.buildEntityAttribute(entry.getValue(), realmName);
-                // Attribute ID fix (post build, this is where the responsibility lies)
-                if(entityAttribute.getAttributeId() == null) {
-                    Long maxId = cm.getMaxAttributeId();
-                    log.error("Detected null attribute id for: " + combined + ". Setting to: " + maxId);
-                    entityAttribute.setAttributeId(maxId);
-                }
 
             } catch (BadDataException e) {
                 log.error(new StringBuilder("(SKIPPING) Error occurred when building EA ")
