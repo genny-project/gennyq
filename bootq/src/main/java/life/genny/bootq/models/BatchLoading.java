@@ -165,6 +165,11 @@ public class BatchLoading {
         Instant start = Instant.now();
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
             Attribute attribute = googleSheetBuilder.buildAttribute(entry.getValue(), realmName);
+            if(attribute.getId() == null) {
+                Long maxId = cm.getMaxAttributeId();
+                log.error("Detected null attribute id for: " + attribute.getCode() + ". Setting to: " + maxId);
+                attribute.setId(maxId);
+            }
             attributeUtils.saveAttribute(attribute);
         }
         Instant end = Instant.now();
