@@ -3,12 +3,7 @@ package life.genny.kogito.common.core;
 import static life.genny.kogito.common.utils.KogitoUtils.UseService.GADAQ;
 import static life.genny.qwandaq.entity.PCM.PCM_TREE;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import javax.enterprise.context.ApplicationScoped;
@@ -91,6 +86,10 @@ public class Dispatch {
 	@Inject
 	AttributeUtils attributeUtils;
 
+	private Set<String> processedTargetCodes = new HashSet<>();
+
+	private Set<String> traversedPCMs = new HashSet<>();
+
 	/**
 	 * Send Asks, PCMs and Searches
 	 *
@@ -118,14 +117,6 @@ public class Dispatch {
 		// ensure target codes match
 		pcm.setTargetCode(targetCode);
 		QBulkMessage msg = new QBulkMessage();
-		// check for a provided question code
-		String questionCode = processData.getQuestionCode();
-		if (questionCode != null) {
-			// fetch question from DB
-			log.info("Generating asks -> " + questionCode + ":" + source.getCode() + ":" + target.getCode());
-			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target, userCapabilities, new ReqConfig());
-			msg.add(ask);
-		}
 		// generate events if specified
 		String buttonEvents = processData.getButtonEvents();
 		if (buttonEvents != null) {
@@ -143,10 +134,9 @@ public class Dispatch {
 		String parent = processData.getParent();
 		String location = processData.getLocation();
 		// traverse pcm to build data
+		processedTargetCodes.clear();
+		traversedPCMs.clear();
 		traversePCM(userCapabilities, pcm, source, target, parent, location, msg, processData);
-		// update questionCode after traversing
-		if (questionCode != null)
-			pcm.setQuestionCode(questionCode);
 
 		/**
 		 * update parent pcm
@@ -223,22 +213,6 @@ public class Dispatch {
 	}
 
 	/**
-	 * Fetch a PCM to traverse, looking for a non-readonly question.
-	 *
-	 * @param code The PCM code to begin traversing
-	 * @param source The source baseEntity
-	 * @param target The target baseEntity
-	 * @param msg The bulk message to store data
-	 * @param processData The ProcessData used to init the task
-	 */
-	public void traversePCM(CapabilitySet userCapabilities, String code, BaseEntity source, BaseEntity target, 
-			String parent, String location, QBulkMessage msg, ProcessData processData) {
-		// add pcm to bulk message
-		PCM pcm = beUtils.getPCM(code);
-		traversePCM(userCapabilities, pcm, source, target, parent, location, msg, processData);
-	}
-
-	/**
 	 * Traverse a PCM looking for a non-readonly question.
 	 *
 	 * @param pcm The PCM to Traverse
@@ -262,8 +236,10 @@ public class Dispatch {
 		// use pcm target if one is specified
 		try {
 			String targetCode = beaUtils.getValue(pcm, Attribute.PRI_TARGET_CODE);
-			if (!targetCode.equals(target.getCode())) {
+            log.debugf("pcmCode: %s, sourceCode: %s,  targetCode: %s, target.getCode(): %s", pcmCode, source.getCode(), targetCode, target.getCode());
+			if (!StringUtils.isBlank(targetCode) && !targetCode.equals(target.getCode()) && !processedTargetCodes.contains(targetCode+target.getCode())) {
 				// merge targetCode
+				log.debugf("Target code combo already processed? : %s", processedTargetCodes.contains(targetCode + target.getCode()));
 				Map<String, Object> ctxMap = new HashMap<>();
 				ctxMap.put("TARGET", target);
 				targetCode = mergeUtils.merge(targetCode, ctxMap);
@@ -276,6 +252,7 @@ public class Dispatch {
 						.add("location", location)
 						.build();
 				kogitoUtils.triggerWorkflow(GADAQ, "processQuestions", payload);
+				processedTargetCodes.add(targetCode+target.getCode());
 				return;
 			}
 		} catch (ItemNotFoundException e) {
@@ -302,9 +279,15 @@ public class Dispatch {
 			if (value.startsWith(Prefix.PCM_)) {
 				parent = pcmCode;
 				location = entityAttribute.getAttributeCode();
-				traversePCM(userCapabilities, value, source, target, parent, location, msg, processData);
+				if (traversedPCMs.contains(value)) {
+					log.debugf("The PCM %s already traversed for parent %s, skipping traversal.", value, processData.getParent());
+				} else {
+					traversedPCMs.add(value);
+					PCM childPcm = beUtils.getPCM(value);
+					traversePCM(userCapabilities, childPcm, source, target, parent, location, msg, processData);
+				}
 			} else if (value.startsWith(Prefix.SBE_)) {
-				processData.getSearches().add(value);
+				processData.getSearches().add(pcmCode);
 			}
 		}
 
