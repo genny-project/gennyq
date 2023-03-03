@@ -218,6 +218,33 @@ public class DefUtils {
 	}
 
 	/**
+	 * Get the prefix for a definition.
+	 *
+	 * @param productCode
+	 * @param definitionCode
+	 * @return
+	 */
+	public String getDefinitionPrefix(String productCode, String definitionCode) {
+		// fetch prefix attribute
+		EntityAttribute prefixAttr = beaUtils.getEntityAttribute(productCode, definitionCode, Attribute.PRI_PREFIX, false);
+		if(prefixAttr != null) {
+			return prefixAttr.getValueString();
+		}
+		// if not found, we can check in the parent defs
+		List<String> parentCodes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(definitionCode, Attribute.LNK_INCLUDE);
+		if (parentCodes != null) {
+			for (String code : parentCodes) {
+				try {
+					return getDefinitionPrefix(productCode, code);
+				} catch (DefinitionException e) {
+					continue;
+				}
+			}
+		}
+		throw new DefinitionException("No prefix set for the def: " + definitionCode);
+	}
+
+	/**
 	 * A function to determine the whether or not an attribute and value is allowed
 	 * to be
 	 * saved to a {@link BaseEntity}

@@ -71,6 +71,9 @@ public class BaseEntityUtils {
 	@Inject
 	AttributeUtils attributeUtils;
 
+	@Inject
+	DefUtils defUtils;
+
 	public BaseEntityUtils() { 
 	}
 
@@ -528,11 +531,7 @@ public class BaseEntityUtils {
 			log.debug("Creating user base entity");
 			item = createUser(definition);
 		} else {
-			EntityAttribute prefixAttr = beaUtils.getEntityAttribute(productCode, definitionCode, PRI_PREFIX, false);
-			if(prefixAttr == null) {
-				throw new DefinitionException("No prefix set for the def: " + definitionCode);
-			}
-			String prefix = prefixAttr.getValueString();
+			String prefix = defUtils.getDefinitionPrefix(productCode, definitionCode);
 			if (StringUtils.isBlank(prefix)) {
 				throw new DefinitionException("No prefix set for the def: " + definitionCode);
 			}
