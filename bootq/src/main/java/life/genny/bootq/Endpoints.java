@@ -115,7 +115,7 @@ public class Endpoints {
 
         Realm realm = new Realm(sheetId);
         List<RealmUnit> realmUnits = realm.getDataUnits();
-        try {
+        // try {
             for (RealmUnit realmUnit : realmUnits) {
                 log.info("Importing from sheet " + realmUnit.getUri() + " for realm " + realmUnit.getName());
 
@@ -128,12 +128,12 @@ public class Endpoints {
                 }
                 msg = "Finished batch loading for all realms in google sheets";
             }
-        } catch (Exception ex) {
-			ex.printStackTrace();
-            msg = "Exception:" + ex.getMessage() + " occurred when batch loading";
-        } finally {
-            setIsTaskRunning(false);
-        }
+        // } catch (Exception ex) {
+		// 	ex.printStackTrace();
+        //     msg = "Exception:" + ex.getMessage() + " occurred when batch loading";
+        // } finally {
+        //     setIsTaskRunning(false);
+        // }
         log.info(msg);
         return Response.ok().entity(msg).build();
     }
