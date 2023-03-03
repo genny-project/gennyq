@@ -345,13 +345,12 @@ public class BatchLoading {
                 attribute = attributeUtils.getAttribute(question.getRealm(), question.getAttributeCode());
             } catch(ItemNotFoundException e) {
                 log.error("Could not find attribute for question: " + question.getCode());
-                log.error("Trying with question's attribute");
                 attribute = question.getAttribute();
             }
-            Long realAttributeId = attribute.getId();
             
+            Long realAttributeId = attribute.getId();            
             if(question.getAttributeId() != realAttributeId) {
-                log.error("Found attribute ID mismatch for Question: " + question.getCode() + " and attribute: " + attribute.getCode() + ".\n" + 
+                log.trace("Found attribute ID mismatch for Question: " + question.getCode() + " and attribute: " + attribute.getCode() + ".\n" + 
                 "\t- Question's Current Attribute ID: " + question.getAttributeId() +
                 "\n\t- Attribute's Actual ID: " + realAttributeId +
                 "\nSetting Question AttrID to Attribute ID: " + realAttributeId);
