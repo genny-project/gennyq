@@ -287,7 +287,7 @@ public class Dispatch {
 					traversePCM(userCapabilities, childPcm, source, target, parent, location, msg, processData);
 				}
 			} else if (value.startsWith(Prefix.SBE_)) {
-				processData.getSearches().add(pcmCode);
+				processData.getSearches().add(value);
 			}
 		}
 
