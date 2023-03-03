@@ -9,6 +9,7 @@ import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.attribute.AttributeKey;
 import life.genny.qwandaq.serialization.datatype.DataTypeKey;
+import life.genny.qwandaq.serialization.validation.ValidationKey;
 import life.genny.qwandaq.validation.Validation;
 import org.jboss.logging.Logger;
 
@@ -35,6 +36,20 @@ public class AttributeUtils {
 
     @Inject
     CacheManager cm;
+
+    /**
+     * @param productCode
+     * @param code
+     * @return
+     */
+    public Validation getValidation(String productCode, String code) {
+        ValidationKey key = new ValidationKey(productCode, code);
+        Validation validation = (Validation) cm.getPersistableEntity(GennyConstants.CACHE_NAME_VALIDATION, key);
+        if (validation == null) {
+            throw new ItemNotFoundException(productCode, code);
+        }
+        return validation;
+    }
 
     /**
      * @param code
@@ -96,6 +111,25 @@ public class AttributeUtils {
         return attribute;
     }
 
+    /**
+	 * Get the datatype for an attribute using an attribute code.
+	 *
+     * @param attributeCode
+     * @param bundleValidationList
+     * @return
+     */
+    public DataType getDataType(String productCode, String dttCode, boolean bundleValidationList) {
+        DataTypeKey key = new DataTypeKey(productCode, dttCode);
+        return (DataType) cm.getPersistableEntity(GennyConstants.CACHE_NAME_DATATYPE, key);
+	}
+
+    /**
+	 * Get the datatype for an attribute using an attribute.
+	 *
+     * @param attribute
+     * @param bundleValidationList
+     * @return
+     */
     public DataType getDataType(Attribute attribute, boolean bundleValidationList) {
         if(attribute == null) {
             throw new NullParameterException("attribute");
@@ -120,12 +154,30 @@ public class AttributeUtils {
     }
 
     /**
+     * @param validation
+     */
+    public void saveValidation(Validation validation) {
+        ValidationKey key = new ValidationKey(validation.getRealm(), validation.getCode());
+        cm.saveEntity(GennyConstants.CACHE_NAME_VALIDATION, key, validation);
+    }
+
+    /**
+     * @param dataType
+     */
+    public void saveDataType(DataType dataType) {
+        DataTypeKey key = new DataTypeKey(dataType.getRealm(), dataType.getDttCode());
+        cm.saveEntity(GennyConstants.CACHE_NAME_DATATYPE, key, dataType);
+    }
+
+    /**
      * @param attribute
      */
     public void saveAttribute(Attribute attribute) {
         AttributeKey key = new AttributeKey(attribute.getRealm(), attribute.getCode());
         cm.saveEntity(GennyConstants.CACHE_NAME_ATTRIBUTE, key, attribute);
-    }/**
+    }
+
+	/**
      * Fetch all attributes for a product.
      *
      * @return Collection of all attributes in the system across all products

@@ -21,7 +21,6 @@ import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.utils.EntityAttributeUtils;
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.QuestionUtils;
 
 @Path("/v1/caps")
@@ -29,9 +28,6 @@ public class CapabilitiesEndpoint {
 
     @Inject
     CacheManager cm;
- 
-    @Inject
-    DatabaseUtils dbUtils;
 
     @Inject
     UserToken userToken;

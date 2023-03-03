@@ -329,11 +329,11 @@ public class QuestionUtils {
 
     public boolean saveQuestionQuestion(QuestionQuestion questionQuestion) {
         QuestionQuestionKey key = new QuestionQuestionKey(questionQuestion.getRealm(), questionQuestion.getParentCode(), questionQuestion.getChildCode());
-        return cacheManager.saveEntity(GennyConstants.CACHE_NAME_QUESTION, key, questionQuestion);
+        return cacheManager.saveEntity(GennyConstants.CACHE_NAME_QUESTIONQUESTION, key, questionQuestion);
     }
 
     public QuestionQuestion findQuestionQuestionBySourceAndTarget(String productCode, String sourceCode, String targetCode) {
         QuestionQuestionKey key = new QuestionQuestionKey(productCode, sourceCode, targetCode);
-        return (QuestionQuestion) cacheManager.getPersistableEntity(GennyConstants.CACHE_NAME_QUESTION, key);
+        return (QuestionQuestion) cacheManager.getPersistableEntity(GennyConstants.CACHE_NAME_QUESTIONQUESTION, key);
     }
 }
