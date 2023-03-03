@@ -12,6 +12,7 @@ import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.utils.AttributeUtils;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.EntityAttributeUtils;
@@ -32,6 +33,9 @@ public class BatchLoading {
 
     private static boolean isSynchronise;
     
+    @Inject
+    CacheManager cm;
+
     @Inject
     Logger log;
 
@@ -293,8 +297,15 @@ public class BatchLoading {
             try {
                 log.trace("Building " + combined + " entityAttribute");
                 entityAttribute = googleSheetBuilder.buildEntityAttribute(entry.getValue(), realmName);
+                // Attribute ID fix (post build, this is where the responsibility lies)
+                if(entityAttribute.getAttributeId() == null) {
+                    Long maxId = cm.getMaxAttributeId();
+                    log.error("Detected null attribute id for: " + combined + ". Setting to: " + maxId);
+                    entityAttribute.setAttributeId(maxId);
+                }
+
             } catch (BadDataException e) {
-                log.error(new StringBuilder("Error occurred when building EA ")
+                log.error(new StringBuilder("(SKIPPING) Error occurred when building EA ")
                     .append(combined)
                     .append(" - ").append(e.getMessage()).toString());
                 continue;
