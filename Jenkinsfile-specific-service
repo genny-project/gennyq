@@ -35,7 +35,7 @@ pipeline {
         stage("Build Dependencies") {
             steps {
               script {
-                if(env.BUILD_DEPENDENCIES) {
+                if(env.BUILD_DEPENDENCIES.toBoolean()) {
                   echo "Building qwandaq"
                   sh "./build.sh qwandaq serviceq kogito-common"
                 }

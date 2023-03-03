@@ -1,7 +1,7 @@
 package life.genny.bootq.models;
 
 
-import life.genny.bootq.sheets.RealmUnit;
+import life.genny.bootq.sheets.realm.RealmUnit;
 import life.genny.bootq.utils.GoogleSheetBuilder;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
@@ -10,10 +10,11 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.utils.AttributeUtils;
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.EntityAttributeUtils;
 import life.genny.qwandaq.utils.QuestionUtils;
 import life.genny.qwandaq.validation.Validation;
@@ -25,15 +26,16 @@ import org.jboss.logging.Logger;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 @ApplicationScoped
 public class BatchLoading {
 
     private static boolean isSynchronise;
     
+    @Inject
+    CacheManager cm;
+
     @Inject
     Logger log;
 
@@ -163,6 +165,11 @@ public class BatchLoading {
         Instant start = Instant.now();
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
             Attribute attribute = googleSheetBuilder.buildAttribute(entry.getValue(), realmName);
+            if(attribute.getId() == null) {
+                Long maxId = cm.getMaxAttributeId();
+                log.error("Detected null attribute id for: " + attribute.getCode() + ". Setting to: " + maxId);
+                attribute.setId(maxId + 1);
+            }
             attributeUtils.saveAttribute(attribute);
         }
         Instant end = Instant.now();
@@ -227,6 +234,12 @@ public class BatchLoading {
 		DataType dttBoolean = attributeUtils.getDataType(realmName, "DTT_BOOLEAN", false);
 		DataType dttText = attributeUtils.getDataType(realmName, "DTT_TEXT", false);
 
+        // above methods have a chance of returning null
+        if(dttBoolean == null)
+            throw new ItemNotFoundException("Missing DTT_BOOLEAN in " + realmName + " when persisting DEF_BaseEntityAttributes");
+        if(dttText == null)
+            throw new ItemNotFoundException("Missing DTT_TEXT in " + realmName + " when persisting DEF_BaseEntityAttributes");
+
 		Map<String, DataType> dttPrefixMap = Map.of(
 			Prefix.ATT_, dttBoolean,
 			Prefix.SER_, dttText,
@@ -237,22 +250,34 @@ public class BatchLoading {
 
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
             Map<String, String> row = entry.getValue();
-			String attributeCode = row.get("attributecode").replaceAll("^\"|\"$", "");
-			try {
+			
+            String baseEntityCode = row.get("baseentitycode");
+            String attributeCode = row.get("attributecode");
+
+            String combined = new StringBuilder(baseEntityCode).append(":").append(attributeCode).toString();
 				// find or create attribute
-				Attribute defAttr = attributeUtils.getAttribute(attributeCode);
-				if (defAttr == null) {
-					DataType dataType = dttPrefixMap.get(attributeCode.substring(0, 4));
-					defAttr = new Attribute(attributeCode, attributeCode, dataType);
-					defAttr.setRealm(realmName);
-					attributeUtils.saveAttribute(defAttr);
-				}
-				EntityAttribute entityAttribute = googleSheetBuilder.buildEntityAttribute(row, realmName, defAttr.getCode());
-				beaUtils.updateEntityAttribute(entityAttribute);
-			} catch (ItemNotFoundException e) {
-				log.warn(e.getMessage());
-			}
+            
+            Attribute defAttr;
+            try {
+                defAttr = attributeUtils.getAttribute(attributeCode);
+            } catch (ItemNotFoundException e) {
+                log.trace(new StringBuilder("Missing attribute ")
+                    .append(attributeCode).append(" when building ").append(combined).append("! Creating!").toString());
+                
+                DataType dataType = dttPrefixMap.get(attributeCode.substring(0, 4));                    
+                defAttr = new Attribute(attributeCode, attributeCode, dataType);
+                defAttr.setRealm(realmName);
+                attributeUtils.saveAttribute(defAttr);
+                log.trace("Saving attribute: " + defAttr + " successful");
+            }
+            try {
+                EntityAttribute entityAttribute = googleSheetBuilder.buildEntityAttribute(row, realmName, defAttr.getCode());
+                beaUtils.updateEntityAttribute(entityAttribute);
+            } catch(BadDataException e) {
+                log.error("Error occurred when persisting: " + combined + ". " + e.getMessage());
+            }
         }
+
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
         log.info("Finished definition entity attributes, cost:" + timeElapsed.toMillis() + " millSeconds, items: " + project.entrySet().size());
@@ -267,15 +292,30 @@ public class BatchLoading {
     public void persistBaseEntityAttributes(Map<String, Map<String, String>> project, String realmName) {
         Instant start = Instant.now();
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
-			try {
-				EntityAttribute entityAttribute = googleSheetBuilder.buildEntityAttribute(entry.getValue(), realmName);
-				beaUtils.updateEntityAttribute(entityAttribute);
-			} catch (ItemNotFoundException e) { // ensure to print beCode and eaCode
-				log.warn(new StringBuilder("Error occurred when building ")
-                    .append(entry.getValue().get("baseentitycode")).append(":").append(entry.getValue().get("attributecode"))
+			
+            String baseEntityCode = entry.getValue().get("baseentitycode");
+            String attributeCode = entry.getValue().get("attributecode");
+
+            String combined = new StringBuilder(baseEntityCode).append(":").append(attributeCode).toString();
+
+            EntityAttribute entityAttribute;
+            try {
+                log.trace("Building " + combined + " entityAttribute");
+                entityAttribute = googleSheetBuilder.buildEntityAttribute(entry.getValue(), realmName);
+
+            } catch (BadDataException e) {
+                log.error(new StringBuilder("(SKIPPING) Error occurred when building EA ")
+                    .append(combined)
                     .append(" - ").append(e.getMessage()).toString());
-			}
+                continue;
+            }
+            
+            boolean success = beaUtils.updateEntityAttribute(entityAttribute);
+            if(!success) {
+                log.error("Error occured when persisting EntityAttribute: " + combined);
+            }
         }
+
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
         log.info("Finished entity attributes, cost:" + timeElapsed.toMillis() + " millSeconds, items: " + project.entrySet().size());

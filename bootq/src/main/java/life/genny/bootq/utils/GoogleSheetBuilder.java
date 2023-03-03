@@ -6,6 +6,7 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.utils.AttributeUtils;
@@ -195,9 +196,9 @@ public class GoogleSheetBuilder {
 		Attribute attribute;
 		try {
 			attribute = attributeUtils.getAttribute(realmName, code, false);
-			log.debug("Found Attribute: " + attribute.getCode());
+			log.trace("Found Attribute: " + attribute.getCode());
 		} catch(ItemNotFoundException e) {
-			log.trace("Creating new Attribute: " + code);
+			log.trace("[!] Creating new Attribute: " + code);
 			// create new attribute if not found
 			attribute = new Attribute();
 			attribute.setCode(code);
@@ -267,14 +268,26 @@ public class GoogleSheetBuilder {
 		EntityAttribute entityAttribute = new EntityAttribute();
 		String baseEntityCode = row.get("baseentitycode");
 
-		// No need to NPE check here. Both methods throw ItemNotFound
-		BaseEntity baseEntity = beUtils.getBaseEntity(realmName, baseEntityCode, false);
-		Attribute attribute = attributeUtils.getAttribute(realmName, attributeCode, false);
+		BaseEntity baseEntity;
+		Attribute attribute;
+
+		try {
+			baseEntity = beUtils.getBaseEntity(realmName, baseEntityCode, false);
+		} catch(ItemNotFoundException e) {
+			throw new BadDataException("Bad or missing BaseEntity: " + baseEntityCode + " in product " + realmName, e);
+		}
+
+		try {
+			attribute = attributeUtils.getAttribute(realmName, attributeCode, false);
+		} catch(ItemNotFoundException e) {
+			throw new BadDataException("Bad or missing Attribute: " + attributeCode + " in product " + realmName, e);
+		}
 
 		entityAttribute.setBaseEntityCode(baseEntityCode);
 		entityAttribute.setBaseEntityId(baseEntity.getId());
-		entityAttribute.setAttributeCode(attributeCode);
-		entityAttribute.setAttributeId(attribute.getId());
+		entityAttribute.setAttribute(attribute);
+		// entityAttribute.setAttributeCode(attributeCode);
+		// entityAttribute.setAttributeId(attribute.getId());
 		entityAttribute.setRealm(realmName);
         
         String valueString = row.get(VALUESTRING);

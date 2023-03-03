@@ -1,6 +1,7 @@
 package life.genny.qwandaq.data;
 
 import life.genny.qwandaq.CoreEntityPersistable;
+import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
@@ -21,7 +22,6 @@ import life.genny.qwandaq.serialization.userstore.UserStoreInitializerImpl;
 import life.genny.qwandaq.serialization.userstore.UserStoreKeyInitializerImpl;
 import life.genny.qwandaq.serialization.validation.ValidationInitializerImpl;
 import life.genny.qwandaq.serialization.validation.ValidationKeyInitializerImpl;
-import life.genny.qwandaq.utils.CommonUtils;
 
 import org.infinispan.client.hotrod.DefaultTemplate;
 import org.infinispan.client.hotrod.RemoteCache;
@@ -260,8 +260,18 @@ public class GennyCache {
 		} catch (Exception e) {
 			log.error(ANSIColour.RED + "Exception when inserting entity (key=" + key.getKeyString() + ") into cache: " + cacheName);
 			log.error("Value: " + (value != null ? value.toString() : "null"));
+			if(value instanceof EntityAttribute ea) {
+				log.error("EntityAttribute ATTRIBUTE: " + ea.getAttributeCode());
+				log.error("EntityAttribute ATTRIBUTE_ID: " + ea.getAttributeId());
+			}
 			log.error(e.getMessage());
-			CommonUtils.printCollection(e.getStackTrace(), log::error, (stack) -> ANSIColour.RED + stack.toString() + ANSIColour.RESET);
+			StringBuilder sb = new StringBuilder(ANSIColour.RED);
+			for(StackTraceElement stack : e.getStackTrace()) {
+				sb.append(stack.toString())
+					.append('\n');
+			}
+			sb.append(ANSIColour.RESET);
+			log.error(sb.toString());
 			return false;
 		}
 		

@@ -4,7 +4,7 @@ import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.*;
 
 import life.genny.bootq.sheets.DataUnit;
-import life.genny.bootq.sheets.ESheetTitle;
+import life.genny.bootq.sheets.ESheetConfiguration;
 import life.genny.bootq.utils.GoogleImportService;
 import life.genny.bootq.utils.XlsxImport;
 
@@ -20,6 +20,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * A POJO representation of a Google Doc and 
+ */
 public class ModuleUnit extends DataUnit {
     protected static final Logger log = org.apache.logging.log4j.LogManager
             .getLogger(MethodHandles.lookup().lookupClass().getCanonicalName());
@@ -37,7 +40,7 @@ public class ModuleUnit extends DataUnit {
         for (Sheet sheet : sheets) {
             SheetProperties sheetProperties = (SheetProperties)sheet.get("properties");
             String title = sheetProperties.getTitle();
-            if (ESheetTitle.isValidTitle(title))
+            if (ESheetConfiguration.isValidTitle(title))
                 titles.add(title);
         }
 
@@ -90,15 +93,23 @@ public class ModuleUnit extends DataUnit {
         return valueRanges;
     }
 
-    private Map<String, Map<String, String>> getData(Sheets sheetsService, ESheetTitle titleData,
-    List<List<Object>> values, String sheetURI) {
+    /**
+     * Get all rows for a sheet within this Google Doc/Module
+     * @param sheetsService - {@link Sheets Google Sheets Service}
+     * @param sheetConfiguration - sheet metadata including the title of the sheet to target
+     * @param values - the values to map
+     * @param sheetId - the id of the google doc to import from 
+     * @return
+     */
+    private Map<String, Map<String, String>> parseRows(Sheets sheetsService, ESheetConfiguration sheetConfiguration,
+    List<List<Object>> values, String sheetId) {
         XlsxImport xlsxImportOnline = new XlsxImport(sheetsService);
         Map<String, Map<String, String>> tmp =  new HashMap<>();
 
         try {
-            tmp = xlsxImportOnline.mappingKeyHeaderToHeaderValues(values, titleData.getDataKeyColumns());
+            tmp = xlsxImportOnline.mappingKeyHeaderToHeaderValues(values, sheetConfiguration.getHeaderRow());
         } catch (Exception ex) {
-            logFetchExceptionForSheets(ex.getMessage(), titleData.getTitle(), sheetURI);
+            logFetchExceptionForSheets(ex.getMessage(), sheetConfiguration.getTitle(), sheetId);
         }
         return tmp;
     }
@@ -112,39 +123,41 @@ public class ModuleUnit extends DataUnit {
             String title = valueRange.getRange().split("!")[0];
 
             if (titles.contains(title)) {
-                ESheetTitle titleData = ESheetTitle.getByTitle(title);
+                ESheetConfiguration titleData = ESheetConfiguration.getByTitle(title);
 
                 List<List<Object>> values = valueRange.getValues();
-                log.info("processing " + title + ", value size:" + values.size());
+                log.info("processing " + titleData.name() + ", value size:" + values.size());
+                
                 switch (titleData) {
                     case VALIDATION:
-                        this.validations = getData(sheetsService, titleData, values, sheetURI);
+                        this.validations = parseRows(sheetsService, titleData, values, sheetURI);
                         break;
                     case DATATYPE:
-                        this.dataTypes= getData(sheetsService, titleData, values, sheetURI);
+                        this.dataTypes= parseRows(sheetsService, titleData, values, sheetURI);
                         break;
                     case ATTRIBUTE:
-                        this.attributes= getData(sheetsService, titleData, values, sheetURI);
+                        this.attributes= parseRows(sheetsService, titleData, values, sheetURI);
                         break;
                     case BASE_ENTITY:
-                        this.baseEntitys= getData(sheetsService, titleData, values, sheetURI);
+                        this.baseEntitys= parseRows(sheetsService, titleData, values, sheetURI);
                         break;
                     case QUESTION_QUESTION:
-                        this.questionQuestions= getData(sheetsService, titleData, values, sheetURI);
+                        this.questionQuestions= parseRows(sheetsService, titleData, values, sheetURI);
                         break;
                     case QUESTION:
-                        this.questions= getData(sheetsService, titleData, values, sheetURI);
+                        this.questions= parseRows(sheetsService, titleData, values, sheetURI);
                         break;
                     case ENTITY_ATTRIBUTE:
-                        this.entityAttributes= getData(sheetsService, titleData, values, sheetURI);
+                        this.entityAttributes= parseRows(sheetsService, titleData, values, sheetURI);
                         break;
                     case DEF_BASE_ENTITY:
-                        this.def_baseEntitys= getData(sheetsService, titleData, values, sheetURI);
+                        this.def_baseEntitys= parseRows(sheetsService, titleData, values, sheetURI);
                         break;
                     case DEF_ENTITY_ATTRIBUTE:
-                        this.def_entityAttributes= getData(sheetsService, titleData, values, sheetURI);
+                        this.def_entityAttributes= parseRows(sheetsService, titleData, values, sheetURI);
                         break;
                     default:
+                        log.error("Unhandled ESheetTitle!: " + title);
                         break;
                 }
             }

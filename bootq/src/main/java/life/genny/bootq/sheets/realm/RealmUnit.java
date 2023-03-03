@@ -1,4 +1,4 @@
-package life.genny.bootq.sheets;
+package life.genny.bootq.sheets.realm;
 
 import java.lang.invoke.MethodHandles;
 import java.util.HashMap;
@@ -8,6 +8,7 @@ import java.util.function.BinaryOperator;
 
 import com.google.common.collect.Maps;
 
+import life.genny.bootq.sheets.DataUnit;
 import life.genny.bootq.sheets.module.GennyModule;
 
 public class RealmUnit extends DataUnit {
@@ -142,48 +143,48 @@ public class RealmUnit extends DataUnit {
         } else {
             module = new GennyModule(realm.get("sheetID".toLowerCase()));
             Optional<HashMap<String, Map<String, String>>> tmpOptional = module.getDataUnits().stream()
-                    .map(moduleUnit -> Maps.newHashMap(moduleUnit.baseEntitys))
+                    .map(moduleUnit -> Maps.newHashMap(moduleUnit.getBaseEntitys()))
                     .reduce(overrideByPrecedence);
 
             tmpOptional.ifPresent(stringMapHashMap -> super.baseEntitys = stringMapHashMap);
 
             tmpOptional = module.getDataUnits().stream()
-                    .map(moduleUnit -> Maps.newHashMap(moduleUnit.attributes))
+                    .map(moduleUnit -> Maps.newHashMap(moduleUnit.getAttributes()))
                     .reduce(overrideByPrecedence);
             tmpOptional.ifPresent(stringMapHashMap -> super.attributes = stringMapHashMap);
 
             tmpOptional = module.getDataUnits().stream()
-                    .map(moduleUnit -> Maps.newHashMap(moduleUnit.def_baseEntitys))
+                    .map(moduleUnit -> Maps.newHashMap(moduleUnit.getDef_baseEntitys()))
                     .reduce(overrideByPrecedence);
             tmpOptional.ifPresent(stringMapHashMap -> super.def_baseEntitys= stringMapHashMap);
 
             tmpOptional = module.getDataUnits().stream()
-                    .map(moduleUnit -> Maps.newHashMap(moduleUnit.def_entityAttributes))
+                    .map(moduleUnit -> Maps.newHashMap(moduleUnit.getDef_entityAttributes()))
                     .reduce(overrideByPrecedence);
             tmpOptional.ifPresent(stringMapHashMap -> super.def_entityAttributes= stringMapHashMap);
 
             tmpOptional = module.getDataUnits().stream()
-                    .map(mm -> Maps.newHashMap(mm.questions))
+                    .map(mm -> Maps.newHashMap(mm.getQuestions()))
                     .reduce(overrideByPrecedence);
             tmpOptional.ifPresent(stringMapHashMap -> super.questions = stringMapHashMap);
 
             tmpOptional = module.getDataUnits().stream()
-                    .map(mm -> Maps.newHashMap(mm.entityAttributes))
+                    .map(mm -> Maps.newHashMap(mm.getEntityAttributes()))
                     .reduce(overrideByPrecedence);
             tmpOptional.ifPresent(stringMapHashMap -> super.entityAttributes = stringMapHashMap);
 
             tmpOptional = module.getDataUnits().stream()
-                    .map(mm -> Maps.newHashMap(mm.questionQuestions))
+                    .map(mm -> Maps.newHashMap(mm.getQuestionQuestions()))
                     .reduce(overrideByPrecedence);
             tmpOptional.ifPresent(stringMapHashMap -> super.questionQuestions = stringMapHashMap);
 
             tmpOptional = module.getDataUnits().stream()
-                    .map(mm -> Maps.newHashMap(mm.validations))
+                    .map(mm -> Maps.newHashMap(mm.getValidations()))
                     .reduce(overrideByPrecedence);
             tmpOptional.ifPresent(stringMapHashMap -> super.validations = stringMapHashMap);
 
             tmpOptional = module.getDataUnits().stream()
-                    .map(mm -> Maps.newHashMap(mm.dataTypes))
+                    .map(mm -> Maps.newHashMap(mm.getDataTypes()))
                     .reduce(overrideByPrecedence);
             tmpOptional.ifPresent(stringMapHashMap -> super.dataTypes = stringMapHashMap);
 
