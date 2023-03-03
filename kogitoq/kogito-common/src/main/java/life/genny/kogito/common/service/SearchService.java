@@ -26,7 +26,6 @@ import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.entity.search.trait.Ord;
 import life.genny.qwandaq.entity.search.trait.Sort;
-import life.genny.qwandaq.utils.CacheUtils;
 
 @ApplicationScoped
 public class SearchService extends KogitoService {

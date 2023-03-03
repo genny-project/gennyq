@@ -49,11 +49,13 @@ import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.entity.search.trait.Ord;
 import life.genny.qwandaq.entity.search.trait.Sort;
+import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.exception.runtime.QueryBuilderException;
 import life.genny.qwandaq.managers.CacheManager;
+import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.Page;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -102,6 +104,8 @@ public class FyodorUltra {
 		// find codes and total
 		Page page = fetchBaseEntities(searchEntity);
 		Set<String> allowed = searchEntity.allowedColumns();
+		log.debug("Got: " + CommonUtils.getArrayString(allowed, String::toString) + " as allowedColumns");
+
 		// apply filter
 		int index = 0;
 		for (BaseEntity baseEntity : page.getItems()) {
@@ -111,7 +115,14 @@ public class FyodorUltra {
 				EntityAttribute ea;
 				if (attributeCode.startsWith("_")) {
 					// handle asociated columns
-					ea = getAssociatedColumnValue(baseEntity, attributeCode);
+					try {
+						ea = getAssociatedColumnValue(baseEntity, attributeCode);
+						// De-escalate the known issue and skip the bad ea
+					} catch(BadDataException e) {
+						log.error(ANSIColour.RED + e.getMessage() + ANSIColour.RESET);
+						continue;
+					}
+					
 					// set attr codes to associated code
 					ea.setAttributeCode(attributeCode);
 					ea.getAttribute().setCode(attributeCode);
@@ -646,7 +657,7 @@ public class FyodorUltra {
 		// recursively find value
 		EntityAttribute ea = getRecursiveColumnLink(entity, cleanCode);
 		if (ea == null) {
-			return null;
+			throw new BadDataException("Null EntityAttribute when parsing: " + entity.getCode() + ":" + cleanCode);
 		}
 
 		// update attribute code for frontend
@@ -666,7 +677,7 @@ public class FyodorUltra {
 	public EntityAttribute getRecursiveColumnLink(BaseEntity entity, String code) {
 
 		if (entity == null)
-			return null;
+			throw new NullParameterException("entity");
 
 		// split code to find next attribute in line
 		String[] array = code.split("__");
@@ -675,10 +686,12 @@ public class FyodorUltra {
 
 		// recursion
 		if (array.length > 1) {
+			String entityCode = entity.getCode();
 			entity = beUtils.getBaseEntityFromLinkAttribute(entity, attributeCode);
 			if (entity == null) {
-				return null;
+				throw new BadDataException("BaseEntity fetched from " + entityCode + ":" + attributeCode + " is null");
 			}
+			
 			return getRecursiveColumnLink(entity, code);
 		}
 

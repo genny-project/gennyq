@@ -61,6 +61,18 @@ public class CommonUtils {
         return msg;
     }
 
+    public static <T> void printCollection(T[] collection, FILogCallback logCallback, FIGetStringCallBack<T> logLine) {
+        if(collection == null) {
+            logCallback.log("[!] Empty Collection");
+            new Exception().printStackTrace();
+            return;
+        }
+
+        for(T item : collection) {
+            logCallback.log(logLine.getString(item));
+        }
+    }
+
     public static <T>void printCollection(Collection<T> collection, FILogCallback logCallback, FIGetStringCallBack<T> logLine) {
         if(collection == null) {
             logCallback.log("Could not find collection");

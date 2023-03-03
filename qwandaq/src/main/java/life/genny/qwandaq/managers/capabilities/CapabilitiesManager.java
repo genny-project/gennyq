@@ -156,6 +156,7 @@ public class CapabilitiesManager extends Manager {
 		}
 		CapabilitySet cSet = new CapabilitySet(target);
 		cSet.addAll(capabilities.stream()
+			.filter(ea -> ea != null)
 			.map((EntityAttribute ea) -> {
 				log.trace("	[!] " + ea.getAttributeCode() + " = " + ea.getValueString());
 				return Capability.getFromEA(ea);
