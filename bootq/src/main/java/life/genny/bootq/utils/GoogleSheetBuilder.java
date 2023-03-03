@@ -205,9 +205,10 @@ public class GoogleSheetBuilder {
 			Long id = cm.getMaxAttributeId();
 			attribute.setId(id+1);
 		}
+		Boolean privacy = toBoolean(row.get("privacy"));
 		
 		attribute.setDttCode(row.get("datatype"));
-        attribute.setDefaultPrivacyFlag(toBoolean(row.get("privacy")));
+        attribute.setDefaultPrivacyFlag(privacy == null ? false : privacy);
         attribute.setDescription(row.get("description"));
         attribute.setHelp(row.get("help"));
         attribute.setPlaceholder(row.get("placeholder"));
@@ -294,8 +295,8 @@ public class GoogleSheetBuilder {
 		entityAttribute.setValueBoolean(valueBoolean);
 
 		entityAttribute.setWeight(weight);
-		entityAttribute.setPrivacyFlag(privacy);
-		entityAttribute.setConfirmationFlag(confirmation);
+		entityAttribute.setPrivacyFlag(privacy == null ? false : privacy);
+		entityAttribute.setConfirmationFlag(confirmation == null ? false : confirmation);
 
         return entityAttribute;
     }
@@ -333,8 +334,8 @@ public class GoogleSheetBuilder {
 		question.setAttributeCode(attributeCode);
         question.setHtml(html);
 		question.setPlaceholder(placeholder);
-        question.setReadonly(readonly);
-        question.setMandatory(mandatory);
+        question.setReadonly(readonly == null ? false : readonly);
+        question.setMandatory(mandatory == null ? false : mandatory);
         question.setIcon(icon);
         question.setRealm(realmName);
 
@@ -373,10 +374,10 @@ public class GoogleSheetBuilder {
 		questionQuestion.setParentCode(parentCode);
 		questionQuestion.setChildCode(targetCode);
 		questionQuestion.setWeight(weight);
-		questionQuestion.setMandatory(mandatory);
-		questionQuestion.setReadonly(readonly);
-		questionQuestion.setDisabled(disabled);
-		questionQuestion.setHidden(hidden);
+        questionQuestion.setReadonly(readonly == null ? false : readonly);
+        questionQuestion.setMandatory(mandatory == null ? false : mandatory);
+		questionQuestion.setDisabled(disabled == null ? false : disabled);
+		questionQuestion.setHidden(hidden == null ? false : hidden);
 		questionQuestion.setIcon(icon);
 		questionQuestion.setRealm(realmName);
 
