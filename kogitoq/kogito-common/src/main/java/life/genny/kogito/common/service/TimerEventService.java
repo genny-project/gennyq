@@ -7,7 +7,6 @@ import javax.inject.Inject;
 
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.models.ServiceToken;
-import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.EntityAttributeUtils;
 import life.genny.qwandaq.utils.SearchUtils;
 import org.jboss.logging.Logger;
@@ -29,9 +28,6 @@ public class TimerEventService extends KogitoService {
 
 	@Inject
 	ServiceToken serviceToken;
-
-	@Inject
-	DatabaseUtils databaseUtils;
 
 	@Inject
 	EntityAttributeUtils beaUtils;

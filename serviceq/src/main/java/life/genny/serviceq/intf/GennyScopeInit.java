@@ -7,13 +7,11 @@ import javax.inject.Inject;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-import javax.persistence.EntityManager;
 
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.DatabaseUtils;
 
 /**
  * Custom Genny Scope Initializer class for initializing the UserToken after
@@ -32,12 +30,6 @@ public class GennyScopeInit {
 	@Inject
 	BaseEntityUtils beUtils;
 
-	@Inject
-	DatabaseUtils databaseUtils;
-
-	@Inject
-	EntityManager entityManager;
-
 	/**
 	 * Default Constructor.
 	 **/
@@ -51,12 +43,6 @@ public class GennyScopeInit {
 	 * @param data The consumed message from kafka
 	 **/
 	public JsonObject init(String data) {
-
-		if (databaseUtils == null) {
-			log.error("NULL DATABASE UTILS");
-			this.databaseUtils = new DatabaseUtils();
-			this.databaseUtils.setEntityManager(entityManager);
-		}
 
 		// activate request scope and fetch UserToken
 		Arc.container().requestContext().activate();

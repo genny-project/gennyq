@@ -15,7 +15,6 @@ import org.jboss.logging.Logger;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-import javax.persistence.EntityManager;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -36,9 +35,6 @@ public class Search {
 
 	@Context
 	HttpServerRequest request;
-
-	@Inject
-	EntityManager entityManager;
 
 	@Inject
 	BaseEntityUtils beUtils;
