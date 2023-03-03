@@ -104,8 +104,6 @@ public class AttributeUtils {
         if (attribute == null) {
             throw new ItemNotFoundException(productCode, code);
         }
-        if(attribute.getId() == null)
-            log.error("NULL ATTRIBUTE ID DETECTED FOR ATTRIBUTE: " + code + " IN REALM " + productCode);
         if(bundleDataType) {
             DataType dataType = getDataType(attribute, bundleValidationList);
             attribute.setDataType(dataType);
