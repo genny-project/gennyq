@@ -159,6 +159,7 @@ public class AttributeUtils {
     public void saveValidation(Validation validation) {
         ValidationKey key = new ValidationKey(validation.getRealm(), validation.getCode());
         cm.saveEntity(GennyConstants.CACHE_NAME_VALIDATION, key, validation);
+        updateAttributesLastUpdatedAt(System.currentTimeMillis());
     }
 
     /**
@@ -167,6 +168,7 @@ public class AttributeUtils {
     public void saveDataType(DataType dataType) {
         DataTypeKey key = new DataTypeKey(dataType.getRealm(), dataType.getDttCode());
         cm.saveEntity(GennyConstants.CACHE_NAME_DATATYPE, key, dataType);
+        updateAttributesLastUpdatedAt(System.currentTimeMillis());
     }
 
     /**
@@ -175,6 +177,7 @@ public class AttributeUtils {
     public void saveAttribute(Attribute attribute) {
         AttributeKey key = new AttributeKey(attribute.getRealm(), attribute.getCode());
         cm.saveEntity(GennyConstants.CACHE_NAME_ATTRIBUTE, key, attribute);
+        updateAttributesLastUpdatedAt(System.currentTimeMillis());
     }
 
 	/**
