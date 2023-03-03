@@ -344,7 +344,7 @@ public class GoogleSheetBuilder {
         String icon = row.get("icon");
 
 		question.setName(name);
-		question.setAttributeCode(attributeCode);
+		question.setAttribute(attribute);
         question.setHtml(html);
 		question.setPlaceholder(placeholder);
         question.setReadonly(readonly == null ? false : readonly);

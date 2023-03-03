@@ -331,12 +331,25 @@ public class BatchLoading {
         Instant start = Instant.now();
 
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
-			try {
-				Question question = googleSheetBuilder.buildQuestion(entry.getValue(), realmName);
-				questionUtils.saveQuestion(question);
+			Question question;
+            try {
+				question = googleSheetBuilder.buildQuestion(entry.getValue(), realmName);
 			} catch (ItemNotFoundException e) {
-				log.warn(e.getMessage());
+				log.warn("Error Building Question: " + e.getMessage());
+                continue;
 			}
+            
+            // Verify question attribute id. The attribute tied to question at this point will exist (from buildQuestion)
+            Attribute attribute = attributeUtils.getAttribute(question.getRealm(), question.getAttributeCode());
+            Long realAttributeId = attribute.getId();
+            
+            if(question.getAttributeId() != realAttributeId) {
+                log.error("Found attribute ID mismatch for Question: " + question.getCode() + " and attribute: " + attribute.getCode() + ". Setting Question AttrID to Attribute ID: " + realAttributeId);
+                question.setAttributeId(realAttributeId);
+            }
+
+            questionUtils.saveQuestion(question);
+
 		}
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
