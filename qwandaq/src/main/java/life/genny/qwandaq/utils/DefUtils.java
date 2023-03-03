@@ -225,17 +225,19 @@ public class DefUtils {
 	 * @return
 	 */
 	public String getDefinitionPrefix(String productCode, String definitionCode) {
+		// fetch prefix attribute
 		EntityAttribute prefixAttr = beaUtils.getEntityAttribute(productCode, definitionCode, Attribute.PRI_PREFIX, false);
-		if(prefixAttr == null) {
-			// if not found, we can check in the parent defs
-			List<String> parentCodes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(definitionCode, Attribute.LNK_INCLUDE);
-			if (parentCodes != null) {
-				for (String code : parentCodes) {
-					try {
-						return getDefinitionPrefix(productCode, code);
-					} catch (DefinitionException e) {
-						continue;
-					}
+		if(prefixAttr != null) {
+			return prefixAttr.getValueString();
+		}
+		// if not found, we can check in the parent defs
+		List<String> parentCodes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(definitionCode, Attribute.LNK_INCLUDE);
+		if (parentCodes != null) {
+			for (String code : parentCodes) {
+				try {
+					return getDefinitionPrefix(productCode, code);
+				} catch (DefinitionException e) {
+					continue;
 				}
 			}
 		}
