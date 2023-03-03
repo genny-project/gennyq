@@ -3,7 +3,13 @@ package life.genny.kogito.common.core;
 import static life.genny.kogito.common.utils.KogitoUtils.UseService.GADAQ;
 import static life.genny.qwandaq.entity.PCM.PCM_TREE;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import javax.enterprise.context.ApplicationScoped;
@@ -157,9 +163,8 @@ public class Dispatch {
 	}
 
 	/**
-	 * @param processData
-	 * @param msg
-	 * @return
+	 * @param flatMapOfAsks
+	 * @return True if the map contains a non-readonly ask, False otherwise
 	 */
 	public Boolean containsNonReadonly(Map<String, Ask> flatMapOfAsks) {
 		for (Ask ask : flatMapOfAsks.values()) {
@@ -316,7 +321,7 @@ public class Dispatch {
 	/**
 	 * Create the events ask group.
 	 * 
-	 * @param events     The events string
+	 * @param buttonEvents     The events string
 	 * @param sourceCode The source entity code
 	 * @param targetCode The target entity code
 	 * @return The events ask group
@@ -370,9 +375,9 @@ public class Dispatch {
 	 * NOTE: This needs optimisation. Ultimately we would like
 	 * to make use of a flat map, or tree map.
 	 *
-	 * @param asks   The ask to traverse
+	 * @param ask   The ask to traverse
 	 * @param target The target entity used in finding values
-	 * @param asks   The msg to add entities to
+	 * @param msg   The msg to add entities to
 	 */
 	public void handleDropdownAttributes(Ask ask, String parentCode, BaseEntity target, QBulkMessage msg) {
 
@@ -432,7 +437,7 @@ public class Dispatch {
 	 *
 	 * @param ask      The Ask to traverse
 	 * @param target   The target entity used in processing
-	 * @param rootCode The code of the root question used in sending DD messages
+	 * @param parentCode The code of the root question used in sending DD messages
 	 */
 	public void sendDropdownItems(Ask ask, BaseEntity target, String parentCode) {
 
