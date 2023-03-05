@@ -234,12 +234,6 @@ public class BatchLoading {
 		DataType dttBoolean = attributeUtils.getDataType(realmName, "DTT_BOOLEAN", false);
 		DataType dttText = attributeUtils.getDataType(realmName, "DTT_TEXT", false);
 
-        // above methods have a chance of returning null
-        if(dttBoolean == null)
-            throw new ItemNotFoundException("Missing DTT_BOOLEAN in " + realmName + " when persisting DEF_BaseEntityAttributes");
-        if(dttText == null)
-            throw new ItemNotFoundException("Missing DTT_TEXT in " + realmName + " when persisting DEF_BaseEntityAttributes");
-
 		Map<String, DataType> dttPrefixMap = Map.of(
 			Prefix.ATT_, dttBoolean,
 			Prefix.SER_, dttText,
@@ -254,13 +248,12 @@ public class BatchLoading {
             String baseEntityCode = row.get("baseentitycode");
             String attributeCode = row.get("attributecode");
 
-            String combined = new StringBuilder(baseEntityCode).append(":").append(attributeCode).toString();
-				// find or create attribute
-            
+				     // find or create attribute 
             Attribute defAttr;
             try {
                 defAttr = attributeUtils.getAttribute(attributeCode);
             } catch (ItemNotFoundException e) {
+                String combined = new StringBuilder(baseEntityCode).append(":").append(attributeCode).toString();
                 log.trace(new StringBuilder("Missing attribute ")
                     .append(attributeCode).append(" when building ").append(combined).append("! Creating!").toString());
                 
