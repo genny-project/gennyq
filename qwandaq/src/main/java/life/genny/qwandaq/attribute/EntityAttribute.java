@@ -14,6 +14,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -33,7 +34,6 @@ import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.time.DateUtils;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.javamoney.moneta.Money;
 import org.jboss.logging.Logger;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -680,15 +680,8 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 
 					} else if (className
 							.equalsIgnoreCase(LocalDate.class.getCanonicalName())) {
-						Date olddate = null;
-						try {
-							olddate = DateUtils.parseDate(result, "M/y", "yyyy-MM-dd", "yyyy/MM/dd",
-									"yyyy-MM-dd'T'HH:mm:ss", "yyyy-MM-dd'T'HH:mm:ss.SSSZ");
-						} catch (java.text.ParseException e) {
-							olddate = DateUtils.parseDate(result, "yyyy-MM-dd", "yyyy-MM-dd'T'HH:mm:ss",
-									"yyyy-MM-dd HH:mm:ss",
-									"yyyy-MM-dd'T'HH:mm:ss.SSSZ", "yyyy-MM-dd HH:mm:ss.SSSZ");
-						}
+						DateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+						Date olddate = format.parse(result);
 						final LocalDate date = olddate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 						setValueDate(date);
 					} else if (className

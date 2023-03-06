@@ -34,7 +34,6 @@ import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
-import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.HttpUtils;
 import life.genny.serviceq.Service;
 
@@ -64,9 +63,6 @@ public class Cache {
 
 	@Inject
 	CacheManager cm;
-
-	@Inject
-	DatabaseUtils databaseUtils;
 
 	@Inject
 	BaseEntityUtils beUtils;
@@ -213,11 +209,6 @@ public class Cache {
 				return Response.ok(jsonb.toJson(be)).build();
 			}
 
-		} else if (key.startsWith("RUL_")) {
-			log.info("Reading rule entity from raw cache: " + key);
-			BaseEntity be = databaseUtils.findBaseEntityByCode(productCode, key);
-
-			return Response.ok(jsonb.toJson(be)).build();
 		} else {
 
 			if ("CAPABILITIES".equals(key)) {

@@ -7,7 +7,6 @@ import javax.json.bind.JsonbBuilder;
 import javax.persistence.EntityManager;
 
 import life.genny.qwandaq.utils.*;
-import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.core.Dispatch;
 import life.genny.kogito.common.core.ProcessAnswers;
@@ -59,9 +58,6 @@ public abstract class KogitoService {
 
     @Inject
     Dispatch dispatch;
-
-	@Inject
-	DatabaseUtils databaseUtils;
 
 	@Inject
 	RoleManager roleManager;

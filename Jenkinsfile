@@ -39,8 +39,8 @@ pipeline {
 					"Build Messages" : {
 						sh "./build-docker.sh messages"
 					},
-					"Build Shleemy" : {
-						sh "./build-docker.sh shleemy"
+					"Build Bootq" : {
+						sh "./build-docker.sh bootq"
                     }
                 )
             }

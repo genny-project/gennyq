@@ -47,6 +47,7 @@ public class Events {
     public static final String QUE_TABLE_ = "QUE_TABLE_";
     public static final String QUE_EXPLORE_ = "QUE_EXPLORE_";
     public static final String QUE_ADD_ = "QUE_ADD_";
+    public static final String QUE_ADD_MESSAGE = "QUE_ADD_MESSAGE";
 
     static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
     static Jsonb jsonb = JsonbBuilder.create();
@@ -178,6 +179,11 @@ public class Events {
             return;
         }
 
+        if (QUE_ADD_MESSAGE.equals(code)) {
+            kogitoUtils.triggerWorkflow(SELF, "messageLifecycle", "userCode", userToken.getUserCode());
+            return;
+        }
+
 		// add item
 		if (code.startsWith(QUE_ADD_)) {
             log.debug("QUE_ADD Triggered");
@@ -194,10 +200,6 @@ public class Events {
 			if (Prefix.PER_.equals(prefix)) {
 				kogitoUtils.triggerWorkflow(SELF, "userLifecycle", json);
                 return;
-			}
-
-			if (Prefix.MSG_.equals(prefix+"_")) {
-                kogitoUtils.triggerWorkflow(SELF, "messageLifecycle", "userCode", userToken.getUserCode());
 			}
 		}
 

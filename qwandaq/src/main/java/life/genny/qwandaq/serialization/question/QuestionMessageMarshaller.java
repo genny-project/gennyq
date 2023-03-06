@@ -73,7 +73,7 @@ public class QuestionMessageMarshaller implements MessageMarshaller<Question> {
 		writer.writeBoolean("mandatory", question.getMandatory());
 		writer.writeBoolean("oneshot", question.getOneshot());
 		writer.writeString("placeholder", question.getPlaceholder());
-		writer.writeBoolean("writeonly", question.getReadonly());
+		writer.writeBoolean("readonly", question.getReadonly());
 		writer.writeLong("attribute_id", question.getAttributeId());
 		writer.writeString("capreqs", CapabilityConverter.convertToDBColumn(question.getCapabilityRequirements()));
 	}

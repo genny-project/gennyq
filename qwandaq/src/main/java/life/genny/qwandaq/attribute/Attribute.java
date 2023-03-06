@@ -93,6 +93,7 @@ public class Attribute extends CodedEntity implements CoreEntityPersistable {
 	// definition
 	public static final String LNK_DEF = "LNK_DEF";
 	public static final String PRI_PREFIX = "PRI_PREFIX";
+    public static final String LNK_INCLUDE = "LNK_INCLUDE";
 
 	// roles
 	public static final String LNK_ROLE = "LNK_ROLE";
@@ -170,6 +171,10 @@ public class Attribute extends CodedEntity implements CoreEntityPersistable {
 	 * Constructor.
 	 */
 	public Attribute() {
+	}
+
+	public Attribute(String code, String name) {
+		super(code, name);
 	}
 
 	public Attribute(String code, String name, DataType dataType) {

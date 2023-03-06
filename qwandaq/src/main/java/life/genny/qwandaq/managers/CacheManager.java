@@ -261,7 +261,30 @@ public class CacheManager {
 	}
 
 	/**
-	 * Get the max entity  id.
+	 * Get the max attribute id.
+	 *
+	 * @return the max id
+	 */
+	public Long getMaxAttributeId() {
+		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_ATTRIBUTE));
+		Query<Attribute> query = queryFactory
+				.create("from life.genny.qwandaq.persistence.attribute.Attribute order by id desc");
+		QueryResult<Attribute> queryResult = query.maxResults(1).execute();
+		
+		List<Attribute> attributes = queryResult.list();
+		if(attributes.isEmpty())
+			return 0L;
+		
+		Attribute attribute = queryResult.list().get(0);
+		if (attribute != null) {
+			return attribute.getId();
+		}
+
+		return 0L;
+	}
+
+	/**
+	 * Get the max entity id.
 	 *
 	 * @return the max id
 	 */
@@ -270,8 +293,15 @@ public class CacheManager {
 		Query<BaseEntity> query = queryFactory
 				.create("from life.genny.qwandaq.persistence.baseentity.BaseEntity order by id desc");
 		QueryResult<BaseEntity> queryResult = query.maxResults(1).execute();
-
-		return queryResult.list().get(0).getId();
+		List<BaseEntity> baseEntities = queryResult.list();
+		if(baseEntities.isEmpty())
+			return 0L;
+		
+		BaseEntity baseEntity = baseEntities.get(0);
+		if (baseEntity != null) {
+			return baseEntity.getId();
+		}
+		return 0L;
 	}
 
     /**
@@ -552,6 +582,14 @@ public class CacheManager {
 			EntityAttributeKey beak = new EntityAttributeKey(baseEntityAttribute.getRealm(), baseEntityAttribute.getBaseEntityCode(), baseEntityAttribute.getAttributeCode());
 			cache.putEntityIntoCache(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, beak, baseEntityAttribute);
 		});
+	}
+
+	public Long getEntityLastUpdatedAt(String entityName) {
+		return cache.getEntityLastUpdatedAt(entityName);
+	}
+
+	public void updateEntityLastUpdatedAt(String entityName, Long updatedTime) {
+		cache.updateEntityLastUpdatedAt(entityName, updatedTime);
 	}
 }
 

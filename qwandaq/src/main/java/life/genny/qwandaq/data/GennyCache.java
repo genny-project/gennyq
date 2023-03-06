@@ -1,6 +1,9 @@
 package life.genny.qwandaq.data;
 
 import life.genny.qwandaq.CoreEntityPersistable;
+import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import life.genny.qwandaq.serialization.attribute.AttributeInitializerImpl;
 import life.genny.qwandaq.serialization.attribute.AttributeKeyInitializerImpl;
@@ -19,6 +22,7 @@ import life.genny.qwandaq.serialization.userstore.UserStoreInitializerImpl;
 import life.genny.qwandaq.serialization.userstore.UserStoreKeyInitializerImpl;
 import life.genny.qwandaq.serialization.validation.ValidationInitializerImpl;
 import life.genny.qwandaq.serialization.validation.ValidationKeyInitializerImpl;
+
 import org.infinispan.client.hotrod.DefaultTemplate;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
@@ -236,7 +240,7 @@ public class GennyCache {
 	 * @param cacheName The cache to get from
 	 * @param key       The key to put the entity under
 	 * @param value     The entity
-	 * @return The Entity
+	 * @return <b>true</b> if value was persisted successfully or value passed was null, <b>false</b>
 	 */
 	public boolean putEntityIntoCache(String cacheName, CoreEntityKey key, CoreEntityPersistable value) {
 		if (remoteCacheManager == null) {
@@ -246,18 +250,31 @@ public class GennyCache {
 		if (cache == null) {
 			throw new NullPointerException("Cache not found: " + cacheName);
 		}
+		if(value == null) {
+			log.warn("[" + cacheName + "]: Value for " + key.getKeyString() + " is null, nothing to be added.");
+			return true;
+		}
+
 		try {
-			if (value != null) {
-				cache.put(key, value);
-			} else {
-				log.warn("[" + cacheName + "]: Value for " + key.getKeyString() + " is null, nothing to be added.");
-			}
+			cache.put(key, value);
 		} catch (Exception e) {
-			log.error("Exception when inserting entity into cache: " + e.getMessage());
-			log.error(e.getStackTrace());
-			e.printStackTrace();
+			log.error(ANSIColour.RED + "Exception when inserting entity (key=" + key.getKeyString() + ") into cache: " + cacheName);
+			log.error("Value: " + (value != null ? value.toString() : "null"));
+			if(value instanceof EntityAttribute ea) {
+				log.error("EntityAttribute ATTRIBUTE: " + ea.getAttributeCode());
+				log.error("EntityAttribute ATTRIBUTE_ID: " + ea.getAttributeId());
+			}
+			log.error(e.getMessage());
+			StringBuilder sb = new StringBuilder(ANSIColour.RED);
+			for(StackTraceElement stack : e.getStackTrace()) {
+				sb.append(stack.toString())
+					.append('\n');
+			}
+			sb.append(ANSIColour.RESET);
+			log.error(sb.toString());
 			return false;
 		}
+		
 		return true;
 	}
 
@@ -325,4 +342,27 @@ public class GennyCache {
 		return cache.remove(key);
 	}
 
+	public Long getEntityLastUpdatedAt(String entityName) {
+		RemoteCache<String, Long> entityLastUpdatedAtCache = remoteCacheManager.getCache(GennyConstants.CACHE_NAME_ENTITY_LAST_UPDATED_AT);
+		if (entityLastUpdatedAtCache == null) {
+			log.debugf("Cache doesn't exist.. Creating...");
+			entityLastUpdatedAtCache = createEntityLastUpdatedAtCache();
+			if (entityLastUpdatedAtCache == null) {
+				log.debugf("Cache creation failed for some reason!!");
+			}
+		}
+		return entityLastUpdatedAtCache.get(entityName);
+	}
+
+	private RemoteCache<String, Long> createEntityLastUpdatedAtCache() {
+		return remoteCacheManager.administration().withFlags(CacheContainerAdmin.AdminFlag.VOLATILE).createCache(GennyConstants.CACHE_NAME_ENTITY_LAST_UPDATED_AT, DefaultTemplate.DIST_SYNC);
+	}
+
+	public void updateEntityLastUpdatedAt(String entityName, Long updatedTime) {
+		RemoteCache<String, Long> entityLastUpdatedAtCache = remoteCacheManager.getCache(GennyConstants.CACHE_NAME_ENTITY_LAST_UPDATED_AT);
+		if (entityLastUpdatedAtCache == null) {
+			entityLastUpdatedAtCache = createEntityLastUpdatedAtCache();
+		}
+		entityLastUpdatedAtCache.put(entityName, updatedTime);
+	}
 }

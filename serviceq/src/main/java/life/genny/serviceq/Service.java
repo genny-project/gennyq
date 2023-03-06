@@ -4,7 +4,6 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-import javax.persistence.EntityManager;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -20,7 +19,6 @@ import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.utils.CommonUtils;
-import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 import life.genny.qwandaq.utils.KeycloakUtils;
@@ -55,9 +53,6 @@ public class Service {
 
 	@ConfigProperty(name = "genny.client.secret")
 	String secret;
-
-	@Inject
-	EntityManager entityManager;
 
 	@Inject
 	InternalProducer producer;
