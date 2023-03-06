@@ -234,12 +234,6 @@ public class BatchLoading {
 		DataType dttBoolean = attributeUtils.getDataType(realmName, "DTT_BOOLEAN", false);
 		DataType dttText = attributeUtils.getDataType(realmName, "DTT_TEXT", false);
 
-        // above methods have a chance of returning null
-        if(dttBoolean == null)
-            throw new ItemNotFoundException("Missing DTT_BOOLEAN in " + realmName + " when persisting DEF_BaseEntityAttributes");
-        if(dttText == null)
-            throw new ItemNotFoundException("Missing DTT_TEXT in " + realmName + " when persisting DEF_BaseEntityAttributes");
-
 		Map<String, DataType> dttPrefixMap = Map.of(
 			Prefix.ATT_, dttBoolean,
 			Prefix.SER_, dttText,
@@ -254,13 +248,12 @@ public class BatchLoading {
             String baseEntityCode = row.get("baseentitycode");
             String attributeCode = row.get("attributecode");
 
-            String combined = new StringBuilder(baseEntityCode).append(":").append(attributeCode).toString();
-				// find or create attribute
-            
+				     // find or create attribute 
             Attribute defAttr;
             try {
                 defAttr = attributeUtils.getAttribute(attributeCode);
             } catch (ItemNotFoundException e) {
+                String combined = new StringBuilder(baseEntityCode).append(":").append(attributeCode).toString();
                 log.trace(new StringBuilder("Missing attribute ")
                     .append(attributeCode).append(" when building ").append(combined).append("! Creating!").toString());
                 
@@ -331,12 +324,34 @@ public class BatchLoading {
         Instant start = Instant.now();
 
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
-			try {
-				Question question = googleSheetBuilder.buildQuestion(entry.getValue(), realmName);
-				questionUtils.saveQuestion(question);
+			Question question;
+            try {
+				question = googleSheetBuilder.buildQuestion(entry.getValue(), realmName);
 			} catch (ItemNotFoundException e) {
-				log.warn(e.getMessage());
+				log.warn("Error Building Question: " + e.getMessage());
+                continue;
 			}
+            
+            // Verify question attribute id. The attribute tied to question at this point will exist (from buildQuestion)
+            Attribute attribute;
+            try {
+                attribute = attributeUtils.getAttribute(question.getRealm(), question.getAttributeCode());
+            } catch(ItemNotFoundException e) {
+                log.error("Could not find attribute for question: " + question.getCode());
+                attribute = question.getAttribute();
+            }
+            
+            Long realAttributeId = attribute.getId();            
+            if(question.getAttributeId() != realAttributeId) {
+                log.trace("Found attribute ID mismatch for Question: " + question.getCode() + " and attribute: " + attribute.getCode() + ".\n" + 
+                "\t- Question's Current Attribute ID: " + question.getAttributeId() +
+                "\n\t- Attribute's Actual ID: " + realAttributeId +
+                "\nSetting Question AttrID to Attribute ID: " + realAttributeId);
+                question.setAttributeId(realAttributeId);
+            }
+
+            questionUtils.saveQuestion(question);
+
 		}
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);

@@ -319,6 +319,8 @@ public class Question extends CodedEntity implements CoreEntityPersistable, ICap
 	 */
 	public void setAttribute(final Attribute attribute) {
 		this.attribute = attribute;
+		setAttributeCode(attribute.getCode());
+		setAttributeId(attribute.getId());
 	}
 
 	/**

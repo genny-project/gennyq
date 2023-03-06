@@ -115,24 +115,17 @@ public class Endpoints {
 
         Realm realm = new Realm(sheetId);
         List<RealmUnit> realmUnits = realm.getDataUnits();
-        try {
-            for (RealmUnit realmUnit : realmUnits) {
-                log.info("Importing from sheet " + realmUnit.getUri() + " for realm " + realmUnit.getName());
+        for (RealmUnit realmUnit : realmUnits) {
+            log.info("Importing from sheet " + realmUnit.getUri() + " for realm " + realmUnit.getName());
 
-                if (!realmUnit.getDisable() && !realmUnit.getSkipGoogleDoc()) {
-                    log.info("Persisting project...");
-                    bl.persistProject(realmUnit);
-                    log.info("Finished Persisting project");
-                } else {
-                    log.info("SKIPPING sheet " + realmUnit.getUri() + " for realm " + realmUnit.getName());
-                }
-                msg = "Finished batch loading for all realms in google sheets";
+            if (!realmUnit.getDisable() && !realmUnit.getSkipGoogleDoc()) {
+                log.info("Persisting project...");
+                bl.persistProject(realmUnit);
+                log.info("Finished Persisting project");
+            } else {
+                log.info("SKIPPING sheet " + realmUnit.getUri() + " for realm " + realmUnit.getName());
             }
-        } catch (Exception ex) {
-			ex.printStackTrace();
-            msg = "Exception:" + ex.getMessage() + " occurred when batch loading";
-        } finally {
-            setIsTaskRunning(false);
+            msg = "Finished batch loading for all realms in google sheets";
         }
         log.info(msg);
         return Response.ok().entity(msg).build();
