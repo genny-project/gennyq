@@ -54,7 +54,7 @@ public class TestCase<I, E> {
         try { 
             verificationCallback.assertFunction(result, expected.expected);
         } catch(AssertionError e) {
-            assert(false);
+            throw new AssertionError("Failed on " + this.getName() + ". Details: " + e.getMessage(), e);
         }
     }
 

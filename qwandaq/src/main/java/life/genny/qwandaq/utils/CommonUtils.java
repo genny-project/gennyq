@@ -468,13 +468,15 @@ public class CommonUtils {
         }
         
         StringBuilder sb = new StringBuilder(array);
-        for(String entry : entries) {
-            // ensure we're not trying to remove from empty array
-            if(sb.charAt(0) == '[') {
-                if(sb.charAt(1) == ']')
-                    return STR_ARRAY_EMPTY;
-            }
+        // ensure we're not trying to remove from empty array
+        if(sb.charAt(0) == '[') {
+            if(sb.charAt(1) == ']')
+                return STR_ARRAY_EMPTY;
+        } else {
+            return STR_ARRAY_EMPTY;
+        }
 
+        for(String entry : entries) {
             if(StringUtils.isBlank(entry))
                 continue;
             int start = sb.indexOf(entry);
@@ -483,15 +485,17 @@ public class CommonUtils {
 
             // Deal with quotes
             int end = start + entry.length() + 1;
-            start -= 1;
-            // deal with start/end
-            if(start == 1) {
-                if(sb.length() - end != 1)
-                    end += 1;
+            sb.delete(start - 1, end);
+        }
+
+        if(sb.length() > 2) {
+            while(sb.charAt(1) == ',') {
+                sb.deleteCharAt(1);
             }
-            else
-                start -= 1;
-            sb.delete(start, end);
+
+            while(sb.charAt(sb.length() - 2) == ',') {
+                sb.deleteCharAt(sb.length() - 2);
+            }
         }
 
         return sb.toString();
@@ -530,18 +534,18 @@ public class CommonUtils {
             if(!array.equals("["))
                 sb.append(",");
 
-            for(int i = 0; i < entries.length - 1; i++) {
+            int i;
+            for(i = 0; i < entries.length - 1; i++) {
                 sb.append("\"")
                     .append(entries[i])
                     .append("\",");
             }
 
             sb.append("\"")
-            .append(entries[entries.length - 1])
-            .append("\"");
+            .append(entries[i])
+            .append("\"]");
         }
-
-        // reattach our missing "]" in all cases
-        return sb.append("]").toString();
+        
+        return sb.toString();
     }
 }
