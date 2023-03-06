@@ -246,23 +246,34 @@ public class BatchLoading {
             Map<String, String> row = entry.getValue();
 			
             String baseEntityCode = row.get("baseentitycode");
-            String attributeCode = row.get("attributecode");
+            String attributeCode = row.get("attributecode"); // ATT_PRI_NATIONALITY
 
 				     // find or create attribute 
             Attribute defAttr;
             try {
-                defAttr = attributeUtils.getAttribute(attributeCode);
+                defAttr = attributeUtils.getAttribute(attributeCode); 
             } catch (ItemNotFoundException e) {
                 String combined = new StringBuilder(baseEntityCode).append(":").append(attributeCode).toString();
-                log.trace(new StringBuilder("Missing attribute ")
+                log.warn(new StringBuilder("[DEF_EntityAttribute] Missing attribute ")
                     .append(attributeCode).append(" when building ").append(combined).append("! Creating!").toString());
                 
-                DataType dataType = dttPrefixMap.get(attributeCode.substring(0, 4));                    
+                // find actual attribute first
+                // Find the attribute without ATT_ (attribute defined in attribute table)
+                String baseAttributeCode = attributeCode.substring(4);
+                try {
+                    Attribute baseAttribute = attributeUtils.getAttribute(baseAttributeCode);
+                } catch(ItemNotFoundException notFoundError) {
+                    log.error("[DEF_EntityAttribute] Could not find Real Attribute: " + baseAttributeCode + " in database. Please fix in sheets. Skipping");
+                    continue;
+                }
+
+                DataType dataType = dttPrefixMap.get(attributeCode.substring(0, 4));               
                 defAttr = new Attribute(attributeCode, attributeCode, dataType);
                 defAttr.setRealm(realmName);
                 attributeUtils.saveAttribute(defAttr);
                 log.trace("Saving attribute: " + defAttr + " successful");
             }
+
             try {
                 EntityAttribute entityAttribute = googleSheetBuilder.buildEntityAttribute(row, realmName, defAttr.getCode());
                 beaUtils.updateEntityAttribute(entityAttribute);
