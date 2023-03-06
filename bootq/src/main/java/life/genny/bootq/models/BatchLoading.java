@@ -267,6 +267,7 @@ public class BatchLoading {
                 EntityAttribute entityAttribute = googleSheetBuilder.buildEntityAttribute(row, realmName, defAttr.getCode());
                 beaUtils.updateEntityAttribute(entityAttribute);
             } catch(BadDataException e) {
+                String combined = new StringBuilder(baseEntityCode).append(":").append(attributeCode).toString();
                 log.error("Error occurred when persisting: " + combined + ". " + e.getMessage());
             }
         }
