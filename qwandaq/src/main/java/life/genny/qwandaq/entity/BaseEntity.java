@@ -189,15 +189,16 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 	 * baseEntity. It auto creates the EntityAttribute object. For efficiency we
 	 * assume the attribute does not already exist
 	 * 
-	 * @param ea the ea to add
+	 * @param entityAttribute the ea to add
 	 * @return EntityAttribute
 	 * @throws BadDataException if the attribute could not be added
 	 */
-	public EntityAttribute addAttribute(final EntityAttribute ea) throws BadDataException {
-		if (ea == null) {
+	public EntityAttribute addAttribute(final EntityAttribute entityAttribute) throws BadDataException {
+		if (entityAttribute == null) {
 			throw new BadDataException("missing Attribute");
 		}
-		return addAttribute(ea.getAttribute(), ea.getWeight(), ea.getValue());
+		this.baseEntityAttributes.put(entityAttribute.getAttributeCode(), entityAttribute);
+		return entityAttribute;
 	}
 
 	/**
@@ -253,7 +254,7 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 			entityAttribute.setValue(value);
 		}
 		entityAttribute.setWeight(weight);
-		this.baseEntityAttributes.put(attribute.getCode(), entityAttribute);
+		addAttribute(entityAttribute);
 		return entityAttribute;
 	}
 

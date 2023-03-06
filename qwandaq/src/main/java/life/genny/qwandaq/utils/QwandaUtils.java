@@ -766,9 +766,6 @@ public class QwandaUtils {
 	 * @return Ask
 	 */
 	public Ask generateAskGroupUsingBaseEntity(BaseEntity baseEntity) {
-		// grab def entity
-		Definition definition = defUtils.getDEF(baseEntity);
-
 		String sourceCode = userToken.getUserCode();
 		String targetCode = baseEntity.getCode();
 
@@ -792,6 +789,8 @@ public class QwandaUtils {
 		entityMessage.setToken(userToken.getToken());
 		entityMessage.setReplace(true);
 
+		// grab def entity
+		Definition definition = defUtils.getDEF(baseEntity);
 		// create a child ask for every valid attribute
 		definition.getBaseEntityAttributes().forEach(ea -> {
 			String attributeCode = ea.getAttributeCode();

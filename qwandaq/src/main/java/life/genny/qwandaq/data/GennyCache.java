@@ -298,27 +298,28 @@ public class GennyCache {
 		return cache.remove(key);
 	}
 
-	public Long getEntityLastUpdatedAt(String entityName) {
+	public Long getEntityLastUpdatedAt(String entityName, String productCode) {
 		RemoteCache<String, Long> entityLastUpdatedAtCache = remoteCacheManager.getCache(GennyConstants.CACHE_NAME_ENTITY_LAST_UPDATED_AT);
 		if (entityLastUpdatedAtCache == null) {
 			log.debugf("Cache doesn't exist.. Creating...");
 			entityLastUpdatedAtCache = createEntityLastUpdatedAtCache();
 			if (entityLastUpdatedAtCache == null) {
-				log.debugf("Cache creation failed for some reason!!");
+				log.error("Cache creation failed for some reason!!");
+				return null;
 			}
 		}
-		return entityLastUpdatedAtCache.get(entityName);
+		return entityLastUpdatedAtCache.get(entityName + ":" + productCode);
 	}
 
 	private RemoteCache<String, Long> createEntityLastUpdatedAtCache() {
 		return remoteCacheManager.administration().withFlags(CacheContainerAdmin.AdminFlag.VOLATILE).createCache(GennyConstants.CACHE_NAME_ENTITY_LAST_UPDATED_AT, DefaultTemplate.DIST_SYNC);
 	}
 
-	public void updateEntityLastUpdatedAt(String entityName, Long updatedTime) {
+	public void updateEntityLastUpdatedAt(String entityName, String productCode, Long updatedTime) {
 		RemoteCache<String, Long> entityLastUpdatedAtCache = remoteCacheManager.getCache(GennyConstants.CACHE_NAME_ENTITY_LAST_UPDATED_AT);
 		if (entityLastUpdatedAtCache == null) {
 			entityLastUpdatedAtCache = createEntityLastUpdatedAtCache();
 		}
-		entityLastUpdatedAtCache.put(entityName, updatedTime);
+		entityLastUpdatedAtCache.put(entityName + ":" + productCode, updatedTime);
 	}
 }
