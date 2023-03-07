@@ -52,66 +52,91 @@ public class AttributeUtils {
     }
 
     /**
-     * Get the attribute using the code and productCode wherein the data type is not bundled
-     *
-     * @param code
-     * @return The attribute identified by the code without data type
+     * Retrieve an Attribute from Infinispan Cache using the user's product code
+     * @param code - the code of the requested attribute
+     * @return The Attribute without its {@link Attribute#getDataType() DataType}
+     * 
+     * @throws {@link ItemNotFoundException} if Attribute cannot be found in the user product's attribute cache
+     * 
+     * @see {@link UserToken#getProductCode() User Product Code}
+     * @see {@link DataType}
      */
     public Attribute getAttribute(String code) {
         return getAttribute(userToken.getProductCode(), code);
     }
 
     /**
-     * Get the attribute using the code wherein the data type is optionally bundled
-     *
-     * @param code
-     * @return The attribute identified by the code with optionally bundled data type
+     * Retrieve an Attribute from Infinispan Cache using the user's product code
+     * @param code - the code of the requested attribute
+     * @param bundleDataType - whether or not to include the {@link DataType} in the Attribute object without its {@link DataType#getValidationList() Validation List}
+     * @return The Attribute and optionally the DataType, but no Validation List
+     * 
+     * @throws {@link ItemNotFoundException} if Attribute cannot be found in the user product's attribute cache
+     * 
+     * @see {@link UserToken#getProductCode() User Product Code}
+     * @see {@link DataType}
      */
     public Attribute getAttribute(String code, boolean bundleDataType) {
         return getAttribute(userToken.getProductCode(), code, bundleDataType);
     }
 
     /**
-     * Get the attribute using the code wherein the data type and validation lists are optionally bundled
-     *
-     * @param code
-     * @return The attribute identified by the code with optionally bundled data type and validation lists
+     * Retrieve an Attribute from Infinispan Cache using the user's product code
+     * @param code - the code of the requested attribute
+     * @param bundleDataType - whether or not to include the {@link DataType} in the Attribute object
+     * @param bundleValidationList - whether or not to include the {@link DataType#getValidationList() Validation List} in the DataType object of the attribute
+     * @return The Attribute and optionally the DataType and associated Validation List
+     * 
+     * @throws {@link ItemNotFoundException} if Attribute cannot be found in the user product's attribute cache
+     * 
+     * @see {@link UserToken#getProductCode() User Product Code}
+     * @see {@link DataType}
+     * @see {@link Validation}
      */
     public Attribute getAttribute(String code, boolean bundleDataType, boolean bundleValidationList) {
         return getAttribute(userToken.getProductCode(), code, bundleDataType, bundleValidationList);
     }
 
+
     /**
-     * Get the attribute using the code and productCode wherein the data type is not bundled
-     *
-     * @param productCode
-     * @param code
-     * @return The attribute identified by the code and productCode without data type
+     * Retrieve an Attribute from Infinispan Cache
+     * @param productCode - the product code the attribute belongs in
+     * @param code - the code of the requested attribute
+     * @return The Attribute without its DataType
+     * 
+     * @throws {@link ItemNotFoundException} if Attribute cannot be found in the requested attribute cache
+     * @see {@link DataType}
      */
     public Attribute getAttribute(String productCode, String code) {
         return getAttribute(productCode, code, false);
     }
 
     /**
-     * Get the attribute using the code and productCode wherein the data type is optionally bundled without validation lists
-     *
-     * @param productCode
-     * @param code
-     * @param bundleDataType
-     * @return The attribute identified by the code with optionally bundled data type and without validation lists
+     * Retrieve an Attribute from Infinispan Cache
+     * @param productCode - the product code the attribute belongs in
+     * @param code - the code of the requested attribute
+     * @param bundleDataType - whether or not to include the {@link DataType} in the Attribute object without its {@link DataType#getValidationList() Validation List}
+     * @return The Attribute and optionally the DataType, but no Validation List
+     * 
+     * @throws {@link ItemNotFoundException} if Attribute cannot be found in the requested attribute cache
+     * @see {@link DataType}
+     * @see {@link Validation}
      */
     public Attribute getAttribute(String productCode, String code, boolean bundleDataType) {
         return getAttribute(productCode, code, bundleDataType, false);
     }
 
     /**
-     * Get the attribute using the code and productCode wherein the data type and validation lists are optionally bundled
-     *
-     * @param productCode
-     * @param code
-     * @param bundleDataType
-     * @param bundleValidationList
-     * @return The attribute identified by code and productCode optionally bundled data type and validation lists
+     * Retrieve an Attribute from Infinispan Cache
+     * @param productCode - the product code the attribute belongs in
+     * @param code - the code of the requested attribute
+     * @param bundleDataType - whether or not to include the {@link DataType} in the Attribute object
+     * @param bundleValidationList - whether or not to include the {@link DataType#getValidationList() Validation List} in the DataType object of the attribute
+     * @return The Attribute and optionally the DataType and associated Validation List
+     * 
+     * @throws {@link ItemNotFoundException} if Attribute cannot be found in the requested attribute cache
+     * @see {@link DataType}
+     * @see {@link Validation}
      */
     public Attribute getAttribute(String productCode, String code, boolean bundleDataType, boolean bundleValidationList) {
         AttributeKey key = new AttributeKey(productCode, code);
@@ -127,18 +152,21 @@ public class AttributeUtils {
     }
 
     /**
-	 * Get the datatype using the dttCode and productCode
-	 *
-     * @param productCode
-     * @param dttCode
-     * @param bundleValidationList
-     * @return The data type identified by dttCode and productCode with optionally bundled validation lists
+	   * Retrieve a DataType from the specified cache
+	   *
+     * @param productCode - product to retrieve the datatype from
+     * @param dttCode - code of the datatype
+     * @param bundleValidationList - whether or not to include its {@link DataType#getValidationList()}
+     * @return the datatype and optionally its Validation List
+     * 
+     * @throws {@link ItemNotFoundException} if the DataType cannot be found
+     * @see {@link Validation}
      */
     public DataType getDataType(String productCode, String dttCode, boolean bundleValidationList) {
         DataTypeKey key = new DataTypeKey(productCode, dttCode);
         DataType dataType = (DataType) cm.getPersistableEntity(GennyConstants.CACHE_NAME_DATATYPE, key);
         if(dataType == null) {
-            throw new ItemNotFoundException("productCode: " + productCode + ". DataType Code: " + dttCode);
+            throw new ItemNotFoundException(productCode, "DataType Code: " + dttCode);
         }
         if (bundleValidationList) {
             List<Validation> validationList = getValidationList(dataType);
@@ -148,15 +176,22 @@ public class AttributeUtils {
 	}
 
     /**
-	 * Get the datatype for an attribute using an attribute.
-	 *
-     * @param attribute
-     * @param bundleValidationList
-     * @return The data type associated with the attribute with optionally bundled validation lists
+	   * Retrieve a DataType for an {@link Attribute} from the Infinispan cache that is tied to the Attribute (same product)
+	   * Will return DataType already attached to the specified Attribute object if one exists, otherwise will check cache
+     * 
+     * @param attribute - attribute to retrieve the datatype of
+     * @param bundleValidationList - whether or not to include the DataType's {@link DataType#getValidationList()}
+     * @return the datatype tied to the attribute (if any) and optionally its Validation List
+     * 
+     * @throws {@link ItemNotFoundException} if the DataType cannot be found
+     * @see {@link Validation}
      */
     public DataType getDataType(Attribute attribute, boolean bundleValidationList) {
         if(attribute == null) {
             throw new NullParameterException("attribute");
+        }
+        if(attribute.getDataType() != null) {
+            return attribute.getDataType();
         }
         DataType dataType = getDataType(attribute.getRealm(), attribute.getDttCode(), bundleValidationList);
         if(dataType == null) {

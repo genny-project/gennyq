@@ -2,9 +2,10 @@ package life.genny.bootq;
 
 import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
+
 import life.genny.bootq.models.BatchLoading;
-import life.genny.bootq.sheets.Realm;
-import life.genny.bootq.sheets.RealmUnit;
+import life.genny.bootq.sheets.realm.Realm;
+import life.genny.bootq.sheets.realm.RealmUnit;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.serviceq.Service;
@@ -96,6 +97,7 @@ public class Endpoints {
     public Response loadSheetsById(@PathParam("sheetid") final String sheetId) {
         log.info("Loading in sheet " + sheetId);
         String msg = "";
+        
         if (getIsTaskRunning()) {
             log.error("Batch loading task is running, please try later or force restart pod");
             return Response.status(Response.Status.BAD_REQUEST)
@@ -113,24 +115,17 @@ public class Endpoints {
 
         Realm realm = new Realm(sheetId);
         List<RealmUnit> realmUnits = realm.getDataUnits();
-        try {
-            for (RealmUnit realmUnit : realmUnits) {
-                log.info("Importing from sheet " + realmUnit.getUri() + " for realm " + realmUnit.getName());
+        for (RealmUnit realmUnit : realmUnits) {
+            log.info("Importing from sheet " + realmUnit.getUri() + " for realm " + realmUnit.getName());
 
-                if (!realmUnit.getDisable() && !realmUnit.getSkipGoogleDoc()) {
-                    log.info("Persisting project...");
-                    bl.persistProject(realmUnit);
-                    log.info("Finished Persisting project");
-                } else {
-                    log.info("SKIPPING sheet " + realmUnit.getUri() + " for realm " + realmUnit.getName());
-                }
-                msg = "Finished batch loading for all realms in google sheets";
+            if (!realmUnit.getDisable() && !realmUnit.getSkipGoogleDoc()) {
+                log.info("Persisting project...");
+                bl.persistProject(realmUnit);
+                log.info("Finished Persisting project");
+            } else {
+                log.info("SKIPPING sheet " + realmUnit.getUri() + " for realm " + realmUnit.getName());
             }
-        } catch (Exception ex) {
-			ex.printStackTrace();
-            msg = "Exception:" + ex.getMessage() + " occurred when batch loading";
-        } finally {
-            setIsTaskRunning(false);
+            msg = "Finished batch loading for all realms in google sheets";
         }
         log.info(msg);
         return Response.ok().entity(msg).build();

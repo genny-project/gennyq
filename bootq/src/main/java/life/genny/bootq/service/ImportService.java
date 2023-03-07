@@ -1,16 +1,15 @@
-package life.genny.bootq.models;
+package life.genny.bootq.service;
 
 import org.apache.logging.log4j.Logger;
 
-import life.genny.bootq.sheets.ESheetTitle;
-import life.genny.bootq.sheets.RealmUnit;
+import life.genny.bootq.models.SheetState;
 import life.genny.bootq.sheets.module.ModuleUnit;
+import life.genny.bootq.sheets.realm.RealmUnit;
 import life.genny.bootq.utils.GoogleImportService;
 import life.genny.bootq.utils.XlsxImport;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -72,21 +71,5 @@ public class ImportService {
         }
 
         return modules;
-    }
-
-    public Map<String, Map<String, String>> fetchEntitiesFromSheet(String sheetURI, ESheetTitle sheetData) {
-        String key = sheetURI + sheetData.getTitle();
-        XlsxImport createXlsImport = createXlsImport(key);
-        try {
-            return createXlsImport.mappingRawToHeaderAndValuesFmt(sheetURI, sheetData.getTitle(), sheetData.getDataKeyColumns());
-        } catch (Exception e1) {
-            logFetchExceptionForSheets(e1.getMessage(), sheetData.getTitle(), sheetURI);
-            return new HashMap<>();
-        }
-    }
-
-    private void logFetchExceptionForSheets(String exception, String sheetName, String sheetURI) {
-        log.error("ATTENTION!, Exception:"  +  exception + " occurred when fetching sheetName:" + sheetName
-        + ", sheetURI:" + sheetURI + ", return EMPTY HashMap!!!");
     }
 }

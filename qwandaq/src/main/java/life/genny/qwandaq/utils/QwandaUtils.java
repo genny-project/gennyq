@@ -305,7 +305,6 @@ public class QwandaUtils {
 	public void recursivelySetInformation(Ask ask, String processId, String targetCode) {
 		ask.setProcessId(processId);
 		ask.setTargetCode(targetCode);
-		ask.setTargetCode(targetCode);
 		if (ask.getChildAsks() != null) {
 			for (Ask child : ask.getChildAsks()) {
 				recursivelySetInformation(child, processId, targetCode);
