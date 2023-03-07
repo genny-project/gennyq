@@ -218,10 +218,6 @@ public class GennyCache {
 	 * @return The persistable core entity
 	 */
 	public CoreEntityPersistable getPersistableEntityFromCache(String cacheName, CoreEntityKey key) {
-		if (remoteCacheManager == null) {
-			initRemoteCacheManager();
-		}
-
 		RemoteCache<CoreEntityKey, CoreEntityPersistable> cache = getRemoteCacheForEntity(cacheName);
 		if (cache == null) {
 			throw new NullPointerException("Could not find a cache called " + cacheName);
@@ -298,9 +294,6 @@ public class GennyCache {
 	 * @return The removed persistable core entity
 	 */
 	public CoreEntityPersistable removeEntityFromCache(String cacheName, CoreEntityKey key) {
-		if (remoteCacheManager == null) {
-			initRemoteCacheManager();
-		}
 		RemoteCache<CoreEntityKey, CoreEntityPersistable> cache = getRemoteCacheForEntity(cacheName);
 		if (cache == null) {
 			throw new NullPointerException("Could not find a cache called " + cacheName);

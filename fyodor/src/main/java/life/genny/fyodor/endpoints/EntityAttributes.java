@@ -8,6 +8,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import org.jboss.logging.Logger;
 
@@ -158,6 +159,7 @@ public class EntityAttributes {
      * @return 200 OK with the EntityAttribute if found. 404 with an associated error message
      */
     @DELETE
+    @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product}/{baseEntityCode}/{attributeCode}")
     public Response delete(
         @PathParam("product") String product, 
@@ -173,8 +175,12 @@ public class EntityAttributes {
             try {
                 EntityAttributeKey key = new EntityAttributeKey(product, baseEntityCode, attributeCode);
                 CoreEntityPersistable attribute = cm.removePersistableEntity(product, key);
+                if(attribute != null) {
+                    log.info("Successfully removed entity");
+                    return Response.ok(attribute).entity("Successfully removed entity").build();
+                }
+                return Response.status(Status.NO_CONTENT).build();
                 
-                return Response.ok(attribute).build();
             } catch(ItemNotFoundException e) {
                 return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
             }
