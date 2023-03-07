@@ -440,13 +440,13 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	public <T> Optional<T> getLoopValue(final String attributeCode) {
+	public <T> Optional<T> getValue(final String attributeCode) {
 
 		Optional<EntityAttribute> ea = this.findEntityAttribute(attributeCode);
 
 		Optional<T> result = Optional.empty();
 		if (ea.isPresent()) {
-			result = Optional.of(ea.get().getLoopValue());
+			result = Optional.of(ea.get().getValue());
 		}
 		return result;
 	}
@@ -505,9 +505,9 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
-	public <T> T getLoopValue(final String attributeCode, T defaultValue) {
+	public <T> T getValue(final String attributeCode, T defaultValue) {
 
-		Optional<T> result = getLoopValue(attributeCode);
+		Optional<T> result = getValue(attributeCode);
 		if (result.isPresent()) {
 			if (!result.equals(Optional.empty())) {
 				return result.get();
@@ -557,8 +557,8 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 
 		Optional<T> result = Optional.empty();
 		if (oldValue.isPresent()) {
-			if (oldValue.get().getLoopValue() != null) {
-				result = Optional.of(oldValue.get().getLoopValue());
+			if (oldValue.get().getValue() != null) {
+				result = Optional.of(oldValue.get().getValue());
 			}
 			EntityAttribute ea = oldValue.get();
 			ea.setAttribute(attribute);
@@ -620,8 +620,8 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 
 		Optional<T> result = Optional.empty();
 		if (oldValue.isPresent()) {
-			if (oldValue.get().getLoopValue() != null) {
-				result = Optional.of(oldValue.get().getLoopValue());
+			if (oldValue.get().getValue() != null) {
+				result = Optional.of(oldValue.get().getValue());
 			}
 			EntityAttribute ea = oldValue.get();
 			ea.setValue(value);
