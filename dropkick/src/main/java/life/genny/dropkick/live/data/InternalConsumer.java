@@ -1,6 +1,5 @@
 package life.genny.dropkick.live.data;
 
-import com.google.common.reflect.TypeToken;
 import io.quarkus.runtime.StartupEvent;
 import io.smallrye.reactive.messaging.annotations.Blocking;
 import life.genny.qwandaq.attribute.Attribute;
@@ -185,7 +184,7 @@ public class InternalConsumer {
 		SearchEntity searchEntity = cm.getObject(productCode, key, SearchEntity.class);
 
 		if (searchEntity == null)
-			throw new ItemNotFoundException(key);
+			throw new ItemNotFoundException("Search Entity with key=" + key);
 
 		log.debug("Using Search Entity: " + searchEntity);
 		// Filter by name wildcard provided by user
