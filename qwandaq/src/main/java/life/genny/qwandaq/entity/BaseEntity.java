@@ -476,28 +476,6 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 	}
 
 	/**
-	 * Get the loop value
-	 *
-	 * @param attributeCode the attribute code
-	 * @param defaultValue  the default value
-	 * @param <T>           The Type to return
-	 * @return T
-	 */
-	@JsonIgnore
-	@JsonbTransient
-	@Transient
-	public <T> T getLoopValue(final String attributeCode, T defaultValue) {
-
-		Optional<T> result = getLoopValue(attributeCode);
-		if (result.isPresent()) {
-			if (!result.equals(Optional.empty())) {
-				return result.get();
-			}
-		}
-		return defaultValue;
-	}
-
-	/**
 	 * @param attributeCode the attribute code
 	 * @return Boolean
 	 */
@@ -538,8 +516,8 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 
 		Optional<T> result = Optional.empty();
 		if (oldValue.isPresent()) {
-			if (oldValue.get().getLoopValue() != null) {
-				result = Optional.of(oldValue.get().getLoopValue());
+			if (oldValue.get().getValue() != null) {
+				result = Optional.of(oldValue.get().getValue());
 			}
 			EntityAttribute ea = oldValue.get();
 			ea.setAttribute(attribute);
