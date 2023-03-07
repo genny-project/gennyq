@@ -228,7 +228,7 @@ public class EntityAttributeUtils {
 				.forEach((ea) -> {
 					String productCode = ea.getRealm();
 					String baseEntityCode = ea.getBaseEntityCode();
-					Attribute attribute = attributeUtils.getAttribute(productCode, ea.getAttributeCode());
+					Attribute attribute = attributeUtils.getAttribute(productCode, ea.getAttributeCode(), true);
 					if (attribute == null) {
 						log.debugf("Attribute not found for BaseEntityAttribute [%s:%s:%s]", productCode, baseEntityCode, ea.getAttributeCode());
 						throw new ItemNotFoundException(productCode, ea.getAttributeCode());

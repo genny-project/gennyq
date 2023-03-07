@@ -190,7 +190,7 @@ public class BaseEntityUtils {
 		}
 		// fetch entity attributes
 		if (bundleAttributes) {
-			List<EntityAttribute> entityAttributesForBaseEntity = beaUtils.getAllEntityAttributesForBaseEntity(productCode, code);
+			List<EntityAttribute> entityAttributesForBaseEntity = beaUtils.getAllEntityAttributesForBaseEntity(productCode, code, true);
 			if(entityAttributesForBaseEntity.isEmpty()) {
 				log.infof("No BaseEntityAttributes found for base entity [%s:%s]", productCode, code);
 				//throw new ItemNotFoundException();
