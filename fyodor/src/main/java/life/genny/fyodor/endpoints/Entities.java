@@ -3,6 +3,7 @@ package life.genny.fyodor.endpoints;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -194,6 +195,7 @@ public class Entities {
 	 */
 	@POST
 	@Path("/{productCode}")
+	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response create(@PathParam("productCode") String productCode, String baseentityJson) {
 		if (userToken == null) {
@@ -204,7 +206,9 @@ public class Entities {
 		be.setRealm(productCode);
 		BaseEntity entity = beUtils.updateBaseEntity(be);
 		if (entity == null) {
-			log.error(getBaseEntityNotFoundLog(productCode, be.getCode()));
+			String msg = getBaseEntityNotFoundLog(productCode, be.getCode());
+			log.error(msg);
+			return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
 		}
 		return Response.ok(entity.getId()).build();
 	}
