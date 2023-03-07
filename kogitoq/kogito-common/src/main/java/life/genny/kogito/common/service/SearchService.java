@@ -83,7 +83,7 @@ public class SearchService extends KogitoService {
 	public void sendDetailView(String targetCode) {
 
 		// fetch target and find it's definition
-		BaseEntity target = beUtils.getBaseEntity(targetCode, true);
+		BaseEntity target = beUtils.getBaseEntity(targetCode);
 		BaseEntity definition = defUtils.getDEF(target);
 		String type = StringUtils.removeStart(definition.getCode(), Prefix.DEF_);
 

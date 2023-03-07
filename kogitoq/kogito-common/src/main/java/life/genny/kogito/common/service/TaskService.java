@@ -148,6 +148,7 @@ public class TaskService extends KogitoService {
 			// ProcessEntity essentially becomes our target
 			target = processEntity;
 		} else {
+			target.setBaseEntityAttributes(beaUtils.getAllEntityAttributesForBaseEntity(target, true, true));
 			msg.add(target);
 		}
 		// handle initial dropdown selections

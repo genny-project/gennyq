@@ -194,6 +194,18 @@ public class EntityAttributeUtils {
 		return getAllEntityAttributesForBaseEntity(baseEntity.getRealm(), baseEntity.getCode(), embedAttribute);
 	}
 
+	/**
+	 * Fetch a list of {@link EntityAttribute} from the cache using a realm:baseEntityCode.
+	 *
+	 * @param baseEntity The baseEntity to use
+	 * @param embedAttribute Whether attribute needs to be fetched and embedded in the base entity attribute
+	 * @param embedDataType Whether datatypes need to be fetched and embedded in the attribute
+	 * @return The corresponding list of all EntityAttributes, or empty list if not found.
+	 */
+	public List<EntityAttribute> getAllEntityAttributesForBaseEntity(BaseEntity baseEntity, boolean embedAttribute, boolean embedDataType) {
+		return getAllEntityAttributesForBaseEntity(baseEntity.getRealm(), baseEntity.getCode(), embedAttribute, embedDataType);
+	}
+
     /**
 	 * Fetch a list of {@link EntityAttribute} from the cache using a realm:baseEntityCode.
 	 *
@@ -221,14 +233,48 @@ public class EntityAttributeUtils {
 		return embedAttributesInEntityAttributes(entityAttributes);
 	}
 
-	@NotNull
+	/**
+	 * Fetch a list of {@link EntityAttribute} from the cache using a realm:baseEntityCode.
+	 *
+	 * @param productCode The productCode to use
+	 * @param baseEntityCode        The BaseEntity code of the BaseEntityAttributes to fetch
+	 * @param embedAttribute Whether attribute needs to be fetched and embedded in the base entity attributes
+	 * @param embedDataType Whether datatypes need to be fetched and embedded in the attribute
+	 * @return The corresponding list of all EntityAttributes, or empty list if not found.
+	 */
+	public List<EntityAttribute> getAllEntityAttributesForBaseEntity(String productCode, String baseEntityCode, boolean embedAttribute, boolean embedDataType) {
+		List<EntityAttribute> entityAttributes = cm.getAllBaseEntityAttributesForBaseEntity(productCode, baseEntityCode);
+		if(!embedAttribute) {
+			return entityAttributes;
+		}
+		return embedAttributesInEntityAttributes(entityAttributes, embedDataType);
+	}
+
+	/**
+	 * Embed attributes in a list of entity attributes.
+	 *
+	 * @param entityAttributes The list of entity attributes.
+	 * @return The corresponding list of EntityAttributes.
+	 */
 	public List<EntityAttribute> embedAttributesInEntityAttributes(List<EntityAttribute> entityAttributes) {
+		return embedAttributesInEntityAttributes(entityAttributes, false);
+	}
+
+	/**
+	 * Embed attributes in a list of entity attributes.
+	 *
+	 * @param entityAttributes The list of entity attributes.
+	 * @param embedDataType Whether to embed the datatypes in the attributes.
+	 * @return The corresponding list of EntityAttributes.
+	 */
+	@NotNull
+	public List<EntityAttribute> embedAttributesInEntityAttributes(List<EntityAttribute> entityAttributes, boolean embedDataType) {
 		List<EntityAttribute> entityAttributesWithEmbeddedAttributes = new LinkedList<>();
 		entityAttributes.stream()
 				.forEach((ea) -> {
 					String productCode = ea.getRealm();
 					String baseEntityCode = ea.getBaseEntityCode();
-					Attribute attribute = attributeUtils.getAttribute(productCode, ea.getAttributeCode());
+					Attribute attribute = attributeUtils.getAttribute(productCode, ea.getAttributeCode(), embedDataType);
 					if (attribute == null) {
 						log.debugf("Attribute not found for BaseEntityAttribute [%s:%s:%s]", productCode, baseEntityCode, ea.getAttributeCode());
 						throw new ItemNotFoundException(productCode, ea.getAttributeCode());
