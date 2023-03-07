@@ -465,7 +465,7 @@ public class CacheManager {
 		RemoteCache<CoreEntityKey, CoreEntityPersistable> remoteCache = cache.getRemoteCacheForEntity(cacheName);
 		QueryFactory queryFactory = Search.getQueryFactory(remoteCache);
 		Query<EntityAttribute> query = queryFactory.create(deleteQueryStr);
-		query.execute();
+		query.executeStatement();
 	}
 
 	/**
