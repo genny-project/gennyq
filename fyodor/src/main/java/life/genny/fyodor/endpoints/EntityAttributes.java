@@ -36,7 +36,72 @@ public class EntityAttributes {
     CacheManager cm;
 
     /**
-     * Fetch an EntityAttribute from a given product using a baseEntityCode and attributeCode
+     * Fetch an EntityAttribute from a given product using a baseEntityCode and attributeCode, without its DataType
+     * @param product - product to fetch from
+     * @param baseEntityCode - base entity code of the Entity Attribute
+     * @param attributeCode - attribute code of the Attribute
+     * @return <ul>
+     *             <li>200 OK with the EntityAttribute if found.</li>
+     *             <li>404 with an associated error message if the EntityAttribute cannot be found/li>
+     *          </ul>
+     * 
+     */
+    @GET
+    @Path("/{product}/{baseEntityCode}/{attributeCode}")
+    public Response fetch(
+            @PathParam("product") String product, 
+            @PathParam("baseEntityCode") String baseEntityCode,
+            @PathParam("attributeCode") String attributeCode) {
+                return fetch(product, baseEntityCode, attributeCode, false);
+            }
+
+    /**
+     * Fetch an EntityAttribute from a given product using a baseEntityCode and attributeCode and optionally its attribute, but not datatype
+     * @param product - product to fetch from
+     * @param baseEntityCode - base entity code of the Entity Attribute
+     * @param attributeCode - attribute code of the Attribute
+     * @param embedAttr - whether or not to embed the attribute in the Entity Attribute
+     * @return <ul>
+     *             <li>200 OK with the EntityAttribute if found.</li>
+     *             <li>404 with an associated error message if the EntityAttribute or its Attribute cannot be found</li>
+     *          </ul>
+     * 
+     */
+    @GET
+    @Path("/{product}/{baseEntityCode}/{attributeCode}/{embedAttr}")
+    public Response fetch(
+            @PathParam("product") String product, 
+            @PathParam("baseEntityCode") String baseEntityCode,
+            @PathParam("attributeCode") String attributeCode,
+            @PathParam("embedAttr") boolean embedAttr) {
+                return fetch(product, baseEntityCode, attributeCode, embedAttr, false);
+            }
+
+    /**
+     * Fetch an EntityAttribute from a given product using a baseEntityCode and attributeCode with optionally its attribute and data type, but not validation list
+     * @param product - product to fetch from
+     * @param baseEntityCode - base entity code of the Entity Attribute
+     * @param attributeCode - attribute code of the Attribute
+     * @param embedAttr - whether or not to embed the attribute in the Entity Attribute
+     * @param embedDtt - whether or not to embed the data type
+     * @return <ul>
+     *             <li>200 OK with the EntityAttribute if found.</li>
+     *             <li>404 with an associated error message if the EntityAttribute or any of its requested components cannot be found</li>
+     *          </ul>
+     */
+    @GET
+    @Path("/{product}/{baseEntityCode}/{attributeCode}/{embedAttr}/{embedDtt}")
+    public Response fetch(
+            @PathParam("product") String product, 
+            @PathParam("baseEntityCode") String baseEntityCode,
+            @PathParam("attributeCode") String attributeCode,
+            @PathParam("embedAttr") boolean embedAttr,
+            @PathParam("embedDtt") boolean embedDtt) {
+                return fetch(product, baseEntityCode, attributeCode, embedAttr, embedDtt, false);
+            }
+
+    /**
+     * Fetch an EntityAttribute from a given product using a baseEntityCode and attributeCode with optionally its attribute, data type and validation list
      * @param product - product to fetch from
      * @param baseEntityCode - base entity code of the Entity Attribute
      * @param attributeCode - attribute code of the Attribute
@@ -55,9 +120,9 @@ public class EntityAttributes {
             @PathParam("product") String product, 
             @PathParam("baseEntityCode") String baseEntityCode,
             @PathParam("attributeCode") String attributeCode,
-            @PathParam("embedAttr") String embedAttr,
-            @PathParam("embedDtt") String embedDtt,
-            @PathParam("embedVld") String embedVld) {
+            @PathParam("embedAttr") boolean embedAttr,
+            @PathParam("embedDtt") boolean embedDtt,
+            @PathParam("embedVld") boolean embedVld) {
                 log.debug("[!] call to GET /entityattributes/" + product + "/" + baseEntityCode + "/" + attributeCode);
 
                 if (userToken == null) {
@@ -66,7 +131,7 @@ public class EntityAttributes {
                 }
         
                 try {
-                    EntityAttribute attribute = beaUtils.getEntityAttribute(product, baseEntityCode, attributeCode, true, true, true);
+                    EntityAttribute attribute = beaUtils.getEntityAttribute(product, baseEntityCode, attributeCode, embedAttr, embedDtt, embedVld);
                     return Response.ok(attribute).build();
                 } catch(ItemNotFoundException e) {
                     return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
