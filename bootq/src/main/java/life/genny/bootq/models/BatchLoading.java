@@ -143,12 +143,8 @@ public class BatchLoading {
     public void persistDatatypes(Map<String, Map<String, String>> project, String realmName) {
         Instant start = Instant.now();
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
-			try {
-				DataType dataType = googleSheetBuilder.buildDataType(entry.getValue(), realmName);
-				attributeUtils.saveDataType(dataType);
-			} catch (ItemNotFoundException e) {
-				log.warn(e.getMessage());
-			}
+            DataType dataType = googleSheetBuilder.buildDataType(entry.getValue(), realmName);
+            attributeUtils.saveDataType(dataType);
 		}
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
