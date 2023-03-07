@@ -54,7 +54,7 @@ public class EntityAttributeUtils {
 	 * @return The corresponding EntityAttribute with embedded "Attribute", or null if not found.
 	 */
 	public <T> T getValue(BaseEntity baseEntity, String attributeCode) {
-		EntityAttribute ea = getEntityAttribute(baseEntity.getRealm(), baseEntity.getCode(), attributeCode, false);
+		EntityAttribute ea = getEntityAttribute(baseEntity.getRealm(), baseEntity.getCode(), attributeCode, true, true);
 		if (ea == null) {
 			throw new ItemNotFoundException(baseEntity.getRealm(), baseEntity.getCode(), attributeCode);
 		}
