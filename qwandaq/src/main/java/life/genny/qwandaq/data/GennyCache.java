@@ -24,6 +24,7 @@ import life.genny.qwandaq.serialization.validation.ValidationInitializerImpl;
 import life.genny.qwandaq.serialization.validation.ValidationKeyInitializerImpl;
 
 import org.infinispan.client.hotrod.DefaultTemplate;
+import org.infinispan.client.hotrod.Flag;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.Configuration;
@@ -298,7 +299,7 @@ public class GennyCache {
 		if (cache == null) {
 			throw new NullPointerException("Could not find a cache called " + cacheName);
 		}
-		return cache.remove(key);
+		return cache.withFlags(Flag.FORCE_RETURN_VALUE).remove(key);
 	}
 
 	public Long getEntityLastUpdatedAt(String entityName) {
