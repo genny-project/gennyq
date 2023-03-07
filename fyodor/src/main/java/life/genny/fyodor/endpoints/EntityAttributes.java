@@ -173,17 +173,17 @@ public class EntityAttributes {
                         .entity("Not authorized to make this request").build();
             }
     
-            try {
-                EntityAttributeKey key = new EntityAttributeKey(product, baseEntityCode, attributeCode);
-                CoreEntityPersistable attribute = cm.removePersistableEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, key);
-                if(attribute != null) {
-                    log.info("Successfully removed entity");
-                    return Response.ok(attribute).entity("Successfully removed entity").build();
-                }
+            // try {
+                // EntityAttributeKey key = new EntityAttributeKey(product, baseEntityCode, attributeCode);
+                beaUtils.removeBaseEntityAttribute(product, baseEntityCode, attributeCode);//cm.removePersistableEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, key);
+                // if(attribute != null) {
+                //     log.info("Successfully removed entity");
+                //     return Response.ok(attribute).entity("Successfully removed entity").build();
+                // }
                 return Response.status(Status.NO_CONTENT).build();
                 
-            } catch(ItemNotFoundException e) {
-                return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
-            }
+            // } catch(ItemNotFoundException e) {
+            //     return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
+            // }
         }
 }

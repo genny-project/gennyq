@@ -273,7 +273,12 @@ public class EntityAttributeUtils {
     }
 
 	public void removeBaseEntityAttributesForBaseEntity(String productCode, String baseEntityCode) {
-		cm.removePersistableEntities(productCode, "from life.genny.qwandaq.persistence.entityattribute.EntityAttribute where realm = '" + productCode
+		cm.removePersistableEntities(productCode, "delete from life.genny.qwandaq.persistence.entityattribute.EntityAttribute where realm = '" + productCode
 				+ "' and baseEntityCode = '" + baseEntityCode + "'");
+	}
+
+	public void removeBaseEntityAttribute(String productCode, String baseEntityCode, String attributeCode) {
+		cm.removePersistableEntities(productCode, "delete from life.genny.qwandaq.persistence.entityattribute.EntityAttribute where realm = '" + productCode
+				+ "' and baseEntityCode = '" + baseEntityCode + "' and attributeCode = '" + attributeCode + "'");
 	}
 }
