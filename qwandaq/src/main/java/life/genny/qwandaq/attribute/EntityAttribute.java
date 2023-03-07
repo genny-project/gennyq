@@ -84,40 +84,48 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 	/**
 	 * Store the Double value of the attribute for the baseEntity
 	 */
+	@JsonbTransient
 	private Double valueDouble;
 
 	/**
 	 * Store the Boolean value of the attribute for the baseEntity
 	 */
+	@JsonbTransient
 	private Boolean valueBoolean;
 	/**
 	 * Store the Integer value of the attribute for the baseEntity
 	 */
+	@JsonbTransient
 	private Integer valueInteger;
 
 	/**
 	 * Store the Long value of the attribute for the baseEntity
 	 */
+	@JsonbTransient
 	private Long valueLong;
 
 	/**
 	 * Store the LocalDateTime value of the attribute for the baseEntity
 	 */
+	@JsonbTransient
 	private LocalTime valueTime;
 
 	/**
 	 * Store the LocalDateTime value of the attribute for the baseEntity
 	 */
+	@JsonbTransient
 	private LocalDateTime valueDateTime;
 
 	/**
 	 * Store the LocalDate value of the attribute for the baseEntity
 	 */
+	@JsonbTransient
 	private LocalDate valueDate;
 
 	/**
 	 * Store the String value of the attribute for the baseEntity
 	 */
+	@JsonbTransient
 	private String valueString;
 
 	@Convert(converter = MoneyConverter.class)
