@@ -298,7 +298,7 @@ public class GennyCache {
 		if (cache == null) {
 			throw new NullPointerException("Could not find a cache called " + cacheName);
 		}
-		return cache.withFlags(Flag.FORCE_RETURN_VALUE).remove(key);
+		return cache.remove(key);
 	}
 
 	public Long getEntityLastUpdatedAt(String entityName) {
