@@ -14,6 +14,7 @@ import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.UserToken;
@@ -174,7 +175,7 @@ public class EntityAttributes {
     
             try {
                 EntityAttributeKey key = new EntityAttributeKey(product, baseEntityCode, attributeCode);
-                CoreEntityPersistable attribute = cm.removePersistableEntity(product, key);
+                CoreEntityPersistable attribute = cm.removePersistableEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, key);
                 if(attribute != null) {
                     log.info("Successfully removed entity");
                     return Response.ok(attribute).entity("Successfully removed entity").build();

@@ -94,7 +94,6 @@ public class GennyCache {
 		Configuration config = builder.build();
 		if (remoteCacheManager == null) {
 			remoteCacheManager = new RemoteCacheManager(config);
-			remoteCacheManager.getConfiguration().marshallerClass();
 		}
 	}
 
