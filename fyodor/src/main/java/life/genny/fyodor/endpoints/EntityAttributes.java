@@ -1,6 +1,7 @@
 package life.genny.fyodor.endpoints;
 
 import javax.inject.Inject;
+import javax.transaction.Transactional;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -160,6 +161,7 @@ public class EntityAttributes {
      * @return 200 OK with the EntityAttribute if found. 404 with an associated error message
      */
     @DELETE
+    @Transactional
     @Produces(MediaType.APPLICATION_JSON)
     @Path("/{product}/{baseEntityCode}/{attributeCode}")
     public Response delete(
