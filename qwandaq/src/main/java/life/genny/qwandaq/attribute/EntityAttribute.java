@@ -41,6 +41,7 @@ import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.converter.MoneyConverter;
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.handler.AttributeMinIOHandler;
 import life.genny.qwandaq.intf.ICapabilityHiddenFilterable;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
@@ -584,27 +585,25 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 	 * @return T
 	 */
 	@SuppressWarnings("unchecked")
-	@JsonIgnore
-	@Transient
-	@XmlTransient
 	@JsonbProperty(nillable = true)
 	public <T> T getValue() {
 		if (attribute == null) {
-			return getLoopValue();
+			throw new BadDataException("No Attribute found for " + baseEntityCode + ":" + attributeCode);
 		}
 		DataType dataType = attribute.getDataType();
-		if (dataType != null) {
-			final String dataTypeClassName = dataType.getClassName();
-			switch (dataTypeClassName) {
-				case GennyConstants.JAVA_LANG_INTEGER, GennyConstants.INTEGER -> { return (T) getValueInteger(); }
-				case GennyConstants.JAVA_TIME_LOCAL_DATE_TIME, GennyConstants.LOCAL_DATE_TIME -> { return (T) getValueDateTime(); }
-				case GennyConstants.JAVA_TIME_LOCAL_TIME, GennyConstants.LOCAL_TIME -> { return (T) getValueTime(); }
-				case GennyConstants.JAVA_LANG_LONG, GennyConstants.LONG -> { return (T) getValueLong(); }
-				case GennyConstants.JAVA_LANG_DOUBLE, GennyConstants.DOUBLE -> { return (T) getValueDouble(); }
-				case GennyConstants.JAVA_LANG_BOOLEAN, GennyConstants.BOOLEAN -> { return (T) getValueBoolean(); }
-				case GennyConstants.JAVA_TIME_LOCAL_DATE, GennyConstants.LOCAL_DATE -> { return (T) getValueDate(); }
-				case GennyConstants.ORG_JAVAMONEY_MONETA_MONEY, GennyConstants.MONEY -> { return (T) getValueMoney(); }
-			}
+		if (dataType == null) {
+			throw new BadDataException("No DataType found for " + baseEntityCode + ":" + attributeCode);
+		}
+		final String dataTypeClassName = dataType.getClassName();
+		switch (dataTypeClassName) {
+			case GennyConstants.JAVA_LANG_INTEGER, GennyConstants.INTEGER -> { return (T) getValueInteger(); }
+			case GennyConstants.JAVA_TIME_LOCAL_DATE_TIME, GennyConstants.LOCAL_DATE_TIME -> { return (T) getValueDateTime(); }
+			case GennyConstants.JAVA_TIME_LOCAL_TIME, GennyConstants.LOCAL_TIME -> { return (T) getValueTime(); }
+			case GennyConstants.JAVA_LANG_LONG, GennyConstants.LONG -> { return (T) getValueLong(); }
+			case GennyConstants.JAVA_LANG_DOUBLE, GennyConstants.DOUBLE -> { return (T) getValueDouble(); }
+			case GennyConstants.JAVA_LANG_BOOLEAN, GennyConstants.BOOLEAN -> { return (T) getValueBoolean(); }
+			case GennyConstants.JAVA_TIME_LOCAL_DATE, GennyConstants.LOCAL_DATE -> { return (T) getValueDate(); }
+			case GennyConstants.ORG_JAVAMONEY_MONETA_MONEY, GennyConstants.MONEY -> { return (T) getValueMoney(); }
 		}
 		return (T) getValueString();
 	}
@@ -963,51 +962,6 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 	 * @param <T> the Type to return
 	 * @return T
 	 */
-	@SuppressWarnings("unchecked")
-	@JsonIgnore
-	@Transient
-	@XmlTransient
-	@JsonbTransient
-	public <T> T getLoopValue() {
-
-		if (getValueString() != null) {
-			return (T) getValueString();
-		} else if (getValueBoolean() != null) {
-			return (T) getValueBoolean();
-		} else if (getValueDateTime() != null) {
-			return (T) getValueDateTime();
-		} else if (getValueDouble() != null) {
-			return (T) getValueDouble();
-		} else if (getValueInteger() != null) {
-			return (T) getValueInteger();
-		} else if (getValueDate() != null) {
-			return (T) getValueDate();
-		} else if (getValueTime() != null) {
-			return (T) getValueTime();
-		} else if (getValueLong() != null) {
-			return (T) getValueLong();
-		}
-		if (getValueString() != null) {
-			return (T) getValueString();
-		} else if (getValueBoolean() != null) {
-			return (T) getValueBoolean();
-		} else if (getValueDateTime() != null) {
-			return (T) getValueDateTime();
-		} else if (getValueDouble() != null) {
-			return (T) getValueDouble();
-		} else if (getValueInteger() != null) {
-			return (T) getValueInteger();
-		} else if (getValueDate() != null) {
-			return (T) getValueDate();
-		} else if (getValueTime() != null) {
-			return (T) getValueTime();
-		} else if (getValueLong() != null) {
-			return (T) getValueLong();
-		}
-
-		return null;
-	}
-
 	private Object getValueAsObject() {
 		return (Object)getValue();
 	}
