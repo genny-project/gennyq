@@ -143,6 +143,7 @@ public class EntityAttributes {
 
                 try {
                     EntityAttribute attribute = beaUtils.getEntityAttribute(product, baseEntityCode, attributeCode, embedAttr, embedDtt, embedVld);
+                    log.info("Found EA: " + attribute.getBaseEntityCode() + ":" + attribute.getAttributeCode());
                     return Response.ok(attribute).build();
                 } catch(ItemNotFoundException e) {
                     return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
