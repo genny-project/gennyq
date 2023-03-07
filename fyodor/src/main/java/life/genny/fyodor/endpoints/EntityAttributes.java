@@ -77,8 +77,8 @@ public class EntityAttributes {
             @PathParam("product") String product, 
             @PathParam("baseEntityCode") String baseEntityCode,
             @PathParam("attributeCode") String attributeCode,
-            @PathParam("embedAttr") boolean embedAttr) {
-                return fetch(product, baseEntityCode, attributeCode, embedAttr, false);
+            @PathParam("embedAttr") String embedAttr) {
+                return fetch(product, baseEntityCode, attributeCode, embedAttr, "false");
             }
 
     /**
@@ -100,19 +100,20 @@ public class EntityAttributes {
             @PathParam("product") String product, 
             @PathParam("baseEntityCode") String baseEntityCode,
             @PathParam("attributeCode") String attributeCode,
-            @PathParam("embedAttr") boolean embedAttr,
-            @PathParam("embedDtt") boolean embedDtt) {
-                return fetch(product, baseEntityCode, attributeCode, embedAttr, embedDtt, false);
+            @PathParam("embedAttr") String embedAttr,
+            @PathParam("embedDtt") String embedDtt) {
+                return fetch(product, baseEntityCode, attributeCode, embedAttr, embedDtt, "false");
             }
 
     /**
      * Fetch an EntityAttribute from a given product using a baseEntityCode and attributeCode with optionally its attribute, data type and validation list
+     * <p>All boolean values in this: if !value.equalsIgnoreCase("true") then it is assumed they are false
      * @param product - product to fetch from
      * @param baseEntityCode - base entity code of the Entity Attribute
      * @param attributeCode - attribute code of the Attribute
-     * @param embedAttr - whether or not to embed the attribute in the Entity Attribute
-     * @param embedDtt - whether or not to embed the data type
-     * @param embedVld - whether or not to embed the Validation
+     * @param embedAttrStr - whether or not to embed the attribute in the Entity Attribute
+     * @param embedDttStr - whether or not to embed the data type
+     * @param embedVldStr - whether or not to embed the Validation
      * @return <ul>
      *             <li>200 OK with the EntityAttribute if found.</li>
      *             <li>404 with an associated error message if the EntityAttribute or any of its requested components cannot be found</li>
@@ -126,16 +127,20 @@ public class EntityAttributes {
             @PathParam("product") String product, 
             @PathParam("baseEntityCode") String baseEntityCode,
             @PathParam("attributeCode") String attributeCode,
-            @PathParam("embedAttr") boolean embedAttr,
-            @PathParam("embedDtt") boolean embedDtt,
-            @PathParam("embedVld") boolean embedVld) {
+            @PathParam("embedAttr") String embedAttrStr,
+            @PathParam("embedDtt") String embedDttStr,
+            @PathParam("embedVld") String embedVldStr) {
                 log.debug("[!] call to GET /entityattributes/" + product + "/" + baseEntityCode + "/" + attributeCode);
 
                 if (userToken == null) {
                     return Response.status(Response.Status.FORBIDDEN)
                             .entity("Not authorized to make this request").build();
                 }
-        
+                
+                boolean embedAttr = "true".equalsIgnoreCase(embedAttrStr);
+                boolean embedDtt = "true".equalsIgnoreCase(embedDttStr);
+                boolean embedVld = "true".equalsIgnoreCase(embedVldStr);
+
                 try {
                     EntityAttribute attribute = beaUtils.getEntityAttribute(product, baseEntityCode, attributeCode, embedAttr, embedDtt, embedVld);
                     return Response.ok(attribute).build();
