@@ -608,14 +608,14 @@ public class QwandaUtils {
 				continue;
 			}
 
-			String className = attribute.getDataType().getClassName();
+			String component = attribute.getDataType().getComponent();
 			Object value = ea.getValue();
 
-			if (value == null && className.contains("Boolean") || className.contains("bool"))
+			// default false if flag
+			if (value == null && component.contains("flag")) {
 				ea.setValue(false);
-
+			}
 			processEntity.addAttribute(attribute, ea.getWeight(), ea.getValue());
-			// beaUtils.updateEntityAttribute(ea);
 		}
 
 		// now apply all incoming answers
