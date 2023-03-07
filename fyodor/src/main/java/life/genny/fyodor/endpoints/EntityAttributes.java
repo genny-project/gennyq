@@ -55,7 +55,7 @@ public class EntityAttributes {
             @PathParam("product") String product, 
             @PathParam("baseEntityCode") String baseEntityCode,
             @PathParam("attributeCode") String attributeCode) {
-                return fetch(product, baseEntityCode, attributeCode, false);
+                return fetch(product, baseEntityCode, attributeCode, "false");
             }
 
     /**
