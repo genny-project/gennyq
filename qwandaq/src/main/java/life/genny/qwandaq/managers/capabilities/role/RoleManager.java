@@ -257,6 +257,8 @@ public class RoleManager extends Manager {
 		BaseEntity ret = role;
 		List<EntityAttribute> perms = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(parentRole.getRealm(), parentRole.getCode(), Prefix.CAP_);
 		for (EntityAttribute permissionEA : perms) {
+			Attribute attribute = attributeUtils.getAttribute(permissionEA.getAttributeCode(), true, true);
+			permissionEA.setAttribute(attribute);
 			List<CapabilityNode> capabilities = CapabilitiesManager.deserializeCapArray(permissionEA.getValue());
 			ret = capManager.addCapabilityToBaseEntity(productCode, ret, permissionEA.getAttributeCode(), capabilities);
 
