@@ -40,15 +40,24 @@ public class EntityAttributes {
      * @param product - product to fetch from
      * @param baseEntityCode - base entity code of the Entity Attribute
      * @param attributeCode - attribute code of the Attribute
-     * @return 200 OK with the EntityAttribute if found. 404 with an associated error message if the EntityAttribute cannot be found
+     * @param embedAttr - whether or not to embed the attribute in the Entity Attribute
+     * @param embedDtt - whether or not to embed the data type
+     * @param embedVld - whether or not to embed the Validation
+     * @return <ul>
+     *             <li>200 OK with the EntityAttribute if found.</li>
+     *             <li>404 with an associated error message if the EntityAttribute or any of its requested components cannot be found</li>
+     *          </ul>
      * 
      */
     @GET
-    @Path("/{product}/{baseEntityCode}/{attributeCode}")
+    @Path("/{product}/{baseEntityCode}/{attributeCode}/{embedAttr}/{embedDtt}/{embedVld}")
     public Response fetch(
             @PathParam("product") String product, 
             @PathParam("baseEntityCode") String baseEntityCode,
-            @PathParam("attributeCode") String attributeCode) {
+            @PathParam("attributeCode") String attributeCode,
+            @PathParam("embedAttr") String embedAttr,
+            @PathParam("embedDtt") String embedDtt,
+            @PathParam("embedVld") String embedVld) {
                 log.debug("[!] call to GET /entityattributes/" + product + "/" + baseEntityCode + "/" + attributeCode);
 
                 if (userToken == null) {
