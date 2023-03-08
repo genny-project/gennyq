@@ -288,6 +288,7 @@ public class BatchLoading {
                 if(entityAttribute.getAttributeId() == null) {
                     log.error("Warning entity attribute attribute id is null post construction for EA: " + entityAttribute.getBaseEntityCode() + ":" + entityAttribute.getAttributeCode());
                     log.error("Attribute Code: " + entityAttribute.getAttributeCode());
+                    
                 }
                 beaUtils.updateEntityAttribute(entityAttribute);
             } catch(BadDataException e) {
