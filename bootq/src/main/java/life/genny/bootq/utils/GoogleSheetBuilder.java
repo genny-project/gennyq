@@ -165,9 +165,11 @@ public class GoogleSheetBuilder {
 	public DataType buildDataType(Map<String, String> row, String realmName) {
 
 		String code = row.get("code");
-		DataType dataType = attributeUtils.getDataType(realmName, code, false);
-		// create new datatype if not found
-		if (dataType == null) {
+		DataType dataType;
+		try {
+			dataType = attributeUtils.getDataType(realmName, code, false);
+		} catch (ItemNotFoundException e) {
+			// create new datatype if not found
 			dataType = new DataType();
 			dataType.setDttCode(code);
 		}

@@ -1,5 +1,7 @@
 package life.genny.fyodor.utils;
 
+import static life.genny.qwandaq.attribute.Attribute.PRI_CREATED;
+import static life.genny.qwandaq.attribute.Attribute.PRI_NAME;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -112,7 +114,7 @@ public class FyodorUltra {
 			baseEntity.setIndex(index);
 			beUtils.addNonLiteralAttributes(baseEntity);
 			for (String attributeCode : allowed) {
-				EntityAttribute ea;
+				EntityAttribute ea = null;
 				if (attributeCode.startsWith("_")) {
 					// handle asociated columns
 					try {
@@ -128,7 +130,17 @@ public class FyodorUltra {
 					ea.getAttribute().setCode(attributeCode);
 				} else {
 					// otherwise fetch entity attribute
-					ea = beaUtils.getEntityAttribute(baseEntity.getRealm(), baseEntity.getCode(), attributeCode, true, true);
+					if (PRI_NAME.equals(attributeCode)) {
+						ea = new EntityAttribute(baseEntity, attributeUtils.getAttribute(PRI_NAME), 1.0, null);
+						ea.setValueString(baseEntity.getName());
+					}
+					else if (PRI_CREATED.equals(attributeCode)) {
+						ea = new EntityAttribute(baseEntity, attributeUtils.getAttribute(PRI_CREATED), 1.0, null);
+						ea.setValueDateTime(baseEntity.getCreated());
+					}
+					else {
+						ea = beaUtils.getEntityAttribute(baseEntity.getRealm(), baseEntity.getCode(), attributeCode, true, true);
+					}
 				}
 				if (ea != null) {
 					baseEntity.addAttribute(ea);

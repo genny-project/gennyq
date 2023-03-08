@@ -53,7 +53,7 @@ public class EntityAttributeUtils {
 	 * @return The corresponding EntityAttribute with embedded "Attribute", or null if not found.
 	 */
 	public <T> T getValue(BaseEntity baseEntity, String attributeCode) {
-		EntityAttribute ea = getEntityAttribute(baseEntity.getRealm(), baseEntity.getCode(), attributeCode, false);
+		EntityAttribute ea = getEntityAttribute(baseEntity.getRealm(), baseEntity.getCode(), attributeCode, true, true);
 		if (ea == null) {
 			throw new ItemNotFoundException(baseEntity.getRealm(), baseEntity.getCode(), attributeCode);
 		}
@@ -283,5 +283,17 @@ public class EntityAttributeUtils {
 	 */
 	public int removeBaseEntityAttribute(String productCode, String baseEntityCode, String attributeCode) {
 		return cm.removeEntityAttribute(productCode, baseEntityCode, attributeCode);
+	}
+
+	/**
+	 * Remove an entity attribute for a given product
+	 * @param productCode
+	 * @param baseEntityCode
+	 * @param attributeCode
+	 * @return the number of changed entities (if any)
+	 */
+	public int removeBaseEntityAttribute(String productCode, String baseEntityCode, String attributeCode) {
+		return cm.removePersistableEntities(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, "delete from life.genny.qwandaq.persistence.entityattribute.EntityAttribute where realm = '" + productCode
+				+ "' and baseEntityCode = '" + baseEntityCode + "' and attributeCode = '" + attributeCode + "'");
 	}
 }
