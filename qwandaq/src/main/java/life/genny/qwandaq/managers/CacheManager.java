@@ -483,7 +483,7 @@ public class CacheManager {
 
 		if(StringUtils.isBlank(conditionalCheck))
 			throw new IllegalStateException("Blank conditional check detected. This would delete all data for " + persistenceName + " in product: " + productCode + ". Stopping");
-		if(!conditionalCheck.contains("\'") || !conditionalCheck.contains("\"")) {
+		if(!(conditionalCheck.contains("\'") && conditionalCheck.contains("\""))) {
 			throw new IllegalStateException("Conditional Check does not have quotes. Likely malformed Conditional Check: " + conditionalCheck);
 		}
 
