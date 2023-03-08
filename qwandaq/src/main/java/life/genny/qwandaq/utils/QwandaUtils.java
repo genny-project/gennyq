@@ -67,9 +67,6 @@ public class QwandaUtils {
 	static Logger log = Logger.getLogger(QwandaUtils.class);
 
 	@Inject
-	DatabaseUtils databaseUtils;
-
-	@Inject
 	DefUtils defUtils;
 
 	@Inject
@@ -116,7 +113,6 @@ public class QwandaUtils {
 	 * @return
 	 */
 	public Set<Ask> fetchAsks(ProcessData processData) {
-		Set<Ask> asks = new HashSet<>();
 		String key = String.format(QwandaUtils.ASK_CACHE_KEY_FORMAT, processData.getProcessId());
 		Ask[] asksArr = cm.getObject(userToken.getProductCode(), key, Ask[].class);
 		return Arrays.stream(asksArr).collect(Collectors.toSet());
@@ -164,80 +160,6 @@ public class QwandaUtils {
 	 */
 	public Attribute getAttribute(final String productCode, final String attributeCode) {
 		return attributeUtils.getAttribute(productCode, attributeCode);
-	}
-
-	/**
-	 * Load all attributes into the cache from the database.
-	 *
-	 * @param productCode The product of the attributes to initialize
-	 */
-	public void loadAllAttributesIntoCache(String productCode) {
-		if (productCode == null)
-			throw new NullParameterException("productCode");
-		if (StringUtils.isBlank(productCode))
-			throw new DebugException("productCode is blank");
-		if (productCode == null)
-			throw new NullParameterException("productCode");
-		if (StringUtils.isBlank(productCode))
-			throw new DebugException("productCode is blank");
-
-		// count attributes in DB for product
-		Long attributeCount = databaseUtils.countAttributes(productCode);
-		final Integer CHUNK_LOAD_SIZE = 200;
-		final int TOTAL_PAGES = (int) Math.ceil(attributeCount / CHUNK_LOAD_SIZE);
-		Long totalAttribsCached = 0L;
-
-		log.info("About to load all attributes for productCode " + productCode);
-		log.info("Found " + attributeCount + " attributes");
-
-		cm.putObject(productCode, "ATTRIBUTE_PAGES", TOTAL_PAGES);
-
-		try {
-			for (int currentPage = 0; currentPage < TOTAL_PAGES + 1; currentPage++) {
-
-				QDataAttributeMessage msg = new QDataAttributeMessage();
-
-				int attributesLoaded = currentPage * CHUNK_LOAD_SIZE;
-
-				// Correctly determine how many more attributes we need to load in
-				int nextLoad = CHUNK_LOAD_SIZE;
-				if (attributeCount - attributesLoaded < CHUNK_LOAD_SIZE) {
-					nextLoad = (int) (attributeCount - attributesLoaded);
-				}
-
-				List<Attribute> attributeList = databaseUtils.findAttributes(productCode, attributesLoaded, nextLoad,
-						null);
-				long lastMemory = PerformanceUtils.getMemoryUsage("MEGABYTES");
-
-				log.debug("Loading in page " + currentPage + " of " + TOTAL_PAGES + " containing " + nextLoad
-						+ " attributes");
-				log.debug("Current memory usage: " + lastMemory + "MB");
-
-				long currentMemory = PerformanceUtils.getMemoryUsage(PerformanceUtils.MemoryMeasurement.MEGABYTES);
-				long memoryUsed = currentMemory - lastMemory;
-
-				log.trace("Post load memory usage: " + currentMemory + "MB");
-				log.trace("Used up: " + memoryUsed + "MB");
-				log.trace("Percentage: " + PerformanceUtils.getPercentMemoryUsed() * 100f);
-				log.trace("============================");
-				// NOTE: Warning, this may cause OOM errors.
-				msg.add(attributeList);
-
-				if (!attributeList.isEmpty()) {
-					Attribute startAttribute = attributeList.get(0);
-					log.debug("Product code" + startAttribute.getRealm() + "Start Attribute code:"
-							+ startAttribute.getCode() + ", End Attribute code:"
-							+ attributeList.get(attributeList.size() - 1).getCode());
-				}
-
-				cm.putObject(productCode, "ATTRIBUTES_P" + currentPage, msg);
-			}
-
-			log.debug("Cached " + totalAttribsCached + " attributes");
-		} catch (Exception e) {
-			log.error("Error loading attributes for productCode: " + productCode);
-			e.printStackTrace();
-		}
 	}
 
 	/**
@@ -382,7 +304,6 @@ public class QwandaUtils {
 	 */
 	public void recursivelySetInformation(Ask ask, String processId, String targetCode) {
 		ask.setProcessId(processId);
-		ask.setTargetCode(targetCode);
 		ask.setTargetCode(targetCode);
 		if (ask.getChildAsks() != null) {
 			for (Ask child : ask.getChildAsks()) {
@@ -687,14 +608,14 @@ public class QwandaUtils {
 				continue;
 			}
 
-			String className = attribute.getDataType().getClassName();
+			String component = attribute.getDataType().getComponent();
 			Object value = ea.getValue();
 
-			if (value == null && className.contains("Boolean") || className.contains("bool"))
+			// default false if flag
+			if (value == null && component.contains("flag")) {
 				ea.setValue(false);
-
+			}
 			processEntity.addAttribute(attribute, ea.getWeight(), ea.getValue());
-			// beaUtils.updateEntityAttribute(ea);
 		}
 
 		// now apply all incoming answers
@@ -851,9 +772,11 @@ public class QwandaUtils {
 		String targetCode = baseEntity.getCode();
 
 		String name = baseEntity.getName();
-		Optional<EntityAttribute> optName = baseEntity.findEntityAttribute(Attribute.PRI_NAME);
-		if(optName.isPresent() && !StringUtils.isBlank(optName.get().getValueString())) {
-			name = optName.get().getValueString();
+		EntityAttribute entityAttribute = beaUtils.getEntityAttribute(baseEntity.getRealm(), targetCode, Attribute.PRI_NAME, true, true);
+		if (entityAttribute != null) {
+			String value = entityAttribute.getValueString();
+			if (!StringUtils.isBlank(value))
+				name = value;
 		}
 
 		// create GRP ask
@@ -869,13 +792,13 @@ public class QwandaUtils {
 		entityMessage.setReplace(true);
 
 		// create a child ask for every valid attribute
-		definition.getBaseEntityAttributes().forEach(entityAttribute -> {
-			String attributeCode = entityAttribute.getAttributeCode();
+		definition.getBaseEntityAttributes().forEach(ea -> {
+			String attributeCode = ea.getAttributeCode();
 			if (!attributeCode.startsWith(Prefix.ATT_)) {
 				return;
 			}
 			String strippedAttributeCode = StringUtils.removeStart(attributeCode, Prefix.ATT_);
-			Attribute attribute = attributeUtils.getAttribute(baseEntity.getRealm(), strippedAttributeCode);
+			Attribute attribute = attributeUtils.getAttribute(baseEntity.getRealm(), strippedAttributeCode, true);
 
 					String questionCode = Prefix.QUE_
 							+ StringUtils.removeStart(StringUtils.removeStart(attribute.getCode(),
@@ -913,7 +836,7 @@ public class QwandaUtils {
 	/**
 	 * Check if a baseentity satisfies a definitions uniqueness checks.
 	 * 
-	 * @param definition The definitions to check against
+	 * @param definitions The list of definitions to check against
 	 * @param answer     An incoming answer
 	 * @param targets    The target entities to check, usually processEntity and
 	 *                   original target

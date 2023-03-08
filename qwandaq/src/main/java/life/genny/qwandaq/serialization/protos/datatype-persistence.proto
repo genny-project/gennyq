@@ -12,7 +12,8 @@ message DataType {
   /* @Field(index=Index.YES, store = Store.YES, analyze = Analyze.NO) */
   optional string dttcode = 2;
   optional string classname = 3;
-  optional string component = 4;
-  optional string inputmask = 5;
-  optional string validation_codes = 6;
+  optional string typename = 4;
+  optional string component = 5;
+  optional string inputmask = 6;
+  optional string validation_codes = 7;
 }

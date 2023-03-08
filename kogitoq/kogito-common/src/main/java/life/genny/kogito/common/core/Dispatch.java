@@ -6,6 +6,7 @@ import static life.genny.qwandaq.entity.PCM.PCM_TREE;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -91,6 +92,10 @@ public class Dispatch {
 	@Inject
 	AttributeUtils attributeUtils;
 
+	private Set<String> processedTargetCodes = new HashSet<>();
+
+	private Set<String> traversedPCMs = new HashSet<>();
+
 	/**
 	 * Send Asks, PCMs and Searches
 	 *
@@ -118,14 +123,6 @@ public class Dispatch {
 		// ensure target codes match
 		pcm.setTargetCode(targetCode);
 		QBulkMessage msg = new QBulkMessage();
-		// check for a provided question code
-		String questionCode = processData.getQuestionCode();
-		if (questionCode != null) {
-			// fetch question from DB
-			log.info("Generating asks -> " + questionCode + ":" + source.getCode() + ":" + target.getCode());
-			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target, userCapabilities, new ReqConfig());
-			msg.add(ask);
-		}
 		// generate events if specified
 		String buttonEvents = processData.getButtonEvents();
 		if (buttonEvents != null) {
@@ -143,10 +140,9 @@ public class Dispatch {
 		String parent = processData.getParent();
 		String location = processData.getLocation();
 		// traverse pcm to build data
+		processedTargetCodes.clear();
+		traversedPCMs.clear();
 		traversePCM(userCapabilities, pcm, source, target, parent, location, msg, processData);
-		// update questionCode after traversing
-		if (questionCode != null)
-			pcm.setQuestionCode(questionCode);
 
 		/**
 		 * update parent pcm
@@ -167,9 +163,8 @@ public class Dispatch {
 	}
 
 	/**
-	 * @param processData
-	 * @param msg
-	 * @return
+	 * @param flatMapOfAsks
+	 * @return True if the map contains a non-readonly ask, False otherwise
 	 */
 	public Boolean containsNonReadonly(Map<String, Ask> flatMapOfAsks) {
 		for (Ask ask : flatMapOfAsks.values()) {
@@ -223,22 +218,6 @@ public class Dispatch {
 	}
 
 	/**
-	 * Fetch a PCM to traverse, looking for a non-readonly question.
-	 *
-	 * @param code The PCM code to begin traversing
-	 * @param source The source baseEntity
-	 * @param target The target baseEntity
-	 * @param msg The bulk message to store data
-	 * @param processData The ProcessData used to init the task
-	 */
-	public void traversePCM(CapabilitySet userCapabilities, String code, BaseEntity source, BaseEntity target, 
-			String parent, String location, QBulkMessage msg, ProcessData processData) {
-		// add pcm to bulk message
-		PCM pcm = beUtils.getPCM(code);
-		traversePCM(userCapabilities, pcm, source, target, parent, location, msg, processData);
-	}
-
-	/**
 	 * Traverse a PCM looking for a non-readonly question.
 	 *
 	 * @param pcm The PCM to Traverse
@@ -262,8 +241,10 @@ public class Dispatch {
 		// use pcm target if one is specified
 		try {
 			String targetCode = beaUtils.getValue(pcm, Attribute.PRI_TARGET_CODE);
-			if (!targetCode.equals(target.getCode())) {
+            log.debugf("pcmCode: %s, sourceCode: %s,  targetCode: %s, target.getCode(): %s", pcmCode, source.getCode(), targetCode, target.getCode());
+			if (!StringUtils.isBlank(targetCode) && !targetCode.equals(target.getCode()) && !processedTargetCodes.contains(targetCode+target.getCode())) {
 				// merge targetCode
+				log.debugf("Target code combo already processed? : %s", processedTargetCodes.contains(targetCode + target.getCode()));
 				Map<String, Object> ctxMap = new HashMap<>();
 				ctxMap.put("TARGET", target);
 				targetCode = mergeUtils.merge(targetCode, ctxMap);
@@ -276,6 +257,7 @@ public class Dispatch {
 						.add("location", location)
 						.build();
 				kogitoUtils.triggerWorkflow(GADAQ, "processQuestions", payload);
+				processedTargetCodes.add(targetCode+target.getCode());
 				return;
 			}
 		} catch (ItemNotFoundException e) {
@@ -303,7 +285,13 @@ public class Dispatch {
 			if (value.startsWith(Prefix.PCM_)) {
 				parent = pcmCode;
 				location = entityAttribute.getAttributeCode();
-				traversePCM(userCapabilities, value, source, target, parent, location, msg, processData);
+				if (traversedPCMs.contains(value)) {
+					log.debugf("The PCM %s already traversed for parent %s, skipping traversal.", value, processData.getParent());
+				} else {
+					traversedPCMs.add(value);
+					PCM childPcm = beUtils.getPCM(value);
+					traversePCM(userCapabilities, childPcm, source, target, parent, location, msg, processData);
+				}
 			} else if (value.startsWith(Prefix.SBE_)) {
 				processData.getSearches().add(value);
 			}
@@ -327,6 +315,7 @@ public class Dispatch {
 		if (!Question.QUE_EVENTS.equals(questionCode) && !StringUtils.isBlank(questionCode)) {
 			// add ask to bulk message
 			Ask ask = qwandaUtils.generateAskFromQuestionCode(questionCode, source, target, userCapabilities, new ReqConfig());
+			ask.setTestTargetCode(target.getCode());
 			msg.add(ask);
 		}
 	}
@@ -334,7 +323,7 @@ public class Dispatch {
 	/**
 	 * Create the events ask group.
 	 * 
-	 * @param events     The events string
+	 * @param buttonEvents     The events string
 	 * @param sourceCode The source entity code
 	 * @param targetCode The target entity code
 	 * @return The events ask group
@@ -388,9 +377,9 @@ public class Dispatch {
 	 * NOTE: This needs optimisation. Ultimately we would like
 	 * to make use of a flat map, or tree map.
 	 *
-	 * @param asks   The ask to traverse
+	 * @param ask   The ask to traverse
 	 * @param target The target entity used in finding values
-	 * @param asks   The msg to add entities to
+	 * @param msg   The msg to add entities to
 	 */
 	public void handleDropdownAttributes(Ask ask, String parentCode, BaseEntity target, QBulkMessage msg) {
 
@@ -450,7 +439,7 @@ public class Dispatch {
 	 *
 	 * @param ask      The Ask to traverse
 	 * @param target   The target entity used in processing
-	 * @param rootCode The code of the root question used in sending DD messages
+	 * @param parentCode The code of the root question used in sending DD messages
 	 */
 	public void sendDropdownItems(Ask ask, BaseEntity target, String parentCode) {
 

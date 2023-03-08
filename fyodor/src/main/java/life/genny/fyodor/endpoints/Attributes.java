@@ -1,15 +1,6 @@
 package life.genny.fyodor.endpoints;
 
 import io.vertx.core.http.HttpServerRequest;
-import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.managers.CacheManager;
-import life.genny.qwandaq.message.QDataAttributeMessage;
-import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.AttributeUtils;
-import life.genny.qwandaq.utils.DatabaseUtils;
-import life.genny.qwandaq.utils.HttpUtils;
-import org.jboss.logging.Logger;
-import org.jboss.resteasy.annotations.jaxrs.PathParam;
 
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
@@ -21,7 +12,17 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.List;
+
+import org.jboss.logging.Logger;
+import org.jboss.resteasy.annotations.jaxrs.PathParam;
+
+import life.genny.qwandaq.CoreEntityPersistable;
+import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
+import life.genny.qwandaq.managers.CacheManager;
+import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.serialization.attribute.AttributeKey;
+import life.genny.qwandaq.utils.AttributeUtils;
 
 /**
  * Attributes Endpoints providing database attribute access
@@ -31,15 +32,13 @@ import java.util.List;
 @Path("/attributes")
 public class Attributes {
 
-	private static final Logger log = Logger.getLogger(Attributes.class);
+	@Inject
+	Logger log;
 
 	static Jsonb jsonb = JsonbBuilder.create();
 
 	@Context
 	HttpServerRequest request;
-
-	@Inject
-	DatabaseUtils databaseUtils;
 
 	@Inject
 	CacheManager cm;
@@ -58,40 +57,21 @@ public class Attributes {
 	 */
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	@Path("/{code}")
-	public Response read(@PathParam("code") String code) {
+	@Path("/{realm}/{code}")
+	public Response read(@PathParam("realm") final String realm, @PathParam("code") String code) {
+		log.debug("[!] call to GET /attributes/" + realm + "/" + code);
 
 		if (userToken == null) {
-			return Response.status(Response.Status.BAD_REQUEST)
-					.entity(HttpUtils.error("Not authorized to make this request")).build();
+			return Response.status(Response.Status.FORBIDDEN)
+					.entity("Not authorized to make this request").build();
 		}
 
-		String productCode = userToken.getProductCode();
-		Attribute attribute = attributeUtils.getAttribute(productCode, code, true, true);
-
-		return Response.ok(attribute).build();
-	}
-
-	/**
-	 * Read an item from the cache.
-	 *
-	 * @param key The key of the cache item
-	 * @return The json item
-	 */
-	@GET
-	@Produces(MediaType.APPLICATION_JSON)
-	@Path("/realms/{realm}")
-	public Response readAttributes(@PathParam("realm") String realm) {
-
-		if (userToken == null) {
-			return Response.status(Response.Status.BAD_REQUEST)
-					.entity(HttpUtils.error("Not authorized to make this request")).build();
+		try {
+			Attribute attribute = attributeUtils.getAttribute(realm, code, true, true);
+			return Response.ok(attribute).build();
+		} catch(ItemNotFoundException e) {
+			return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
 		}
-
-		List<Attribute> attributeList = databaseUtils.findAttributes(realm, 0, 10000, "");
-
-		QDataAttributeMessage attributeMsg = new QDataAttributeMessage(attributeList);
-		return Response.ok(attributeMsg).build();
 	}
 
 	/**
@@ -102,17 +82,18 @@ public class Attributes {
 	 */
 	@DELETE
 	@Produces(MediaType.APPLICATION_JSON)
-	@Path("/{realm}/{attributeCode}")
-	public Response deleteAttribute(@PathParam("realm") String realm,@PathParam("attributeCode") String attributeCode) {
-
+	@Path("/{realm}/{code}")
+	public Response deleteAttribute(@PathParam("realm") String realm, @PathParam("code") String code) {
+		log.debug("[!] call to DELETE /attributes/" + realm + "/" + code);
 		if (userToken == null) {
-			return Response.status(Response.Status.BAD_REQUEST)
-					.entity(HttpUtils.error("Not authorized to make this request")).build();
+			return Response.status(Response.Status.FORBIDDEN)
+					.entity("Not authorized to make this request").build();
 		}
-
-		log.info("Api Attribute delete of "+realm+" : "+attributeCode);
-
-		
-		return Response.ok().build();
+		AttributeKey key = new AttributeKey(realm, code);
+		CoreEntityPersistable attribute = cm.removePersistableEntity(realm, key);
+		if(attribute != null)
+			return Response.ok().entity("Attribute " + code + " found and deleted").build();
+		else
+			return Response.status(Response.Status.NOT_FOUND).entity("Attribute " + code + " not found").build();
 	}
 }

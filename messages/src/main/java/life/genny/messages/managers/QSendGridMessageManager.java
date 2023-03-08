@@ -7,11 +7,13 @@ import com.sendgrid.SendGrid;
 import com.sendgrid.helpers.mail.Mail;
 import com.sendgrid.helpers.mail.objects.Email;
 import com.sendgrid.helpers.mail.objects.Personalization;
+import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.GennySettings;
+import life.genny.qwandaq.utils.AttributeUtils;
 import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.EntityAttributeUtils;
 import life.genny.qwandaq.utils.TimeUtils;
@@ -32,6 +34,8 @@ public final class QSendGridMessageManager extends QMessageProvider {
 
 	@Inject
 	EntityAttributeUtils beaUtils;
+	@Inject
+	AttributeUtils attributeUtils;
 
 	private static final Logger log = Logger.getLogger(QSendGridMessageManager.class);
 
@@ -109,6 +113,8 @@ public final class QSendGridMessageManager extends QMessageProvider {
 
 					String attrCode = ea.getAttributeCode();
 					if (attrCode.startsWith("LNK") || attrCode.startsWith("PRI")) {
+                        Attribute attribute = attributeUtils.getAttribute(ea.getAttributeCode(), true, true);
+                        ea.setAttribute(attribute);
 						Object attrVal = ea.getValue();
 						if (attrVal != null) {
 

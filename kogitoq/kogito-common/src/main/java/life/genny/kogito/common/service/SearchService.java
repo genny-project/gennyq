@@ -26,7 +26,6 @@ import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.entity.search.trait.Ord;
 import life.genny.qwandaq.entity.search.trait.Sort;
-import life.genny.qwandaq.utils.CacheUtils;
 
 @ApplicationScoped
 public class SearchService extends KogitoService {
@@ -84,7 +83,7 @@ public class SearchService extends KogitoService {
 	public void sendDetailView(String targetCode) {
 
 		// fetch target and find it's definition
-		BaseEntity target = beUtils.getBaseEntity(targetCode);
+		BaseEntity target = beUtils.getBaseEntity(targetCode, true);
 		BaseEntity definition = defUtils.getDEF(target);
 		String type = StringUtils.removeStart(definition.getCode(), Prefix.DEF_);
 

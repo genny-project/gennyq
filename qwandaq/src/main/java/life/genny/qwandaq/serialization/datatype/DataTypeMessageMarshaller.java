@@ -23,6 +23,7 @@ public class DataTypeMessageMarshaller implements MessageMarshaller<DataType> {
 		dataType.setRealm(reader.readString("realm"));
 		dataType.setDttCode(reader.readString("dttcode"));
 		dataType.setClassName(reader.readString("classname"));
+		dataType.setTypeName(reader.readString("typename"));
 		dataType.setComponent(reader.readString("component"));
 		dataType.setInputmask(reader.readString("inputmask"));
 		dataType.setValidationCodes(reader.readString("validation_codes"));
@@ -35,6 +36,7 @@ public class DataTypeMessageMarshaller implements MessageMarshaller<DataType> {
 		writer.writeString("realm", dataType.getRealm());
 		writer.writeString("dttcode", dataType.getDttCode());
 		writer.writeString("classname", dataType.getClassName());
+		writer.writeString("typename", dataType.getTypeName());
 		writer.writeString("component", dataType.getComponent());
 		writer.writeString("inputmask", dataType.getInputmask());
 		writer.writeString("validation_codes", dataType.getValidationCodes());

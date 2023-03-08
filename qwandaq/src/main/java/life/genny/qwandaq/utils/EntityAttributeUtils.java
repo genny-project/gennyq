@@ -54,7 +54,7 @@ public class EntityAttributeUtils {
 	 * @return The corresponding EntityAttribute with embedded "Attribute", or null if not found.
 	 */
 	public <T> T getValue(BaseEntity baseEntity, String attributeCode) {
-		EntityAttribute ea = getEntityAttribute(baseEntity.getRealm(), baseEntity.getCode(), attributeCode, false);
+		EntityAttribute ea = getEntityAttribute(baseEntity.getRealm(), baseEntity.getCode(), attributeCode, true, true);
 		if (ea == null) {
 			throw new ItemNotFoundException(baseEntity.getRealm(), baseEntity.getCode(), attributeCode);
 		}
@@ -106,12 +106,27 @@ public class EntityAttributeUtils {
 	 * @param baseEntityCode        The BaseEntity code of the EntityAttribute to fetch
 	 * @param attributeCode        The Attribute code of the EntityAttribute to fetch
 	 * @param embedAttribute       Defines if "Attribute" will be embedded into the returned EntityAttribute
-	 * @return The corresponding BaseEntityAttribute, or null if not found.
+	 * @return The corresponding BaseEntityAttribute
+	 * 
+	 * @throws {@link ItemNotFoundException} if:
+	 * 	<ul>
+	 * 		<li>the corresponding {@link EntityAttribute} cannot be found</li>
+	 * 		<li>the corresponding {@link Attribute} cannot be found and the attribute has been requested <bembedAttribute</b></li>
+	 * 		<li>the corresponding {@link DataType}" cannot be found and the dataType and attribute has been requested <b>embedAttribute && embedDataType</b></li>
+	 *  </ul>
+	 * 
+	 * @see {@link AttributeUtils#getAttribute(String, String, Boolean, Boolean) AttributeUtils.getAttribute}
+	 * @see {@link AttributeUtils#getDataType}
 	 */
 	public EntityAttribute getEntityAttribute(String productCode, String baseEntityCode, String attributeCode, boolean embedAttribute, boolean embedDataType, boolean embedValidationInfo) {
 		EntityAttributeKey key = new EntityAttributeKey(productCode, baseEntityCode, attributeCode);
 		EntityAttribute entityAttribute = (EntityAttribute) cm.getPersistableEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, key);
-		if (embedAttribute && entityAttribute != null) {
+
+		if(entityAttribute == null) {
+			throw new ItemNotFoundException(productCode, "EntityAttribute: " + baseEntityCode + ":" + attributeCode);
+		}
+
+		if (embedAttribute) {
 			entityAttribute.setAttribute(attributeUtils.getAttribute(productCode, attributeCode, embedDataType, embedValidationInfo));
 		}
 		return entityAttribute;
@@ -258,7 +273,19 @@ public class EntityAttributeUtils {
     }
 
 	public void removeBaseEntityAttributesForBaseEntity(String productCode, String baseEntityCode) {
-		cm.removePersistableEntities(productCode, "from life.genny.qwandaq.persistence.entityattribute.EntityAttribute where realm = '" + productCode
+		cm.removePersistableEntities(productCode, "delete from life.genny.qwandaq.persistence.entityattribute.EntityAttribute where realm = '" + productCode
 				+ "' and baseEntityCode = '" + baseEntityCode + "'");
+	}
+
+	/**
+	 * Remove an entity attribute for a given product
+	 * @param productCode
+	 * @param baseEntityCode
+	 * @param attributeCode
+	 * @return the number of changed entities (if any)
+	 */
+	public int removeBaseEntityAttribute(String productCode, String baseEntityCode, String attributeCode) {
+		return cm.removePersistableEntities(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, "delete from life.genny.qwandaq.persistence.entityattribute.EntityAttribute where realm = '" + productCode
+				+ "' and baseEntityCode = '" + baseEntityCode + "' and attributeCode = '" + attributeCode + "'");
 	}
 }

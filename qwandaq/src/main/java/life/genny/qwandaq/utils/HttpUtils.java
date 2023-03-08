@@ -36,7 +36,7 @@ public class HttpUtils {
 	public static final String GET = "GET";
 	public static final String DELETE = "DELETE";
 
-	public static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(10);
+	public static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(2);
 
 	private static Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 

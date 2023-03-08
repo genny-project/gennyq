@@ -23,6 +23,7 @@ public class QuestionQuestionMessageMarshaller implements MessageMarshaller<Ques
 	// @Override
 	public QuestionQuestion readFrom(ProtoStreamReader reader) throws IOException {
 		QuestionQuestion questionQuestion = new QuestionQuestion();
+		questionQuestion.setParentId(reader.readLong("source_id"));
 		questionQuestion.setParentCode(reader.readString("sourceCode"));
 		questionQuestion.setChildCode(reader.readString("targetCode"));
 		Long createdLong = reader.readLong("created");
@@ -48,6 +49,7 @@ public class QuestionQuestionMessageMarshaller implements MessageMarshaller<Ques
 	// @Override
 	public void writeTo(ProtoStreamWriter writer, QuestionQuestion questionQuestion) throws IOException {
 		// writer.writeLong("id", questionQuestion.getId());
+		writer.writeLong("source_id", questionQuestion.getParentId());
 		writer.writeString("sourceCode", questionQuestion.getParentCode());
 		writer.writeString("targetCode", questionQuestion.getChildCode());
 		LocalDateTime created = questionQuestion.getCreated();

@@ -13,7 +13,6 @@ import org.jboss.logging.Logger;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.DatabaseUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 
 @ApplicationScoped
@@ -35,8 +34,6 @@ public abstract class Manager {
 	@Inject
 	protected EntityAttributeUtils beaUtils;
 
-	@Inject
-	protected DatabaseUtils dbUtils;
     protected String className() {
 		String str = this.getClass().getSimpleName();
 		int index = str.indexOf('_');

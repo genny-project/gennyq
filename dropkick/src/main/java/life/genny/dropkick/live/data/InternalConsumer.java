@@ -1,6 +1,5 @@
 package life.genny.dropkick.live.data;
 
-import com.google.common.reflect.TypeToken;
 import io.quarkus.runtime.StartupEvent;
 import io.smallrye.reactive.messaging.annotations.Blocking;
 import life.genny.qwandaq.attribute.Attribute;
@@ -147,7 +146,7 @@ public class InternalConsumer {
 			target = qwandaUtils.generateProcessEntity(processData);
 			List<String> defCodes = processData.getDefCodes();
 			for (String defCode : defCodes) {
-				BaseEntity def = beUtils.getBaseEntity(defCode);
+				BaseEntity def = beUtils.getBaseEntity(defCode, true);
 				definitions.add(def);
 			}
 		} else {
@@ -184,48 +183,10 @@ public class InternalConsumer {
 		log.info("key="+key);
 		SearchEntity searchEntity = cm.getObject(productCode, key, SearchEntity.class);
 
-		if (searchEntity == null) {
-			String valueString = null;
-			log.info("try third way to build searchEntity");
-
-			log.info("searching attribute by code :"+"SER_" + attrCode);
-			for (EntityAttribute attr : definition.getBaseEntityAttributes()) {
-				log.info("--> Available attr: "+attr.getAttributeCode());
-				if (attr.getAttributeCode().equals("SER_" + attrCode)) {
-					valueString = attr.getValueString();
-					break;
-				}
-			}
-
-			if (valueString != null) {
-				log.info("SER_"+attrCode+" : "+valueString);
-				Map<String, Object> result = jsonb.fromJson(valueString, new TypeToken<Map<String, Object>>(){}.getType());
-				Object parms = result.get("parms");
-				String code = null, name = null;
-				if (parms instanceof List<?> pValues) {
-					for (Object o : pValues) {
-						if (o instanceof Map<?,?> attrValue) {
-							if (attrValue.containsKey("attributeCode")) {
-								code = attrValue.get("attributeCode").toString();
-							}
-							if (attrValue.containsKey("value")) {
-								name = attrValue.get("value").toString();
-							}
-						}
-					}
-				}
-				if (code != null && name != null) {
-					searchEntity = new SearchEntity(code, name);
-					searchEntity.setLinkCode(code);
-					searchEntity.setLinkValue(name);
-					cm.putObject(productCode, key, searchEntity);
-				}
-			}
-		}
-
 		if (searchEntity == null)
-			throw new ItemNotFoundException(key);
+			throw new ItemNotFoundException("Search Entity with key=" + key);
 
+		log.debug("Using Search Entity: " + searchEntity);
 		// Filter by name wildcard provided by user
 		searchEntity.add(new Or(
 			new Filter(Attribute.PRI_NAME, Operator.LIKE, searchText + "%"),

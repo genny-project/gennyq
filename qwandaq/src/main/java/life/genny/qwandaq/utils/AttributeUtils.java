@@ -9,6 +9,7 @@ import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.attribute.AttributeKey;
 import life.genny.qwandaq.serialization.datatype.DataTypeKey;
+import life.genny.qwandaq.serialization.validation.ValidationKey;
 import life.genny.qwandaq.validation.Validation;
 import org.jboss.logging.Logger;
 
@@ -37,57 +38,111 @@ public class AttributeUtils {
     CacheManager cm;
 
     /**
+     * @param productCode
      * @param code
      * @return
+     */
+    public Validation getValidation(String productCode, String code) {
+        ValidationKey key = new ValidationKey(productCode, code);
+        Validation validation = (Validation) cm.getPersistableEntity(GennyConstants.CACHE_NAME_VALIDATION, key);
+        if (validation == null) {
+            throw new ItemNotFoundException(productCode, code);
+        }
+        return validation;
+    }
+
+    /**
+     * Retrieve an Attribute from Infinispan Cache using the user's product code
+     * @param code - the code of the requested attribute
+     * @return The Attribute without its {@link Attribute#getDataType() DataType}
+     * 
+     * @throws {@link ItemNotFoundException} if Attribute cannot be found in the user product's attribute cache
+     * 
+     * @see {@link UserToken#getProductCode() User Product Code}
+     * @see {@link DataType}
      */
     public Attribute getAttribute(String code) {
         return getAttribute(userToken.getProductCode(), code);
     }
 
     /**
-     * @param code
-     * @return
+     * Retrieve an Attribute from Infinispan Cache using the user's product code
+     * @param code - the code of the requested attribute
+     * @param bundleDataType - whether or not to include the {@link DataType} in the Attribute object without its {@link DataType#getValidationList() Validation List}
+     * @return The Attribute and optionally the DataType, but no Validation List
+     * 
+     * @throws {@link ItemNotFoundException} if Attribute cannot be found in the user product's attribute cache
+     * 
+     * @see {@link UserToken#getProductCode() User Product Code}
+     * @see {@link DataType}
      */
     public Attribute getAttribute(String code, boolean bundleDataType) {
         return getAttribute(userToken.getProductCode(), code, bundleDataType);
     }
 
     /**
-     * @param code
-     * @return
+     * Retrieve an Attribute from Infinispan Cache using the user's product code
+     * @param code - the code of the requested attribute
+     * @param bundleDataType - whether or not to include the {@link DataType} in the Attribute object
+     * @param bundleValidationList - whether or not to include the {@link DataType#getValidationList() Validation List} in the DataType object of the attribute
+     * @return The Attribute and optionally the DataType and associated Validation List
+     * 
+     * @throws {@link ItemNotFoundException} if Attribute cannot be found in the user product's attribute cache
+     * 
+     * @see {@link UserToken#getProductCode() User Product Code}
+     * @see {@link DataType}
+     * @see {@link Validation}
      */
     public Attribute getAttribute(String code, boolean bundleDataType, boolean bundleValidationList) {
         return getAttribute(userToken.getProductCode(), code, bundleDataType, bundleValidationList);
     }
 
+
     /**
-     * @param productCode
-     * @param code
-     * @return
+     * Retrieve an Attribute from Infinispan Cache
+     * @param productCode - the product code the attribute belongs in
+     * @param code - the code of the requested attribute
+     * @return The Attribute without its DataType
+     * 
+     * @throws {@link ItemNotFoundException} if Attribute cannot be found in the requested attribute cache
+     * @see {@link DataType}
      */
     public Attribute getAttribute(String productCode, String code) {
         return getAttribute(productCode, code, false);
     }
 
     /**
-     * @param productCode
-     * @param code
-     * @return
+     * Retrieve an Attribute from Infinispan Cache
+     * @param productCode - the product code the attribute belongs in
+     * @param code - the code of the requested attribute
+     * @param bundleDataType - whether or not to include the {@link DataType} in the Attribute object without its {@link DataType#getValidationList() Validation List}
+     * @return The Attribute and optionally the DataType, but no Validation List
+     * 
+     * @throws {@link ItemNotFoundException} if Attribute cannot be found in the requested attribute cache
+     * @see {@link DataType}
+     * @see {@link Validation}
      */
     public Attribute getAttribute(String productCode, String code, boolean bundleDataType) {
         return getAttribute(productCode, code, bundleDataType, false);
     }
 
     /**
-     * @param productCode
-     * @param code
-     * @return
+     * Retrieve an Attribute from Infinispan Cache
+     * @param productCode - the product code the attribute belongs in
+     * @param code - the code of the requested attribute
+     * @param bundleDataType - whether or not to include the {@link DataType} in the Attribute object
+     * @param bundleValidationList - whether or not to include the {@link DataType#getValidationList() Validation List} in the DataType object of the attribute
+     * @return The Attribute and optionally the DataType and associated Validation List
+     * 
+     * @throws {@link ItemNotFoundException} if Attribute cannot be found in the requested attribute cache
+     * @see {@link DataType}
+     * @see {@link Validation}
      */
     public Attribute getAttribute(String productCode, String code, boolean bundleDataType, boolean bundleValidationList) {
         AttributeKey key = new AttributeKey(productCode, code);
         Attribute attribute = (Attribute) cm.getPersistableEntity(GennyConstants.CACHE_NAME_ATTRIBUTE, key);
         if (attribute == null) {
-            throw new ItemNotFoundException(productCode, code);
+            throw new ItemNotFoundException(productCode, "attribute: " + code);
         }
         if(bundleDataType) {
             DataType dataType = getDataType(attribute, bundleValidationList);
@@ -96,27 +151,74 @@ public class AttributeUtils {
         return attribute;
     }
 
-    public DataType getDataType(Attribute attribute, boolean bundleValidationList) {
-        if(attribute == null) {
-            throw new NullParameterException("attribute");
-        }
-
-        DataTypeKey key = new DataTypeKey(attribute.getRealm(), attribute.getDttCode());
+    /**
+	 * Retrieve a DataType from the specified cache
+	 *
+     * @param productCode - product to retrieve the datatype from
+     * @param dttCode - code of the datatype
+     * @param bundleValidationList - whether or not to include its {@link DataType#getValidationList()}
+     * @return the datatype and optionally its Validation List
+     * 
+     * @throws {@link ItemNotFoundException} if the DataType cannot be found
+     * @see {@link Validation}
+     */
+    public DataType getDataType(String productCode, String dttCode, boolean bundleValidationList) {
+        DataTypeKey key = new DataTypeKey(productCode, dttCode);
         DataType dataType = (DataType) cm.getPersistableEntity(GennyConstants.CACHE_NAME_DATATYPE, key);
 
         if(dataType == null) {
-            throw new ItemNotFoundException("DataType attached to Attribute: " + attribute.getCode());
+            throw new ItemNotFoundException(productCode, dttCode);
         }
 
         if (bundleValidationList) {
             List<Validation> validationList = getValidationList(dataType);
             dataType.setValidationList(validationList);
         }
+
         return dataType;
+	}
+
+    /**
+	 * Retrieve a DataType for an {@link Attribute} from the Infinispan cache that is tied to the Attribute (same product)
+	 * Will return DataType already attached to the specified Attribute object if one exists, otherwise will check cache
+     * 
+     * @param attribute - attribute to retrieve the datatype of
+     * @param bundleValidationList - whether or not to include the DataType's {@link DataType#getValidationList()}
+     * @return the datatype tied to the attribute (if any) and optionally its Validation List
+     * 
+     * @throws {@link ItemNotFoundException} if the DataType cannot be found
+     * @see {@link Validation}
+     */
+    public DataType getDataType(Attribute attribute, boolean bundleValidationList) {
+        if(attribute == null) {
+            throw new NullParameterException("attribute");
+        }
+
+        if(attribute.getDataType() != null) {
+            return attribute.getDataType();
+        }
+
+        return getDataType(attribute.getRealm(), attribute.getDttCode(), bundleValidationList);
     }
 
     public List<Validation> getValidationList(DataType dataType) {
         return cm.getValidations(dataType.getRealm(), dataType.getValidationCodes());
+    }
+
+    /**
+     * @param validation
+     */
+    public void saveValidation(Validation validation) {
+        ValidationKey key = new ValidationKey(validation.getRealm(), validation.getCode());
+        cm.saveEntity(GennyConstants.CACHE_NAME_VALIDATION, key, validation);
+    }
+
+    /**
+     * @param dataType
+     */
+    public void saveDataType(DataType dataType) {
+        DataTypeKey key = new DataTypeKey(dataType.getRealm(), dataType.getDttCode());
+        cm.saveEntity(GennyConstants.CACHE_NAME_DATATYPE, key, dataType);
     }
 
     /**
@@ -125,7 +227,9 @@ public class AttributeUtils {
     public void saveAttribute(Attribute attribute) {
         AttributeKey key = new AttributeKey(attribute.getRealm(), attribute.getCode());
         cm.saveEntity(GennyConstants.CACHE_NAME_ATTRIBUTE, key, attribute);
-    }/**
+    }
+
+	/**
      * Fetch all attributes for a product.
      *
      * @return Collection of all attributes in the system across all products
@@ -163,5 +267,18 @@ public class AttributeUtils {
      */
     public List<Attribute> getAttributesWithPrefixForProduct(String productCode, String prefix) {
         return cm.getAttributesWithPrefixForProduct(productCode, prefix);
+    }
+
+    public Long getAttributesLastUpdatedAt() {
+        Long entityLastUpdatedAt = cm.getEntityLastUpdatedAt(GennyConstants.CACHE_NAME_ATTRIBUTE);
+        if(entityLastUpdatedAt != null)
+            return entityLastUpdatedAt;
+        entityLastUpdatedAt = System.currentTimeMillis();
+        updateAttributesLastUpdatedAt(entityLastUpdatedAt);
+        return entityLastUpdatedAt;
+    }
+
+    public void updateAttributesLastUpdatedAt(Long updatedTime) {
+        cm.updateEntityLastUpdatedAt(GennyConstants.CACHE_NAME_ATTRIBUTE, updatedTime);
     }
 }

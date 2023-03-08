@@ -197,12 +197,51 @@ public class DefUtils {
 		}
 
 		// just make use of the faster attribute lookup
-		if (!definition.containsEntityAttribute(Prefix.ATT_ + attributeCode)) {
-			log.error(ANSIColour.RED + "Invalid attribute " + attributeCode + " for " + answer.getTargetCode()
-					+ " with def= " + definition.getCode() + ANSIColour.RESET);
-			return false;
+		EntityAttribute ea = beaUtils.getEntityAttribute(definition.getRealm(), definition.getCode(), Prefix.ATT_ + attributeCode);
+		if (ea != null) {
+			return true;
 		}
-		return true;
+		// if not found, we can check in the parent defs
+		List<String> parentCodes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(definition, Attribute.LNK_INCLUDE);
+		if (parentCodes != null) {
+			for (String code : parentCodes) {
+				Definition parent = beUtils.getDefinition(code, false);
+				if (answerValidForDEF(parent, answer)) {
+					return true;
+				}
+			}
+		}
+		log.error(ANSIColour.RED + "Invalid attribute " + attributeCode + " for " + answer.getTargetCode()
+				+ " with def= " + definition.getCode() + ANSIColour.RESET);
+			
+		return false;
+	}
+
+	/**
+	 * Get the prefix for a definition.
+	 *
+	 * @param productCode
+	 * @param definitionCode
+	 * @return
+	 */
+	public String getDefinitionPrefix(String productCode, String definitionCode) {
+		// fetch prefix attribute
+		EntityAttribute prefixAttr = beaUtils.getEntityAttribute(productCode, definitionCode, Attribute.PRI_PREFIX, false);
+		if(prefixAttr != null) {
+			return prefixAttr.getValueString();
+		}
+		// if not found, we can check in the parent defs
+		List<String> parentCodes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(definitionCode, Attribute.LNK_INCLUDE);
+		if (parentCodes != null) {
+			for (String code : parentCodes) {
+				try {
+					return getDefinitionPrefix(productCode, code);
+				} catch (DefinitionException e) {
+					continue;
+				}
+			}
+		}
+		throw new DefinitionException("No prefix set for the def: " + definitionCode);
 	}
 
 	/**

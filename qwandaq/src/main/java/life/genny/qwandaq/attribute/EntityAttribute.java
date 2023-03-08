@@ -32,8 +32,6 @@ import life.genny.qwandaq.datatype.DataType;
 import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.commons.lang3.time.DateUtils;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.javamoney.moneta.Money;
 import org.jboss.logging.Logger;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -680,8 +678,9 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 
 					} else if (className
 							.equalsIgnoreCase(LocalDate.class.getCanonicalName())) {
-						DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSz");
-						LocalDate date = LocalDate.parse(result, formatter);
+						DateFormat format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS");
+						Date olddate = format.parse(result);
+						final LocalDate date = olddate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 						setValueDate(date);
 					} else if (className
 							.equalsIgnoreCase(LocalTime.class.getCanonicalName())) {

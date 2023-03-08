@@ -63,6 +63,7 @@ public class Ask extends CoreEntity {
 	private String processId = "no-idq";
 	private String sourceCode;
 	private String targetCode;
+	private String testTargetCode;
 
 	private Boolean mandatory = false;
 	private Boolean oneshot = false;
@@ -221,6 +222,14 @@ public class Ask extends CoreEntity {
 
 	public void setTargetCode(String targetCode) {
 		this.targetCode = targetCode;
+	}
+
+	public String getTestTargetCode() {
+		return testTargetCode;
+	}
+
+	public void setTestTargetCode(String testTargetCode) {
+		this.testTargetCode = testTargetCode;
 	}
 
 	public Boolean getMandatory() {
