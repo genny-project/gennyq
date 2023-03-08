@@ -142,7 +142,7 @@ public class AttributeUtils {
         AttributeKey key = new AttributeKey(productCode, code);
         Attribute attribute = (Attribute) cm.getPersistableEntity(GennyConstants.CACHE_NAME_ATTRIBUTE, key);
         if (attribute == null) {
-            throw new ItemNotFoundException(productCode, code);
+            throw new ItemNotFoundException(productCode, "attribute: " + code);
         }
         if(bundleDataType) {
             DataType dataType = getDataType(attribute, bundleValidationList);

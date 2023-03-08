@@ -2,8 +2,8 @@ package life.genny.test.qwandaq.utils.merge;
 
 import java.util.Map;
 
-import io.quarkus.test.junit.QuarkusTest;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
 
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
@@ -12,12 +12,10 @@ import life.genny.qwandaq.utils.collections.MapBuilder;
 import life.genny.qwandaq.utils.testsuite.JUnitTester;
 import life.genny.test.qwandaq.utils.BaseTestCase;
 
-import javax.inject.Inject;
-
-@QuarkusTest
+// @QuarkusTest
 public class BaseTests extends BaseTestCase {
 
-    @Inject
+    @InjectMocks
     MergeUtils mergeUtils;
     
     @Test

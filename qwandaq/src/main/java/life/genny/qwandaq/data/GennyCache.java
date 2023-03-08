@@ -3,6 +3,7 @@ package life.genny.qwandaq.data;
 import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.exception.GennyRuntimeException;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import life.genny.qwandaq.serialization.attribute.AttributeInitializerImpl;
@@ -24,6 +25,7 @@ import life.genny.qwandaq.serialization.validation.ValidationInitializerImpl;
 import life.genny.qwandaq.serialization.validation.ValidationKeyInitializerImpl;
 
 import org.infinispan.client.hotrod.DefaultTemplate;
+import org.infinispan.client.hotrod.Flag;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.Configuration;
@@ -93,7 +95,6 @@ public class GennyCache {
 		Configuration config = builder.build();
 		if (remoteCacheManager == null) {
 			remoteCacheManager = new RemoteCacheManager(config);
-			remoteCacheManager.getConfiguration().marshallerClass();
 		}
 	}
 
@@ -218,10 +219,6 @@ public class GennyCache {
 	 * @return The persistable core entity
 	 */
 	public CoreEntityPersistable getPersistableEntityFromCache(String cacheName, CoreEntityKey key) {
-		if (remoteCacheManager == null) {
-			initRemoteCacheManager();
-		}
-
 		RemoteCache<CoreEntityKey, CoreEntityPersistable> cache = getRemoteCacheForEntity(cacheName);
 		if (cache == null) {
 			throw new NullPointerException("Could not find a cache called " + cacheName);
@@ -298,9 +295,6 @@ public class GennyCache {
 	 * @return The removed persistable core entity
 	 */
 	public CoreEntityPersistable removeEntityFromCache(String cacheName, CoreEntityKey key) {
-		if (remoteCacheManager == null) {
-			initRemoteCacheManager();
-		}
 		RemoteCache<CoreEntityKey, CoreEntityPersistable> cache = getRemoteCacheForEntity(cacheName);
 		if (cache == null) {
 			throw new NullPointerException("Could not find a cache called " + cacheName);
@@ -314,8 +308,11 @@ public class GennyCache {
 			log.debugf("Cache doesn't exist.. Creating...");
 			entityLastUpdatedAtCache = createEntityLastUpdatedAtCache();
 			if (entityLastUpdatedAtCache == null) {
-				log.error("Cache creation failed for some reason!!");
-				return null;
+
+				log.debugf("Cache creation failed for some reason!!");
+				throw new GennyRuntimeException("Cache creation of " + GennyConstants.CACHE_NAME_ENTITY_LAST_UPDATED_AT + " failed") {
+					
+				};
 			}
 		}
 		return entityLastUpdatedAtCache.get(entityName + ":" + productCode);

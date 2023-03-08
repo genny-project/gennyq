@@ -461,11 +461,17 @@ public class CacheManager {
 		return queryResult.list();
 	}
 
-	public void removePersistableEntities(String cacheName, String deleteQueryStr) {
+	/**
+	 * Delete an Entity from a specified cache using an ickle query
+	 * @param cacheName - the cache to execute on
+	 * @param deleteQueryStr - the ickle to execute
+	 * @return the number of affected entries (if any)
+	 */
+	public int removePersistableEntities(String cacheName, String deleteQueryStr) {
 		RemoteCache<CoreEntityKey, CoreEntityPersistable> remoteCache = cache.getRemoteCacheForEntity(cacheName);
 		QueryFactory queryFactory = Search.getQueryFactory(remoteCache);
 		Query<EntityAttribute> query = queryFactory.create(deleteQueryStr);
-		query.execute();
+		return query.executeStatement();
 	}
 
 	/**
