@@ -54,6 +54,9 @@ public class Validator {
 	BaseEntityUtils beUtils;
 
 	@Inject
+	DefUtils defUtils;
+
+	@Inject
 	EntityAttributeUtils beaUtils;
 
 	@Inject
@@ -182,17 +185,17 @@ public class Validator {
 		if (!target.getCode().equals(answer.getTargetCode()))
 			return blacklist("TargetCode " + target.getCode() + " does not match answer target " + answer.getTargetCode());
 
-		boolean notValidForAnyDefinition = false;
-		for (String code : processData.getDefCodes()) {
-			Definition definition = beUtils.getDefinition(code);
-			log.infof("Definition %s found for target %s", definition.getCode(), answer.getTargetCode());
+		boolean notValidForAnyDefinition = !defUtils.answerValidForDEF(answer);
+		// for (String code : processData.getDefCodes()) {
+		// 	Definition definition = beUtils.getDefinition(code);
+		// 	log.infof("Definition %s found for target %s", definition.getCode(), answer.getTargetCode());
 
-			// check attribute code is allowed by target DEF
-			if (!definition.containsEntityAttribute(Prefix.ATT_ + attributeCode)) {
-				log.warn("AttributeCode " + attributeCode + " not allowed for " + definition.getCode());
-				notValidForAnyDefinition = true;
-			}
-		}
+		// 	// check attribute code is allowed by target DEF
+		// 	if (!definition.containsEntityAttribute(Prefix.ATT_ + attributeCode)) {
+		// 		log.warn("AttributeCode " + attributeCode + " not allowed for " + definition.getCode());
+		// 		notValidForAnyDefinition = true;
+		// 	}
+		// }
 
 		if (notValidForAnyDefinition) {
 			return blacklist("Attribute NOT Valid for any definition!");
