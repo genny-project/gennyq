@@ -10,7 +10,6 @@ import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.serialization.common.CoreEntityKey;
 import life.genny.qwandaq.serialization.entityattribute.EntityAttributeKey;
-import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 import org.jetbrains.annotations.NotNull;
 
@@ -141,7 +140,6 @@ public class EntityAttributeUtils {
 	 * @return The corresponding BaseEntityAttribute, or null if not found.
 	 */
 	public life.genny.qwandaq.serialization.entityattribute.EntityAttribute getSerializableEntityAttribute(String productCode, String baseEntityCode, String attributeCode) {
-		EntityAttributeKey key = new EntityAttributeKey(productCode, baseEntityCode, attributeCode);
 		return (life.genny.qwandaq.serialization.entityattribute.EntityAttribute) getEntityAttribute(productCode, baseEntityCode, attributeCode).toSerializableCoreEntity();
 	}
 
@@ -273,8 +271,7 @@ public class EntityAttributeUtils {
     }
 
 	public void removeBaseEntityAttributesForBaseEntity(String productCode, String baseEntityCode) {
-		cm.removePersistableEntities(productCode, "delete from life.genny.qwandaq.persistence.entityattribute.EntityAttribute where realm = '" + productCode
-				+ "' and baseEntityCode = '" + baseEntityCode + "'");
+		cm.removeAllEntityAttributesOfBaseEntity(productCode, baseEntityCode);
 	}
 
 	/**
@@ -285,7 +282,6 @@ public class EntityAttributeUtils {
 	 * @return the number of changed entities (if any)
 	 */
 	public int removeBaseEntityAttribute(String productCode, String baseEntityCode, String attributeCode) {
-		return cm.removePersistableEntities(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, "delete from life.genny.qwandaq.persistence.entityattribute.EntityAttribute where realm = '" + productCode
-				+ "' and baseEntityCode = '" + baseEntityCode + "' and attributeCode = '" + attributeCode + "'");
+		return cm.removeEntityAttribute(productCode, baseEntityCode, attributeCode);
 	}
 }
