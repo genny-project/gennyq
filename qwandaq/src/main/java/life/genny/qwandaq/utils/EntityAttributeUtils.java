@@ -284,16 +284,4 @@ public class EntityAttributeUtils {
 	public int removeBaseEntityAttribute(String productCode, String baseEntityCode, String attributeCode) {
 		return cm.removeEntityAttribute(productCode, baseEntityCode, attributeCode);
 	}
-
-	/**
-	 * Remove an entity attribute for a given product
-	 * @param productCode
-	 * @param baseEntityCode
-	 * @param attributeCode
-	 * @return the number of changed entities (if any)
-	 */
-	public int removeBaseEntityAttribute(String productCode, String baseEntityCode, String attributeCode) {
-		return cm.removePersistableEntities(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, "delete from life.genny.qwandaq.persistence.entityattribute.EntityAttribute where realm = '" + productCode
-				+ "' and baseEntityCode = '" + baseEntityCode + "' and attributeCode = '" + attributeCode + "'");
-	}
 }
