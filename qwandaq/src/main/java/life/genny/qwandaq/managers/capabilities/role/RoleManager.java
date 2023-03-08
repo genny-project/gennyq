@@ -20,7 +20,13 @@ import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @ApplicationScoped
@@ -354,9 +360,14 @@ public class RoleManager extends Manager {
 	}
 	
 	public List<String> getRoleCodes(BaseEntity personBaseEntity) {
-		List<String> roles = beUtils.getBaseEntityCodeArrayFromLinkAttribute(personBaseEntity, Attribute.LNK_ROLE);
+		List<String> roles;
+		try {
+			roles = beUtils.getBaseEntityCodeArrayFromLinkAttribute(personBaseEntity, Attribute.LNK_ROLE);
+		} catch(ItemNotFoundException e) {
+			return new ArrayList<>();
+		}
 
-		if (roles == null || roles.isEmpty())
+		if (roles.isEmpty())
 			return new ArrayList<String>();
 		return roles;
 	}
