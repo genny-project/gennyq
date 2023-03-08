@@ -32,11 +32,10 @@ public class EntityAttributes {
     EntityAttributeUtils beaUtils;
 
     @Inject
-    Logger log;
-
-    @Inject
     CacheManager cm;
 
+    @Inject
+    Logger log;
     /**
      * Fetch an EntityAttribute from a given product using a baseEntityCode and attributeCode, without its DataType
      * @param product - product to fetch from
