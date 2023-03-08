@@ -45,6 +45,12 @@ public class CapHandler extends Manager {
 		// NOTE: This line may be a double up, but there are issues otherwise.
 		if (hasSecureToken(userToken))
 			return;
+		
+		if(!searchEntity.hasRequirements()) {
+			log.debug("no requirements to check for searchEntity: " + searchEntity.getCode() + ". Skipping");
+			return;
+		}
+
 		CapabilitySet userCapabilities = capMan.getUserCapabilities();
 		refineColumnsFromCapabilities(searchEntity, userCapabilities);
 		refineActionsFromCapabilities(searchEntity, userCapabilities);
