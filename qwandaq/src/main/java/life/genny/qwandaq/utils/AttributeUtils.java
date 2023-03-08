@@ -1,5 +1,6 @@
 package life.genny.qwandaq.utils;
 
+import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.datatype.DataType;
@@ -8,6 +9,7 @@ import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.attribute.AttributeKey;
+import life.genny.qwandaq.serialization.common.CoreEntityKey;
 import life.genny.qwandaq.serialization.datatype.DataTypeKey;
 import life.genny.qwandaq.serialization.validation.ValidationKey;
 import life.genny.qwandaq.validation.Validation;
@@ -17,7 +19,11 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * A non-static utility class used for standard
@@ -227,6 +233,17 @@ public class AttributeUtils {
     public void saveAttribute(Attribute attribute) {
         AttributeKey key = new AttributeKey(attribute.getRealm(), attribute.getCode());
         cm.saveEntity(GennyConstants.CACHE_NAME_ATTRIBUTE, key, attribute);
+    }
+
+    /**
+     * @param attributes
+     */
+    public void saveAttributes(List<Attribute> attributes) {
+        Map<CoreEntityKey, CoreEntityPersistable> attributesMap = new HashMap<>(attributes.size());
+        for (Attribute attr : attributes) {
+            attributesMap.put(new AttributeKey(attr.getRealm(), attr.getCode()), attr);
+        }
+        cm.saveEntities(GennyConstants.CACHE_NAME_ATTRIBUTE, attributesMap);
     }
 
 	/**

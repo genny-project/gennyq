@@ -188,7 +188,10 @@ public class GoogleSheetBuilder {
      * @param realmName The realm
      * @return An Attribute object
      */
-    public Attribute buildAttribute(Map<String, String> row, String realmName) {
+    public Attribute buildAttribute(Map<String, String> row, String realmName, Long id) {
+		if (id == null) {
+			id = cm.getMaxAttributeId();
+		}
 
         String code = row.get("code");
         String name = row.get("name");
@@ -203,8 +206,7 @@ public class GoogleSheetBuilder {
 			attribute = new Attribute();
 			attribute.setCode(code);
 			attribute.setName(name);
-			// Long id = cm.getMaxAttributeId();
-			// attribute.setId(id+1);
+			attribute.setId(id+1);
 		}
 		Boolean privacy = toBoolean(row.get("privacy"));
 		

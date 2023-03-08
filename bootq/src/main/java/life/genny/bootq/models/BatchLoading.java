@@ -26,6 +26,8 @@ import org.jboss.logging.Logger;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @ApplicationScoped
@@ -166,14 +168,21 @@ public class BatchLoading {
         log.debug("Persisting attributes.");
         Instant start = Instant.now();
         Long maxId = cm.getMaxAttributeId();
+        List<Attribute> attributesBatch = new ArrayList<>(10);
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
-            Attribute attribute = googleSheetBuilder.buildAttribute(entry.getValue(), realmName);
+            Attribute attribute = googleSheetBuilder.buildAttribute(entry.getValue(), realmName, maxId);
             if(attribute.getId() == null) {
                 maxId++;
                 log.error("Detected null attribute id for: " + attribute.getCode() + ". Setting to: " + maxId);
                 attribute.setId(maxId);
             }
-            attributeUtils.saveAttribute(attribute);
+            // Saving cache every 10 attributes
+            attributesBatch.add(attribute);
+            if (attributesBatch.size() >= 10) {
+                attributeUtils.saveAttributes(attributesBatch);
+                attributesBatch = new ArrayList<>(10);
+            }
+            // attributeUtils.saveAttribute(attribute);
         }
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
@@ -309,6 +318,7 @@ public class BatchLoading {
 			
             String baseEntityCode = entry.getValue().get("baseentitycode");
             String attributeCode = entry.getValue().get("attributecode");
+            System.out.println("BaseEntity Attribute: " + entry.getValue());
 
             String combined = new StringBuilder(baseEntityCode).append(":").append(attributeCode).toString();
 
