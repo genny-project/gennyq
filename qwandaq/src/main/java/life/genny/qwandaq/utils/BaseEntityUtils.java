@@ -103,7 +103,9 @@ public class BaseEntityUtils {
 	 * @return
 	 */
 	public PCM getPCM(String code) {
-		return PCM.from(getBaseEntity(code, true));
+		PCM pcm = PCM.from(getBaseEntity(code));
+		pcm.setBaseEntityAttributes(beaUtils.getAllEntityAttributesForBaseEntity(pcm, true, true));
+		return pcm;
 	}
 
 	/**
@@ -116,7 +118,9 @@ public class BaseEntityUtils {
 	 * @throws {@link ItemNotFoundException} if entity linked to code is not persisted/cannot be found
 	 */
 	public Definition getDefinition(String code) {
-		return getDefinition(code, true);
+		Definition definition = Definition.from(getBaseEntity(code));
+		definition.setBaseEntityAttributes(beaUtils.getAllEntityAttributesForBaseEntity(definition, true, true));
+		return definition;
 	}
 
 	/**
@@ -311,7 +315,7 @@ public class BaseEntityUtils {
 
 	@Nullable
 	private <T> T getAttributeValue(BaseEntity baseEntity, String attributeCode) {
-		EntityAttribute entityAttribute = beaUtils.getEntityAttribute(baseEntity.getRealm(), baseEntity.getCode(), attributeCode, true);
+		EntityAttribute entityAttribute = beaUtils.getEntityAttribute(baseEntity.getRealm(), baseEntity.getCode(), attributeCode, true, true);
 		if (entityAttribute == null) {
 			return null;
 		}

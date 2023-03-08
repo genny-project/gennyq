@@ -85,14 +85,13 @@ public class DefUtils {
 	 * @return BaseEntity The corresponding definition {@link BaseEntity}
 	 */
 	public Definition getDEF(final BaseEntity entity) {
-		entity.setBaseEntityAttributes(beaUtils.getAllEntityAttributesForBaseEntity(entity));
-
-		if (entity == null)
-			throw new NullParameterException("entity");
-
+		entity.setBaseEntityAttributes(beaUtils.getAllEntityAttributesForBaseEntity(entity, true, true));
 		// save processing time on particular entities
 		if (entity.getCode().startsWith(Prefix.DEF_))
 			return Definition.from(entity);
+
+		if (entity.getCode().startsWith(Prefix.PRJ_))
+			return beUtils.getDefinition(Definition.DEF_PROJECT);
 
 		List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(entity, Attribute.LNK_DEF);
 

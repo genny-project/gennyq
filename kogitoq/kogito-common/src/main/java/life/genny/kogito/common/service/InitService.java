@@ -58,6 +58,7 @@ public class InitService extends KogitoService {
 	public void sendProject() {
 
 		BaseEntity project = beUtils.getBaseEntity(Prefix.PRJ_.concat(userToken.getProductCode().toUpperCase()));
+		project.setBaseEntityAttributes(beaUtils.getAllEntityAttributesForBaseEntity(project, true, true));
 		log.info("Sending Project " + project.getCode());
 
 		// configure msg and send
