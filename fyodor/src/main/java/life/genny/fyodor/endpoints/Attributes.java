@@ -89,11 +89,10 @@ public class Attributes {
 			return Response.status(Response.Status.FORBIDDEN)
 					.entity("Not authorized to make this request").build();
 		}
-		AttributeKey key = new AttributeKey(realm, code);
-		CoreEntityPersistable attribute = cm.removePersistableEntity(realm, key);
-		if(attribute != null)
-			return Response.ok().entity("Attribute " + code + " found and deleted").build();
+		int numAffected = cm.removeAttribute(realm, code);
+		if(numAffected > 0)
+			return Response.ok().entity("Num Entities affected: " + numAffected).build();
 		else
-			return Response.status(Response.Status.NOT_FOUND).entity("Attribute " + code + " not found").build();
+			return Response.status(Response.Status.NOT_FOUND).entity("No entities affected by delete of " + realm + ":" + code).build();
 	}
 }
