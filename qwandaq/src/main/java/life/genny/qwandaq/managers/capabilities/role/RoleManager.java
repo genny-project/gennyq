@@ -367,7 +367,7 @@ public class RoleManager extends Manager {
 			return new ArrayList<>();
 		}
 
-		if (roles.isEmpty())
+		if (roles == null || roles.isEmpty())
 			return new ArrayList<String>();
 		return roles;
 	}
