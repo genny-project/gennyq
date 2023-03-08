@@ -4,6 +4,7 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.managers.CacheManager;
@@ -17,6 +18,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 
 /**
  * A non-static utility class used for standard
@@ -30,6 +32,9 @@ public class EntityAttributeUtils {
 
 	@Inject
 	CacheManager cm;
+
+	@Inject
+	BaseEntityUtils beUtils;
 
 	@Inject
 	AttributeUtils attributeUtils;

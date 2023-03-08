@@ -870,10 +870,16 @@ public class QwandaUtils {
 		List<EntityAttribute> uniques = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(productCode, definitionCode, Prefix.UNQ_);
 		log.info("Found " + uniques.size() + " UNQ attributes");
 
-		EntityAttribute prefixAttribute = beaUtils.getEntityAttribute(productCode, definitionCode, Attribute.PRI_PREFIX);
-		
-		if(prefixAttribute == null) {
+		// No uniques, can't be a duplicate right?
+		if(uniques.size() == 0)
+			return false;
+
+		EntityAttribute prefixAttribute;
+		try {
+			prefixAttribute = beaUtils.getEntityAttribute(productCode, definitionCode, Attribute.PRI_PREFIX);
+		} catch(ItemNotFoundException e) {
 			log.error("Got null prefix for " + definitionCode + ":" + Attribute.PRI_PREFIX);
+			return false;
 		}
 
 		String prefix = prefixAttribute.getValueString();
