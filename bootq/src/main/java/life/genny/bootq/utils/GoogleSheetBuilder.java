@@ -204,12 +204,10 @@ public class GoogleSheetBuilder {
 			// create new attribute if not found
 			attribute = new Attribute();
 			attribute.setCode(code);
-			attribute.setName(name);
-			Long id = cm.getMaxAttributeId();
-			attribute.setId(id+1);
 		}
 		Boolean privacy = toBoolean(row.get("privacy"));
 		
+		attribute.setName(name);
 		attribute.setDttCode(row.get("datatype"));
         attribute.setDefaultPrivacyFlag(privacy == null ? false : privacy);
         attribute.setDescription(row.get("description"));

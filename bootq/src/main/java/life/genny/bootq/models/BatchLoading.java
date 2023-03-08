@@ -13,7 +13,6 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.managers.CacheManager;
-import life.genny.qwandaq.serialization.entityattribute.EntityAttributeInitializerImpl;
 import life.genny.qwandaq.utils.AttributeUtils;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.EntityAttributeUtils;
@@ -164,6 +163,7 @@ public class BatchLoading {
      */
     public void persistAttributes(Map<String, Map<String, String>> project, String realmName) {
         Instant start = Instant.now();
+
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
             Attribute attribute = googleSheetBuilder.buildAttribute(entry.getValue(), realmName);
             if(attribute.getId() == null) {
@@ -272,6 +272,14 @@ public class BatchLoading {
                 defAttr = new Attribute(attributeCode, attributeCode, dataType);
                 defAttr.setRealm(realmName);
                 attributeUtils.saveAttribute(defAttr);
+                
+                defAttr = attributeUtils.getAttribute(defAttr.getRealm(), defAttr.getCode());
+                if(defAttr.getId() == null) {
+                    log.error("Attribute id of attribute: " + defAttr.getCode() + " is null. Deleting and move");
+                    cm.removeAttribute(realmName, defAttr.getCode());
+                    continue;
+                }
+
                 log.trace("Saving attribute: " + defAttr + " successful");
             }
 
@@ -317,6 +325,13 @@ public class BatchLoading {
                 log.error(new StringBuilder("(SKIPPING) Error occurred when building EA ")
                     .append(combined)
                     .append(" - ").append(e.getMessage()).toString());
+                continue;
+            }
+
+            if(entityAttribute.getAttributeId() == null) {
+                // throw the baby out with the bath water for now
+                log.error("Bad attribute id for attribute: " + entityAttribute.getAttributeCode() + " deleting for now");
+                cm.removeAttribute(realmName, entityAttribute.getAttributeCode());
                 continue;
             }
             
