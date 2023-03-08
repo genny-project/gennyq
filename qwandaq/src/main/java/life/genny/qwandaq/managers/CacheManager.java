@@ -462,16 +462,166 @@ public class CacheManager {
 	}
 
 	/**
+	 * Create an Ickle delete query using a persistence name, product code and a few conditionals
+	 * @param persistenceName - the fully qualified name of the Java POJO that is used as a template for persistence of the entity(s) needing to be deleted
+	 * @param productCode - the product the entity is in
+	 * @param conditionalCheck - the component of the where clause of the ickle query used to find the entity
+	 * 
+	 * @return a correctly formatted ickle delete query with the above parameters
+	 * @throws {@link IllegalStateException} if the persistenceName does not start with life.genny (as all of persistenceNames in the ecosystem do)
+	 * @throws {@link IllegalStateException} if the conditionalCheck is not well formatted (not empty and  contains either single or double quotes)
+	 * <p>e.g
+	 * <pre>String delQuery = constructDeleteQuery("life.genny.qwandaq.persistence.entityattribute.EntityAttribute", "SOME_PRODUCT", "'baseEntityCode' = 'DEF_TEST'" and "attributeCode like 'ATT_%'");
+	 * </pre>
+	 * Will generate a deleting query for deleting all ATT entity attributes of base entity: DEF_TEST within product: SOME_PRODUCT</p> 
+	 * 
+	 * <p><b>NOTE:</b> this assumes that conditionalCheck does not start with where. Do not add where to the start of conditionalCheck</p>
+	 */
+	private static String constructDeleteQuery(String persistenceName, String productCode, String conditionalCheck) {
+		if(!persistenceName.startsWith("life.genny") || !persistenceName.contains("persistence"))
+			throw new IllegalStateException("PersistenceName likely not valid persistence object (does not start with life.genny or not in persistence folder): " + persistenceName);
+
+		if(StringUtils.isBlank(conditionalCheck))
+			throw new IllegalStateException("Blank conditional check detected. This would delete all data for " + persistenceName + " in product: " + productCode + ". Stopping");
+		// TODO: Going to revisit this conditional check (not deleting the commented code)
+		// if(!(conditionalCheck.contains("\'") && conditionalCheck.contains("\""))) {
+		// 	throw new IllegalStateException("Conditional Check does not have quotes. Likely malformed Conditional Check: " + conditionalCheck);
+		// }
+
+		StringBuilder sb = new StringBuilder("delete from ")
+						.append(persistenceName)
+						.append(" where realm = '")
+						.append(productCode)
+						// Conditional check never blank so its okay to add and
+						.append("' and ");
+		
+		conditionalCheck = conditionalCheck.strip();
+		sb.append(conditionalCheck);
+		return sb.toString();			
+	}
+
+	/**
 	 * Delete an Entity from a specified cache using an ickle query
 	 * @param cacheName - the cache to execute on
 	 * @param deleteQueryStr - the ickle to execute
 	 * @return the number of affected entries (if any)
+	 * 
+	 * @throws {@link IllegalStateException} if the deleteQueryStr requested is not a delete statement
 	 */
-	public int removePersistableEntities(String cacheName, String deleteQueryStr) {
+	private int removePersistableEntities(String cacheName, String deleteQueryStr) {
+		if(!deleteQueryStr.startsWith("delete"))
+			throw new IllegalStateException("Not a delete query: " + deleteQueryStr);
 		RemoteCache<CoreEntityKey, CoreEntityPersistable> remoteCache = cache.getRemoteCacheForEntity(cacheName);
 		QueryFactory queryFactory = Search.getQueryFactory(remoteCache);
 		Query<EntityAttribute> query = queryFactory.create(deleteQueryStr);
 		return query.executeStatement();
+	}
+
+	/**
+	 * Remove a validation from cache/persistence
+	 * @param productCode - product to remove from
+	 * @param code - code of validation to remove
+	 * @return number of entities affected by deletion
+	 */
+	public int removeValidation(String productCode, String code) {
+		String persistenceObject = "life.genny.qwandaq.persistence.validation.Validation";
+		String conditional = "code = '" + code + "'";
+		String deleteQuery = constructDeleteQuery(persistenceObject, productCode, conditional);
+		return removePersistableEntities(GennyConstants.CACHE_NAME_VALIDATION, deleteQuery);
+	}
+
+	/**
+	 * Remove a datatype from cache/persistence
+	 * @param productCode - product to remove from
+	 * @param code - code of datatype to remove
+	 * @return number of entities affected by deletion
+	 */
+	public int removeDataType(String productCode, String code) {
+		String persistenceObject = "life.genny.qwandaq.persistence.datatype.DataType";
+		String conditional = "code = '" + code + "'";
+		String deleteQuery = constructDeleteQuery(persistenceObject, productCode, conditional);
+		return removePersistableEntities(GennyConstants.CACHE_NAME_DATATYPE, deleteQuery);
+	}
+
+	/**
+	 * Remove an Attribute from cache/persistence
+	 * @param productCode - product to remove from
+	 * @param code - code of attribute to remove
+	 * @return number of entities affected by deletion
+	 */
+	public int removeAttribute(String productCode, String code) {
+		String persistenceObject = "life.genny.qwandaq.persistence.datatype.DataType";
+		String conditional = "code = '" + code + "'";
+		String deleteQuery = constructDeleteQuery(persistenceObject, productCode, conditional);
+		return removePersistableEntities(GennyConstants.CACHE_NAME_DATATYPE, deleteQuery);
+	}
+
+	/**
+	 * Remove a question from cache/persistence
+	 * @param productCode - product to remove from
+	 * @param code - code of question to remove
+	 * @return number of entities affected by deletion
+	 */
+	public int removeQuestion(String productCode, String code) {
+		String persistenceObject = "life.genny.qwandaq.persistence.question.Question";
+		String conditional = "code = '" + code + "'";
+		String deleteQuery = constructDeleteQuery(persistenceObject, productCode, conditional);
+		return removePersistableEntities(GennyConstants.CACHE_NAME_QUESTION, deleteQuery);
+	}
+
+	/**
+	 * Remove all entity attributes from a baseentity from cache/persistence
+	 * @param productCode - product to remove from
+	 * @param baseEntityCOde - baseEntityCode of baseentity to remove all entity attributes for
+	 * @return number of entities affected by deletion
+	 */
+	public int removeAllEntityAttributesOfBaseEntity(String productCode, String baseEntityCode) {
+		String persistenceObject = "life.genny.qwandaq.persistence.entityattribute.EntityAttribute";
+		String conditional = "baseEntityCode = '" + baseEntityCode + "'";
+		String deleteQuery = constructDeleteQuery(persistenceObject, productCode, conditional);
+		return removePersistableEntities(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, deleteQuery);
+	}
+
+	/**
+	 * Remove a single EntityAttribute from cache/persistence
+	 * @param productCode - product to remove from
+	 * @param baseEntityCode - base entity code of the entity attribute to remove
+	 * @param attributeCode - attributeCode of the entity attribute to remove
+	 * @return number of entities affected by deletion
+	 */
+	public int removeEntityAttribute(String productCode, String baseEntityCode, String attributeCode) {
+		String persistenceObject = "life.genny.qwandaq.persistence.entityattribute.EntityAttribute";
+		String conditional = "baseEntityCode = '" + baseEntityCode + "' and attributeCode = '" + attributeCode + "'";
+		String deleteQuery = constructDeleteQuery(persistenceObject, productCode, conditional);
+		return removePersistableEntities(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, deleteQuery);
+	}
+
+	/**
+	 * Remove a QuestionQuestion from cache/persistence
+	 * @param productCode - product to remove from
+	 * @param sourceCode - sourceCode of QuestionQuestion to remove
+	 * @param targetCode - targetCode of QuestionQuestion to remove
+	 * @return number of entities affected by deletion
+	 */
+	public int removeQuestionQuestion(String productCode, String sourceCode, String targetCode) {
+		String persistenceObject = "life.genny.qwandaq.persistence.questionquestion.QuestionQuestion";
+		String conditional = "sourceCode = '" + sourceCode + "' and targetCode = '" + targetCode + "'";
+		String deleteQuery = constructDeleteQuery(persistenceObject, productCode, conditional);
+		return removePersistableEntities(GennyConstants.CACHE_NAME_QUESTIONQUESTION, deleteQuery);
+	}
+
+	/**
+	 * Remove all QuestionQuestions with the same sourceCode (in a group) from cache/persistence
+	 * @param productCode - product to remove from
+	 * @param sourceCode - sourceCode of QuestionQuestion to remove
+	 * @param targetCode - targetCode of QuestionQuestion to remove
+	 * @return number of entities affected by deletion
+	 */
+	public int removeAllQuestionQuestionsInGroup(String productCode, String sourceCode) {
+		String persistenceObject = "life.genny.qwandaq.persistence.questionquestion.QuestionQuestion";
+		String conditional = "sourceCode = '" + sourceCode + "'";
+		String deleteQuery = constructDeleteQuery(persistenceObject, productCode, conditional);
+		return removePersistableEntities(GennyConstants.CACHE_NAME_QUESTIONQUESTION, deleteQuery);
 	}
 
 	/**

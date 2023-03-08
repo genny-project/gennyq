@@ -3,7 +3,6 @@ package life.genny.qwandaq.utils;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.constants.GennyConstants;
-import life.genny.qwandaq.intf.ICapabilityFilterable;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.serialization.baseentity.BaseEntity;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
@@ -24,12 +23,10 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 @ApplicationScoped
 public class QuestionUtils {
 
-    private static final Logger log = Logger.getLogger(QuestionUtils.class);
     public static final String ATTRIBUTE_CODE = "attributeCode";
     public static final String DIRECTIONS = "directions";
     public static final String HELPER = "helper";
@@ -51,6 +48,9 @@ public class QuestionUtils {
     public static Map<BaseEntityKey, Question> questionsLocalCache = new HashMap<>();
 
     public static Map<BaseEntityKey, QuestionQuestion> questionQuestionsLocalCache = new HashMap<>();
+    
+    @Inject
+    Logger log;
 
     @Inject
     CacheManager cacheManager;
@@ -285,11 +285,6 @@ public class QuestionUtils {
         return null;
     }
 
-    public QuestionQuestion createQuestionQuestion(Question parent, Question child) {
-        QuestionQuestion questionQuestion = new QuestionQuestion(parent, child);
-        return questionQuestion;
-    }
-
     public QuestionQuestion getQuestionQuestionFromBaseEntity(life.genny.qwandaq.entity.BaseEntity baseEntity) {
         QuestionQuestion questionQuestion = new QuestionQuestion();
         String beCode = baseEntity.getCode();
@@ -335,5 +330,9 @@ public class QuestionUtils {
     public QuestionQuestion findQuestionQuestionBySourceAndTarget(String productCode, String sourceCode, String targetCode) {
         QuestionQuestionKey key = new QuestionQuestionKey(productCode, sourceCode, targetCode);
         return (QuestionQuestion) cacheManager.getPersistableEntity(GennyConstants.CACHE_NAME_QUESTIONQUESTION, key);
+    }
+
+    public int removeQuestionQuestion(String productCode, String sourceCode, String targetCode) {
+		return cacheManager.removeQuestionQuestion(productCode, sourceCode, targetCode);
     }
 }
