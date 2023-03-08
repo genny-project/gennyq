@@ -146,7 +146,7 @@ public class MergeUtils {
 				return be.getCode();
 			}
 
-			EntityAttribute ea = beaUtils.getEntityAttribute(be.getRealm(), be.getCode(), attributeCode, true);
+			EntityAttribute ea = beaUtils.getEntityAttribute(be.getRealm(), be.getCode(), attributeCode, true, true);
 			Object attributeValue = ea.getValue();
 			log.debug("context: " + keyCode + ", attr: " + attributeCode + ", value: " + attributeValue);
 

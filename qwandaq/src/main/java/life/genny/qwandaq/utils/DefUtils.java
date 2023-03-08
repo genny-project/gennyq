@@ -127,8 +127,10 @@ public class DefUtils {
 			Definition definition = beUtils.getDefinition(code);
 
 			// merge into new def
-			for (EntityAttribute ea : beaUtils.getAllEntityAttributesForBaseEntity(definition, true)) {
+			for (EntityAttribute ea : beaUtils.getAllEntityAttributesForBaseEntity(definition)) {
 				try {
+					Attribute attr = attributeUtils.getAttribute(ea.getRealm(), ea.getAttributeCode(), true);
+					ea.setAttribute(attr);
 					mergedDef.addAttribute(ea);
 				} catch (Exception e) {
 					e.printStackTrace();
