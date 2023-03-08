@@ -477,12 +477,13 @@ public class CacheManager {
 	 * 
 	 * <p><b>NOTE:</b> this assumes that conditionalCheck does not start with where. Do not add where to the start of conditionalCheck</p>
 	 */
-	private String constructDeleteQuery(String persistenceName, String productCode, String conditionalCheck) {
+	private static String constructDeleteQuery(String persistenceName, String productCode, String conditionalCheck) {
 		if(!persistenceName.startsWith("life.genny") || !persistenceName.contains("persistence"))
 			throw new IllegalStateException("PersistenceName likely not valid persistence object (does not start with life.genny or not in persistence folder): " + persistenceName);
 
 		if(StringUtils.isBlank(conditionalCheck))
 			throw new IllegalStateException("Blank conditional check detected. This would delete all data for " + persistenceName + " in product: " + productCode + ". Stopping");
+		// TODO: Going to revisit this conditional check (not deleting the commented code)
 		// if(!(conditionalCheck.contains("\'") && conditionalCheck.contains("\""))) {
 		// 	throw new IllegalStateException("Conditional Check does not have quotes. Likely malformed Conditional Check: " + conditionalCheck);
 		// }
