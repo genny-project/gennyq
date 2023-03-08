@@ -13,6 +13,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.managers.CacheManager;
+import life.genny.qwandaq.serialization.entityattribute.EntityAttributeInitializerImpl;
 import life.genny.qwandaq.utils.AttributeUtils;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.EntityAttributeUtils;
@@ -276,6 +277,10 @@ public class BatchLoading {
 
             try {
                 EntityAttribute entityAttribute = googleSheetBuilder.buildEntityAttribute(row, realmName, defAttr.getCode());
+                if(entityAttribute.getAttributeId() == null) {
+                    log.error("Warning entity attribute attribute id is null post construction for EA: " + entityAttribute.getBaseEntityCode() + ":" + entityAttribute.getAttributeCode());
+                    log.error("Attribute Code: " + entityAttribute.getAttributeCode());
+                }
                 beaUtils.updateEntityAttribute(entityAttribute);
             } catch(BadDataException e) {
                 String combined = new StringBuilder(baseEntityCode).append(":").append(attributeCode).toString();
