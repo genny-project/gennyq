@@ -188,6 +188,7 @@ public class Validator {
 		boolean notValidForAnyDefinition = false;//!defUtils.answerValidForDEF(answer);
 		for (String code : processData.getDefCodes()) {
 			Definition definition = beUtils.getDefinition(code);
+			log.info("Definition Attributes: " + CommonUtils.getArrayString(definition.getBaseEntityAttributesMap().keySet()));
 			log.infof("Definition %s found for target %s", definition.getCode(), answer.getTargetCode());
 
 			// check attribute code is allowed by target DEF
