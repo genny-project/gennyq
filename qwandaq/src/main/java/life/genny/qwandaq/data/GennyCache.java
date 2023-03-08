@@ -3,6 +3,7 @@ package life.genny.qwandaq.data;
 import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.exception.GennyRuntimeException;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import life.genny.qwandaq.serialization.attribute.AttributeInitializerImpl;
@@ -308,6 +309,9 @@ public class GennyCache {
 			entityLastUpdatedAtCache = createEntityLastUpdatedAtCache();
 			if (entityLastUpdatedAtCache == null) {
 				log.debugf("Cache creation failed for some reason!!");
+				throw new GennyRuntimeException("Cache creation of " + GennyConstants.CACHE_NAME_ENTITY_LAST_UPDATED_AT + " failed") {
+					
+				};
 			}
 		}
 		return entityLastUpdatedAtCache.get(entityName);

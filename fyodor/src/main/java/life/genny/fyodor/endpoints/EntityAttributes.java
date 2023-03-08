@@ -13,13 +13,10 @@ import javax.ws.rs.core.Response.Status;
 
 import org.jboss.logging.Logger;
 
-import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.serialization.entityattribute.EntityAttributeKey;
 import life.genny.qwandaq.utils.EntityAttributeUtils;
 
 /**
@@ -169,23 +166,17 @@ public class EntityAttributes {
         @PathParam("baseEntityCode") String baseEntityCode,
         @PathParam("attributeCode") String attributeCode) {
             log.debug("[!] call to DELETE /entityattributes/" + product + "/" + baseEntityCode + "/" + attributeCode);
-
+            // TODO: Need to make a proper authentication check here
             if (userToken == null) {
                 return Response.status(Response.Status.FORBIDDEN)
                         .entity("Not authorized to make this request").build();
             }
-    
-            // try {
-                // EntityAttributeKey key = new EntityAttributeKey(product, baseEntityCode, attributeCode);
-                beaUtils.removeBaseEntityAttribute(product, baseEntityCode, attributeCode);//cm.removePersistableEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, key);
-                // if(attribute != null) {
-                //     log.info("Successfully removed entity");
-                //     return Response.ok(attribute).entity("Successfully removed entity").build();
-                // }
-                return Response.status(Status.NO_CONTENT).build();
-                
-            // } catch(ItemNotFoundException e) {
-            //     return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
-            // }
+
+            int numChanged = beaUtils.removeBaseEntityAttribute(product, baseEntityCode, attributeCode);
+            if(numChanged > 0) {
+                return Response.status(Status.OK).entity("Num affected: " + numChanged).build();
+            } else {
+                return Response.status(Status.NOT_FOUND).entity("No entities affected").build();
+            }
         }
 }
