@@ -23,6 +23,7 @@ import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.exception.runtime.DefinitionException;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.ANSIColour;
@@ -197,9 +198,11 @@ public class DefUtils {
 		}
 
 		// just make use of the faster attribute lookup
-		EntityAttribute ea = beaUtils.getEntityAttribute(definition.getRealm(), definition.getCode(), Prefix.ATT_ + attributeCode);
-		if (ea != null) {
+		try {
+			EntityAttribute ea = beaUtils.getEntityAttribute(definition.getRealm(), definition.getCode(), Prefix.ATT_ + attributeCode);
 			return true;
+		} catch(ItemNotFoundException e) {
+			log.error(e.getMessage());
 		}
 		// if not found, we can check in the parent defs
 		List<String> parentCodes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(definition, Attribute.LNK_INCLUDE);
