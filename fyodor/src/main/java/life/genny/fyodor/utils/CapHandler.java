@@ -49,6 +49,8 @@ public class CapHandler extends Manager {
 		if(!searchEntity.hasRequirements()) {
 			log.debug("no requirements to check for searchEntity: " + searchEntity.getCode() + ". Skipping");
 			return;
+		} else {
+			log.debug("FOUND Requirements for " + searchEntity.getCode() + " generating user capabilities");
 		}
 
 		CapabilitySet userCapabilities = capMan.getUserCapabilities();
