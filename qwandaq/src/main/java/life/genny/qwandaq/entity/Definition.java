@@ -30,8 +30,17 @@ public class Definition extends BaseEntity {
 	public static final String DEF_USER = "DEF_USER";
 	public static final String DEF_MESSAGE = "DEF_MESSAGE";
 
+	/**
+	 * {@inheritDoc}
+	 * @param code - code of the Definition {@link BaseEntity}. Must start with {@link Prefix#DEF_ DEF_}
+	 * @param name - name of the Definition Base Entity
+	 * 
+	 * @throws {@link IllegalStateException} if the definition is not a definition (code does not start with {@link Prefix#DEF_ DEF_})
+	 */
 	public Definition(String code, String name) {
 		super(code, name);
+		if(!code.startsWith(Prefix.DEF_))
+			throw new IllegalStateException("Base Entity: " + code + " is not a definition (code does not start with " + Prefix.DEF_ + ")");
 	}
 
 	public static Definition from(BaseEntity entity) {

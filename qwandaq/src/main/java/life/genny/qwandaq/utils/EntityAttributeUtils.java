@@ -1,9 +1,11 @@
 package life.genny.qwandaq.utils;
 
 import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.managers.CacheManager;
@@ -26,13 +28,40 @@ import java.util.List;
  */
 @ApplicationScoped
 public class EntityAttributeUtils {
-    static final Logger log = Logger.getLogger(EntityAttributeUtils.class);
+	
+	@Inject
+	Logger log;
 
 	@Inject
 	CacheManager cm;
 
 	@Inject
 	AttributeUtils attributeUtils;
+
+	/**
+	 * Fetch an EntityAttribute from the nearest parent definition 
+	 * @param definition - {@link Definition} to scan from
+	 * @param attributeCode - code of the {@link Attribute} to find
+	 * @return - The requested Definition EntityAttribute
+	 * 
+	 * @throws {@link ItemNotFoundException} if the requested EntityAttribute is not present in <b>any</b> of the parents of the Definition
+	 * @throws {@link ItemNotFoundException} if an initial {@link Attribute#LNK_INCLUDE LNK_INCLUDE Attribute} could not be found in the Definition supplied
+	 */
+	public EntityAttribute getEntityAttributeFromNearestParent(Definition definition, String attributeCode) {
+		boolean bundledEas = !definition.getBaseEntityAttributesMap().isEmpty();
+		
+		EntityAttribute lnkInclude = null;
+		if(bundledEas) {
+			// Make an attempt to use the in memory map if it is not empty
+			lnkInclude = definition.getBaseEntityAttributesMap().get(Attribute.LNK_INCLUDE);
+		}
+
+		if(lnkInclude == null) {
+			lnkInclude = getEntityAttribute(definition.getRealm(), definition.getCode(), Attribute.LNK_INCLUDE);
+		}
+
+		EntityAttribute target;
+	}
 
 	/**
 	 * Fetch an EntityAttribute value from the cache.
@@ -66,7 +95,11 @@ public class EntityAttributeUtils {
 	 * @param productCode The productCode to use
 	 * @param baseEntityCode        The BaseEntity code of the EntityAttribute to fetch
 	 * @param attributeCode        The Attribute code of the EntityAttribute to fetch
-	 * @return The corresponding EntityAttribute with embedded "Attribute", or null if not found.
+	 * @return The corresponding EntityAttribute without the embedded {@link Attribute}
+	 * 
+	 * @throws {@link ItemNotFoundException} if the EntityAttribute could not be found
+	 * 
+	 * @see {@link Attribute}
 	 */
 	public EntityAttribute getEntityAttribute(String productCode, String baseEntityCode, String attributeCode) {
 		return getEntityAttribute(productCode, baseEntityCode, attributeCode, false);
@@ -78,8 +111,14 @@ public class EntityAttributeUtils {
 	 * @param productCode The productCode to use
 	 * @param baseEntityCode        The BaseEntity code of the EntityAttribute to fetch
 	 * @param attributeCode        The Attribute code of the EntityAttribute to fetch
-	 * @param embedAttribute       Defines if "Attribute" will be embedded into the returned EntityAttribute
-	 * @return The corresponding BaseEntityAttribute, or null if not found.
+	 * @param embedAttribute       Defines if the {@link Attribute} of the EntityAttribute will be embedded into the returned EntityAttribute
+	 * @return The EntityAttribute, optionally with its corresponding {@link Attribute}, but not {@link DataType}
+	 * 
+	 * @throws {@link ItemNotFoundException} if the EntityAttribute could not be found
+	 * @throws {@link ItemNotFoundException} if the Attribute was requested but could not be found
+	 * 
+	 * @see {@link Attribute}
+	 * @see {@link DataType}
 	 */
 	public EntityAttribute getEntityAttribute(String productCode, String baseEntityCode, String attributeCode, boolean embedAttribute) {
 		return getEntityAttribute(productCode, baseEntityCode, attributeCode, embedAttribute, false);
@@ -92,7 +131,14 @@ public class EntityAttributeUtils {
 	 * @param baseEntityCode        The BaseEntity code of the EntityAttribute to fetch
 	 * @param attributeCode        The Attribute code of the EntityAttribute to fetch
 	 * @param embedAttribute       Defines if "Attribute" will be embedded into the returned EntityAttribute
-	 * @return The corresponding BaseEntityAttribute, or null if not found.
+	 * @return The EntityAttribute, optionally with its {@link Attribute} and {@link DataType}, but not the DataType's {@link DataType#getValidationList() Validation Info}
+	 * 
+	 * @throws {@link ItemNotFoundException} if the EntityAttribute could not be found
+	 * @throws {@link ItemNotFoundException} if the Attribute was requested but could not be found
+	 * @throws {@link ItemNotFoundExcpetion} if the DataType was requested but could not be found
+	 * 
+	 * @see {@link Attribute}
+	 * @see {@link DataType}
 	 */
 	public EntityAttribute getEntityAttribute(String productCode, String baseEntityCode, String attributeCode, boolean embedAttribute, boolean embedDataType) {
 		return getEntityAttribute(productCode, baseEntityCode, attributeCode, embedAttribute, embedDataType, false);
