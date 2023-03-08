@@ -51,9 +51,9 @@ public class GennyCache {
 
 	static final Logger log = Logger.getLogger(GennyCache.class);
 
-    private final Set<String> realms = new HashSet<>();
+	private final Set<String> realms = new HashSet<>();
 
-    private final Map<String, RemoteCache> caches = new HashMap<>();
+	private final Map<String, RemoteCache> caches = new HashMap<>();
 
 	private RemoteCacheManager remoteCacheManager;
 
@@ -89,7 +89,7 @@ public class GennyCache {
 		}
 
 		// create cache manager
-        getAllSerializationContextInitializers().forEach(builder::addContextInitializer);
+		getAllSerializationContextInitializers().forEach(builder::addContextInitializer);
 		Configuration config = builder.build();
 		if (remoteCacheManager == null) {
 			remoteCacheManager = new RemoteCacheManager(config);
@@ -184,9 +184,9 @@ public class GennyCache {
 	 * Return a remote cache for the given entity.
 	 *
 	 * @param entityName
-	 * 		the name of the associated entity the desired cache
+	 *                   the name of the associated entity the desired cache
 	 * @return RemoteCache&lt;String, String&gt;
-	 * 		the remote cache associated with the entity
+	 *         the remote cache associated with the entity
 	 */
 	public RemoteCache<CoreEntityKey, CoreEntityPersistable> getRemoteCacheForEntity(final String entityName) {
 		if (remoteCacheManager == null) {
@@ -214,7 +214,7 @@ public class GennyCache {
 	 * Get a CoreEntity from the cache.
 	 *
 	 * @param cacheName The cache to get from
-	 * @param key The key to the entity to fetch
+	 * @param key       The key to the entity to fetch
 	 * @return The persistable core entity
 	 */
 	public CoreEntityPersistable getPersistableEntityFromCache(String cacheName, CoreEntityKey key) {
@@ -240,7 +240,8 @@ public class GennyCache {
 	 * @param cacheName The cache to get from
 	 * @param key       The key to put the entity under
 	 * @param value     The entity
-	 * @return <b>true</b> if value was persisted successfully or value passed was null, <b>false</b>
+	 * @return <b>true</b> if value was persisted successfully or value passed was
+	 *         null, <b>false</b>
 	 */
 	public boolean putEntityIntoCache(String cacheName, CoreEntityKey key, CoreEntityPersistable value) {
 		if (remoteCacheManager == null) {
@@ -250,7 +251,7 @@ public class GennyCache {
 		if (cache == null) {
 			throw new NullPointerException("Cache not found: " + cacheName);
 		}
-		if(value == null) {
+		if (value == null) {
 			log.warn("[" + cacheName + "]: Value for " + key.getKeyString() + " is null, nothing to be added.");
 			return true;
 		}
@@ -258,23 +259,24 @@ public class GennyCache {
 		try {
 			cache.put(key, value);
 		} catch (Exception e) {
-			log.error(ANSIColour.RED + "Exception when inserting entity (key=" + key.getKeyString() + ") into cache: " + cacheName);
+			log.error(ANSIColour.RED + "Exception when inserting entity (key=" + key.getKeyString() + ") into cache: "
+					+ cacheName);
 			log.error("Value: " + (value != null ? value.toString() : "null"));
-			if(value instanceof EntityAttribute ea) {
+			if (value instanceof EntityAttribute ea) {
 				log.error("EntityAttribute ATTRIBUTE: " + ea.getAttributeCode());
 				log.error("EntityAttribute ATTRIBUTE_ID: " + ea.getAttributeId());
 			}
 			log.error(e.getMessage());
 			StringBuilder sb = new StringBuilder(ANSIColour.RED);
-			for(StackTraceElement stack : e.getStackTrace()) {
+			for (StackTraceElement stack : e.getStackTrace()) {
 				sb.append(stack.toString())
-					.append('\n');
+						.append('\n');
 			}
 			sb.append(ANSIColour.RESET);
 			log.error(sb.toString());
 			return false;
 		}
-		
+
 		return true;
 	}
 
@@ -282,19 +284,73 @@ public class GennyCache {
 	 * Put a CoreEntity into the cache.
 	 *
 	 * @param cacheName The cache to get from
-	 * @param key The key to put the entity under
-	 * @param value The serializable entity
-	 * @return True if the entity is successfully inserted into cache, False otherwise
+	 * @param key       The key to put the entity under
+	 * @param value     The serializable entity
+	 * @return True if the entity is successfully inserted into cache, False
+	 *         otherwise
 	 */
 	public boolean putEntityIntoCache(String cacheName, CoreEntityKey key, CoreEntitySerializable value) {
 		return putEntityIntoCache(cacheName, key, value.toPersistableCoreEntity());
 	}
 
 	/**
+	 * Put Map of CoreEntity into the cache.
+	 * 
+	 * @param cacheName    The cache to get from
+	 * @param entityCaches The Map of CoreEntity
+	 * @return
+	 */
+	public boolean putEntitiesIntoCache(String cacheName, Map<CoreEntityKey, CoreEntityPersistable> entityCaches) {
+		if (remoteCacheManager == null) {
+			initRemoteCacheManager();
+		}
+		RemoteCache<CoreEntityKey, CoreEntityPersistable> cache = remoteCacheManager.getCache(cacheName);
+		if (cache == null) {
+			throw new NullPointerException("Cache not found: " + cacheName);
+		}
+		if (entityCaches == null) {
+			throw new NullPointerException("dataChace is null. Please contact the developer.");
+		}
+
+		try {
+			cache.putAll(entityCaches);
+		} catch (Exception e) {
+			List<String> entitiesJson = new ArrayList<>(entityCaches.size());
+			for (Map.Entry<CoreEntityKey, CoreEntityPersistable> entityEntry : entityCaches.entrySet()) {
+				StringBuilder entityJson = new StringBuilder("{")
+						.append("\nkeys: %s".formatted(entityEntry.getKey().getKeyString()))
+						.append(", \nvalue: %s".formatted((entityEntry.getValue() != null
+								? entityEntry.getValue().toString()
+								: "null")));
+				if (entityEntry.getValue() instanceof EntityAttribute ea) {
+					entityJson.append(", \nATTRIBUTE: %s".formatted(ea.getAttributeCode()))
+							.append(", \nATTRIBUTE_ID: %s".formatted(ea.getAttributeId()));
+				} else {
+					entityJson.append("\n}");
+				}
+				entitiesJson.add(entityJson.toString());
+			}
+			log.error(ANSIColour.RED + "Exception when inserting entities into %s, entities: \n%s".formatted(cacheName,
+					new StringBuilder("[\n").append(String.join(",\n", entitiesJson)).append("\n]")));
+			log.error(e.getMessage());
+			StringBuilder sb = new StringBuilder(ANSIColour.RED);
+			for (StackTraceElement stack : e.getStackTrace()) {
+				sb.append(stack.toString())
+						.append('\n');
+			}
+			sb.append(ANSIColour.RESET);
+			log.error(sb.toString());
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
 	 * Remove CoreEntity from the cache.
 	 *
 	 * @param cacheName The cache to get from
-	 * @param key The key to the entity to remove
+	 * @param key       The key to the entity to remove
 	 * @return The removed persistable core entity
 	 */
 	public CoreEntityPersistable removeEntityFromCache(String cacheName, CoreEntityKey key) {
@@ -309,7 +365,8 @@ public class GennyCache {
 	}
 
 	public Long getEntityLastUpdatedAt(String entityName) {
-		RemoteCache<String, Long> entityLastUpdatedAtCache = remoteCacheManager.getCache(GennyConstants.CACHE_NAME_ENTITY_LAST_UPDATED_AT);
+		RemoteCache<String, Long> entityLastUpdatedAtCache = remoteCacheManager
+				.getCache(GennyConstants.CACHE_NAME_ENTITY_LAST_UPDATED_AT);
 		if (entityLastUpdatedAtCache == null) {
 			log.debugf("Cache doesn't exist.. Creating...");
 			entityLastUpdatedAtCache = createEntityLastUpdatedAtCache();
@@ -321,11 +378,13 @@ public class GennyCache {
 	}
 
 	private RemoteCache<String, Long> createEntityLastUpdatedAtCache() {
-		return remoteCacheManager.administration().withFlags(CacheContainerAdmin.AdminFlag.VOLATILE).createCache(GennyConstants.CACHE_NAME_ENTITY_LAST_UPDATED_AT, DefaultTemplate.DIST_SYNC);
+		return remoteCacheManager.administration().withFlags(CacheContainerAdmin.AdminFlag.VOLATILE)
+				.createCache(GennyConstants.CACHE_NAME_ENTITY_LAST_UPDATED_AT, DefaultTemplate.DIST_SYNC);
 	}
 
 	public void updateEntityLastUpdatedAt(String entityName, Long updatedTime) {
-		RemoteCache<String, Long> entityLastUpdatedAtCache = remoteCacheManager.getCache(GennyConstants.CACHE_NAME_ENTITY_LAST_UPDATED_AT);
+		RemoteCache<String, Long> entityLastUpdatedAtCache = remoteCacheManager
+				.getCache(GennyConstants.CACHE_NAME_ENTITY_LAST_UPDATED_AT);
 		if (entityLastUpdatedAtCache == null) {
 			entityLastUpdatedAtCache = createEntityLastUpdatedAtCache();
 		}

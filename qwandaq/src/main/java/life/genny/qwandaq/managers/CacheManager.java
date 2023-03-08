@@ -216,6 +216,10 @@ public class CacheManager {
 		return cache.putEntityIntoCache(cacheName, key, entity);
 	}
 
+	public boolean saveEntities(String cacheName, Map<CoreEntityKey, CoreEntityPersistable> entities) {
+		return cache.putEntitiesIntoCache(cacheName, entities);
+	}
+
 	/**
 	 * Get a list of {@link CoreEntity}s to from cache by prefix.
 	 * @param cacheName - Product Code / Cache to retrieve from
@@ -292,7 +296,9 @@ public class CacheManager {
 		
 		BaseEntity baseEntity = baseEntities.get(0);
 		if (baseEntity != null) {
-			return baseEntity.getId();
+			if (baseEntity.getId() != null) {
+				return baseEntity.getId();
+			}
 		}
 		return 0L;
 	}
