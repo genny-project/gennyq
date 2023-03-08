@@ -489,7 +489,7 @@ public class CacheManager {
 
 		StringBuilder sb = new StringBuilder("delete from ")
 						.append(persistenceName)
-						.append("where realm = '")
+						.append(" where realm = '")
 						.append(productCode)
 						// Conditional check never blank so its okay to add and
 						.append("' and ");
