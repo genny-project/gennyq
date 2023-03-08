@@ -593,15 +593,17 @@ public class QwandaUtils {
 		for (String code : attributeCodes) {
 
 			// check for existing attribute in target
-			EntityAttribute ea = beaUtils.getEntityAttribute(productCode, targetCode, code, true, true);
+			EntityAttribute ea;
 			Attribute attribute;
-			if(ea == null) {
+			try {
+				ea = beaUtils.getEntityAttribute(productCode, targetCode, code, true, true);
+			} catch(ItemNotFoundException e) {
 				attribute = attributeUtils.getAttribute(productCode, code, true);
 				// otherwise create new attribute
 				ea = new EntityAttribute(processEntity, attribute, 1.0, null);
-			} else {
-				attribute = ea.getAttribute();
 			}
+
+			attribute = ea.getAttribute();
 
 			if(attribute.getDataType() == null) {
 				log.error("[!] Detected Null DataType for attribute: " + attribute.getCode());
