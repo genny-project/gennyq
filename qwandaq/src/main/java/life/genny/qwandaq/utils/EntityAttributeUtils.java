@@ -66,7 +66,9 @@ public class EntityAttributeUtils {
 	 * @param productCode The productCode to use
 	 * @param baseEntityCode        The BaseEntity code of the EntityAttribute to fetch
 	 * @param attributeCode        The Attribute code of the EntityAttribute to fetch
-	 * @return The corresponding EntityAttribute with embedded "Attribute", or null if not found.
+	 * @return The corresponding EntityAttribute with no embedded "Attribute"
+	 * 
+	 * @throws {@link ItemNotFoundException} if no EntityAttribute can be found
 	 */
 	public EntityAttribute getEntityAttribute(String productCode, String baseEntityCode, String attributeCode) {
 		return getEntityAttribute(productCode, baseEntityCode, attributeCode, false);
