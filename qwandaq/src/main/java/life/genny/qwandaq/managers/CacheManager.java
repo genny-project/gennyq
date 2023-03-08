@@ -538,7 +538,7 @@ public class CacheManager {
 	 */
 	public int removeDataType(String productCode, String code) {
 		String persistenceObject = "life.genny.qwandaq.persistence.datatype.DataType";
-		String conditional = "code = '" + code + "'";
+		String conditional = "dttCode = '" + code + "'";
 		String deleteQuery = constructDeleteQuery(persistenceObject, productCode, conditional);
 		return removePersistableEntities(GennyConstants.CACHE_NAME_DATATYPE, deleteQuery);
 	}
