@@ -45,6 +45,8 @@ public class CapHandler extends Manager {
 		// NOTE: This line may be a double up, but there are issues otherwise.
 		if (hasSecureToken(userToken))
 			return;
+
+		// CHECK IF REQUIREMENTS ARE NEEDED
 		CapabilitySet userCapabilities = capMan.getUserCapabilities();
 		refineColumnsFromCapabilities(searchEntity, userCapabilities);
 		refineActionsFromCapabilities(searchEntity, userCapabilities);

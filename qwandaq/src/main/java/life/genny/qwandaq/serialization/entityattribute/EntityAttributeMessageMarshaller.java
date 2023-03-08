@@ -118,6 +118,12 @@ public class EntityAttributeMessageMarshaller implements MessageMarshaller<Entit
 		writer.writeString("money", moneyStr);
 		writer.writeString("valueString", bea.getValueString());
 		writer.writeDouble("weight", bea.getWeight());
+		if(bea.getAttributeId() == null || bea.getBaseEntityId() == null) {
+			System.err.println("BaseEntity Code: " + bea.getBaseEntityCode());
+			System.err.println("Attribute Code: " + bea.getAttributeCode());
+			System.err.println("BaseEntity ID: " + bea.getBaseEntityId());
+			throw new IllegalStateException("Entity Attribute ID is null");
+		}
 		writer.writeLong("attribute_id", bea.getAttributeId());
 		writer.writeLong("baseentity_id", bea.getBaseEntityId());
 		writer.writeBoolean("confirmationFlag", bea.getConfirmationFlag());

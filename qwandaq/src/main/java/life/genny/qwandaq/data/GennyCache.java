@@ -269,7 +269,7 @@ public class GennyCache {
 			}
 			sb.append(ANSIColour.RESET);
 			log.error(sb.toString());
-			return false;
+			throw e;
 		}
 		
 		return true;
