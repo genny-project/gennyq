@@ -122,7 +122,7 @@ public class EntityAttributeMessageMarshaller implements MessageMarshaller<Entit
 			System.err.println("BaseEntity Code: " + bea.getBaseEntityCode());
 			System.err.println("Attribute Code: " + bea.getAttributeCode());
 			System.err.println("BaseEntity ID: " + bea.getBaseEntityId());
-			throw new IllegalStateException("Entity Attribute ID is null");
+			throw new IllegalStateException("Entity Attribute ID is null for EntityAttribute: " + bea.getBaseEntityCode() + ":" + bea.getAttributeCode());
 		}
 		writer.writeLong("attribute_id", bea.getAttributeId());
 		writer.writeLong("baseentity_id", bea.getBaseEntityId());

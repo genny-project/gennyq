@@ -262,9 +262,9 @@ public class GennyCache {
 				log.error("EntityAttribute ATTRIBUTE_ID: " + ea.getAttributeId());
 			}
 			log.error(e.getMessage());
-			StringBuilder sb = new StringBuilder(ANSIColour.RED);
+			StringBuilder sb = new StringBuilder();
 			for(StackTraceElement stack : e.getStackTrace()) {
-				sb.append(stack.toString())
+				sb.append(ANSIColour.RED + stack.toString())
 					.append('\n');
 			}
 			sb.append(ANSIColour.RESET);
@@ -276,14 +276,7 @@ public class GennyCache {
 				log.error("EntityAttribute ATTRIBUTE: " + ea.getAttributeCode());
 				log.error("EntityAttribute ATTRIBUTE_ID: " + ea.getAttributeId());
 			}
-			log.error(e.getMessage());
-			StringBuilder sb = new StringBuilder(ANSIColour.RED);
-			for(StackTraceElement stack : e.getStackTrace()) {
-				sb.append(stack.toString())
-					.append('\n');
-			}
-			sb.append(ANSIColour.RESET);
-			log.error(sb.toString());
+			log.error("Exception Message: " + e.getMessage());
 			throw e;
 		}
 		
