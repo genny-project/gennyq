@@ -266,9 +266,11 @@ public class CacheManager {
 		if(attributes.isEmpty())
 			return 0L;
 		
-		Attribute attribute = queryResult.list().get(0);
+		Attribute attribute = attributes.get(0);
 		if (attribute != null) {
-			return attribute.getId();
+			if (attribute.getId() != null) {
+				return attribute.getId();
+			}
 		}
 
 		return 0L;

@@ -123,7 +123,7 @@ public class BatchLoading {
      * @param realmName The realm
      */
     public void persistValidations(Map<String, Map<String, String>> project, String realmName) {
-
+        log.debug("Persisting validations.");
         Instant start = Instant.now();
         for (Map<String, String> row : project.values()) {
 			Validation validation = googleSheetBuilder.buildValidation(row, realmName);
@@ -141,6 +141,7 @@ public class BatchLoading {
      * @param realmName The realm
      */
     public void persistDatatypes(Map<String, Map<String, String>> project, String realmName) {
+        log.debug("Persisting datatypes.");
         Instant start = Instant.now();
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
 			try {
@@ -162,13 +163,15 @@ public class BatchLoading {
      * @param realmName The realm
      */
     public void persistAttributes(Map<String, Map<String, String>> project, String realmName) {
+        log.debug("Persisting attributes.");
         Instant start = Instant.now();
+        Long maxId = cm.getMaxAttributeId();
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
             Attribute attribute = googleSheetBuilder.buildAttribute(entry.getValue(), realmName);
             if(attribute.getId() == null) {
-                Long maxId = cm.getMaxAttributeId();
+                maxId++;
                 log.error("Detected null attribute id for: " + attribute.getCode() + ". Setting to: " + maxId);
-                attribute.setId(maxId + 1);
+                attribute.setId(maxId);
             }
             attributeUtils.saveAttribute(attribute);
         }
@@ -184,6 +187,7 @@ public class BatchLoading {
      * @param realmName The realm
      */
     public void persistDefBaseEntitys(Map<String, Map<String, String>> project, String realmName) {
+        log.debug("Persisting definition baseentitys.");
         Instant start = Instant.now();
 		persistEntitys(project, realmName);
         Instant end = Instant.now();
@@ -198,6 +202,7 @@ public class BatchLoading {
      * @param realmName The realm
      */
     public void persistBaseEntitys(Map<String, Map<String, String>> project, String realmName) {
+        log.debug("Persisting baseentitys.");
         Instant start = Instant.now();
 		persistEntitys(project, realmName);
         Instant end = Instant.now();
@@ -212,9 +217,11 @@ public class BatchLoading {
      * @param realmName The realm
      */
     public void persistEntitys(Map<String, Map<String, String>> project, String realmName) {
+        Long maxId = cm.getMaxBaseEntityId() + 1;
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
 			try {
-				BaseEntity baseEntity = googleSheetBuilder.buildBaseEntity(entry.getValue(), realmName);
+                BaseEntity baseEntity = googleSheetBuilder.buildBaseEntity(entry.getValue(), realmName, maxId);
+                maxId = baseEntity.getId() + 1;
 				beUtils.updateBaseEntity(baseEntity, false);
 			} catch (ItemNotFoundException e) {
 				log.warn(e.getMessage());
@@ -229,6 +236,7 @@ public class BatchLoading {
      * @param realmName The realm
      */
     public void persistDefBaseEntityAttributes(Map<String, Map<String, String>> project, String realmName) {
+        log.debug("Persisting definition entity attributes.");
         Instant start = Instant.now();
 
 		DataType dttBoolean = attributeUtils.getDataType(realmName, "DTT_BOOLEAN", false);
@@ -295,6 +303,7 @@ public class BatchLoading {
      * @param realmName The realm
      */
     public void persistBaseEntityAttributes(Map<String, Map<String, String>> project, String realmName) {
+        log.debug("Persisting entity attributes.");
         Instant start = Instant.now();
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
 			
@@ -333,6 +342,7 @@ public class BatchLoading {
      * @param realmName The realm
      */
     public void persistQuestions(Map<String, Map<String, String>> project, String realmName) {
+        log.debug("Persisting questions.");
         Instant start = Instant.now();
 
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
@@ -377,6 +387,7 @@ public class BatchLoading {
      * @param realmName The realm
      */
     public void persistQuestionQuestions(Map<String, Map<String, String>> project, String realmName) {
+        log.debug("Persisting question questions.");
         Instant start = Instant.now();
 
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
