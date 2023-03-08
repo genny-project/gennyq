@@ -185,7 +185,7 @@ public class Validator {
 		if (!target.getCode().equals(answer.getTargetCode()))
 			return blacklist("TargetCode " + target.getCode() + " does not match answer target " + answer.getTargetCode());
 
-		// boolean notValidForAnyDefinition = false;//!defUtils.answerValidForDEF(answer);
+		boolean notValidForAnyDefinition = false;//!defUtils.answerValidForDEF(answer);
 		// for (String code : processData.getDefCodes()) {
 		// 	Definition definition = beUtils.getDefinition(code);
 		// 	log.info("Definition Attributes: " + CommonUtils.getArrayString(definition.getBaseEntityAttributesMap().keySet()));
