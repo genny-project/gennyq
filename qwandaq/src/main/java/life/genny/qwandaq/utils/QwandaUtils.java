@@ -864,8 +864,6 @@ public class QwandaUtils {
 		Map<String, EntityAttribute> bfsAttributeMap = beaUtils.getAllEntityAttributesInParent(definition);
 
 		// Check if attribute code exists as a UNQ for the DEF
-		String productCode = definition.getRealm();
-		String definitionCode = definition.getCode();
 		List<EntityAttribute> uniques = bfsAttributeMap.values().stream().filter(ea -> ea.getAttributeCode().startsWith(Prefix.UNQ_)).collect(Collectors.toList());
 
 		log.info("Found " + uniques.size() + " UNQ attributes");
@@ -880,8 +878,12 @@ public class QwandaUtils {
 		for (EntityAttribute entityAttribute : uniques) {
 
 			// fetch list of unique code combo
-			List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(definition,
-					entityAttribute.getAttributeCode());
+			String valueString = entityAttribute.getValueString();
+			if(StringUtils.isBlank(valueString))
+				continue;
+			
+			String[] codes = CommonUtils.getArrayFromString(valueString);
+			// beUtils.getBaseEntityCodeArrayFromLinkAttribute(definition,entityAttribute.getAttributeCode());
 
 			// skip if no value found
 			if (codes == null)

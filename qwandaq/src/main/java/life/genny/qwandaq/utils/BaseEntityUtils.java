@@ -305,6 +305,7 @@ public BaseEntityUtils() { /* no-args constructor */ }
 		return CommonUtils.cleanUpAttributeValue(attributeValue);
 	}
 
+	@Deprecated
 	public String getStringValueOfAttribute(BaseEntity baseEntity, String attributeCode) {
 		return getAttributeValue(baseEntity, attributeCode);
 	}
