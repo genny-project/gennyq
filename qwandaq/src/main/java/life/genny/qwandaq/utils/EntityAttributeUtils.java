@@ -13,13 +13,20 @@ import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.serialization.common.CoreEntityKey;
 import life.genny.qwandaq.serialization.entityattribute.EntityAttributeKey;
+
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
+import java.util.Set;
 
 /**
  * A non-static utility class used for standard
@@ -41,6 +48,69 @@ public class EntityAttributeUtils {
 
 	@Inject
 	BaseEntityUtils beUtils;
+
+	/**
+	 * Get all DEF EntityAttributes for a BaseEntity that is a {@link Definition} using
+	 * Breadth-First Search.
+	 * @param definition - root definition to start at
+	 * @return a {@link HashSet} of {@link EntityAttribute EntityAttributes} containing all the DEF_EntityAttributes
+	 * in the parent structure
+	 */
+	public Set<EntityAttribute> getAllEntityAttributesInParent(BaseEntity definition) {
+		boolean bundledEas = !definition.getBaseEntityAttributesMap().isEmpty();
+		
+		if(!bundledEas) {
+			// Load in all entity attributes of this def from memory
+			definition = beUtils.getBaseEntity(definition.getRealm(), definition.getCode(), true);
+		}
+		
+		// BFS
+		// Heirarchy Maintain order
+		Set<BaseEntity> visited = new LinkedHashSet<>();
+		Set<EntityAttribute> allEntityAttributes = new HashSet<>();
+
+		Queue<BaseEntity> queue = new LinkedList<>();
+
+		// Root node is our starting point
+		queue.offer(definition);
+
+		BaseEntity current;
+		EntityAttribute lnkInclude = null;
+
+		while(!queue.isEmpty()) {
+			current = queue.poll();
+			if(visited.contains(current)) {
+				continue;
+			}
+
+			allEntityAttributes.addAll(current.getBaseEntityAttributes());
+
+			visited.add(current);
+			// visit neighbours
+			lnkInclude = current.getBaseEntityAttributesMap().get(Attribute.LNK_INCLUDE);
+			if(lnkInclude == null) {
+				continue;
+			}
+
+			String parentValueString = lnkInclude.getValueString();
+			if(StringUtils.isBlank(parentValueString))
+				continue;
+			
+			String[] parentCodes = CommonUtils.getArrayFromString(parentValueString);
+			for(String parentCode : parentCodes) {
+				try {
+					BaseEntity parent = beUtils.getBaseEntity(parentCode, true);
+					queue.offer(parent);
+				} catch(ItemNotFoundException e) {
+					log.error("Could not find parent definition pertaining to " + current.getCode() + "'s LNK_INCLUDE valueString");
+					log.error(current.getCode() + " LNK_INCLUDE = " + parentValueString);
+					log.error(e.getMessage());
+				}
+			}
+		}
+
+		return allEntityAttributes;
+	}
 
 	/**
 	 * Fetch an EntityAttribute from the nearest parent definition 
