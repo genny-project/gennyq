@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import life.genny.kogito.common.core.Dispatch;
@@ -112,8 +113,9 @@ public class TaskService extends KogitoService {
 		qwandaUtils.storeProcessData(processData);
 
 		// TODO: Not every task has a userCode
-		if (!sourceCode.equals(userCode)) {
+		if (!sourceCode.equals(userCode) && !StringUtils.isBlank(userCode)) {
 			log.info("Task on hold: User is not source");
+			log.debug("User Code: " + userCode);
 			return processData;
 		}
 
