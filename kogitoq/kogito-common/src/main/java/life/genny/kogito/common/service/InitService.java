@@ -30,9 +30,9 @@ public class InitService extends KogitoService {
 	@Inject
 	Logger log;
 
-	private static Map<String, List<List<Attribute>>> batchedAttributesListPerProduct = new HashMap<>();
+	private static Map<String, List<Set<Attribute>>> batchedAttributesListPerProduct = new HashMap<>();
 
-	private static Map<String, Long> attributesLastUpdatedAtPerProduct = new HashMap<>();
+	private static Map<String, Long> attributesLastFetchedAtPerProduct = new HashMap<>();
 
 	/**
 	 * Send the Project BaseEntity.
@@ -82,13 +82,13 @@ public class InitService extends KogitoService {
 		log.info("Sending Attributes for " + userToken.getProductCode());
 		String productCode = userToken.getProductCode();
 		Long attributesUpdatedAt = attributeUtils.getAttributesLastUpdatedAt(productCode);
-		Long attributesLastUpdatedAt = attributesLastUpdatedAtPerProduct.get(productCode);
-		List<List<Attribute>> batchedAttributesList = batchedAttributesListPerProduct.get(productCode);
-		if (attributesUpdatedAt == null || attributesLastUpdatedAt == null ||
-				attributesLastUpdatedAt.compareTo(attributesUpdatedAt) < 0 ||
+		Long attributesLastFetchedAt = attributesLastFetchedAtPerProduct.get(productCode);
+		List<Set<Attribute>> batchedAttributesList = batchedAttributesListPerProduct.get(productCode);
+		if (attributesUpdatedAt == null || attributesLastFetchedAt == null ||
+				attributesLastFetchedAt.compareTo(attributesUpdatedAt) < 0 ||
 				batchedAttributesList == null || batchedAttributesList.isEmpty()) {
 			cacheAttributesLocallyAndDispatch(productCode);
-			attributesLastUpdatedAtPerProduct.put(productCode, attributesUpdatedAt);
+			attributesLastFetchedAtPerProduct.put(productCode, attributesUpdatedAt);
 		} else {
 			log.debugf("No change to attributes since previous read. Sending out the locally cached batch of attributes");
 			dispatchLocallyCachedAttributes(batchedAttributesList);
@@ -109,9 +109,9 @@ public class InitService extends KogitoService {
 		if (totalAttributesCount % BATCH_SIZE != 0) {
 			totalBatches++;
 		}
-		List<List<Attribute>> batchedAttributesList = new LinkedList<>();
+		List<Set<Attribute>> batchedAttributesList = new LinkedList<>();
 		batchedAttributesListPerProduct.put(productCode, batchedAttributesList);
-		List<Attribute> attributesBatch = new LinkedList<>();
+		Set<Attribute> attributesBatch = new HashSet<>();
 		for(Attribute attribute : allAttributes) {
 			if (attribute == null || attribute.getCode().startsWith(Prefix.CAP_)) {
 				totalAttributesCount--;
@@ -133,7 +133,7 @@ public class InitService extends KogitoService {
 				batchedAttributesList.add(attributesBatch);
 				count = 0;
 				batchNum++;
-				attributesBatch = new LinkedList<>();
+				attributesBatch = new HashSet<>();
 			}
 		}
 		// Dispatch the last batch, if any
@@ -146,10 +146,10 @@ public class InitService extends KogitoService {
 		batchedAttributesList.add(attributesBatch);
 	}
 
-	private void dispatchLocallyCachedAttributes(List<List<Attribute>> batchedAttributesList) {
+	private void dispatchLocallyCachedAttributes(List<Set<Attribute>> batchedAttributesList) {
 		long start = System.nanoTime();
 		int batchNum = 1;
-		for (List<Attribute> attributesBatch : batchedAttributesList) {
+		for (Set<Attribute> attributesBatch : batchedAttributesList) {
 			dispatchAttributesToKafka(attributesBatch, "ATTRIBUTE_MESSAGE_BATCH_" + batchNum + "_OF_" + batchedAttributesList.size());
 			batchNum++;
 		}
@@ -163,7 +163,7 @@ public class InitService extends KogitoService {
 	 * @param attributesBatch
 	 * @param aliasCode
 	 */
-	private void dispatchAttributesToKafka(List<Attribute> attributesBatch, String aliasCode) {
+	private void dispatchAttributesToKafka(Set<Attribute> attributesBatch, String aliasCode) {
 		QDataAttributeMessage msg = new QDataAttributeMessage();
 		msg.add(attributesBatch);
 		msg.setItems(attributesBatch);
