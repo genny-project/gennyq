@@ -81,9 +81,9 @@ public class EntityAttributeUtils {
 
 		while(!queue.isEmpty()) {
 			current = queue.poll();
-			log.trace("[BFS] iterating through " + current.getCode());
+			log.debug("[BFS] iterating through " + current.getCode());
 			if(visited.contains(current)) {
-				log.trace("[BFS] Already visited: " + current.getCode());
+				log.debug("[BFS] Already visited: " + current.getCode());
 				continue;
 			}
 
@@ -91,30 +91,30 @@ public class EntityAttributeUtils {
 				allEntityAttributes.put(ea.getAttributeCode(), ea);
 			}
 			
-			log.trace("[BFS] Iterated through and potentially added: " + current.getBaseEntityAttributes().size() + " attributes");
+			log.debug("[BFS] Iterated through and potentially added: " + current.getBaseEntityAttributes().size() + " attributes");
 
 			visited.add(current);
 			// visit neighbours
 			lnkInclude = current.getBaseEntityAttributesMap().get(Attribute.LNK_INCLUDE);
 			if(lnkInclude == null) {
-				log.trace("[BFS] Could not find LNK_INCLUDE in " + current.getCode() + " not adding neighbours. Current queue size: " + queue.size());
+				log.debug("[BFS] Could not find LNK_INCLUDE in " + current.getCode() + " not adding neighbours. Current queue size: " + queue.size());
 				continue;
 			}
 
 			String parentValueString = lnkInclude.getValueString();
 			if(StringUtils.isBlank(parentValueString)) {
-				log.trace("[BFS] No parent codes found for: " + current.getCode() + " not adding neighbours. Current queue size: " + queue.size());
+				log.debug("[BFS] No parent codes found for: " + current.getCode() + " not adding neighbours. Current queue size: " + queue.size());
 				continue;
 			}
 			
 			String[] parentCodes = CommonUtils.getArrayFromString(parentValueString);
 			if(parentCodes.length == 0) {
-				log.trace("[BFS] No parent codes found for: " + current.getCode() + " not adding neighbours. Current queue size: " + queue.size());
+				log.debug("[BFS] No parent codes found for: " + current.getCode() + " not adding neighbours. Current queue size: " + queue.size());
 			}
 			for(String parentCode : parentCodes) {
 				try {
 					BaseEntity parent = beUtils.getBaseEntity(parentCode, true);
-					log.trace("\t[BFS] - Adding neighbour: " + parent.getCode());
+					log.debug("\t[BFS] - Adding neighbour: " + parent.getCode());
 					queue.offer(parent);
 				} catch(ItemNotFoundException e) {
 					log.error("Could not find parent definition pertaining to " + current.getCode() + "'s LNK_INCLUDE valueString");
@@ -169,7 +169,7 @@ public class EntityAttributeUtils {
 				// if there is no lnk include in this current parent, scream
 				// if there is an lnk include but there are no parent codes, then scream
 
-				log.trace("Parent: " + parentCodes[0] + " does not have requested attribute: " + attributeCode + ". Checking next level");
+				log.debug("Parent: " + parentCodes[0] + " does not have requested attribute: " + attributeCode + ". Checking next level");
 				lnkInclude = getEntityAttribute(definition.getRealm(), definition.getCode(), Attribute.LNK_INCLUDE);
 				String oldParent = parentCodes[0];
 				parentCodes = CommonUtils.getArrayFromString(lnkInclude.getValueString());
