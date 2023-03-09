@@ -628,7 +628,7 @@ public BaseEntityUtils() { /* no-args constructor */ }
 		// check definition prefix
 		// Optional<String> optCode = definition.getValue(Attribute.PRI_PREFIX);
 		// if (optCode.isEmpty())
-		EntityAttribute prefixEa = bfsdMapOfAttributes.get(Prefix.ATT_.concat(Attribute.PRI_PREFIX));
+		EntityAttribute prefixEa = bfsdMapOfAttributes.get(Attribute.PRI_PREFIX);
 		if(prefixEa == null || StringUtils.isBlank(prefixEa.getValueString()))
 			throw new DebugException("Prefix not provided" + definition.getCode());
 
