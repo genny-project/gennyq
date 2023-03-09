@@ -6,14 +6,9 @@ import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.exception.runtime.DebugException;
-import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
-import life.genny.qwandaq.managers.CacheManager;
-import life.genny.qwandaq.models.ServiceToken;
-import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.utils.*;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
@@ -24,35 +19,9 @@ import java.util.Optional;
 @ApplicationScoped
 public class BaseEntityService extends KogitoService {
 
-	@Inject
-	ServiceToken serviceToken;
-
-	@Inject
-	UserToken userToken;
-
-	@Inject
-	BaseEntityUtils beUtils;
-
-	@Inject
-	EntityAttributeUtils beaUtils;
-
-	@Inject
-	QwandaUtils qwandaUtils;
-
-	@Inject
-	KeycloakUtils keycloakUtils;
-
-	@Inject
-	CacheManager cm;
-
-	@Inject
-	DefUtils defUtils;
 
 	@Inject
 	Logger log;
-
-	@Inject
-	AttributeUtils attributeUtils;
 
 	/**
 	 * Send a message to perform an update of a persons summary
@@ -119,10 +88,9 @@ public class BaseEntityService extends KogitoService {
 		// use entity create function and save to db
 		String defCode = definition.getCode();
 		String defaultName = StringUtils.capitalize(defCode.substring(4));
+
 		EntityAttribute prefixAttr = beaUtils.getEntityAttribute(definition.getRealm(), defCode, Attribute.PRI_PREFIX, false);
-		if (prefixAttr == null) {
-			throw new ItemNotFoundException(definition.getRealm(), defCode, Attribute.PRI_PREFIX);
-		}
+		
 		String prefixValue = prefixAttr.getValueString();
 		BaseEntity entity = beUtils.create(definition, defaultName, prefixValue + "_" + processId.toUpperCase());
 		log.info("BaseEntity Created: " + entity.getCode());

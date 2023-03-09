@@ -6,14 +6,22 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.persistence.EntityManager;
 
-import life.genny.qwandaq.utils.*;
-
 import life.genny.kogito.common.core.Dispatch;
 import life.genny.kogito.common.core.ProcessAnswers;
 import life.genny.kogito.common.utils.KogitoUtils;
+import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.managers.capabilities.role.RoleManager;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
+
+import life.genny.qwandaq.utils.AttributeUtils;
+import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.DefUtils;
+import life.genny.qwandaq.utils.EntityAttributeUtils;
+import life.genny.qwandaq.utils.FilterUtils;
+import life.genny.qwandaq.utils.KeycloakUtils;
+import life.genny.qwandaq.utils.QwandaUtils;
+import life.genny.qwandaq.utils.SearchUtils;
 import life.genny.serviceq.intf.GennyScopeInit;
 
 
@@ -25,6 +33,12 @@ public abstract class KogitoService {
 
 	// one instance for all classes
 	protected static Jsonb jsonb = JsonbBuilder.create();
+	
+	@Inject
+	KeycloakUtils keycloakUtils;
+
+	@Inject
+	CacheManager cm;
 
 	@Inject
 	ServiceToken serviceToken;
