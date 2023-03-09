@@ -612,9 +612,12 @@ public BaseEntityUtils() { /* no-args constructor */ }
 	 * @return The created BaseEntity
 	 */
 	public BaseEntity createUser(final Definition definition) {
+		// This is going to become inefficient if we keep having to do this...
+		Map<String, EntityAttribute> bfsdMapOfAttributes = beaUtils.getAllEntityAttributesInParent(definition);
+		// Optional<EntityAttribute> opt = definition.findEntityAttribute(Prefix.ATT_.concat(Attribute.PRI_UUID));
+		EntityAttribute attUuidEa = bfsdMapOfAttributes.get(Prefix.ATT_.concat(Attribute.PRI_UUID));
 
-		Optional<EntityAttribute> opt = definition.findEntityAttribute(Prefix.ATT_.concat(Attribute.PRI_UUID));
-		if (opt.isEmpty())
+		if (attUuidEa == null)
 			throw new DefinitionException("Definition is not a User definition: " + definition.getCode());
 
 		String email = "random+" + UUID.randomUUID().toString().substring(0, 20) + "@gada.io";
