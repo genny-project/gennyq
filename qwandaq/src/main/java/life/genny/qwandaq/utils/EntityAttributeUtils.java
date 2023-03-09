@@ -81,41 +81,40 @@ public class EntityAttributeUtils {
 
 		while(!queue.isEmpty()) {
 			current = queue.poll();
-			log.debug("[BFS] iterating through " + current.getCode());
+			log.trace("[BFS] iterating through " + current.getCode());
 			if(visited.contains(current)) {
-				log.debug("[BFS] Already visited: " + current.getCode());
+				log.trace("[BFS] Already visited: " + current.getCode());
 				continue;
 			}
 
 			for(EntityAttribute ea : current.getBaseEntityAttributes()) {
 				allEntityAttributes.put(ea.getAttributeCode(), ea);
-				log.debug("Adding " + ea.getAttributeCode() + " to set");
 			}
 			
-			log.debug("[BFS] Iterated through and potentially added: " + current.getBaseEntityAttributes().size() + " attributes");
+			log.trace("[BFS] Iterated through and potentially added: " + current.getBaseEntityAttributes().size() + " attributes from " + current.getCode());
 
 			visited.add(current);
 			// visit neighbours
 			lnkInclude = current.getBaseEntityAttributesMap().get(Attribute.LNK_INCLUDE);
 			if(lnkInclude == null) {
-				log.debug("[BFS] Could not find LNK_INCLUDE in " + current.getCode() + " not adding neighbours. Current queue size: " + queue.size());
+				log.trace("[BFS] Could not find LNK_INCLUDE in " + current.getCode() + " not adding neighbours. Current queue size: " + queue.size());
 				continue;
 			}
 
 			String parentValueString = lnkInclude.getValueString();
 			if(StringUtils.isBlank(parentValueString)) {
-				log.debug("[BFS] No parent codes found for: " + current.getCode() + " not adding neighbours. Current queue size: " + queue.size());
+				log.trace("[BFS] No parent codes found for: " + current.getCode() + " not adding neighbours. Current queue size: " + queue.size());
 				continue;
 			}
 			
 			String[] parentCodes = CommonUtils.getArrayFromString(parentValueString);
 			if(parentCodes.length == 0) {
-				log.debug("[BFS] No parent codes found for: " + current.getCode() + " not adding neighbours. Current queue size: " + queue.size());
+				log.trace("[BFS] No parent codes found for: " + current.getCode() + " not adding neighbours. Current queue size: " + queue.size());
 			}
 			for(String parentCode : parentCodes) {
 				try {
 					BaseEntity parent = beUtils.getBaseEntity(parentCode, true);
-					log.debug("\t[BFS] - Adding neighbour: " + parent.getCode());
+					log.trace("\t[BFS] - Adding neighbour: " + parent.getCode());
 					queue.offer(parent);
 				} catch(ItemNotFoundException e) {
 					log.error("Could not find parent definition pertaining to " + current.getCode() + "'s LNK_INCLUDE valueString");
