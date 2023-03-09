@@ -9,7 +9,7 @@ import life.genny.qwandaq.exception.GennyRuntimeException;
  */
 public class ItemNotFoundException extends GennyRuntimeException {
 
-	private static final String ERR_TEXT = "%s could not be found";
+	private static  String ERR_TEXT = "%s could not be found";
 	private static final String PRD_TXT = ERR_TEXT + " in product %s";
 
 	public ItemNotFoundException() {

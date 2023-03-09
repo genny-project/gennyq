@@ -842,7 +842,7 @@ public class QwandaUtils {
 	 *                   original target
 	 * @return Boolean
 	 */
-	public Boolean isDuplicate(List<Definition> definitions, Answer answer, BaseEntity... targets) {
+	public boolean isDuplicate(List<Definition> definitions, Answer answer, BaseEntity... targets) {
 		for (Definition definition : definitions) {
 			if (isDuplicate(definition, answer, targets)) {
 				return true;
@@ -860,15 +860,22 @@ public class QwandaUtils {
 	 *                   original target
 	 * @return Boolean
 	 */
-	public Boolean isDuplicate(Definition definition, Answer answer, BaseEntity... targets) {
+	public boolean isDuplicate(Definition definition, Answer answer, BaseEntity... targets) {
+		Map<String, EntityAttribute> bfsAttributeMap = beaUtils.getAllEntityAttributesInParent(definition);
 
 		// Check if attribute code exists as a UNQ for the DEF
 		String productCode = definition.getRealm();
 		String definitionCode = definition.getCode();
-		List<EntityAttribute> uniques = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(productCode, definitionCode, Prefix.UNQ_);
+		List<EntityAttribute> uniques = bfsAttributeMap.values().stream().filter(ea -> ea.getAttributeCode().startsWith(Prefix.UNQ_)).collect(Collectors.toList());
+
 		log.info("Found " + uniques.size() + " UNQ attributes");
 
-		String prefix = beaUtils.getEntityAttribute(productCode, definitionCode, Attribute.PRI_PREFIX).getValueString();
+		EntityAttribute prefixAttr = bfsAttributeMap.get(Attribute.PRI_PREFIX);
+		if(prefixAttr == null) {
+			throw ItemNotFoundException.general(Attribute.PRI_PREFIX, " in EntityAttribute Hierarchy of " + definition.getCode() + " within " + definition.getRealm());
+		}
+
+		String prefix = prefixAttr.getValueString();
 
 		for (EntityAttribute entityAttribute : uniques) {
 
