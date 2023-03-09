@@ -326,7 +326,7 @@ public class KogitoUtils {
 
 		// Collect all new answers from the rules
 		List<Answer> answers = session.getObjects().stream()
-				.filter(o -> (o instanceof Answer))
+				.filter(Answer.class::isInstance)
 				.map(o -> (Answer) o)
 				.collect(Collectors.toList());
 

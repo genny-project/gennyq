@@ -14,7 +14,6 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.KafkaUtils;
-import life.genny.qwandaq.utils.KeycloakUtils;
 
 /**
  * A Service class used for communication with other kogito services.
@@ -23,9 +22,6 @@ import life.genny.qwandaq.utils.KeycloakUtils;
  */
 @ApplicationScoped
 public class Service2Service extends KogitoService {
-
-	@Inject
-	KeycloakUtils keycloakUtils;
 
 	@Inject
 	Logger log;
@@ -45,7 +41,7 @@ public class Service2Service extends KogitoService {
 			BaseEntity project = beUtils.getBaseEntity(Prefix.PRJ_.concat(userBE.getRealm().toUpperCase()));
 			userToken = new UserToken(keycloakUtils.getImpersonatedToken(userBE, serviceToken, project));
 		}
-		logToken();
+		log.debug(getTokenLogLine());
 		taskExchange.setToken(userToken.getToken());
 		return taskExchange;
 	}
@@ -68,7 +64,7 @@ public class Service2Service extends KogitoService {
 	 */
 	public void initialiseScope(TaskExchange taskExchange) {
 		scope.init(jsonb.toJson(taskExchange));
-		logToken();
+		log.debug(getTokenLogLine());
 	}
 
 	/**
@@ -78,14 +74,14 @@ public class Service2Service extends KogitoService {
 	 */
 	public void initialiseScope(UserExchange userExchange) {
 		scope.init(jsonb.toJson(userExchange));
-		logToken();
+		log.debug(getTokenLogLine());
 	}
 
 	/**
 	 * log token
 	 */
-	public void logToken() {
-		log.debugf("USER [%s] : [%s]", userToken.getUserCode(), userToken.getUsername());
+	public String getTokenLogLine() {
+		return "USER [" + userToken.getUserCode() + "] : [" + userToken.getUsername() + "]";
 	}
 
 	/**
