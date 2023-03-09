@@ -27,7 +27,7 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -75,8 +75,7 @@ public class BaseEntityUtils {
 	@Inject
 	DefUtils defUtils;
 
-	public BaseEntityUtils() { 
-	}
+public BaseEntityUtils() { /* no-args constructor */ }
 
 	/**
 	 * Fetch the user base entity of the {@link UserToken}.
@@ -312,11 +311,14 @@ public class BaseEntityUtils {
 
 	@Nullable
 	private <T> T getAttributeValue(BaseEntity baseEntity, String attributeCode) {
-		EntityAttribute entityAttribute = beaUtils.getEntityAttribute(baseEntity.getRealm(), baseEntity.getCode(), attributeCode, true);
-		if (entityAttribute == null) {
-			return null;
+		try {
+			EntityAttribute entityAttribute = beaUtils.getEntityAttribute(baseEntity.getRealm(), baseEntity.getCode(), attributeCode, true);
+			return entityAttribute.getValue();
+		} catch(ItemNotFoundException e) {
+			log.error(e.getMessage());
+			e.printStackTrace();
 		}
-		return entityAttribute.getValue();
+		return null;
 	}
 
 	/**
@@ -345,12 +347,11 @@ public class BaseEntityUtils {
 
 		String attributeValue = getBaseEntityCodeFromLinkAttribute(baseEntity, attributeCode);
 		if (attributeValue == null) {
-			return null;
+			return new ArrayList<>(0);
 		}
 
 		String[] baseEntityCodeArray = StringUtils.split(attributeValue,",");
-		List<String> beCodeList = Arrays.asList(baseEntityCodeArray);
-		return beCodeList;
+		return Arrays.asList(baseEntityCodeArray);
 	}
 
 	/**
