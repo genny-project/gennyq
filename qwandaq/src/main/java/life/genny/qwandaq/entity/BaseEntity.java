@@ -487,9 +487,7 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 
 		Optional<T> result = getValue(attributeCode);
 		if (result.isPresent()) {
-			if (!result.equals(Optional.empty())) {
-				return result.get();
-			}
+			return result.get();
 		}
 		return defaultValue;
 	}

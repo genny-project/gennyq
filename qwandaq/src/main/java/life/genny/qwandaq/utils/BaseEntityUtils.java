@@ -528,10 +528,10 @@ public BaseEntityUtils() { /* no-args constructor */ }
 		BaseEntity item;
 		String productCode = definition.getRealm();
 		String definitionCode = definition.getCode();
-		Map<String, EntityAttribute> allParentAttributes = beaUtils.getAllEntityAttributesInParent(definition);
+		Map<String, EntityAttribute> bfsAttributeMap = beaUtils.getAllEntityAttributesInParent(definition);
 
-		EntityAttribute uuidEA = allParentAttributes.get(Prefix.ATT_.concat(Attribute.PRI_UUID));
-		//beaUtils.getEntityAttribute(productCode, definitionCode, Prefix.ATT_.concat(Attribute.PRI_UUID));
+		EntityAttribute uuidEA = bfsAttributeMap.get(Prefix.ATT_.concat(Attribute.PRI_UUID));
+		
 		if (uuidEA != null) {
 			log.debug("Creating user base entity");
 			item = createUser(definition);
@@ -555,19 +555,22 @@ public BaseEntityUtils() { /* no-args constructor */ }
 		// save to DB and cache
 		updateBaseEntity(item);
 
-		List<EntityAttribute> atts = allParentAttributes.entrySet().stream()
+		List<EntityAttribute> atts = bfsAttributeMap.entrySet().stream()
 			.map(eaEntry -> eaEntry.getValue())
 			.filter(ea -> ea.getAttributeCode().startsWith(Prefix.ATT_))
 			.collect(Collectors.toList());
-		// List<EntityAttribute> atts = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(productCode, definitionCode, Prefix.ATT_);
+			
 		for (EntityAttribute ea : atts) {
 			String attrCode = ea.getAttributeCode().substring(Prefix.ATT_.length());
-			Attribute attribute = qwandaUtils.getAttribute(attrCode);
-
-			if (attribute == null) {
+			
+			Attribute attribute = null;
+			try {
+				attribute = qwandaUtils.getAttribute(attrCode);
+			} catch(ItemNotFoundException e) {
 				log.warn("No Attribute found for def attr " + attrCode);
 				continue;
 			}
+
 			if (item.containsEntityAttribute(attribute.getCode())) {
 				log.info(item.getCode() + " already has value for " + attribute.getCode());
 				continue;
@@ -575,7 +578,8 @@ public BaseEntityUtils() { /* no-args constructor */ }
 
 			// Find any default val for this Attr
 			String defaultDefValueAttr = Prefix.DFT_.concat(attrCode);
-			Object defaultVal = definition.getValue(defaultDefValueAttr, attribute.getDefaultValue());
+			EntityAttribute defaultAttr = bfsAttributeMap.get(defaultDefValueAttr);
+			Object defaultVal = defaultAttr != null ? defaultAttr.getValue() : attribute.getDefaultValue();
 
 			// Only process mandatory attributes, or defaults
 			Boolean mandatory = ea.getValueBoolean();
