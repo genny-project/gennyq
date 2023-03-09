@@ -89,6 +89,7 @@ public class EntityAttributeUtils {
 
 			for(EntityAttribute ea : current.getBaseEntityAttributes()) {
 				allEntityAttributes.put(ea.getAttributeCode(), ea);
+				log.debug("Adding " + ea.getAttributeCode() + " to set");
 			}
 			
 			log.debug("[BFS] Iterated through and potentially added: " + current.getBaseEntityAttributes().size() + " attributes");
