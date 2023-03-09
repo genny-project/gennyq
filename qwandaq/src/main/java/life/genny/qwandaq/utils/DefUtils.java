@@ -178,7 +178,8 @@ public class DefUtils {
 	 * @param answer     the answer to check
 	 * @return Boolean
 	 */
-	public Boolean answerValidForDEF(Definition definition, Answer answer) {
+	public boolean answerValidForDEF(Definition definition, Answer answer) {
+		Map<String, EntityAttribute> bfsAttributeMap = beaUtils.getAllEntityAttributesInParent(definition);
 
 		if (definition == null)
 			throw new NullParameterException("definition");
@@ -197,7 +198,7 @@ public class DefUtils {
 		}
 
 		// just make use of the faster attribute lookup
-		EntityAttribute ea = beaUtils.getEntityAttribute(definition.getRealm(), definition.getCode(), Prefix.ATT_ + attributeCode);
+		EntityAttribute ea = bfsAttributeMap.get(Prefix.ATT_ + attributeCode);
 		if (ea != null) {
 			return true;
 		}
