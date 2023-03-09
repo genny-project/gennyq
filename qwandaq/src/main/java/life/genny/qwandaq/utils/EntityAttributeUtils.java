@@ -21,10 +21,12 @@ import org.jetbrains.annotations.NotNull;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
@@ -56,7 +58,7 @@ public class EntityAttributeUtils {
 	 * @return a {@link HashSet} of {@link EntityAttribute EntityAttributes} containing all the DEF_EntityAttributes
 	 * in the parent structure
 	 */
-	public Set<EntityAttribute> getAllEntityAttributesInParent(BaseEntity definition) {
+	public Map<String, EntityAttribute> getAllEntityAttributesInParent(BaseEntity definition) {
 		boolean bundledEas = !definition.getBaseEntityAttributesMap().isEmpty();
 		
 		if(!bundledEas) {
@@ -67,7 +69,7 @@ public class EntityAttributeUtils {
 		// BFS
 		// Heirarchy Maintain order
 		Set<BaseEntity> visited = new LinkedHashSet<>();
-		Set<EntityAttribute> allEntityAttributes = new HashSet<>();
+		Map<String, EntityAttribute> allEntityAttributes = new HashMap<>();
 
 		Queue<BaseEntity> queue = new LinkedList<>();
 
@@ -83,8 +85,10 @@ public class EntityAttributeUtils {
 				continue;
 			}
 
-			allEntityAttributes.addAll(current.getBaseEntityAttributes());
-
+			for(EntityAttribute ea : current.getBaseEntityAttributes()) {
+				allEntityAttributes.put(ea.getAttributeCode(), ea);
+			}
+			
 			visited.add(current);
 			// visit neighbours
 			lnkInclude = current.getBaseEntityAttributesMap().get(Attribute.LNK_INCLUDE);

@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static life.genny.qwandaq.attribute.Attribute.*;
 
@@ -526,7 +527,10 @@ public class BaseEntityUtils {
 		BaseEntity item;
 		String productCode = definition.getRealm();
 		String definitionCode = definition.getCode();
-		EntityAttribute uuidEA = beaUtils.getEntityAttribute(productCode, definitionCode, Prefix.ATT_.concat(Attribute.PRI_UUID));
+		Map<String, EntityAttribute> allParentAttributes = beaUtils.getAllEntityAttributesInParent(definition);
+
+		EntityAttribute uuidEA = allParentAttributes.get(Prefix.ATT_.concat(Attribute.PRI_UUID));
+		//beaUtils.getEntityAttribute(productCode, definitionCode, Prefix.ATT_.concat(Attribute.PRI_UUID));
 		if (uuidEA != null) {
 			log.debug("Creating user base entity");
 			item = createUser(definition);
@@ -550,7 +554,11 @@ public class BaseEntityUtils {
 		// save to DB and cache
 		updateBaseEntity(item);
 
-		List<EntityAttribute> atts = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(productCode, definitionCode, Prefix.ATT_);
+		List<EntityAttribute> atts = allParentAttributes.entrySet().stream()
+			.map(eaEntry -> eaEntry.getValue())
+			.filter(ea -> ea.getAttributeCode().startsWith(Prefix.ATT_))
+			.collect(Collectors.toList());
+		// List<EntityAttribute> atts = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(productCode, definitionCode, Prefix.ATT_);
 		for (EntityAttribute ea : atts) {
 			String attrCode = ea.getAttributeCode().substring(Prefix.ATT_.length());
 			Attribute attribute = qwandaUtils.getAttribute(attrCode);
