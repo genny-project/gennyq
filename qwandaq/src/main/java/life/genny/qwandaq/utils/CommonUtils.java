@@ -27,6 +27,18 @@ public class CommonUtils {
     
     private CommonUtils() { /* Should never be instantiated */}
 
+    public static void printFilteredStackTrace(StackTraceElement[] stackTrace, String key, FILogCallback logLevel) {
+        for(StackTraceElement e : stackTrace) {
+            String str = e.toString();
+            if(str.contains(key))
+                logLevel.log(str);
+        }
+    }
+
+    public static void printFilteredStackTrace(StackTraceElement[] stackTrace, String key) {
+        printFilteredStackTrace(stackTrace, key, log::error);
+    }
+
     /**
      * Normalize a String by forcing uppercase on first character and lowercase on the rest
      * e.g: 

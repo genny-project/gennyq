@@ -9,6 +9,7 @@ import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.managers.CacheManager;
+import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.serialization.common.CoreEntityKey;
 import life.genny.qwandaq.serialization.entityattribute.EntityAttributeKey;
@@ -48,7 +49,7 @@ public class EntityAttributeUtils {
 	 * @return - The requested Definition EntityAttribute
 	 * 
 	 * @throws {@link ItemNotFoundException} if the requested EntityAttribute is not present in <b>any</b> of the parents of the Definition
-	 * @throws {@link ItemNotFoundException} if an initial {@link Attribute#LNK_INCLUDE LNK_INCLUDE Attribute} could not be found in the Definition supplied
+	 * @throws {@link ItemNotFoundException} if any {@link Attribute#LNK_INCLUDE LNK_INCLUDE Attribute} could not be found in the Definition supplied
 	 */
 	public EntityAttribute getEntityAttributeFromNearestParent(Definition definition, String attributeCode) {
 		boolean bundledEas = !definition.getBaseEntityAttributesMap().isEmpty();
@@ -64,11 +65,40 @@ public class EntityAttributeUtils {
 			lnkInclude = getEntityAttribute(definition.getRealm(), definition.getCode(), Attribute.LNK_INCLUDE);
 		}
 
-		String parentCode = CommonUtils.getArrayFromString(lnkInclude.getValueString())[0];
+		String[] parentCodes = CommonUtils.getArrayFromString(lnkInclude.getValueString());
 
-		Definition parent = getEntity
+		if(parentCodes.length == 0) {
+			// No parent codes no good
+			throw ItemNotFoundException.general("parent codes in " + Attribute.LNK_INCLUDE + " (empty array)", definition.getCode() + " in product: " + definition.getRealm());
+		}
 
-		EntityAttribute target;
+		EntityAttribute target = null;
+
+		while(target == null) {
+			try {
+				// attempt to retrieve from first higher-up def
+				target = getEntityAttribute(definition.getRealm(), parentCodes[0], attributeCode);
+			} catch(ItemNotFoundException e) {
+
+				// If we can't find the target, prep to check the parent
+				// if there is no lnk include in this current parent, scream
+				// if there is an lnk include but there are no parent codes, then scream
+
+				log.trace("Parent: " + parentCodes[0] + " does not have requested attribute: " + attributeCode + ". Checking next level");
+				lnkInclude = getEntityAttribute(definition.getRealm(), definition.getCode(), Attribute.LNK_INCLUDE);
+				String oldParent = parentCodes[0];
+				parentCodes = CommonUtils.getArrayFromString(lnkInclude.getValueString());
+				if(parentCodes.length == 0) {
+					throw ItemNotFoundException.general("parent codes in " + Attribute.LNK_INCLUDE + " (empty array)", oldParent + " in product: " + definition.getRealm());
+				}
+
+				if(parentCodes.length > 1) {
+					log.debug(ANSIColour.PURPLE + "warning: multiple parent codes in LNK_INCLUDE however BFS is not implemented yet. Only scanning through first parent code" + ANSIColour.RESET);
+				}
+			}
+		}
+
+		return target;
 	}
 
 	/**
