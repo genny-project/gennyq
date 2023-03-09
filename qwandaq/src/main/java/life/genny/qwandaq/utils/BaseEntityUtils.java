@@ -1,5 +1,6 @@
 package life.genny.qwandaq.utils;
 
+import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.constants.Prefix;
@@ -16,6 +17,7 @@ import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
+import life.genny.qwandaq.serialization.common.CoreEntityKey;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
@@ -27,14 +29,16 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static life.genny.qwandaq.attribute.Attribute.*;
 
@@ -245,6 +249,53 @@ public class BaseEntityUtils {
 			});
 		}
 		return savedSuccessfully ? baseEntity : null;
+	}
+
+	/**
+	 * Update a list of {@link BaseEntity} and all of its {@link EntityAttribute EntityAttributes} in the database and the cache.
+	 *
+	 * @param baseEntity  The list of BaseEntity to update
+	 * @return the newly cached BaseEntity and any linked EntityAttributes
+	 */
+	public List<BaseEntity> updateBaseEntities(List<BaseEntity> baseEntities) {
+		return updateBaseEntities(baseEntities, true);
+	}
+
+	/**
+	 * Update a list of {@link BaseEntity} and (optionally) its {@link EntityAttribute EntityAttributes} in the database and the cache.
+	 *
+	 * @param baseEntities The list of BaseEntity to update
+	 * @param updateBaseEntityAttributes  Defines whether the BaseEntityAttributes need to be updated
+	 * @return the newly cached BaseEntity and any linked EntityAttributes
+	 */
+	public List<BaseEntity> updateBaseEntities(List<BaseEntity> baseEntities, boolean updateBaseEntityAttributes) {
+		Map<CoreEntityKey, CoreEntityPersistable> cacheEntities = new HashMap<>();
+		for (BaseEntity be: baseEntities) {
+			cacheEntities.put(new BaseEntityKey(be.getRealm(), be.getCode()), be);
+		}
+		boolean savedSuccessfully = cm.saveEntities(GennyConstants.CACHE_NAME_BASEENTITY, cacheEntities);
+		
+		if (updateBaseEntityAttributes) {
+			for (BaseEntity be: baseEntities) {
+				be.getBaseEntityAttributes().forEach(bea -> {
+					// ensure for all entityAttribute that baseentity and attribute are not null
+					bea.setBaseEntityId(be.getId());
+					if (bea.getRealm() == null) {
+						bea.setRealm(be.getRealm());
+					}
+					if (bea.getBaseEntityCode() == null) {
+						bea.setBaseEntityCode(be.getCode());
+					}
+					if (bea.getAttribute() == null) {
+						Attribute attribute = attributeUtils.getAttribute(be.getRealm(), bea.getAttributeCode());
+						bea.setAttribute(attribute);
+					}
+					beaUtils.updateEntityAttribute(bea);
+				});
+			}
+		}
+		
+		return savedSuccessfully ? baseEntities : null;
 	}
 
 	/**

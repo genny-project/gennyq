@@ -168,7 +168,8 @@ public class BatchLoading {
         log.debug("Persisting attributes.");
         Instant start = Instant.now();
         Long maxId = cm.getMaxAttributeId();
-        List<Attribute> attributesBatch = new ArrayList<>(10);
+        int totalItemsInBatch = 10;
+        List<Attribute> attributesBatch = new ArrayList<>(totalItemsInBatch);
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
             Attribute attribute = googleSheetBuilder.buildAttribute(entry.getValue(), realmName, maxId);
             if(attribute.getId() == null) {
@@ -180,9 +181,8 @@ public class BatchLoading {
             attributesBatch.add(attribute);
             if (attributesBatch.size() >= 10) {
                 attributeUtils.saveAttributes(attributesBatch);
-                attributesBatch = new ArrayList<>(10);
+                attributesBatch = new ArrayList<>(totalItemsInBatch);
             }
-            // attributeUtils.saveAttribute(attribute);
         }
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
@@ -227,11 +227,18 @@ public class BatchLoading {
      */
     public void persistEntitys(Map<String, Map<String, String>> project, String realmName) {
         Long maxId = cm.getMaxBaseEntityId() + 1;
+        int totalItemInBatch = 10;
+        List<BaseEntity> entities = new ArrayList<>(totalItemInBatch);
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
 			try {
                 BaseEntity baseEntity = googleSheetBuilder.buildBaseEntity(entry.getValue(), realmName, maxId);
-                maxId = baseEntity.getId() + 1;
-				beUtils.updateBaseEntity(baseEntity, false);
+                maxId++;
+                entities.add(baseEntity);
+                if (entities.size() >= totalItemInBatch) {
+                    beUtils.updateBaseEntities(entities, false);
+                    entities = new ArrayList<>(totalItemInBatch);
+                }
+				// beUtils.updateBaseEntity(baseEntity, false);
 			} catch (ItemNotFoundException e) {
 				log.warn(e.getMessage());
 			}

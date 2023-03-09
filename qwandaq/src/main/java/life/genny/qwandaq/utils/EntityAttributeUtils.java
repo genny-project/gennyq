@@ -1,5 +1,6 @@
 package life.genny.qwandaq.utils;
 
+import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.GennyConstants;
@@ -16,8 +17,11 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A non-static utility class used for standard
@@ -139,6 +143,20 @@ public class EntityAttributeUtils {
 	public boolean updateEntityAttribute(EntityAttribute baseEntityAttribute) {
 		EntityAttributeKey key = new EntityAttributeKey(baseEntityAttribute.getRealm(), baseEntityAttribute.getBaseEntityCode(), baseEntityAttribute.getAttributeCode());
 		return cm.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, key, baseEntityAttribute);
+	}
+
+	/**
+	 * Update list of {@link EntityAttribute} in the cache
+	 * 
+	 * @param baseEntityAttributes The list of BaseEntityAttribute to be updated.
+	 * @return True if update is successful, false otherwise.
+	 */
+	public boolean updateEntityAttributes(List<EntityAttribute> baseEntityAttributes) {
+		Map<CoreEntityKey, CoreEntityPersistable> entityAttributesMap = new HashMap<>(baseEntityAttributes.size());
+        for (EntityAttribute ea : baseEntityAttributes) {
+            entityAttributesMap.put(new EntityAttributeKey(ea.getRealm(), ea.getBaseEntityCode(), ea.getAttributeCode()), ea);
+        }
+		return cm.saveEntities(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, entityAttributesMap);
 	}
 
     /**
