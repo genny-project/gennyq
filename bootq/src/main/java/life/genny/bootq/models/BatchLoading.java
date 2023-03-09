@@ -171,9 +171,8 @@ public class BatchLoading {
         int totalItemsInBatch = 10;
         List<Attribute> attributesBatch = new ArrayList<>(totalItemsInBatch);
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
-            Attribute attribute = googleSheetBuilder.buildAttribute(entry.getValue(), realmName, maxId);
+            Attribute attribute = googleSheetBuilder.buildAttribute(entry.getValue(), realmName, ++maxId);
             if(attribute.getId() == null) {
-                maxId++;
                 log.error("Detected null attribute id for: " + attribute.getCode() + ". Setting to: " + maxId);
                 attribute.setId(maxId);
             }
@@ -226,13 +225,12 @@ public class BatchLoading {
      * @param realmName The realm
      */
     public void persistEntitys(Map<String, Map<String, String>> project, String realmName) {
-        Long maxId = cm.getMaxBaseEntityId() + 1;
+        Long maxId = cm.getMaxBaseEntityId();
         int totalItemInBatch = 10;
         List<BaseEntity> entities = new ArrayList<>(totalItemInBatch);
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
 			try {
-                BaseEntity baseEntity = googleSheetBuilder.buildBaseEntity(entry.getValue(), realmName, maxId);
-                maxId++;
+                BaseEntity baseEntity = googleSheetBuilder.buildBaseEntity(entry.getValue(), realmName, ++maxId);
                 entities.add(baseEntity);
                 if (entities.size() >= totalItemInBatch) {
                     beUtils.updateBaseEntities(entities, false);

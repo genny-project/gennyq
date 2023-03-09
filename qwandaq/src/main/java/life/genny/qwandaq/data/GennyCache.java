@@ -322,9 +322,9 @@ public class GennyCache {
 				if (entityEntry.getValue() instanceof EntityAttribute ea) {
 					entityJson.append(", \nATTRIBUTE: %s".formatted(ea.getAttributeCode()))
 							.append(", \nATTRIBUTE_ID: %s".formatted(ea.getAttributeId()));
-				} else {
-					entityJson.append("\n}");
 				}
+				entityJson.append("\n}");
+
 				entitiesJson.add(entityJson.toString());
 			}
 			log.error(ANSIColour.RED + "Exception when inserting entities into %s, entities: \n%s".formatted(cacheName,
