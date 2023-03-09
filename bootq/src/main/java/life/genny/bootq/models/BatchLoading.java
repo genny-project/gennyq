@@ -321,11 +321,12 @@ public class BatchLoading {
     public void persistBaseEntityAttributes(Map<String, Map<String, String>> project, String realmName) {
         log.debug("Persisting entity attributes.");
         Instant start = Instant.now();
+        int totalItemsInBatch = 10;
+        List<EntityAttribute> entityAttributesBatch = new ArrayList<>(totalItemsInBatch);
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
 			
             String baseEntityCode = entry.getValue().get("baseentitycode");
             String attributeCode = entry.getValue().get("attributecode");
-            System.out.println("BaseEntity Attribute: " + entry.getValue());
 
             String combined = new StringBuilder(baseEntityCode).append(":").append(attributeCode).toString();
 
@@ -341,7 +342,12 @@ public class BatchLoading {
                 continue;
             }
             
-            boolean success = beaUtils.updateEntityAttribute(entityAttribute);
+            entityAttributesBatch.add(entityAttribute);
+            boolean success = true;
+            if (entityAttributesBatch.size() >= totalItemsInBatch) {
+                success = success && beaUtils.updateEntityAttributes(entityAttributesBatch);
+                entityAttributesBatch = new ArrayList<>(totalItemsInBatch);
+            }
             if(!success) {
                 log.error("Error occured when persisting EntityAttribute: " + combined);
             }
