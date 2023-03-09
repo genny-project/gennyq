@@ -90,6 +90,30 @@ public class SearchEntity extends BaseEntity {
 		setPageSize(20);
 	}
 
+	/**
+	 * Check whether anything in this search entity has capability requirements
+	 * @return <b>true</b> if there is at least one CapabilityRequirement. <b>false</b> otherwise
+	 */
+	@JsonbTransient
+	public boolean hasRequirements() {
+		// Yucky n2. Will need to modify this later
+		for(Map.Entry<Integer, List<? extends Trait>> traitList : traits.entrySet()) {
+			for(Trait t : traitList.getValue()) {
+				if(!t.getCapabilityRequirements().isEmpty())
+					return true;
+			}
+		}
+
+		for(ClauseContainer c : clauseContainers) {
+			if(c.getFilter() != null) {
+				if(!c.getFilter().getCapabilityRequirements().isEmpty())
+					return true;
+			}
+		}
+
+		return false;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * 
