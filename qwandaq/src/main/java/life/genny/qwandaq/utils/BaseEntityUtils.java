@@ -626,11 +626,13 @@ public BaseEntityUtils() { /* no-args constructor */ }
 		String uuid = KeycloakUtils.createDummyUser(serviceToken, userToken.getKeycloakRealm());
 
 		// check definition prefix
-		Optional<String> optCode = definition.getValue(Attribute.PRI_PREFIX);
-		if (optCode.isEmpty())
+		// Optional<String> optCode = definition.getValue(Attribute.PRI_PREFIX);
+		// if (optCode.isEmpty())
+		EntityAttribute prefixEa = bfsdMapOfAttributes.get(Prefix.ATT_.concat(Attribute.PRI_PREFIX));
+		if(prefixEa == null || StringUtils.isBlank(prefixEa.getValueString()))
 			throw new DebugException("Prefix not provided" + definition.getCode());
 
-		String code = optCode.get() + "_" + uuid.toUpperCase();
+		String code = prefixEa.getValueString() + "_" + uuid.toUpperCase();
 		BaseEntity item = new BaseEntity(code, null);
 		item.setRealm(userToken.getProductCode());
 
