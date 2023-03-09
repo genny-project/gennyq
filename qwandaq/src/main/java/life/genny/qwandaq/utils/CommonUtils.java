@@ -24,6 +24,8 @@ public class CommonUtils {
 	static final Logger log = Logger.getLogger(CommonUtils.class);
 
     public static final String STR_ARRAY_EMPTY = "[]";
+    
+    private CommonUtils() { /* Should never be instantiated */}
 
     /**
      * Normalize a String by forcing uppercase on first character and lowercase on the rest
@@ -98,16 +100,16 @@ public class CommonUtils {
      * @param map map to print
      */
     public static void printMap(Map<?, ?> map) {
-        for(Object key : map.keySet()) {
-            log.info(key + "=" + map.get(key));
+        for(Map.Entry<?, ?> key : map.entrySet()) {
+            log.info(key.getKey() + "=" + key.getValue());
         }
     }
 
     public static <K, V> void printMap(Map<K, V> map, FIGetStringCallBack<K> keyCallback, FIGetStringCallBack<V> valueCallback) {
-        for(K key : map.keySet()) {
-            String msg = new StringBuilder(keyCallback.getString(key))
+        for(Map.Entry<K, V> key : map.entrySet()) {
+            String msg = new StringBuilder(keyCallback.getString(key.getKey()))
                             .append(" = ")
-                            .append(valueCallback.getString(map.get(key)))
+                            .append(valueCallback.getString(key.getValue()))
                             .toString();
             log.info(msg);
         }
@@ -168,7 +170,7 @@ public class CommonUtils {
      * @return a JSON style array of object
      */
     public static <T> String getArrayString(Collection<T> list) {
-        return getArrayString(list, (item) -> item.toString());
+        return getArrayString(list, Object::toString);
     }
 
     /**
@@ -195,7 +197,7 @@ public class CommonUtils {
             return "null";
         StringBuilder result = new StringBuilder("[");
         Iterator<T> iterator = list.iterator();
-        for(int i = 0; i < list.size(); i++) {
+        while(iterator.hasNext()) {
             T object = iterator.next();
             result.append("\"")
                 .append(stringCallback.getString(object));
@@ -205,9 +207,6 @@ public class CommonUtils {
                 result.append("\"");
         }
 
-        // T object = iterator.next();
-        // result.append("\"")
-        //     .append(stringCallback.getString(object))
         result.append("]");
         return result.toString();
     }
@@ -253,15 +252,36 @@ public class CommonUtils {
         return instance;
     }
 
+    /**
+     * Get an Array From A JSONified String Array
+     * @param <T> - Type of the array to collect
+     * @param arrayString - the JSONified String Array
+     * @param type - the Class referring to {@link T the type}
+     * @param objectCallback - a lambda that maps one entry in the string array to the requested Type
+     * @return an array of type {@link T} with each entry the mapped equivalent of each entry in the Jsonified String array
+     * 
+     * <p>E.g
+     * <pre>
+     *  String intData = "[\"1\",\"2\",\"3\"]"; // this reads as ["1","2","3"]
+     * 
+     * // Both of these are logically equivalent
+     * Integer[] ints = getArrayFromString(intData, Integer.class, (data -> Integer.parseInt(data)));
+     * 
+     * // SonarLint Compliant Solution
+     * Integer[] ints = getArrayFromString(intData, Integer.class, Integer::parseInt);
+     * 
+     * // ints is now an Integer array containing {1, 2, 3}
+     * </pre>
+     * </p>
+     */
     @SuppressWarnings("unchecked")
     public static <T> T[] getArrayFromString(String arrayString, Class<T> type, FIGetObjectCallback<T> objectCallback) {
-        arrayString = arrayString.substring(1, arrayString.length() - 1).replaceAll("\"", "").strip();
+        arrayString = arrayString.substring(1, arrayString.length() - 1).replace("\"", "").strip();
         
-
 		if(StringUtils.isBlank(arrayString))
             return (T[])Array.newInstance(type, 0);
 
-        String components[] = arrayString.split(",");
+        String[] components = arrayString.split(",");
         T[] array = (T[])Array.newInstance(type, components.length);
                 
         for(int i = 0; i < components.length; i++) {
@@ -273,10 +293,10 @@ public class CommonUtils {
     }
 
     public static String getCommaAndSingleQuoteSeparatedString(Collection<String> tokens) {
-        List<String> newList = new CopyOnWriteArrayList<>();
-        tokens.forEach(token -> newList.add("'"+token+"'"));
-        return newList.toString();
+        String str = getArrayString(tokens, (token) -> new StringBuilder("'").append(token).append("'").toString());
+        return str.substring(1, str.length() - 1);
     }
+
 
     public static String getCommaSeparatedString(Collection<String> tokens) {
         return new CopyOnWriteArrayList<>(tokens).toString();
@@ -287,14 +307,17 @@ public class CommonUtils {
         if (StringUtils.isBlank(arrayString)) {
             return new ArrayList<>(0);
         }
+
         arrayString = arrayString.trim();
         if (arrayString.startsWith("[") && arrayString.endsWith("]")) {
             arrayString = arrayString.substring(1, arrayString.length() - 1);
         }
-        arrayString = arrayString.replaceAll("\"", "").strip();
+
+        arrayString = arrayString.replace("\"", "").strip();
         if (StringUtils.isBlank(arrayString))
             return new ArrayList<>(0);
-        String tokens[] = StringUtils.split(arrayString, ",");
+        
+        String[] tokens = StringUtils.split(arrayString, ",");
         newList = new ArrayList<>(tokens.length);
         for (String token : tokens) {
             String trimmedToken = token.trim();
@@ -316,7 +339,7 @@ public class CommonUtils {
         if(StringUtils.isBlank(arrayString))
             return new ArrayList<>(0);
 
-        arrayString = arrayString.substring(1, arrayString.length() - 1).replaceAll("\"", "").strip();
+        arrayString = arrayString.substring(1, arrayString.length() - 1).replace("\"", "").strip();
 
 		if(StringUtils.isBlank(arrayString))
             return new ArrayList<>(0);
@@ -339,7 +362,7 @@ public class CommonUtils {
      * @return
      */
     public static <T> Set<T> getSetFromString(String arrayString, FIGetObjectCallback<T> objectCallback) {
-        String[] components = arrayString.substring(1, arrayString.length() - 1).replaceAll("\"", "").split(",");
+        String[] components = arrayString.substring(1, arrayString.length() - 1).replace("\"", "").split(",");
         Set<T> newSet = new HashSet<>();
         for(String component : components) {
             newSet.add(objectCallback.getObject(component));
@@ -470,20 +493,18 @@ public class CommonUtils {
         StringBuilder sb = new StringBuilder(array);
         for(String entry : entries) {
             // ensure we're not trying to remove from empty array
-            if(sb.charAt(0) == '[') {
-                if(sb.charAt(1) == ']')
+            if(sb.charAt(0) == '[' && sb.charAt(1) == ']') {
                     return STR_ARRAY_EMPTY;
             }
 
-            if(StringUtils.isBlank(entry))
-                continue;
-            int start = sb.indexOf(entry);
-            if(start == -1)
+            int start;
+            if(StringUtils.isBlank(entry) || (start = sb.indexOf(entry)) == -1)
                 continue;
 
             // Deal with quotes
             int end = start + entry.length() + 1;
             start -= 1;
+            
             // deal with start/end
             if(start == 1) {
                 if(sb.length() - end != 1)

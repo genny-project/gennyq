@@ -38,6 +38,9 @@ public class EntityAttributeUtils {
 	@Inject
 	AttributeUtils attributeUtils;
 
+	@Inject
+	BaseEntityUtils beUtils;
+
 	/**
 	 * Fetch an EntityAttribute from the nearest parent definition 
 	 * @param definition - {@link Definition} to scan from
@@ -57,8 +60,13 @@ public class EntityAttributeUtils {
 		}
 
 		if(lnkInclude == null) {
+			// Let this throw. No LNK_INCLUDE == no point
 			lnkInclude = getEntityAttribute(definition.getRealm(), definition.getCode(), Attribute.LNK_INCLUDE);
 		}
+
+		String parentCode = CommonUtils.getArrayFromString(lnkInclude.getValueString())[0];
+
+		Definition parent = getEntity
 
 		EntityAttribute target;
 	}
