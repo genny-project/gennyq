@@ -4,7 +4,6 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.message.QMessageGennyMSG;
 import org.jboss.logging.Logger;
 
-import java.util.HashMap;
 import java.util.Map;
 import life.genny.qwandaq.message.QBaseMSGMessageType;
 
@@ -41,19 +40,11 @@ public class SendMessage extends MessageSendingStrategy {
         this.ctxMap = ctxMap;
     }
 
-    public SendMessage(String templateCode, BaseEntity recipientBE, String url) {
-        super();
-        this.templateCode = templateCode;
-        this.recipientBE = recipientBE;
-        this.ctxMap = (Map<String, String>) new HashMap<>().put("URL:ENCODE", url);
-    }
-
     public SendMessage(String templateCode,String recipientBECode,QBaseMSGMessageType msgType) {
         super();
         this.templateCode = templateCode;
         this.recipientBE = beUtils.getBaseEntity(recipientBECode);
         this.msgType = msgType;
-        this.ctxMap = ctxMap;
     }
 
     public SendMessage(String templateCode,String recipientBECode,QBaseMSGMessageType msgType,Map<String, String> ctxMap) {
@@ -83,6 +74,7 @@ public class SendMessage extends MessageSendingStrategy {
         msgBuilder.addRecipient(recipientBE)
                 .setUtils(beUtils)
                 .setToken(userToken)
+                .setMessageContextMap(ctxMap)
                 .send();
     }
 }
