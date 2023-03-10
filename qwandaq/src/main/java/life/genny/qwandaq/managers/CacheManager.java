@@ -257,41 +257,43 @@ public class CacheManager {
 	 * @return the max id
 	 */
 	public Long getMaxAttributeId() {
-		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_ATTRIBUTE));
-		Query<Attribute> query = queryFactory
-				.create("from life.genny.qwandaq.persistence.attribute.Attribute order by id desc");
-		QueryResult<Attribute> queryResult = query.maxResults(1).execute();
-		
-		List<Attribute> attributes = queryResult.list();
-		if(attributes.isEmpty())
-			return 0L;
-		
-		Attribute attribute = queryResult.list().get(0);
-		if (attribute != null) {
-			return attribute.getId();
-		}
-
-		return 0L;
+		return getMaxId(GennyConstants.CACHE_NAME_ATTRIBUTE, "life.genny.qwandaq.persistence.attribute.Attribute");
 	}
 
 	/**
-	 * Get the max entity id.
+	 * Get the max base entity id.
 	 *
 	 * @return the max id
 	 */
 	public Long getMaxBaseEntityId() {
-		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_BASEENTITY));
-		Query<BaseEntity> query = queryFactory
-				.create("from life.genny.qwandaq.persistence.baseentity.BaseEntity order by id desc");
-		QueryResult<BaseEntity> queryResult = query.maxResults(1).execute();
-		List<BaseEntity> baseEntities = queryResult.list();
-		if(baseEntities.isEmpty())
+		return getMaxId(GennyConstants.CACHE_NAME_BASEENTITY, "life.genny.qwandaq.persistence.baseentity.BaseEntity");
+	}
+
+	/**
+	 * Get the max question id.
+	 *
+	 * @return the max id
+	 */
+	public Long getMaxQuestionId() {
+		return getMaxId(GennyConstants.CACHE_NAME_QUESTION, "life.genny.qwandaq.persistence.question.Question");
+	}
+
+	/**
+	 * Get the max id for a given core entity.
+	 * @param cacheName The cache name for the entity
+	 * @param entityName The entity name with classpath (Example: life.genny.qwandaq.persistence.baseentity.BaseEntity)
+	 * @return the max id in the cache for the entity
+	 */
+	public Long getMaxId(String cacheName, String entityName) {
+		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(cacheName));
+		Query<CoreEntity> query = queryFactory.create("from " + entityName + " order by id desc");
+		QueryResult<CoreEntity> queryResult = query.maxResults(1).execute();
+		List<CoreEntity> coreEntities = queryResult.list();
+		if(coreEntities.isEmpty())
 			return 0L;
-		
-		BaseEntity baseEntity = baseEntities.get(0);
-		if (baseEntity != null) {
-			return baseEntity.getId();
-		}
+		CoreEntity coreEntity = coreEntities.get(0);
+		if(coreEntity != null && coreEntity.getId() != null)
+			return coreEntity.getId();
 		return 0L;
 	}
 

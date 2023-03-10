@@ -231,6 +231,7 @@ public class QuestionQuestion implements CoreEntitySerializable {
 		questionQuestion.setUpdated(getUpdated());
 		questionQuestion.setVersion(getVersion());
 		questionQuestion.setWeight(getWeight());
+		questionQuestion.setParentId(getSourceId());
 		questionQuestion.setCapabilityRequirements(CapabilityConverter.convertToEA(getCapreqs()));
 		return questionQuestion;
 	}
