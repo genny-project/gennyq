@@ -253,15 +253,78 @@ public class CommonUtils {
         return instance;
     }
 
+
+    /**
+     * Get a String Array of A JSONified String Array
+     * @param arrayString - the JSONified String Array
+     * @return A String array with each entry the mapped equivalent through {@link Object#toString} on each entry in the Jsonified String array
+     * 
+     * <p>E.g
+     * <pre>
+     *  String intData = "[\"1\",\"2\",\"3\"]"; // this reads as ["1","2","3"]
+     * 
+     * String[] ints = getArrayFromString(intData);
+     * 
+     * // ints is now a *String* array containing: ["1","2","3"]
+     * </pre>
+     * </p>
+     */
+    public static String[] getArrayFromString(String arrayString) {
+        return getArrayFromString(arrayString, Object::toString);
+    }
+
+    
+
+    /**
+     * Get a String Array of A JSONified String Array
+     * @param arrayString - the JSONified String Array
+     * @param mapCallback - the mapping function to apply on each entry
+     * @return A String array with each entry the mapped equivalent using the mapCallback on each entry in the Jsonified String array
+     * 
+     * <p>E.g
+     * <pre>
+     *  String intData = "[\"1\",\"2\",\"3\"]"; // this reads as ["1","2","3"]
+     * 
+     * String[] ints = getArrayFromString(intData, (integer) -> integer.concat("abcde"));
+     * 
+     * // ints is now a *String* array containing: ["1abcde","2abcde","3abcde"]
+     * </pre>
+     * </p>
+     */
+    public static String[] getArrayFromString(String arrayString, FIGetObjectCallback<String> mapCallback) {
+        return getArrayFromString(arrayString, String.class, mapCallback);
+    }
+
+    /**
+     * Get an Array From A JSONified String Array
+     * @param <T> - Type of the array to collect
+     * @param arrayString - the JSONified String Array
+     * @param type - the Class referring to {@link T the type}
+     * @param objectCallback - a lambda that maps one entry in the string array to the requested Type
+     * @return an array of type {@link T} with each entry the mapped equivalent according to objectCallback of each entry in the Jsonified String array
+     * 
+     * <p>E.g
+     * <pre>
+     *  String intData = "[\"1\",\"2\",\"3\"]"; // this reads as ["1","2","3"]
+     * 
+     * // Both of these are logically equivalent
+     * Integer[] ints = getArrayFromString(intData, Integer.class, (data -> Integer.parseInt(data)));
+     * 
+     * // SonarLint Compliant Solution
+     * Integer[] ints = getArrayFromString(intData, Integer.class, Integer::parseInt);
+     * 
+     * // ints is now an Integer array containing {1, 2, 3}
+     * </pre>
+     * </p>
+     */
     @SuppressWarnings("unchecked")
     public static <T> T[] getArrayFromString(String arrayString, Class<T> type, FIGetObjectCallback<T> objectCallback) {
-        arrayString = arrayString.substring(1, arrayString.length() - 1).replaceAll("\"", "").strip();
+        arrayString = arrayString.substring(1, arrayString.length() - 1).replace("\"", "").strip();
         
-
 		if(StringUtils.isBlank(arrayString))
             return (T[])Array.newInstance(type, 0);
 
-        String components[] = arrayString.split(",");
+        String[] components = arrayString.split(",");
         T[] array = (T[])Array.newInstance(type, components.length);
                 
         for(int i = 0; i < components.length; i++) {
