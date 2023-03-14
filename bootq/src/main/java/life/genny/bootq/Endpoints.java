@@ -112,6 +112,7 @@ public class Endpoints {
         }
 
         setIsTaskRunning(true);
+        Long start = System.currentTimeMillis();
 
         Realm realm = new Realm(sheetId);
         List<RealmUnit> realmUnits = realm.getDataUnits();
@@ -128,6 +129,9 @@ public class Endpoints {
             msg = "Finished batch loading for all realms in google sheets";
         }
         log.info(msg);
+        setIsTaskRunning(false);
+        Long end = System.currentTimeMillis();
+        log.infof("Total time taken to load the sheet %s : %s (millis)", sheetId, (end - start));
         return Response.ok().entity(msg).build();
     }
 

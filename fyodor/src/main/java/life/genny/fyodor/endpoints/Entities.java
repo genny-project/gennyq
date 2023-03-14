@@ -170,9 +170,6 @@ public class Entities {
 		log.info("Created BaseEntity " + be.getCode());
 		Attribute attr = attributeUtils.getAttribute("LNK_AUTHOR");
 		EntityAttribute attribute = new EntityAttribute(be, attr, 1.0, "TEST");
-		attribute.setBaseEntityCode(be.getCode());
-		attribute.setAttribute(attr);
-
 		try {
 			be.addAttribute(attribute);
 			beaUtils.updateEntityAttribute(attribute);

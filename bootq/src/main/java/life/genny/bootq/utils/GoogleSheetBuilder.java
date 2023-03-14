@@ -205,8 +205,6 @@ public class GoogleSheetBuilder {
 			attribute = new Attribute();
 			attribute.setCode(code);
 			attribute.setName(name);
-			Long id = cm.getMaxAttributeId();
-			attribute.setId(id+1);
 		}
 		Boolean privacy = toBoolean(row.get("privacy"));
 		
@@ -237,8 +235,6 @@ public class GoogleSheetBuilder {
 		} catch (ItemNotFoundException e) {
 			baseEntity = new BaseEntity();
 			baseEntity.setCode(code);
-			Long id = cm.getMaxBaseEntityId();
-			baseEntity.setId(id+1);
 		}
         String name = row.get("name");
 		baseEntity.setName(name);
@@ -393,7 +389,7 @@ public class GoogleSheetBuilder {
 		questionQuestion.setHidden(hidden == null ? false : hidden);
 		questionQuestion.setIcon(icon);
 		questionQuestion.setRealm(realmName);
-
+		questionQuestion.setParentId(source.getId());
 		return questionQuestion;
     }
 
