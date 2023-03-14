@@ -132,6 +132,7 @@ public class Endpoints {
         setIsTaskRunning(false);
         Long end = System.currentTimeMillis();
         log.infof("Total time taken to load the sheet %s : %s (millis)", sheetId, (end - start));
+        bl.printLoadReport();
         return Response.ok().entity(msg).build();
     }
 
@@ -179,6 +180,7 @@ public class Endpoints {
             setIsTaskRunning(false);
         }
         log.info(msg);
+        bl.printLoadReport();
         return Response.ok().entity(msg).build();
     }
 
