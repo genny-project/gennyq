@@ -224,11 +224,7 @@ public class GennyCache {
 			throw new NullPointerException("Could not find a cache called " + cacheName);
 		}
 
-		CoreEntityPersistable coreEntityPersistable = cache.get(key);
-		if (coreEntityPersistable == null) {
-			return null;
-		}
-		return coreEntityPersistable;
+		return cache.get(key);
 	}
 
 	/**

@@ -1,12 +1,12 @@
 package life.genny.bootq.utils;
 
+import life.genny.bootq.models.Validator;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.utils.AttributeUtils;
@@ -53,6 +53,9 @@ public class GoogleSheetBuilder {
 
 	@Inject
 	CacheManager cm;
+
+    @Inject
+    Validator validator;
 
 	@Inject
 	AttributeUtils attributeUtils;
@@ -148,7 +151,7 @@ public class GoogleSheetBuilder {
 		
 		// handle the group codes
 		String group_codes = row.get("groupcodes");
-		List<String> groups = StringUtils.isBlank(group_codes) ? new ArrayList<>() : Arrays.asList(group_codes.replaceAll(" ", "").split(","));
+		List<String> groups = StringUtils.isBlank(group_codes) ? new ArrayList<>() : Arrays.asList(group_codes.replace(" ", "").split(","));
 		validation.setSelectionBaseEntityGroupList(groups);
 
 		validation.setRealm(realmName);
@@ -173,6 +176,9 @@ public class GoogleSheetBuilder {
 			dataType = new DataType();
 			dataType.setDttCode(code);
 		}
+
+		// Ensure there is an actual validation sitting behind validations column
+		validator.validateDataType(row, realmName);
 
 		dataType.setClassName(row.get("classname"));
 		dataType.setInputmask(row.get("inputmask"));
@@ -254,39 +260,15 @@ public class GoogleSheetBuilder {
      * @return A EntityAttribute object
      */
     public EntityAttribute buildEntityAttribute(Map<String, String> row, String realmName) {
-		return buildEntityAttribute(row, realmName, row.get("attributecode"));
-	}
-
-    /**
-	 * Build a EntityAttribute object from a row.
-	 *
-     * @param row THe row from the sheets
-     * @param realmName The realm
-     * @param attributeCode The attributeCode to set
-     * @return A EntityAttribute object
-     */
-    public EntityAttribute buildEntityAttribute(Map<String, String> row, String realmName, String attributeCode) {
 
 		EntityAttribute entityAttribute = new EntityAttribute();
-		String baseEntityCode = row.get("baseentitycode");
 
-		BaseEntity baseEntity;
-		Attribute attribute;
+		Map<Class<?>, Object> dependencies = validator.validateEntityAttribute(row, realmName);
 
-		try {
-			baseEntity = beUtils.getBaseEntity(realmName, baseEntityCode, false);
-		} catch(ItemNotFoundException e) {
-			throw new BadDataException("Bad or missing BaseEntity: " + baseEntityCode + " in product " + realmName, e);
-		}
+		BaseEntity baseEntity = (BaseEntity) dependencies.get(BaseEntity.class);
+		Attribute attribute = (Attribute) dependencies.get(Attribute.class);
 
-		try {
-			attribute = attributeUtils.getAttribute(realmName, attributeCode, false);
-		} catch(ItemNotFoundException e) {
-			throw new BadDataException("Bad or missing Attribute: " + attributeCode + " in product " + realmName, e);
-		}
-
-		entityAttribute.setBaseEntityCode(baseEntityCode);
-		entityAttribute.setBaseEntityId(baseEntity.getId());
+		entityAttribute.setBaseEntity(baseEntity);
 		entityAttribute.setAttribute(attribute);
 		entityAttribute.setRealm(realmName);
         
@@ -308,8 +290,8 @@ public class GoogleSheetBuilder {
 		entityAttribute.setValueBoolean(valueBoolean);
 
 		entityAttribute.setWeight(weight);
-		entityAttribute.setPrivacyFlag(privacy == null ? false : privacy);
-		entityAttribute.setConfirmationFlag(confirmation == null ? false : confirmation);
+		entityAttribute.setPrivacyFlag(privacy != null && privacy);
+		entityAttribute.setConfirmationFlag(confirmation != null && confirmation);
 
         return entityAttribute;
     }

@@ -13,6 +13,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.managers.CacheManager;
+import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.utils.AttributeUtils;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.EntityAttributeUtils;
@@ -70,8 +71,8 @@ public class BatchLoading {
         persistValidations(rx.getValidations(), rx.getCode());
         persistDatatypes(rx.getDataTypes(), rx.getCode());
         persistAttributes(rx.getAttributes(), rx.getCode());
-        persistDefBaseEntitys(rx.getDef_baseEntitys(), rx.getCode());
-        persistBaseEntitys(rx.getBaseEntitys(), rx.getCode());
+        persistBaseEntities(rx.getDef_baseEntitys(), rx.getCode());
+        persistBaseEntities(rx.getBaseEntitys(), rx.getCode());
         persistDefBaseEntityAttributes(rx.getDef_entityAttributes(), rx.getCode());
         persistBaseEntityAttributes(rx.getEntityAttributes(), rx.getCode());
         persistQuestions(rx.getQuestions(), rx.getCode());
@@ -85,33 +86,37 @@ public class BatchLoading {
      * @param table
      */
     public void persistTable(RealmUnit rx, String table) {
-		switch (table) {
+		Duration timeElapsed;
+        String realm = rx.getCode();
+        switch (table) {
 			case "validation":
-				persistValidations(rx.getValidations(), rx.getCode());
+				persistValidations(rx.getValidations(), realm);
 				break;
 			case "datatype":
-				persistDatatypes(rx.getDataTypes(), rx.getCode());
+				persistDatatypes(rx.getDataTypes(), realm);
 				break;
 			case "attribute":
-				persistAttributes(rx.getAttributes(), rx.getCode());
+				persistAttributes(rx.getAttributes(), realm);
 				break;
 			case "def_baseentity":
-				persistDefBaseEntitys(rx.getDef_baseEntitys(), rx.getCode());
+				timeElapsed = persistBaseEntities(rx.getDef_baseEntitys(), realm);
+                log.info("Finished definition baseentities, cost:" + timeElapsed.toMillis() + " millSeconds, items: " + rx.getDef_baseEntitys().size());
 				break;
 			case "baseentity":
-				persistBaseEntitys(rx.getBaseEntitys(), rx.getCode());
+                timeElapsed = persistBaseEntities(rx.getBaseEntitys(), realm);
+                log.info("Finished baseentityies, cost:" + timeElapsed.toMillis() + " millSeconds, items: " + rx.getBaseEntitys().size());
 				break;
 			case "def_entityattribute":
-				persistDefBaseEntityAttributes(rx.getDef_entityAttributes(), rx.getCode());
+				persistDefBaseEntityAttributes(rx.getDef_entityAttributes(), realm);
 				break;
 			case "entityattribute":
-				persistBaseEntityAttributes(rx.getEntityAttributes(), rx.getCode());
+				persistBaseEntityAttributes(rx.getEntityAttributes(), realm);
 				break;
 			case "question":
-				persistQuestions(rx.getQuestions(), rx.getCode());
+				persistQuestions(rx.getQuestions(), realm);
 				break;
 			case "questionquestion":
-				persistQuestionQuestions(rx.getQuestionQuestions(), rx.getCode());
+				persistQuestionQuestions(rx.getQuestionQuestions(), realm);
 				break;
             default:
                 throw new IllegalStateException("Bad Table: " + table);
@@ -145,12 +150,14 @@ public class BatchLoading {
     public void persistDatatypes(Map<String, Map<String, String>> project, String realmName) {
         Instant start = Instant.now();
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
-			try {
-				DataType dataType = googleSheetBuilder.buildDataType(entry.getValue(), realmName);
-				attributeUtils.saveDataType(dataType);
-			} catch (ItemNotFoundException e) {
-				log.warn(e.getMessage());
-			}
+            try {
+                validator.validateDataType(entry.getValue(), realmName);
+            } catch(BadDataException e) {
+                log.error(ANSIColour.RED + e.getMessage() + ". Skipping" + ANSIColour.RESET);
+                continue;
+            }
+            DataType dataType = googleSheetBuilder.buildDataType(entry.getValue(), realmName);
+            attributeUtils.saveDataType(dataType);
 		}
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
@@ -180,40 +187,27 @@ public class BatchLoading {
     }
 
     /**
-	 * Persist the def baseentitys
+	 * Persist the def baseentities
 	 *
      * @param project The project sheets data
      * @param realmName The realm
+     * 
+     * @return {@link Duration} containing time taken
      */
-    public void persistDefBaseEntitys(Map<String, Map<String, String>> project, String realmName) {
+    public Duration persistBaseEntities(Map<String, Map<String, String>> project, String realmName) {
         Instant start = Instant.now();
-		persistEntitys(project, realmName);
+		persistEntities(project, realmName);
         Instant end = Instant.now();
-        Duration timeElapsed = Duration.between(start, end);
-        log.info("Finished definition baseentitys, cost:" + timeElapsed.toMillis() + " millSeconds, items: " + project.entrySet().size());
+        return Duration.between(start, end);
 	}
 
     /**
-	 * Persist the baseentitys
+	 * Persist the entities
 	 *
      * @param project The project sheets data
      * @param realmName The realm
      */
-    public void persistBaseEntitys(Map<String, Map<String, String>> project, String realmName) {
-        Instant start = Instant.now();
-		persistEntitys(project, realmName);
-        Instant end = Instant.now();
-        Duration timeElapsed = Duration.between(start, end);
-        log.info("Finished baseentitys, cost:" + timeElapsed.toMillis() + " millSeconds, items: " + project.entrySet().size());
-	}
-
-    /**
-	 * Persist the entitys
-	 *
-     * @param project The project sheets data
-     * @param realmName The realm
-     */
-    public void persistEntitys(Map<String, Map<String, String>> project, String realmName) {
+    public void persistEntities(Map<String, Map<String, String>> project, String realmName) {
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
 			try {
 				BaseEntity baseEntity = googleSheetBuilder.buildBaseEntity(entry.getValue(), realmName);
@@ -248,12 +242,12 @@ public class BatchLoading {
             Map<String, String> row = entry.getValue();
 			
             String baseEntityCode = row.get("baseentitycode");
-            String attributeCode = row.get("attributecode"); // ATT_PRI_NATIONALITY
+            String attributeCode = row.get("attributecode");
 
-				     // find or create attribute 
+            // find or create attribute 
             Attribute defAttr;
             try {
-                defAttr = attributeUtils.getAttribute(attributeCode); 
+                defAttr = attributeUtils.getAttribute(attributeCode);
             } catch (ItemNotFoundException e) {
                 String combined = new StringBuilder(baseEntityCode).append(":").append(attributeCode).toString();
                 log.warn(new StringBuilder("[DEF_EntityAttribute] Missing attribute ")
@@ -356,7 +350,7 @@ public class BatchLoading {
             }
             
             Long realAttributeId = attribute.getId();            
-            if(question.getAttributeId() != realAttributeId) {
+            if(question.getAttributeId() == null || !question.getAttributeId().equals(realAttributeId)) {
                 log.trace("Found attribute ID mismatch for Question: " + question.getCode() + " and attribute: " + attribute.getCode() + ".\n" + 
                 "\t- Question's Current Attribute ID: " + question.getAttributeId() +
                 "\n\t- Attribute's Actual ID: " + realAttributeId +

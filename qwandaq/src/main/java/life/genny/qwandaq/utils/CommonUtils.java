@@ -430,7 +430,13 @@ public class CommonUtils {
      */
     public static <T>boolean isInArray(T[] array, T obj) {
         for(T o : array) {
-            if(o.equals(obj))
+            if(o == null && obj != null || o != null && obj == null) {
+                continue;
+            }
+
+            // Now o and obj can only be both null or not null
+            // so testing if 1 is null tests if both are null
+            if(o == null || o.equals(obj))
                 return true;
         }
 

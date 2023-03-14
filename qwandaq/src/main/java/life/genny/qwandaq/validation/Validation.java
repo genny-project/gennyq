@@ -20,29 +20,19 @@
 
 package life.genny.qwandaq.validation;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.PatternSyntaxException;
 
 import javax.persistence.Column;
 import javax.persistence.Convert;
-import javax.persistence.DiscriminatorColumn;
-import javax.persistence.DiscriminatorType;
-import javax.persistence.Entity;
-import javax.persistence.Index;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
-import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import life.genny.qwandaq.CoreEntityPersistable;
-import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.converter.ValidationListConverter;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
-import org.hibernate.annotations.Type;
 
 import life.genny.qwandaq.CodedEntity;
 import life.genny.qwandaq.converter.StringListConverter;
@@ -154,7 +144,7 @@ public class Validation extends CodedEntity implements CoreEntityPersistable {
 	}
 
 	
-	public Validation(String aCode, String aName, String aSelectionBaseEntityGroup, Boolean recursive, Boolean multiAllowed) throws PatternSyntaxException
+	public Validation(String aCode, String aName, String aSelectionBaseEntityGroup, boolean recursive, Boolean multiAllowed) throws PatternSyntaxException
 	{
 		super(aCode, aName);
 		setRegex(DEFAULT_REGEX);
@@ -164,7 +154,7 @@ public class Validation extends CodedEntity implements CoreEntityPersistable {
 		setMultiAllowed(multiAllowed);
 	}
 
-	public Validation(String aCode, String aName, String aSelectionBaseEntityGroup, Boolean recursive, Boolean multiAllowed,String aOptions) throws PatternSyntaxException
+	public Validation(String aCode, String aName, String aSelectionBaseEntityGroup, boolean recursive, Boolean multiAllowed,String aOptions) throws PatternSyntaxException
 	{
 		super(aCode, aName);
 		setRegex(DEFAULT_REGEX);
@@ -175,7 +165,7 @@ public class Validation extends CodedEntity implements CoreEntityPersistable {
 		setOptions(aOptions);
 	}
 	
-	public Validation(String aCode, String aName, List<String> aSelectionBaseEntityGroupList, Boolean recursive, Boolean multiAllowed) throws PatternSyntaxException
+	public Validation(String aCode, String aName, List<String> aSelectionBaseEntityGroupList, boolean recursive, boolean multiAllowed) throws PatternSyntaxException
 	{
 		super(aCode, aName);
 		setRegex(DEFAULT_REGEX);
@@ -183,7 +173,7 @@ public class Validation extends CodedEntity implements CoreEntityPersistable {
 		setMultiAllowed(multiAllowed);
 	}
 	
-	public Validation(String aCode, String aName, List<String> aSelectionBaseEntityGroupList, Boolean recursive, Boolean multiAllowed,String aOptions) throws PatternSyntaxException
+	public Validation(String aCode, String aName, List<String> aSelectionBaseEntityGroupList, boolean recursive, boolean multiAllowed,String aOptions) throws PatternSyntaxException
 	{
 		super(aCode, aName);
 		setRegex(DEFAULT_REGEX);
