@@ -550,10 +550,10 @@ public class CacheManager {
 	 * @return number of entities affected by deletion
 	 */
 	public int removeAttribute(String productCode, String code) {
-		String persistenceObject = "life.genny.qwandaq.persistence.datatype.DataType";
+		String persistenceObject = "life.genny.qwandaq.persistence.datatype.Attribute";
 		String conditional = "code = '" + code + "'";
 		String deleteQuery = constructDeleteQuery(persistenceObject, productCode, conditional);
-		return removePersistableEntities(GennyConstants.CACHE_NAME_DATATYPE, deleteQuery);
+		return removePersistableEntities(GennyConstants.CACHE_NAME_ATTRIBUTE, deleteQuery);
 	}
 
 	/**
