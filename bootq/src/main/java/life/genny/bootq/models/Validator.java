@@ -77,8 +77,13 @@ public class Validator {
         }
 
         Attribute attribute = cm.getAttribute(realmName, attributeCode);
-        if(attribute == null)
-            throw new BadDataException("No Attribute found: " + row.get("attributecode") + " for entity attribute: " + baseEntityCode + ":" + attributeCode + " in product: " + realmName);
+        if(attribute == null) {
+            if(isDefAttr) {
+                throw new BadDataException("Missing Base Attribute: " + attributeCode + " for entity attribute: " + baseEntityCode + ":" + row.get("attributecode") + " in product: " + realmName);
+            } else {
+                throw new BadDataException("Missing Attribute: " + attributeCode + " for entity attribute: " + baseEntityCode + ":" + attributeCode + " in product: " + realmName);
+            }
+        }
 
 
         return Map.of(

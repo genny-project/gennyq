@@ -223,7 +223,10 @@ public class GennyCache {
 		if (cache == null) {
 			throw new NullPointerException("Could not find a cache called " + cacheName);
 		}
+<<<<<<< HEAD
 
+=======
+>>>>>>> 10.3.0-consolidated
 		return cache.get(key);
 	}
 

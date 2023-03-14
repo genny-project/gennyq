@@ -236,6 +236,7 @@ public class BaseEntityUtils {
 				}
 				if (bea.getBaseEntityCode() == null) {
 					bea.setBaseEntityCode(baseEntity.getCode());
+					bea.setBaseEntityId(baseEntity.getId());
 				}
 				if (bea.getAttribute() == null) {
 					Attribute attribute = attributeUtils.getAttribute(baseEntity.getRealm(), bea.getAttributeCode());
@@ -553,7 +554,7 @@ public class BaseEntityUtils {
 		List<EntityAttribute> atts = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(productCode, definitionCode, Prefix.ATT_);
 		for (EntityAttribute ea : atts) {
 			String attrCode = ea.getAttributeCode().substring(Prefix.ATT_.length());
-			Attribute attribute = qwandaUtils.getAttribute(attrCode);
+			Attribute attribute = attributeUtils.getAttribute(attrCode, true);
 
 			if (attribute == null) {
 				log.warn("No Attribute found for def attr " + attrCode);
@@ -657,7 +658,7 @@ public class BaseEntityUtils {
 			throw new NullParameterException("attributeCode");
 		}
 
-		Attribute attribute = attributeUtils.getAttribute(attributeCode);
+		Attribute attribute = attributeUtils.getAttribute(attributeCode, true);
 
 		EntityAttribute ea = new EntityAttribute(be, attribute, 1.0, value);
 		be.addAttribute(ea);

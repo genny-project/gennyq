@@ -256,41 +256,43 @@ public class CacheManager {
 	 * @return the max id
 	 */
 	public Long getMaxAttributeId() {
-		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_ATTRIBUTE));
-		Query<Attribute> query = queryFactory
-				.create("from life.genny.qwandaq.persistence.attribute.Attribute order by id desc");
-		QueryResult<Attribute> queryResult = query.maxResults(1).execute();
-		
-		List<Attribute> attributes = queryResult.list();
-		if(attributes.isEmpty())
-			return 0L;
-		
-		Attribute attribute = queryResult.list().get(0);
-		if (attribute != null) {
-			return attribute.getId();
-		}
-
-		return 0L;
+		return getMaxId(GennyConstants.CACHE_NAME_ATTRIBUTE, "life.genny.qwandaq.persistence.attribute.Attribute");
 	}
 
 	/**
-	 * Get the max entity id.
+	 * Get the max base entity id.
 	 *
 	 * @return the max id
 	 */
 	public Long getMaxBaseEntityId() {
-		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_BASEENTITY));
-		Query<BaseEntity> query = queryFactory
-				.create("from life.genny.qwandaq.persistence.baseentity.BaseEntity order by id desc");
-		QueryResult<BaseEntity> queryResult = query.maxResults(1).execute();
-		List<BaseEntity> baseEntities = queryResult.list();
-		if(baseEntities.isEmpty())
+		return getMaxId(GennyConstants.CACHE_NAME_BASEENTITY, "life.genny.qwandaq.persistence.baseentity.BaseEntity");
+	}
+
+	/**
+	 * Get the max question id.
+	 *
+	 * @return the max id
+	 */
+	public Long getMaxQuestionId() {
+		return getMaxId(GennyConstants.CACHE_NAME_QUESTION, "life.genny.qwandaq.persistence.question.Question");
+	}
+
+	/**
+	 * Get the max id for a given core entity.
+	 * @param cacheName The cache name for the entity
+	 * @param entityName The entity name with classpath (Example: life.genny.qwandaq.persistence.baseentity.BaseEntity)
+	 * @return the max id in the cache for the entity
+	 */
+	public Long getMaxId(String cacheName, String entityName) {
+		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(cacheName));
+		Query<CoreEntity> query = queryFactory.create("from " + entityName + " order by id desc");
+		QueryResult<CoreEntity> queryResult = query.maxResults(1).execute();
+		List<CoreEntity> coreEntities = queryResult.list();
+		if(coreEntities.isEmpty())
 			return 0L;
-		
-		BaseEntity baseEntity = baseEntities.get(0);
-		if (baseEntity != null) {
-			return baseEntity.getId();
-		}
+		CoreEntity coreEntity = coreEntities.get(0);
+		if(coreEntity != null && coreEntity.getId() != null)
+			return coreEntity.getId();
 		return 0L;
 	}
 
@@ -322,7 +324,10 @@ public class CacheManager {
 		Query<Attribute> query = queryFactory
 				.create("from life.genny.qwandaq.persistence.attribute.Attribute");
 		QueryResult<Attribute> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
-		return queryResult.list();
+		List<Attribute> attributeList = queryResult.list();
+		if (attributeList.size() == 1 && attributeList.get(0) == null)
+			return new ArrayList<>(0);
+		return attributeList;
 	}
 
 	/**
@@ -336,7 +341,10 @@ public class CacheManager {
 		Query<Attribute> query = queryFactory
 				.create("from life.genny.qwandaq.persistence.attribute.Attribute where realm = '" + productCode + "'");
 		QueryResult<Attribute> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
-		return queryResult.list();
+		List<Attribute> attributeList = queryResult.list();
+		if (attributeList.size() == 1 && attributeList.get(0) == null)
+			return new ArrayList<>(0);
+		return attributeList;
 	}
 
 	/**
@@ -350,7 +358,10 @@ public class CacheManager {
 		Query<Attribute> query = queryFactory
 				.create("from life.genny.qwandaq.persistence.attribute.Attribute where code like '" + prefix + "%'");
 		QueryResult<Attribute> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
-		return queryResult.list();
+		List<Attribute> attributeList = queryResult.list();
+		if (attributeList.size() == 1 && attributeList.get(0) == null)
+			return new ArrayList<>(0);
+		return attributeList;
 	}
 
 	/**
@@ -366,7 +377,10 @@ public class CacheManager {
 				.create("from life.genny.qwandaq.persistence.attribute.Attribute where realm = '" + productCode
 						+ "' and code like '" + prefix + "%'");
 		QueryResult<Attribute> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
-		return queryResult.list();
+		List<Attribute> attributeList = queryResult.list();
+		if (attributeList.size() == 1 && attributeList.get(0) == null)
+			return new ArrayList<>(0);
+		return attributeList;
 	}
 
 	public DataType getDataType(String productCode, String dttCode) {
@@ -381,7 +395,10 @@ public class CacheManager {
 				.create("from life.genny.qwandaq.persistence.validation.Validation where realm = '" + productCode +
 						"' and code in ('"+inClauseValue+"')");
 		QueryResult<Validation> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
-		return queryResult.list();
+		List<Validation> validationList = queryResult.list();
+		if (validationList.size() == 1 && validationList.get(0) == null)
+			return new ArrayList<>(0);
+		return validationList;
 	}
 
 	public List<Validation> getValidations(String productCode, List<String> validationCodes) {
@@ -397,13 +414,16 @@ public class CacheManager {
 	 *
 	 * See Also: {@link BaseEntityKey}, {@link CoreEntityKey#fromKey}, {@link CacheManager#getEntitiesByPrefix}
 	 */
-	public List<life.genny.qwandaq.serialization.baseentity.BaseEntity> getBaseEntitiesByPrefixUsingIckle(String productCode, String prefix) {
+	public List<BaseEntity> getBaseEntitiesByPrefixUsingIckle(String productCode, String prefix) {
 		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_BASEENTITY));
-		Query<life.genny.qwandaq.serialization.baseentity.BaseEntity> query = queryFactory
+		Query<BaseEntity> query = queryFactory
 				.create("from life.genny.qwandaq.persistence.baseentity.BaseEntity where realm = '" + productCode
 						+ "' and code like '" + prefix + "%'");
-		QueryResult<life.genny.qwandaq.serialization.baseentity.BaseEntity> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
-		return queryResult.list();
+		QueryResult<BaseEntity> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
+		List<BaseEntity> baseEntityList = queryResult.list();
+		if (baseEntityList.size() == 1 && baseEntityList.get(0) == null)
+			return new ArrayList<>(0);
+		return baseEntityList;
 	}
 
 	/**
@@ -433,7 +453,10 @@ public class CacheManager {
 				.create("from life.genny.qwandaq.persistence.entityattribute.EntityAttribute where realm = '" + productCode
 						+ "' and baseEntityCode = '" + baseEntityCode + "'");
 		QueryResult<EntityAttribute> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
-		return queryResult.list();
+		List<EntityAttribute> attributeList = queryResult.list();
+		if (attributeList.size() == 1 && attributeList.get(0) == null)
+			return new ArrayList<>(0);
+		return attributeList;
 	}
 
 	/**
@@ -453,7 +476,10 @@ public class CacheManager {
 				.create("from life.genny.qwandaq.persistence.entityattribute.EntityAttribute where realm = '" + productCode
 						+ "' and baseEntityCode = '" + baseEntityCode + "' and attributeCode like '" + attributeCodePrefix + "%'");
 		QueryResult<EntityAttribute> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
-		return queryResult.list();
+		List<EntityAttribute> attributeList = queryResult.list();
+		if (attributeList.size() == 1 && attributeList.get(0) == null)
+			return new ArrayList<>(0);
+		return attributeList;
 	}
 
 	/**
@@ -567,7 +593,7 @@ public class CacheManager {
 	/**
 	 * Remove all entity attributes from a baseentity from cache/persistence
 	 * @param productCode - product to remove from
-	 * @param baseEntityCOde - baseEntityCode of baseentity to remove all entity attributes for
+	 * @param baseEntityCode - baseEntityCode of baseentity to remove all entity attributes for
 	 * @return number of entities affected by deletion
 	 */
 	public int removeAllEntityAttributesOfBaseEntity(String productCode, String baseEntityCode) {
@@ -609,7 +635,6 @@ public class CacheManager {
 	 * Remove all QuestionQuestions with the same sourceCode (in a group) from cache/persistence
 	 * @param productCode - product to remove from
 	 * @param sourceCode - sourceCode of QuestionQuestion to remove
-	 * @param targetCode - targetCode of QuestionQuestion to remove
 	 * @return number of entities affected by deletion
 	 */
 	public int removeAllQuestionQuestionsInGroup(String productCode, String sourceCode) {
@@ -675,7 +700,10 @@ public class CacheManager {
 						+ "' and realm = '" + productCode + "' order by weight");
 		// execute query
 		QueryResult<QuestionQuestion> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
-		return queryResult.list();
+		List<QuestionQuestion> questionQuestionList = queryResult.list();
+		if (questionQuestionList.size() == 1 && questionQuestionList.get(0) == null)
+			return new ArrayList<>(0);
+		return questionQuestionList;
 	}
 
 	/**
@@ -695,8 +723,11 @@ public class CacheManager {
 					 + " and realm = '"+productCode+"'");
 		// execute query
 		QueryResult<EntityAttribute> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
+		List<EntityAttribute> attributeList = queryResult.list();
+		if (attributeList.size() == 1 && attributeList.get(0) == null)
+			return new ArrayList<>(0);
 		// begin building QQ objects
-		return questionUtils.createQuestionQuestionsForParentQuestion(parent, queryResult.list());
+		return questionUtils.createQuestionQuestionsForParentQuestion(parent, attributeList);
 	}
 
 	/**

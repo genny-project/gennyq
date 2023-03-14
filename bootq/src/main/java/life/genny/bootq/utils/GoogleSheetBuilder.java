@@ -201,6 +201,9 @@ public class GoogleSheetBuilder {
         String code = row.get("code");
         String name = row.get("name");
 
+		// Ensure valid datatype exists
+		validator.validateAttribute(row, realmName);
+
 		Attribute attribute;
 		try {
 			attribute = attributeUtils.getAttribute(realmName, code, false);
@@ -211,8 +214,6 @@ public class GoogleSheetBuilder {
 			attribute = new Attribute();
 			attribute.setCode(code);
 			attribute.setName(name);
-			Long id = cm.getMaxAttributeId();
-			attribute.setId(id+1);
 		}
 		Boolean privacy = toBoolean(row.get("privacy"));
 		
@@ -243,8 +244,6 @@ public class GoogleSheetBuilder {
 		} catch (ItemNotFoundException e) {
 			baseEntity = new BaseEntity();
 			baseEntity.setCode(code);
-			Long id = cm.getMaxBaseEntityId();
-			baseEntity.setId(id+1);
 		}
         String name = row.get("name");
 		baseEntity.setName(name);
@@ -259,17 +258,9 @@ public class GoogleSheetBuilder {
      * @param realmName The realm
      * @return A EntityAttribute object
      */
-    public EntityAttribute buildEntityAttribute(Map<String, String> row, String realmName) {
+    public EntityAttribute buildEntityAttribute(Map<String, String> row, String realmName, BaseEntity be, Attribute attribute) {
 
-		EntityAttribute entityAttribute = new EntityAttribute();
-
-		Map<Class<?>, Object> dependencies = validator.validateEntityAttribute(row, realmName);
-
-		BaseEntity baseEntity = (BaseEntity) dependencies.get(BaseEntity.class);
-		Attribute attribute = (Attribute) dependencies.get(Attribute.class);
-
-		entityAttribute.setBaseEntity(baseEntity);
-		entityAttribute.setAttribute(attribute);
+		EntityAttribute entityAttribute = new EntityAttribute(be, attribute);
 		entityAttribute.setRealm(realmName);
         
         String valueString = row.get(VALUESTRING);
@@ -375,7 +366,7 @@ public class GoogleSheetBuilder {
 		questionQuestion.setHidden(hidden == null ? false : hidden);
 		questionQuestion.setIcon(icon);
 		questionQuestion.setRealm(realmName);
-
+		questionQuestion.setParentId(source.getId());
 		return questionQuestion;
     }
 

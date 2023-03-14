@@ -322,7 +322,7 @@ public class Validator {
 
 			// So send back a dummy empty value for the LNK_PERSON
 			try {
-				EntityAttribute entityAttribute = beaUtils.getEntityAttribute(target.getRealm(), target.getCode(), attribute.getCode());
+				EntityAttribute entityAttribute = beaUtils.getEntityAttribute(target.getRealm(), target.getCode(), attribute.getCode(), true, true);
 				if (entityAttribute == null) {
 					entityAttribute = new EntityAttribute(target, attribute, 0.0, "[]");
 					beaUtils.updateEntityAttribute(entityAttribute);
