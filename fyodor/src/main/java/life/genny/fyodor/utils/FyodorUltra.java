@@ -131,11 +131,11 @@ public class FyodorUltra {
 				} else {
 					// otherwise fetch entity attribute
 					if (PRI_NAME.equals(attributeCode)) {
-						ea = new EntityAttribute(baseEntity, attributeUtils.getAttribute(PRI_NAME), 1.0, null);
+						ea = new EntityAttribute(baseEntity, attributeUtils.getAttribute(PRI_NAME, true), 1.0, null);
 						ea.setValueString(baseEntity.getName());
 					}
 					else if (PRI_CREATED.equals(attributeCode)) {
-						ea = new EntityAttribute(baseEntity, attributeUtils.getAttribute(PRI_CREATED), 1.0, null);
+						ea = new EntityAttribute(baseEntity, attributeUtils.getAttribute(PRI_CREATED, true), 1.0, null);
 						ea.setValueDateTime(baseEntity.getCreated());
 					}
 					else {

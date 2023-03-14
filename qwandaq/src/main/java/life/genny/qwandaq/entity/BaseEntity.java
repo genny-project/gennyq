@@ -130,12 +130,15 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 
 	@JsonbTransient
 	public void setBaseEntityAttributes(final Set<EntityAttribute> baseEntityAttributes) {
-		baseEntityAttributes.forEach(bea -> this.baseEntityAttributes.put(bea.getAttributeCode(), bea));
+		setBaseEntityAttributes((Collection<EntityAttribute>) baseEntityAttributes);
 	}
 
 	@JsonbTransient
 	public void setBaseEntityAttributes(final Collection<EntityAttribute> baseEntityAttributes) {
-		baseEntityAttributes.forEach(bea -> this.baseEntityAttributes.put(bea.getAttributeCode(), bea));
+		baseEntityAttributes.forEach(bea -> {
+			if (bea != null)
+				this.baseEntityAttributes.put(bea.getAttributeCode(), bea);
+		});
 	}
 
 	/**
