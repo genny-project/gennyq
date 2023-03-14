@@ -97,10 +97,12 @@ public class NavigationService extends KogitoService {
 							.build());
 		}
 
+		log.info("Checking for outstanding tasks");
 		// check for outstanding tasks
 		try {
 			String processId = kogitoUtils.getOutstandingTaskProcessId();
 			kogitoUtils.sendSignal(GADAQ, "processQuestions", processId, "requestion");
+			log.info("Found existing processQuestions processId: " + processId);
 			return;
 		} catch (GraphQLException e) {
 			log.debug(e.getMessage());

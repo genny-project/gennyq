@@ -81,7 +81,7 @@ public class Service2Service extends KogitoService {
 	 * log token
 	 */
 	public String getTokenLogLine() {
-		return "USER [" + userToken.getUserCode() + "] : [" + userToken.getUsername() + "]";
+		return "USER [" + userToken.getUserCode() + "] : [" + userToken.getUsername() +":" + userToken.getEmail() + "]";
 	}
 
 	/**

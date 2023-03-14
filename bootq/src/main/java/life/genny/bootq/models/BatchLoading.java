@@ -246,7 +246,7 @@ public class BatchLoading {
             Map<String, String> row = entry.getValue();
 			
             String baseEntityCode = row.get("baseentitycode");
-            String attributeCode = row.get("attributecode"); // ATT_PRI_NATIONALITY
+            String attributeCode = row.get("attributecode");
 
 				     // find or create attribute 
             Attribute defAttr;

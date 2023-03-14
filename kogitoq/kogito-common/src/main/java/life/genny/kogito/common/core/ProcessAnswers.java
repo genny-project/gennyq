@@ -152,11 +152,12 @@ public class ProcessAnswers {
 	public void saveAllAnswers(ProcessData processData) {
 		// save answers
 		String targetCode = processData.getTargetCode();
-		processData.getAnswers().forEach(a -> a.setTargetCode(targetCode));
+		
 		BaseEntity target = beUtils.getBaseEntity(targetCode);
+
 		// iterate our stored process updates and create an answer
 		for (Answer answer : processData.getAnswers()) {
-
+			answer.setTargetCode(targetCode);
 			// find the attribute
 			String attributeCode = answer.getAttributeCode();
 			Attribute attribute = attributeUtils.getAttribute(attributeCode, true);
