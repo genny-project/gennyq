@@ -5,6 +5,9 @@ package life.genny.qwandaq.models;
  * used in logging, or anything else.
  */
 public class ANSIColour {
+
+    private ANSIColour() { /* constants class */}
+
     /**
      * ansi reset
      */

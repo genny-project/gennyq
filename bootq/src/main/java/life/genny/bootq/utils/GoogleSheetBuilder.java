@@ -77,9 +77,9 @@ public class GoogleSheetBuilder {
      * @param booleanString
      * @return Boolean or null.
      */
-    public static Boolean toBoolean(final String booleanString) {
+    public static boolean toBoolean(final String booleanString) {
         if (StringUtils.isBlank(booleanString)) {
-            return null;
+            return false;
         }
         return "TRUE".equalsIgnoreCase(booleanString);
     }
@@ -215,10 +215,10 @@ public class GoogleSheetBuilder {
 			attribute.setCode(code);
 			attribute.setName(name);
 		}
-		Boolean privacy = toBoolean(row.get("privacy"));
+		boolean privacy = toBoolean(row.get("privacy"));
 		
 		attribute.setDttCode(row.get("datatype"));
-        attribute.setDefaultPrivacyFlag(privacy == null ? false : privacy);
+        attribute.setDefaultPrivacyFlag(privacy);
         attribute.setDescription(row.get("description"));
         attribute.setHelp(row.get("help"));
         attribute.setPlaceholder(row.get("placeholder"));
@@ -267,12 +267,12 @@ public class GoogleSheetBuilder {
         Integer valueInt = toInt(row.get(VALUEINTEGER));
         Long valueLong = toLong(row.get(VALUELONG));
         Double valueDouble = toDouble(row.get(VALUEDOUBLE));
-        Boolean valueBoolean = toBoolean(row.get(VALUEBOOLEAN));
+        boolean valueBoolean = toBoolean(row.get(VALUEBOOLEAN));
 
         Double weight = toDouble(row.get(WEIGHT));
 
-        Boolean privacy = toBoolean(row.get(PRIVACY));
-        Boolean confirmation = toBoolean(row.get(CONFIRMATION));
+        boolean privacy = toBoolean(row.get(PRIVACY));
+        boolean confirmation = toBoolean(row.get(CONFIRMATION));
 
 		entityAttribute.setValueString(valueString);
 		entityAttribute.setValueInteger(valueInt);
@@ -281,8 +281,8 @@ public class GoogleSheetBuilder {
 		entityAttribute.setValueBoolean(valueBoolean);
 
 		entityAttribute.setWeight(weight);
-		entityAttribute.setPrivacyFlag(privacy != null && privacy);
-		entityAttribute.setConfirmationFlag(confirmation != null && confirmation);
+		entityAttribute.setPrivacyFlag(privacy);
+		entityAttribute.setConfirmationFlag(confirmation);
 
         return entityAttribute;
     }
@@ -302,26 +302,23 @@ public class GoogleSheetBuilder {
 			question = new Question();
 			question.setCode(code);
 		}
-        String attributeCode = row.get("attributecode");
 
-		Attribute attribute = attributeUtils.getAttribute(realmName, attributeCode, false);
-		if (attribute == null) {
-			throw new ItemNotFoundException(realmName, attributeCode);
-		}
+		Map<Class<?>, Object> dependencies = validator.validateQuestion(row, realmName);
+		Attribute attribute = (Attribute) dependencies.get(Attribute.class);
 
         String name = row.get("name");
         String html = row.get("html");
         String placeholder = row.get("placeholder");
-        Boolean readonly = toBoolean(row.get(READONLY));
-        Boolean mandatory = toBoolean(row.get(MANDATORY));
+        boolean readonly = toBoolean(row.get(READONLY));
+        boolean mandatory = toBoolean(row.get(MANDATORY));
         String icon = row.get("icon");
 
 		question.setName(name);
 		question.setAttribute(attribute);
         question.setHtml(html);
 		question.setPlaceholder(placeholder);
-        question.setReadonly(readonly == null ? false : readonly);
-        question.setMandatory(mandatory == null ? false : mandatory);
+        question.setReadonly(readonly);
+        question.setMandatory(mandatory);
         question.setIcon(icon);
         question.setRealm(realmName);
 
@@ -337,36 +334,29 @@ public class GoogleSheetBuilder {
      */
     public QuestionQuestion buildQuestionQuestion(Map<String, String> row, String realmName) {
 
-        String parentCode = row.get("parentcode");
-		Question source = questionUtils.getQuestionFromQuestionCode(realmName, parentCode);
-		if (source == null) {
-			throw new ItemNotFoundException(realmName, parentCode);
-		}
-        String targetCode = row.get("targetcode");
-		Question target = questionUtils.getQuestionFromQuestionCode(realmName, targetCode);
-		if (target == null) {
-			throw new ItemNotFoundException(realmName, parentCode);
-		}
+		Map<String, Object> dependencies = validator.validateQuestionQuestion(row, realmName);
+		Question parent = (Question) dependencies.get("parent");
+		Question child = (Question) dependencies.get("child");
 
         Double weight = toDouble(row.get(WEIGHT));
-        Boolean mandatory = toBoolean(row.get(MANDATORY));
-        Boolean readonly = toBoolean(row.get(READONLY));
+        boolean mandatory = toBoolean(row.get(MANDATORY));
+        boolean readonly = toBoolean(row.get(READONLY));
 
         String icon = row.get("icon");
-        Boolean disabled = toBoolean(row.get("disabled"));
-        Boolean hidden = toBoolean(row.get("hidden"));
+        boolean disabled = toBoolean(row.get("disabled"));
+        boolean hidden = toBoolean(row.get("hidden"));
 
 		QuestionQuestion questionQuestion = new QuestionQuestion();
-		questionQuestion.setParentCode(parentCode);
-		questionQuestion.setChildCode(targetCode);
+		questionQuestion.setParentCode(parent.getCode());
+		questionQuestion.setChildCode(child.getCode());
 		questionQuestion.setWeight(weight);
-        questionQuestion.setReadonly(readonly == null ? false : readonly);
-        questionQuestion.setMandatory(mandatory == null ? false : mandatory);
-		questionQuestion.setDisabled(disabled == null ? false : disabled);
-		questionQuestion.setHidden(hidden == null ? false : hidden);
+        questionQuestion.setReadonly(readonly);
+        questionQuestion.setMandatory(mandatory);
+		questionQuestion.setDisabled(disabled);
+		questionQuestion.setHidden(hidden);
 		questionQuestion.setIcon(icon);
 		questionQuestion.setRealm(realmName);
-		questionQuestion.setParentId(source.getId());
+		questionQuestion.setParentId(parent.getId());
 		return questionQuestion;
     }
 

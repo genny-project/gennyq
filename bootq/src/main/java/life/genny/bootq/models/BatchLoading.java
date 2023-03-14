@@ -365,34 +365,14 @@ public class BatchLoading {
 			Question question;
             try {
 				question = googleSheetBuilder.buildQuestion(entry.getValue(), realmName);
-                question.setId(id++);
-			} catch (ItemNotFoundException e) {
-				log.warn("Error Building Question: " + e.getMessage());
+			} catch(BadDataException e) {
+                log.error(ANSIColour.RED + e.getMessage() + ". Skipping" + ANSIColour.RESET);
                 continue;
-			}
-            
-            // Verify question attribute id. The attribute tied to question at this point will exist (from buildQuestion)
-            Attribute attribute;
-            try {
-                attribute = attributeUtils.getAttribute(question.getRealm(), question.getAttributeCode());
-            } catch(ItemNotFoundException e) {
-                log.error("Could not find attribute for question: " + question.getCode());
-                attribute = question.getAttribute();
             }
-            
-            Long realAttributeId = attribute.getId();            
-            if(question.getAttributeId() == null || !question.getAttributeId().equals(realAttributeId)) {
-                log.trace("Found attribute ID mismatch for Question: " + question.getCode() + " and attribute: " + attribute.getCode() + ".\n" + 
-                "\t- Question's Current Attribute ID: " + question.getAttributeId() +
-                "\n\t- Attribute's Actual ID: " + realAttributeId +
-                "\nSetting Question AttrID to Attribute ID: " + realAttributeId);
-                question.setAttributeId(realAttributeId);
-            }
-
+            question.setId(id++);
             questionUtils.saveQuestion(question);
             if (count++ % LOG_BATCH_SIZE == 0)
                 log.debugf("Processed %s questions. Continuing...", count);
-
 		}
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
@@ -412,9 +392,11 @@ public class BatchLoading {
 			try {
 				QuestionQuestion questionQuestion = googleSheetBuilder.buildQuestionQuestion(entry.getValue(), realmName);
 				questionUtils.saveQuestionQuestion(questionQuestion);
-			} catch (ItemNotFoundException e) {
-				log.warn(e.getMessage());
-			}
+			} catch(BadDataException e) {
+                log.error(ANSIColour.RED + e.getMessage() + ". Skipping" + ANSIColour.RESET);
+                continue;
+            }
+            
             if (count++ % LOG_BATCH_SIZE == 0)
                 log.debugf("Processed %s questionquestions. Continuing...", count);
         }

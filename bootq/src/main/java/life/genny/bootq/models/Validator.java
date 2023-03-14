@@ -6,6 +6,7 @@ import java.util.Map;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
@@ -29,6 +30,44 @@ public class Validator {
 
     @Inject
     CacheManager cm;
+
+
+    public Map<String, Object> validateQuestionQuestion(Map<String, String> row, String realmName) 
+        throws BadDataException {
+
+            String parentCode = row.get("parentcode");
+            String childCode = row.get("targetcode");
+
+            Question parentQuestion = cm.getQuestion(realmName, parentCode);
+            if(parentQuestion == null) {
+                throw new BadDataException("Parent Question: " + parentCode + " of QuestionQuestion: " + parentCode + ":" + childCode + " does not exist/has not been persisted. Please check the question table");
+            }
+
+            Question childQuestion = cm.getQuestion(realmName, childCode);
+            if(childQuestion == null) {
+                throw new BadDataException("Child Question: " + childCode + " of QuestionQuestion: " + parentCode + ":" + childCode + " does not exist/has not been persisted. Please check the question table");
+            }
+
+        return Map.of
+        ("parent", parentQuestion,
+        "child", childQuestion);
+    }
+
+    public Map<Class<?>, Object> validateQuestion(Map<String, String> row, String realmName)
+        throws BadDataException {
+
+            String attributeCode = row.get("attributecode");
+
+            Attribute attribute = cm.getAttribute(realmName, attributeCode);
+            if(attribute == null) {
+                throw new BadDataException("Attribute: " + attributeCode + " cannot be found in product " + realmName);
+            }
+
+            return Map.of
+            (
+                Attribute.class, attribute
+            );
+        }
 
     public Map<Class<?>, Object> validateAttribute(Map<String, String> row, String realmName) 
         throws BadDataException {
