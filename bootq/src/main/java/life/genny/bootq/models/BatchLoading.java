@@ -113,6 +113,8 @@ public class BatchLoading {
 			case "questionquestion":
 				persistQuestionQuestions(rx.getQuestionQuestions(), rx.getCode());
 				break;
+            default:
+                throw new IllegalStateException("Bad Table: " + table);
 		}
     }
 
@@ -261,7 +263,7 @@ public class BatchLoading {
                 // Find the attribute without ATT_ (attribute defined in attribute table)
                 String baseAttributeCode = attributeCode.substring(4);
                 try {
-                    Attribute baseAttribute = attributeUtils.getAttribute(baseAttributeCode);
+                    attributeUtils.getAttribute(baseAttributeCode);
                 } catch(ItemNotFoundException notFoundError) {
                     log.error("[DEF_EntityAttribute] Could not find Real Attribute: " + baseAttributeCode + " in database. Please fix in sheets. Skipping");
                     continue;

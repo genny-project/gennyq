@@ -22,6 +22,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -161,7 +162,11 @@ public class Endpoints {
 
                 if (!realmUnit.getDisable() && !realmUnit.getSkipGoogleDoc()) {
                     log.info("Persisting table " + table + "...");
-                    bl.persistTable(realmUnit, table);
+                    try {
+                        bl.persistTable(realmUnit, table);
+                    } catch (IllegalStateException e) {
+                        return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+                    }
                     log.info("Finished Persisting table " + table);
                 } else {
                     log.info("SKIPPING sheet " + realmUnit.getUri() + " for realm " + realmUnit.getName());
