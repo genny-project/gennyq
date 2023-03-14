@@ -1,6 +1,13 @@
 package life.genny.kogito.common.service;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -30,9 +37,9 @@ public class InitService extends KogitoService {
 	@Inject
 	Logger log;
 
-	private static Map<String, List<Set<Attribute>>> batchedAttributesListPerProduct = new HashMap<>();
+	private static Map<String, List<Set<Attribute>>> batchedAttributesListPerProduct = new ConcurrentHashMap<>();
 
-	private static Map<String, Long> attributesLastFetchedAtPerProduct = new HashMap<>();
+	private static Map<String, Long> attributesLastFetchedAtPerProduct = new ConcurrentHashMap<>();
 
 	/**
 	 * Send the Project BaseEntity.
@@ -109,9 +116,8 @@ public class InitService extends KogitoService {
 		if (totalAttributesCount % BATCH_SIZE != 0) {
 			totalBatches++;
 		}
-		List<Set<Attribute>> batchedAttributesList = new LinkedList<>();
-		batchedAttributesListPerProduct.put(productCode, batchedAttributesList);
-		Set<Attribute> attributesBatch = new HashSet<>();
+		List<Set<Attribute>> batchedAttributesList = new CopyOnWriteArrayList<>();
+		Set<Attribute> attributesBatch = new CopyOnWriteArraySet<>();
 		for(Attribute attribute : allAttributes) {
 			if (attribute == null || attribute.getCode().startsWith(Prefix.CAP_)) {
 				totalAttributesCount--;
@@ -144,6 +150,7 @@ public class InitService extends KogitoService {
 		log.infof("%s Attribute(s) dispatched in %s batch(es).", totalAttributesCount, totalBatches);
 		log.debugf("Total time taken to send out the attributes (for the first time): %s (nanos)", end-start);
 		batchedAttributesList.add(attributesBatch);
+		batchedAttributesListPerProduct.put(productCode, batchedAttributesList);
 	}
 
 	private void dispatchLocallyCachedAttributes(List<Set<Attribute>> batchedAttributesList) {
