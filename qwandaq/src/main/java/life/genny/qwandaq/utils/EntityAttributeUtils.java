@@ -3,20 +3,31 @@ package life.genny.qwandaq.utils;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 import life.genny.qwandaq.serialization.common.CoreEntityKey;
 import life.genny.qwandaq.serialization.entityattribute.EntityAttributeKey;
+
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 import org.jetbrains.annotations.NotNull;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
 
 /**
  * A non-static utility class used for standard
@@ -26,13 +37,94 @@ import java.util.List;
  */
 @ApplicationScoped
 public class EntityAttributeUtils {
-    static final Logger log = Logger.getLogger(EntityAttributeUtils.class);
+	
+	@Inject
+	Logger log;
 
 	@Inject
 	CacheManager cm;
 
 	@Inject
+	BaseEntityUtils beUtils;
+
+	@Inject
 	AttributeUtils attributeUtils;
+	
+	/**
+	* Get all DEF EntityAttributes for a BaseEntity that is a {@link Definition} using
+	* Breadth-First Search.
+	* @param definition - root definition to start at
+	* @return a {@link HashSet} of {@link EntityAttribute EntityAttributes} containing all the DEF_EntityAttributes
+	* in the parent structure
+	*/
+   public Map<String, EntityAttribute> getAllEntityAttributesInParent(BaseEntity definition) {
+	   boolean bundledEas = !definition.getBaseEntityAttributesMap().isEmpty();
+	   
+	   if(!bundledEas) {
+		   // Load in all entity attributes of this def from memory
+		   definition = beUtils.getBaseEntity(definition.getRealm(), definition.getCode(), true);
+	   }
+	   
+	   // BFS
+	   // Heirarchy Maintain order
+	   Set<BaseEntity> visited = new LinkedHashSet<>();
+	   Map<String, EntityAttribute> allEntityAttributes = new HashMap<>();
+
+	   Queue<BaseEntity> queue = new LinkedList<>();
+
+	   // Root node is our starting point
+	   queue.offer(definition);
+
+	   BaseEntity current;
+	   EntityAttribute lnkInclude = null;
+
+	   while(!queue.isEmpty()) {
+		   current = queue.poll();
+		   log.trace("[BFS] iterating through " + current.getCode());
+		   if(visited.contains(current)) {
+			   log.trace("[BFS] Already visited: " + current.getCode());
+			   continue;
+		   }
+
+		   for(EntityAttribute ea : current.getBaseEntityAttributes()) {
+			   allEntityAttributes.put(ea.getAttributeCode(), ea);
+		   }
+		   
+		   log.trace("[BFS] Iterated through and potentially added: " + current.getBaseEntityAttributes().size() + " attributes from " + current.getCode());
+
+		   visited.add(current);
+		   // visit neighbours
+		   lnkInclude = current.getBaseEntityAttributesMap().get(Attribute.LNK_INCLUDE);
+		   if(lnkInclude == null) {
+			   log.trace("[BFS] Could not find LNK_INCLUDE in " + current.getCode() + " not adding neighbours. Current queue size: " + queue.size());
+			   continue;
+		   }
+
+		   String parentValueString = lnkInclude.getValueString();
+		   if(StringUtils.isBlank(parentValueString)) {
+			   log.trace("[BFS] No parent codes found for: " + current.getCode() + " not adding neighbours. Current queue size: " + queue.size());
+			   continue;
+		   }
+		   
+		   String[] parentCodes = CommonUtils.getArrayFromString(parentValueString);
+		   if(parentCodes.length == 0) {
+			   log.trace("[BFS] No parent codes found for: " + current.getCode() + " not adding neighbours. Current queue size: " + queue.size());
+		   }
+		   for(String parentCode : parentCodes) {
+			   try {
+				   BaseEntity parent = beUtils.getBaseEntity(parentCode, true);
+				   log.trace("\t[BFS] - Adding neighbour: " + parent.getCode());
+				   queue.offer(parent);
+			   } catch(ItemNotFoundException e) {
+				   log.error("Could not find parent definition pertaining to " + current.getCode() + "'s LNK_INCLUDE valueString");
+				   log.error(current.getCode() + " LNK_INCLUDE = " + parentValueString);
+				   log.error(e.getMessage());
+			   }
+		   }
+	   }
+
+	   return allEntityAttributes;
+   }
 
 	/**
 	 * Fetch an EntityAttribute value from the cache.
