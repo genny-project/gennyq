@@ -10,11 +10,11 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.utils.AttributeUtils;
 import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.EntityAttributeUtils;
 import life.genny.qwandaq.utils.QuestionUtils;
 import life.genny.qwandaq.validation.Validation;
@@ -26,12 +26,24 @@ import org.jboss.logging.Logger;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 @ApplicationScoped
 public class BatchLoading {
 
     public static final int LOG_BATCH_SIZE = 100;
+    public static final String VALIDATIONS = " Validations ";
+    public static final String DATA_TYPES = " DataTypes ";
+    public static final String ATTRIBUTES = " Attributes ";
+    public static final String BASE_ENTITYS = " BaseEntitys ";
+    public static final String BASEENTITY_ATTRIBUTES = " BaseEntityAttributes ";
+    public static final String QUESTIONS = " Questions ";
+    public static final String QUESTIONS_QUESTIONS = " QuestionQuestions ";
+    public static final String MSG_LOADED_SUCCESSFULLY = " loaded successfully.";
+    public static final String MSG_ERROR_WHILE_SAVING = "Error while saving %s - [%s] : %s";
     private static boolean isSynchronise;
 
     @Inject
@@ -54,6 +66,8 @@ public class BatchLoading {
 
 	@Inject
 	GoogleSheetBuilder googleSheetBuilder;
+
+    private Map<String, List<String>> loadReport = new HashMap<>(9);
 
     public BatchLoading() {
     }
@@ -124,15 +138,27 @@ public class BatchLoading {
      * @param realmName The realm
      */
     public void persistValidations(Map<String, Map<String, String>> project, String realmName) {
-
+        List<String> errorCodes = new LinkedList<>();
+        int successFullySaved = 0;
         Instant start = Instant.now();
         for (Map<String, String> row : project.values()) {
-			Validation validation = googleSheetBuilder.buildValidation(row, realmName);
-			attributeUtils.saveValidation(validation);
+            try {
+                Validation validation = googleSheetBuilder.buildValidation(row, realmName);
+                attributeUtils.saveValidation(validation);
+                successFullySaved++;
+            } catch (Exception e) {
+                String entityInfo = realmName + ":" + row.get("code");
+                log.warnf(MSG_ERROR_WHILE_SAVING, VALIDATIONS, entityInfo, e.getMessage());
+                errorCodes.add(entityInfo);
+            }
         }
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
-        log.info("Finished validations, cost:" + timeElapsed.toMillis() + " millSeconds, items: " + project.entrySet().size());
+        log.info("Finished validations, cost:" + timeElapsed.toMillis() + " millSeconds, items: " + successFullySaved);
+        if(errorCodes.isEmpty()) {
+            errorCodes.add(successFullySaved + VALIDATIONS + MSG_LOADED_SUCCESSFULLY);
+        }
+        loadReport.put(VALIDATIONS, errorCodes);
     }
 
     /**
@@ -142,21 +168,30 @@ public class BatchLoading {
      * @param realmName The realm
      */
     public void persistDatatypes(Map<String, Map<String, String>> project, String realmName) {
+        List<String> errorCodes = new LinkedList<>();
+        int successFullySaved = 0;
         Instant start = Instant.now();
         int count = 1;
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
 			try {
-				DataType dataType = googleSheetBuilder.buildDataType(entry.getValue(), realmName);
-				attributeUtils.saveDataType(dataType);
+                DataType dataType = googleSheetBuilder.buildDataType(entry.getValue(), realmName);
+                attributeUtils.saveDataType(dataType);
                 if (count++ % LOG_BATCH_SIZE == 0)
                     log.debugf("Saved %s datatypes. Continuing...", count);
-			} catch (ItemNotFoundException e) {
-				log.warn(e.getMessage());
+                successFullySaved++;
+			} catch (Exception e) {
+                String entityInfo = realmName + ":" + entry.getValue().get("code");
+                log.warnf(MSG_ERROR_WHILE_SAVING, DATA_TYPES, entityInfo, e.getMessage());
+                errorCodes.add(entityInfo);
 			}
 		}
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
         log.info("Finished datatypes, cost:" + timeElapsed.toMillis() + " millSeconds, items: " + project.entrySet().size());
+        if(errorCodes.isEmpty()) {
+            errorCodes.add(successFullySaved + DATA_TYPES + MSG_LOADED_SUCCESSFULLY);
+        }
+        loadReport.put(DATA_TYPES, errorCodes);
     }
 
     /**
@@ -166,21 +201,34 @@ public class BatchLoading {
      * @param realmName The realm
      */
     public void persistAttributes(Map<String, Map<String, String>> project, String realmName) {
+        List<String> errorCodes = new LinkedList<>();
+        int successFullySaved = 0;
         Instant start = Instant.now();
         long id = cm.getMaxAttributeId() + 1;
         int count = 1;
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
-            Attribute attribute = googleSheetBuilder.buildAttribute(entry.getValue(), realmName);
-            if(attribute.getId() == null) {
-                attribute.setId(id++);
+            try {
+                Attribute attribute = googleSheetBuilder.buildAttribute(entry.getValue(), realmName);
+                if (attribute.getId() == null) {
+                    attribute.setId(id++);
+                }
+                if (count++ % LOG_BATCH_SIZE == 0)
+                    log.debugf("Saved %s attributes. Continuing...", count);
+                attributeUtils.saveAttribute(attribute);
+                successFullySaved++;
+            } catch (Exception e) {
+                String entityInfo = realmName + ":" + entry.getValue().get("code");
+                log.warnf(MSG_ERROR_WHILE_SAVING, ATTRIBUTES, entityInfo, e.getMessage());
+                errorCodes.add(entityInfo);
             }
-            if (count++ % LOG_BATCH_SIZE == 0)
-                log.debugf("Saved %s attributes. Continuing...", count);
-            attributeUtils.saveAttribute(attribute);
         }
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
         log.info("Finished attributes, cost:" + timeElapsed.toMillis() + " millSeconds, items: " + project.entrySet().size());
+        if(errorCodes.isEmpty()) {
+            errorCodes.add(successFullySaved + ATTRIBUTES + MSG_LOADED_SUCCESSFULLY);
+        }
+        loadReport.put(ATTRIBUTES, errorCodes);
     }
 
     /**
@@ -218,21 +266,33 @@ public class BatchLoading {
      * @param realmName The realm
      */
     public void persistEntitys(Map<String, Map<String, String>> project, String realmName) {
+        List<String> errorCodes = new LinkedList<>();
+        int successFullySaved = 0;
         int count = 1;
         long id = cm.getMaxAttributeId() + 1;
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
-			try {
-				BaseEntity baseEntity = googleSheetBuilder.buildBaseEntity(entry.getValue(), realmName);
+            try {
+                BaseEntity baseEntity = googleSheetBuilder.buildBaseEntity(entry.getValue(), realmName);
                 if (baseEntity.getId() == null) {
                     baseEntity.setId(id++);
                 }
 				beUtils.updateBaseEntity(baseEntity, false);
                 if (count++ % LOG_BATCH_SIZE == 0)
                     log.debugf("Saved %s baseEntitys. Continuing...", count);
-			} catch (ItemNotFoundException e) {
-				log.warn(e.getMessage());
-			}
+			} catch (Exception e) {
+                String entityInfo = realmName + ":" + entry.getValue().get("code");
+                log.warnf(MSG_ERROR_WHILE_SAVING, BASE_ENTITYS, entityInfo, e.getMessage());
+                errorCodes.add(entityInfo);
+            }
         }
+        if(errorCodes.isEmpty()) {
+            errorCodes.add(successFullySaved + BASE_ENTITYS + MSG_LOADED_SUCCESSFULLY);
+        }
+        List<String> existingErrorCodes = loadReport.get(BASE_ENTITYS);
+        if (existingErrorCodes != null) {
+            errorCodes.addAll(existingErrorCodes);
+        }
+        loadReport.put(BASE_ENTITYS, errorCodes);
     }
 
     /**
@@ -255,6 +315,8 @@ public class BatchLoading {
 			Prefix.UNQ_, dttText
 		);
 
+        List<String> errorCodes = new LinkedList<>();
+        int successFullySaved = 0;
         int count = 1;
         long attrId = cm.getMaxAttributeId() + 1;
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
@@ -293,9 +355,10 @@ public class BatchLoading {
             try {
                 EntityAttribute entityAttribute = googleSheetBuilder.buildEntityAttribute(row, realmName, defAttr.getCode());
                 beaUtils.updateEntityAttribute(entityAttribute);
-            } catch(BadDataException e) {
-                String combined = new StringBuilder(baseEntityCode).append(":").append(attributeCode).toString();
-                log.error("Error occurred when persisting: " + combined + ". " + e.getMessage());
+            } catch (Exception e) {
+                String entityInfo = realmName + ":" + baseEntityCode + ":" + attributeCode;
+                log.warnf(MSG_ERROR_WHILE_SAVING, BASEENTITY_ATTRIBUTES, entityInfo, e.getMessage());
+                errorCodes.add(entityInfo);
             }
             if (count++ % LOG_BATCH_SIZE == 0)
                 log.debugf("Processed %s definition entity attributes. Continuing...", count);
@@ -304,6 +367,14 @@ public class BatchLoading {
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
         log.info("Finished definition entity attributes, cost:" + timeElapsed.toMillis() + " millSeconds, items: " + project.entrySet().size());
+        if(errorCodes.isEmpty()) {
+            errorCodes.add(successFullySaved + BASEENTITY_ATTRIBUTES + MSG_LOADED_SUCCESSFULLY);
+        }
+        List<String> existingErrorCodes = loadReport.get(BASEENTITY_ATTRIBUTES);
+        if (existingErrorCodes != null) {
+            errorCodes.addAll(existingErrorCodes);
+        }
+        loadReport.put(BASEENTITY_ATTRIBUTES, errorCodes);
     }
 
     /**
@@ -313,6 +384,8 @@ public class BatchLoading {
      * @param realmName The realm
      */
     public void persistBaseEntityAttributes(Map<String, Map<String, String>> project, String realmName) {
+        List<String> errorCodes = new LinkedList<>();
+        int successFullySaved = 0;
         Instant start = Instant.now();
         int count = 1;
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
@@ -326,16 +399,15 @@ public class BatchLoading {
             try {
                 log.trace("Building " + combined + " entityAttribute");
                 entityAttribute = googleSheetBuilder.buildEntityAttribute(entry.getValue(), realmName);
-
-            } catch (BadDataException e) {
-                log.error(new StringBuilder("(SKIPPING) Error occurred when building EA ")
-                    .append(combined)
-                    .append(" - ").append(e.getMessage()).toString());
+                boolean success = beaUtils.updateEntityAttribute(entityAttribute);
+                if(!success) {
+                    log.error("Error occured when persisting EntityAttribute: " + combined);
+                }
+            } catch (Exception e) {
+                String entityInfo = realmName + ":" + baseEntityCode + ":" + attributeCode;
+                log.warnf(MSG_ERROR_WHILE_SAVING, BASEENTITY_ATTRIBUTES, entityInfo, e.getMessage());
+                errorCodes.add(entityInfo);
                 continue;
-            }
-            boolean success = beaUtils.updateEntityAttribute(entityAttribute);
-            if(!success) {
-                log.error("Error occured when persisting EntityAttribute: " + combined);
             }
             if (count++ % LOG_BATCH_SIZE == 0)
                 log.debugf("Processed %s entity attributes. Continuing...", count);
@@ -344,6 +416,14 @@ public class BatchLoading {
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
         log.info("Finished entity attributes, cost:" + timeElapsed.toMillis() + " millSeconds, items: " + project.entrySet().size());
+        if(errorCodes.isEmpty()) {
+            errorCodes.add(successFullySaved + BASEENTITY_ATTRIBUTES + MSG_LOADED_SUCCESSFULLY);
+        }
+        List<String> existingErrorCodes = loadReport.get(BASEENTITY_ATTRIBUTES);
+        if (existingErrorCodes != null) {
+            errorCodes.addAll(existingErrorCodes);
+        }
+        loadReport.put(BASEENTITY_ATTRIBUTES, errorCodes);
     }
 
     /**
@@ -353,6 +433,8 @@ public class BatchLoading {
      * @param realmName The realm
      */
     public void persistQuestions(Map<String, Map<String, String>> project, String realmName) {
+        List<String> errorCodes = new LinkedList<>();
+        int successFullySaved = 0;
         Instant start = Instant.now();
         int count = 1;
         long id = cm.getMaxQuestionId() + 1;
@@ -362,7 +444,9 @@ public class BatchLoading {
 				question = googleSheetBuilder.buildQuestion(entry.getValue(), realmName);
                 question.setId(id++);
 			} catch (ItemNotFoundException e) {
-				log.warn("Error Building Question: " + e.getMessage());
+                String entityInfo = realmName + ":" + entry.getValue().get("code");
+                log.warnf(MSG_ERROR_WHILE_SAVING, QUESTIONS, entityInfo, e.getMessage());
+                errorCodes.add(entityInfo);
                 continue;
 			}
             
@@ -384,7 +468,13 @@ public class BatchLoading {
                 question.setAttributeId(realAttributeId);
             }
 
-            questionUtils.saveQuestion(question);
+            try {
+                questionUtils.saveQuestion(question);
+            } catch (Exception e) {
+                String entityInfo = realmName + ":" + question.getCode();
+                log.warnf(MSG_ERROR_WHILE_SAVING, QUESTIONS, entityInfo, e.getMessage());
+                errorCodes.add(entityInfo);
+            }
             if (count++ % LOG_BATCH_SIZE == 0)
                 log.debugf("Processed %s questions. Continuing...", count);
 
@@ -392,6 +482,10 @@ public class BatchLoading {
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
         log.info("Finished questions, cost:" + timeElapsed.toMillis() + " millSeconds, items: " + project.entrySet().size());
+        if(errorCodes.isEmpty()) {
+            errorCodes.add(successFullySaved + QUESTIONS + MSG_LOADED_SUCCESSFULLY);
+        }
+        loadReport.put(QUESTIONS, errorCodes);
     }
 
     /**
@@ -401,6 +495,8 @@ public class BatchLoading {
      * @param realmName The realm
      */
     public void persistQuestionQuestions(Map<String, Map<String, String>> project, String realmName) {
+        List<String> errorCodes = new LinkedList<>();
+        int successFullySaved = 0;
         Instant start = Instant.now();
         int count = 1;
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
@@ -408,7 +504,12 @@ public class BatchLoading {
 				QuestionQuestion questionQuestion = googleSheetBuilder.buildQuestionQuestion(entry.getValue(), realmName);
 				questionUtils.saveQuestionQuestion(questionQuestion);
 			} catch (ItemNotFoundException e) {
-				log.warn(e.getMessage());
+                Map<String, String> row = entry.getValue();
+                String parentCode = row.get("parentcode");
+                String targetCode = row.get("targetcode");
+                String entityInfo = realmName + ":" + parentCode + ":" + targetCode;
+                log.warnf(MSG_ERROR_WHILE_SAVING, QUESTIONS_QUESTIONS, entityInfo, e.getMessage());
+                errorCodes.add(entityInfo);
 			}
             if (count++ % LOG_BATCH_SIZE == 0)
                 log.debugf("Processed %s questionquestions. Continuing...", count);
@@ -416,6 +517,24 @@ public class BatchLoading {
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
         log.info("Finished question questions, cost:" + timeElapsed.toMillis() + " millSeconds, items: " + project.entrySet().size());
+        if(errorCodes.isEmpty()) {
+            errorCodes.add(successFullySaved + QUESTIONS_QUESTIONS + MSG_LOADED_SUCCESSFULLY);
+        }
+        loadReport.put(QUESTIONS_QUESTIONS, errorCodes);
     }
 
+    public void printLoadReport() {
+        log.info("/************ Load Summary Start ************/");
+        for(Map.Entry<String, List<String>> entry : loadReport.entrySet()) {
+            log.info("    " + entry.getKey() + ":");
+            List<String> errorCodes = entry.getValue();
+            if(errorCodes.size() == 1 && errorCodes.get(0).endsWith(MSG_LOADED_SUCCESSFULLY))
+                log.info("        " + errorCodes);
+            else {
+                log.info("        Loading failed for the following " + entry.getKey() + ":");
+                log.info("        " + CommonUtils.getCommaAndSingleQuoteSeparatedString(errorCodes));
+            }
+        }
+        log.info("/************ Load Summary END ************/");
+    }
 }
