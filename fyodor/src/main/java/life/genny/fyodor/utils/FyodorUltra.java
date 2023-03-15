@@ -121,7 +121,7 @@ public class FyodorUltra {
 						ea = getAssociatedColumnValue(baseEntity, attributeCode);
 						// De-escalate the known issue and skip the bad ea
 					} catch(BadDataException e) {
-						log.error(ANSIColour.RED + e.getMessage() + ANSIColour.RESET);
+						log.error(ANSIColour.doColour(e.getMessage(), ANSIColour.RED));
 						continue;
 					}
 					

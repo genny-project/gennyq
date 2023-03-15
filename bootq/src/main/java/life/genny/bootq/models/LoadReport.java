@@ -1,6 +1,11 @@
 package life.genny.bootq.models;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -11,6 +16,7 @@ import javax.inject.Inject;
 
 import org.jboss.logging.Logger;
 
+import io.jsonwebtoken.io.IOException;
 import io.vavr.Tuple2;
 import life.genny.bootq.models.sheets.EReportCategoryType;
 import life.genny.qwandaq.models.ANSIColour;
@@ -33,6 +39,7 @@ public class LoadReport {
     Logger log;
 
 
+    List<Object> linesToOutput = new ArrayList<>();
     File outputFile;
 
     private List<Tuple2<EReportCategoryType, Integer>> successes = new LinkedList<>();
@@ -55,10 +62,18 @@ public class LoadReport {
 
             loadReportMap.put(reportType, map);
         }
+
+        String path = CommonUtils.getSystemEnv("GENNY_BOOTQ_OUTPUT_FILE_PATH", "output/");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-LLLL-yyyy");
+        LocalDate localDate = LocalDate.now();
+        String fmtedString = localDate.format(formatter);
+        String output = CommonUtils.getSystemEnv("GENNY_BOOTQ_OUTPUT_FILE", "output-" + fmtedString + ".log");
+
+        setOutputFile(path + "/" + output);
     }
 
     public void setOutputFile(String path) {
-
+        outputFile = new File(path);
     }
 
     public File getOutputFile() {
@@ -138,57 +153,73 @@ public class LoadReport {
         }
     }
 
-    private void infoAndDump(Object msg) {
-
-        log.info(msg);
-    }
-
     public void printCategory(ReportType reportType, Map.Entry<EReportCategoryType, List<ReportLog>> reportEntry, boolean showStackTraces) {
         EReportCategoryType category = reportEntry.getKey();
 
         List<ReportLog> logs = reportEntry.getValue();
-        log.info(ANSIColour.GREEN + CATEGORY_INDENTATION + "-" + category.getLogLine() + ANSIColour.RESET);
+        logAndDump(ANSIColour.GREEN + CATEGORY_INDENTATION + "-" + category.getLogLine() + ANSIColour.RESET);
         // Print errors if exists
         if(hasErrors(category, reportType)) {
-            CommonUtils.printCollection(logs, this::infoAndDump, reportLog -> ANSIColour.RED + reportLog.getReportLine(showStackTraces) + ANSIColour.RESET);
+            CommonUtils.printCollection(logs, this::logAndDump, reportLog -> ANSIColour.RED + reportLog.getReportLine(showStackTraces) + ANSIColour.RESET);
         } else {
-            log.info(REPORT_INDENTATION + ANSIColour.doColour("No " + CommonUtils.normalizeString(reportType.name()) + " Errors for type" + category.getLogLine() + "!", ANSIColour.GREEN));
+            logAndDump(REPORT_INDENTATION + ANSIColour.doColour("No " + CommonUtils.normalizeString(reportType.name()) + " Errors for type" + category.getLogLine() + "!", ANSIColour.GREEN));
         }
     }
 
-    public void printLoadReport(boolean showStackTraces) {
-        log.info(ANSIColour.YELLOW + "/************ Load Summary Start ************/" + ANSIColour.RESET);
+    private void logAndDump(Object msg) {
+        linesToOutput.add(ANSIColour.strip(msg + "\n"));
+        log.info(msg);
+    }
+
+    public void printLoadReport(boolean showStackTraces) throws java.io.IOException {
+        logAndDump(ANSIColour.doColour("/************ Load Summary Start ************/", ANSIColour.YELLOW));
 
         // Print all build errors (if exists)
         if(hasErrors(ReportType.BUILD_ERRORS)) {
-            log.info(ANSIColour.RED + TYPE_INDENTATION + "- Build Errors" + ANSIColour.RESET);
+            logAndDump(ANSIColour.doColour(TYPE_INDENTATION + "- Build Errors", ANSIColour.RED));
             Map<EReportCategoryType, List<ReportLog>> buildErrorMap = loadReportMap.get(ReportType.BUILD_ERRORS);
             for(Map.Entry<EReportCategoryType, List<ReportLog>> reportEntry : buildErrorMap.entrySet()) {
                 printCategory(ReportType.BUILD_ERRORS, reportEntry, showStackTraces);
             }
         } else {
-            log.info(ANSIColour.GREEN + TYPE_INDENTATION + "- NO Build Errors :)" + ANSIColour.RESET);
+            logAndDump(ANSIColour.doColour(TYPE_INDENTATION + "- NO Build Errors :)", ANSIColour.GREEN));
         }
 
         // Print all persist errors (if exists)
         if(hasErrors(ReportType.PERSIST_ERRORS)) {
-            log.info(ANSIColour.CYAN + TYPE_INDENTATION + "- Persist Errors" + ANSIColour.RESET);
+            logAndDump(ANSIColour.doColour(TYPE_INDENTATION + "- Persist Errors", ANSIColour.CYAN));
             Map<EReportCategoryType, List<ReportLog>> buildErrorMap = loadReportMap.get(ReportType.BUILD_ERRORS);
             for(Map.Entry<EReportCategoryType, List<ReportLog>> reportEntry : buildErrorMap.entrySet()) {
                 printCategory(ReportType.PERSIST_ERRORS, reportEntry, showStackTraces);
             }
         } else {
-            log.info(ANSIColour.GREEN + TYPE_INDENTATION + "- NO Persist Errors :)" + ANSIColour.RESET);
+            logAndDump(ANSIColour.doColour(TYPE_INDENTATION + "- NO Persist Errors :)", ANSIColour.GREEN));
         }
 
-        log.info(ANSIColour.doColour("/************ Load Summary END ************/", ANSIColour.YELLOW));
+        logAndDump(ANSIColour.doColour("/************ Load Summary END ************/", ANSIColour.YELLOW));
+
+
+        FileWriter fw = null;
+        try {
+            fw = new FileWriter(outputFile);
+        } catch (java.io.IOException e) {
+            log.error("Error opening file: " + outputFile);
+            e.printStackTrace();
+        }
+        try(BufferedWriter writer = new BufferedWriter(fw)) {
+            for(Object msg : linesToOutput) {
+                writer.append(msg.toString());
+            }
+        }
+        if(fw != null)
+            fw.close();
     }
     
     public class ReportLog {
 
-        public final String identifier;
-        public Exception exception;
-        public final String details;
+        private final String identifier;
+        private Exception exception;
+        private final String details;
 
         public ReportLog(String identifier, String details) {
             this(identifier, null, details);

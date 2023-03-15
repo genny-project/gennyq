@@ -22,6 +22,8 @@ import life.genny.qwandaq.validation.Validation;
 public class Validator {
     public static final String KEY_PARENT = "parent";
     public static final String KEY_CHILD = "child";
+
+    public static final String ID_MAP = "id_map";
     
     protected static final String[] DEF_PREFIXES = new String[] {
         Prefix.ATT_,

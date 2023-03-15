@@ -191,6 +191,8 @@ public class DefUtils {
 		String attributeCode = answer.getAttributeCode();
 
 		// allow if it is Capability saved to a Role
+		// TODO: Make this nicer
+		// TODO: Get rid of PRM_ ????
 		if (targetCode.startsWith(Prefix.ROL_) && attributeCode.startsWith(Prefix.PRM_)) {
 			return true;
 		} else if (targetCode.startsWith(Prefix.SBE_) && (attributeCode.startsWith(Prefix.COL_)
@@ -213,8 +215,8 @@ public class DefUtils {
 				}
 			}
 		}
-		log.error(ANSIColour.RED + "Invalid attribute " + attributeCode + " for " + answer.getTargetCode()
-				+ " with def= " + definition.getCode() + ANSIColour.RESET);
+		log.error(ANSIColour.doColour("Invalid attribute " + attributeCode + " for " + answer.getTargetCode()
+				+ " with def= " + definition.getCode(), ANSIColour.RED));
 			
 		return false;
 	}
@@ -280,8 +282,8 @@ public class DefUtils {
 
 		// just make use of the faster attribute lookup
 		if (!defBE.containsEntityAttribute(Prefix.ATT_.concat(attribute.getCode()))) {
-			log.error(ANSIColour.RED + "Invalid attribute " + attribute.getCode() + " for "
-					+ defBE.getCode() + ANSIColour.RESET);
+			log.error(ANSIColour.doColour("Invalid attribute " + attribute.getCode() + " for "
+					+ defBE.getCode(), ANSIColour.RED));
 			return false;
 		}
 
@@ -345,8 +347,7 @@ public class DefUtils {
 							// Ensure Datatype is Correct, then set Value
 							entityAttribute.setValue(mergedObj);
 						} else {
-							log.warn(ANSIColour.RED + "Not all contexts are present for " + attrValStr
-									+ ANSIColour.RESET);
+							log.warn(ANSIColour.doColour("Not all contexts are present for " + attrValStr, ANSIColour.RED));
 							return null;
 						}
 					} else {
@@ -355,7 +356,7 @@ public class DefUtils {
 					}
 				} else {
 					log.error(
-							ANSIColour.RED + "Value is NULL for entity attribute " + attributeCode + ANSIColour.RESET);
+							ANSIColour.doColour("Value is NULL for entity attribute " + attributeCode,  ANSIColour.RED));
 					return null;
 				}
 			}

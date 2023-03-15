@@ -1,4 +1,4 @@
-package life.genny.fyodor.endpoints;
+package life.genny.fyodor.endpoints.models;
 
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;

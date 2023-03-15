@@ -334,7 +334,6 @@ public class BatchLoading {
 			Prefix.UNQ_, dttText
 		);
 
-        List<String> errorCodes = new LinkedList<>();
         int successFullySaved = 0;
         int count = 1;
         long attrId = cm.getMaxAttributeId() + 1;
@@ -372,7 +371,6 @@ public class BatchLoading {
                 } catch(Exception persistException) {
                     String entityInfo = realmName + ":" + defAttr.getCode();
                     loadReport.addPersistError(EReportCategoryType.ATTRIBUTE, entityInfo, persistException);
-                    log.error("DEF_ATTRIBUTE PERSIST ERROR. SKIPPING ENTITY ATTRIBUTE: " + baseEntityCode + ":" + attributeCode);
                     continue;
                 }
             }
@@ -431,8 +429,11 @@ public class BatchLoading {
 
             for(Map.Entry<String, EntityAttribute> eas : inheritedEas.entrySet()) {
                 EntityAttribute entityAttribute = eas.getValue();
-                log.trace("Adding " + defBe.getCode() + ":" + entityAttribute.getAttributeCode());
-                Attribute attribute = attributeUtils.getAttribute(entityAttribute.getRealm(), entityAttribute.getAttributeCode());
+                log.debug("Adding " + defBe.getCode() + ":" + entityAttribute.getAttributeCode());
+                Attribute attribute = attributeUtils.getAttribute(entityAttribute.getRealm(), entityAttribute.getAttributeCode(), true);
+                entityAttribute.setAttribute(attribute);
+                log.debug("\t- Value: " + beaUtils.getValue(realmName, entityAttribute.getBaseEntityCode(), entityAttribute.getAttributeCode()));
+                log.debug("\t- DataType: " + entityAttribute.getAttribute().getDataType());
                 EntityAttribute newEa = defBe.addEntityAttribute(attribute, entityAttribute.getWeight() != null ? entityAttribute.getWeight() : 0.0, entityAttribute.getInferred(), entityAttribute.getValue());
                 newEa.setPrivacyFlag(entityAttribute.getPrivacyFlag());
                 newEa.setConfirmationFlag(entityAttribute.getConfirmationFlag());
@@ -529,10 +530,8 @@ public class BatchLoading {
                 continue;
             }
 
-            Question preExisting = questionUtils.getQuestionFromQuestionCode(realmName, question.getCode());
-            if(preExisting != null) {
-                question.setId(preExisting.getId());
-            } else
+            // only null id if hasn't been set in buildQuestion (preexisting question found)
+            if(question.getId() == null)
                 question.setId(id++);
 
             try {
