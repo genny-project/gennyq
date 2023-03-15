@@ -26,7 +26,9 @@ import org.jboss.logging.Logger;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -39,11 +41,15 @@ public class BatchLoading {
     public static final String DATA_TYPES = " DataTypes ";
     public static final String ATTRIBUTES = " Attributes ";
     public static final String BASE_ENTITYS = " BaseEntitys ";
+    public static final String DEF_BASE_ENTITYS = " DefBaseEntitys ";
     public static final String BASEENTITY_ATTRIBUTES = " BaseEntityAttributes ";
+    public static final String DEF_BASEENTITY_ATTRIBUTES = " DefBaseEntityAttributes ";
     public static final String QUESTIONS = " Questions ";
     public static final String QUESTIONS_QUESTIONS = " QuestionQuestions ";
     public static final String MSG_LOADED_SUCCESSFULLY = " loaded successfully.";
     public static final String MSG_ERROR_WHILE_SAVING = "Error while saving %s - [%s] : %s";
+    public static final String SUCCESSFUL = "Successful";
+    public static final String FAILED = "Failed";
     private static boolean isSynchronise;
 
     @Inject
@@ -67,7 +73,7 @@ public class BatchLoading {
 	@Inject
 	GoogleSheetBuilder googleSheetBuilder;
 
-    private Map<String, List<String>> loadReport = new HashMap<>(9);
+    private Map<String, Map<String, List<String>>> loadReport = new LinkedHashMap<>(0);
 
     public BatchLoading() {
     }
@@ -138,6 +144,7 @@ public class BatchLoading {
      * @param realmName The realm
      */
     public void persistValidations(Map<String, Map<String, String>> project, String realmName) {
+        List<String> successMsg = new ArrayList<>(1);
         List<String> errorCodes = new LinkedList<>();
         int successFullySaved = 0;
         Instant start = Instant.now();
@@ -155,10 +162,11 @@ public class BatchLoading {
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
         log.info("Finished validations, cost:" + timeElapsed.toMillis() + " millSeconds, items: " + successFullySaved);
-        if(errorCodes.isEmpty()) {
-            errorCodes.add(successFullySaved + VALIDATIONS + MSG_LOADED_SUCCESSFULLY);
-        }
-        loadReport.put(VALIDATIONS, errorCodes);
+        successMsg.add(successFullySaved + VALIDATIONS + MSG_LOADED_SUCCESSFULLY);
+        Map<String, List<String>> report = new HashMap<>(2);
+        report.put(SUCCESSFUL, successMsg);
+        report.put(FAILED, errorCodes);
+        loadReport.put(VALIDATIONS, report);
     }
 
     /**
@@ -168,6 +176,7 @@ public class BatchLoading {
      * @param realmName The realm
      */
     public void persistDatatypes(Map<String, Map<String, String>> project, String realmName) {
+        List<String> successMsg = new ArrayList<>(1);
         List<String> errorCodes = new LinkedList<>();
         int successFullySaved = 0;
         Instant start = Instant.now();
@@ -188,10 +197,11 @@ public class BatchLoading {
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
         log.info("Finished datatypes, cost:" + timeElapsed.toMillis() + " millSeconds, items: " + project.entrySet().size());
-        if(errorCodes.isEmpty()) {
-            errorCodes.add(successFullySaved + DATA_TYPES + MSG_LOADED_SUCCESSFULLY);
-        }
-        loadReport.put(DATA_TYPES, errorCodes);
+        successMsg.add(successFullySaved + DATA_TYPES + MSG_LOADED_SUCCESSFULLY);
+        Map<String, List<String>> report = new HashMap<>(2);
+        report.put(SUCCESSFUL, successMsg);
+        report.put(FAILED, errorCodes);
+        loadReport.put(DATA_TYPES, report);
     }
 
     /**
@@ -201,6 +211,7 @@ public class BatchLoading {
      * @param realmName The realm
      */
     public void persistAttributes(Map<String, Map<String, String>> project, String realmName) {
+        List<String> successMsg = new ArrayList<>(1);
         List<String> errorCodes = new LinkedList<>();
         int successFullySaved = 0;
         Instant start = Instant.now();
@@ -225,10 +236,11 @@ public class BatchLoading {
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
         log.info("Finished attributes, cost:" + timeElapsed.toMillis() + " millSeconds, items: " + project.entrySet().size());
-        if(errorCodes.isEmpty()) {
-            errorCodes.add(successFullySaved + ATTRIBUTES + MSG_LOADED_SUCCESSFULLY);
-        }
-        loadReport.put(ATTRIBUTES, errorCodes);
+        successMsg.add(successFullySaved + ATTRIBUTES + MSG_LOADED_SUCCESSFULLY);
+        Map<String, List<String>> report = new HashMap<>(2);
+        report.put(SUCCESSFUL, successMsg);
+        report.put(FAILED, errorCodes);
+        loadReport.put(ATTRIBUTES, report);
     }
 
     /**
@@ -239,7 +251,7 @@ public class BatchLoading {
      */
     public void persistDefBaseEntitys(Map<String, Map<String, String>> project, String realmName) {
         Instant start = Instant.now();
-		persistEntitys(project, realmName);
+		persistEntitys(project, realmName, true);
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
         log.info("Finished definition baseentitys, cost:" + timeElapsed.toMillis() + " millSeconds, items: " + project.entrySet().size());
@@ -253,7 +265,7 @@ public class BatchLoading {
      */
     public void persistBaseEntitys(Map<String, Map<String, String>> project, String realmName) {
         Instant start = Instant.now();
-		persistEntitys(project, realmName);
+		persistEntitys(project, realmName, false);
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
         log.info("Finished baseentitys, cost:" + timeElapsed.toMillis() + " millSeconds, items: " + project.entrySet().size());
@@ -265,7 +277,8 @@ public class BatchLoading {
      * @param project The project sheets data
      * @param realmName The realm
      */
-    public void persistEntitys(Map<String, Map<String, String>> project, String realmName) {
+    public void persistEntitys(Map<String, Map<String, String>> project, String realmName, boolean isDefBE) {
+        List<String> successMsg = new ArrayList<>(1);
         List<String> errorCodes = new LinkedList<>();
         int successFullySaved = 0;
         int count = 1;
@@ -279,20 +292,18 @@ public class BatchLoading {
 				beUtils.updateBaseEntity(baseEntity, false);
                 if (count++ % LOG_BATCH_SIZE == 0)
                     log.debugf("Saved %s baseEntitys. Continuing...", count);
+                successFullySaved++;
 			} catch (Exception e) {
                 String entityInfo = realmName + ":" + entry.getValue().get("code");
                 log.warnf(MSG_ERROR_WHILE_SAVING, BASE_ENTITYS, entityInfo, e.getMessage());
                 errorCodes.add(entityInfo);
             }
         }
-        if(errorCodes.isEmpty()) {
-            errorCodes.add(successFullySaved + BASE_ENTITYS + MSG_LOADED_SUCCESSFULLY);
-        }
-        List<String> existingErrorCodes = loadReport.get(BASE_ENTITYS);
-        if (existingErrorCodes != null) {
-            errorCodes.addAll(existingErrorCodes);
-        }
-        loadReport.put(BASE_ENTITYS, errorCodes);
+        successMsg.add(successFullySaved + BASE_ENTITYS + MSG_LOADED_SUCCESSFULLY);
+        Map<String, List<String>> report = new HashMap<>(2);
+        report.put(SUCCESSFUL, successMsg);
+        report.put(FAILED, errorCodes);
+        loadReport.put(isDefBE ? DEF_BASE_ENTITYS : BASE_ENTITYS, report);
     }
 
     /**
@@ -315,6 +326,7 @@ public class BatchLoading {
 			Prefix.UNQ_, dttText
 		);
 
+        List<String> successMsg = new ArrayList<>(1);
         List<String> errorCodes = new LinkedList<>();
         int successFullySaved = 0;
         int count = 1;
@@ -355,6 +367,7 @@ public class BatchLoading {
             try {
                 EntityAttribute entityAttribute = googleSheetBuilder.buildEntityAttribute(row, realmName, defAttr.getCode());
                 beaUtils.updateEntityAttribute(entityAttribute);
+                successFullySaved++;
             } catch (Exception e) {
                 String entityInfo = realmName + ":" + baseEntityCode + ":" + attributeCode;
                 log.warnf(MSG_ERROR_WHILE_SAVING, BASEENTITY_ATTRIBUTES, entityInfo, e.getMessage());
@@ -367,14 +380,11 @@ public class BatchLoading {
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
         log.info("Finished definition entity attributes, cost:" + timeElapsed.toMillis() + " millSeconds, items: " + project.entrySet().size());
-        if(errorCodes.isEmpty()) {
-            errorCodes.add(successFullySaved + BASEENTITY_ATTRIBUTES + MSG_LOADED_SUCCESSFULLY);
-        }
-        List<String> existingErrorCodes = loadReport.get(BASEENTITY_ATTRIBUTES);
-        if (existingErrorCodes != null) {
-            errorCodes.addAll(existingErrorCodes);
-        }
-        loadReport.put(BASEENTITY_ATTRIBUTES, errorCodes);
+        successMsg.add(successFullySaved + BASEENTITY_ATTRIBUTES + MSG_LOADED_SUCCESSFULLY);
+        Map<String, List<String>> report = new HashMap<>(2);
+        report.put(SUCCESSFUL, successMsg);
+        report.put(FAILED, errorCodes);
+        loadReport.put(DEF_BASEENTITY_ATTRIBUTES, report);
     }
 
     /**
@@ -384,6 +394,7 @@ public class BatchLoading {
      * @param realmName The realm
      */
     public void persistBaseEntityAttributes(Map<String, Map<String, String>> project, String realmName) {
+        List<String> successMsg = new ArrayList<>(1);
         List<String> errorCodes = new LinkedList<>();
         int successFullySaved = 0;
         Instant start = Instant.now();
@@ -402,6 +413,8 @@ public class BatchLoading {
                 boolean success = beaUtils.updateEntityAttribute(entityAttribute);
                 if(!success) {
                     log.error("Error occured when persisting EntityAttribute: " + combined);
+                } else {
+                    successFullySaved++;
                 }
             } catch (Exception e) {
                 String entityInfo = realmName + ":" + baseEntityCode + ":" + attributeCode;
@@ -416,14 +429,11 @@ public class BatchLoading {
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
         log.info("Finished entity attributes, cost:" + timeElapsed.toMillis() + " millSeconds, items: " + project.entrySet().size());
-        if(errorCodes.isEmpty()) {
-            errorCodes.add(successFullySaved + BASEENTITY_ATTRIBUTES + MSG_LOADED_SUCCESSFULLY);
-        }
-        List<String> existingErrorCodes = loadReport.get(BASEENTITY_ATTRIBUTES);
-        if (existingErrorCodes != null) {
-            errorCodes.addAll(existingErrorCodes);
-        }
-        loadReport.put(BASEENTITY_ATTRIBUTES, errorCodes);
+        successMsg.add(successFullySaved + BASEENTITY_ATTRIBUTES + MSG_LOADED_SUCCESSFULLY);
+        Map<String, List<String>> report = new HashMap<>(2);
+        report.put(SUCCESSFUL, successMsg);
+        report.put(FAILED, errorCodes);
+        loadReport.put(BASEENTITY_ATTRIBUTES, report);
     }
 
     /**
@@ -433,6 +443,7 @@ public class BatchLoading {
      * @param realmName The realm
      */
     public void persistQuestions(Map<String, Map<String, String>> project, String realmName) {
+        List<String> successMsg = new ArrayList<>(1);
         List<String> errorCodes = new LinkedList<>();
         int successFullySaved = 0;
         Instant start = Instant.now();
@@ -470,6 +481,7 @@ public class BatchLoading {
 
             try {
                 questionUtils.saveQuestion(question);
+                successFullySaved++;
             } catch (Exception e) {
                 String entityInfo = realmName + ":" + question.getCode();
                 log.warnf(MSG_ERROR_WHILE_SAVING, QUESTIONS, entityInfo, e.getMessage());
@@ -482,10 +494,11 @@ public class BatchLoading {
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
         log.info("Finished questions, cost:" + timeElapsed.toMillis() + " millSeconds, items: " + project.entrySet().size());
-        if(errorCodes.isEmpty()) {
-            errorCodes.add(successFullySaved + QUESTIONS + MSG_LOADED_SUCCESSFULLY);
-        }
-        loadReport.put(QUESTIONS, errorCodes);
+        successMsg.add(successFullySaved + QUESTIONS + MSG_LOADED_SUCCESSFULLY);
+        Map<String, List<String>> report = new HashMap<>(2);
+        report.put(SUCCESSFUL, successMsg);
+        report.put(FAILED, errorCodes);
+        loadReport.put(QUESTIONS, report);
     }
 
     /**
@@ -495,6 +508,7 @@ public class BatchLoading {
      * @param realmName The realm
      */
     public void persistQuestionQuestions(Map<String, Map<String, String>> project, String realmName) {
+        List<String> successMsg = new ArrayList<>(1);
         List<String> errorCodes = new LinkedList<>();
         int successFullySaved = 0;
         Instant start = Instant.now();
@@ -503,6 +517,7 @@ public class BatchLoading {
 			try {
 				QuestionQuestion questionQuestion = googleSheetBuilder.buildQuestionQuestion(entry.getValue(), realmName);
 				questionUtils.saveQuestionQuestion(questionQuestion);
+                successFullySaved++;
 			} catch (ItemNotFoundException e) {
                 Map<String, String> row = entry.getValue();
                 String parentCode = row.get("parentcode");
@@ -517,21 +532,23 @@ public class BatchLoading {
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
         log.info("Finished question questions, cost:" + timeElapsed.toMillis() + " millSeconds, items: " + project.entrySet().size());
-        if(errorCodes.isEmpty()) {
-            errorCodes.add(successFullySaved + QUESTIONS_QUESTIONS + MSG_LOADED_SUCCESSFULLY);
-        }
-        loadReport.put(QUESTIONS_QUESTIONS, errorCodes);
+        successMsg.add(successFullySaved + QUESTIONS_QUESTIONS + MSG_LOADED_SUCCESSFULLY);
+        Map<String, List<String>> report = new HashMap<>(2);
+        report.put(SUCCESSFUL, successMsg);
+        report.put(FAILED, errorCodes);
+        loadReport.put(QUESTIONS_QUESTIONS, report);
     }
 
     public void printLoadReport() {
         log.info("/************ Load Summary Start ************/");
-        for(Map.Entry<String, List<String>> entry : loadReport.entrySet()) {
-            log.info("    " + entry.getKey() + ":");
-            List<String> errorCodes = entry.getValue();
-            if(errorCodes.size() == 1 && errorCodes.get(0).endsWith(MSG_LOADED_SUCCESSFULLY))
-                log.info("        " + errorCodes);
-            else {
-                log.info("        Loading failed for the following " + entry.getKey() + ":");
+        for(Map.Entry<String, Map<String, List<String>>> entry : loadReport.entrySet()) {
+            String entityName = entry.getKey();
+            log.info("    " + entityName + ":");
+            List<String> successMsg = entry.getValue().get(SUCCESSFUL);
+            log.info("        " + successMsg);
+            List<String> errorCodes = entry.getValue().get(FAILED);
+            if(!errorCodes.isEmpty()) {
+                log.info("        Loading failed for the following " + entityName + " (failed count -> " + errorCodes.size() + ") :");
                 log.info("        " + CommonUtils.getCommaAndSingleQuoteSeparatedString(errorCodes));
             }
         }
