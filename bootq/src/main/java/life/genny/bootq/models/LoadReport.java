@@ -16,7 +16,6 @@ import javax.inject.Inject;
 
 import org.jboss.logging.Logger;
 
-import io.jsonwebtoken.io.IOException;
 import io.vavr.Tuple2;
 import life.genny.bootq.models.sheets.EReportCategoryType;
 import life.genny.qwandaq.models.ANSIColour;

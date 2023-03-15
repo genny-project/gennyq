@@ -42,4 +42,8 @@ public enum ANSIColour {
         return colour;
     }
 
+    public static final String doColour(String text, String colourCode) {
+        return colourCode + text + ANSIColour.RESET;
+    }
+
 }
