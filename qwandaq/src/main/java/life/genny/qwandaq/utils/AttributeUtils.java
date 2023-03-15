@@ -139,7 +139,7 @@ public class AttributeUtils {
      * @see {@link Validation}
      */
     public Attribute getAttribute(String productCode, String code, boolean bundleDataType, boolean bundleValidationList) {
-        Attribute attribute = getAttribute(productCode, code);
+        Attribute attribute = cm.getAttribute(productCode, code);
         if (attribute == null) {
             throw new ItemNotFoundException(productCode, "attribute: " + code);
         }
