@@ -527,11 +527,11 @@ public class BaseEntityUtils {
 		BaseEntity item;
 		String productCode = definition.getRealm();
 		String definitionCode = definition.getCode();
-		EntityAttribute uuidEA = beaUtils.getEntityAttribute(productCode, definitionCode, Prefix.ATT_.concat(Attribute.PRI_UUID));
-		if (uuidEA != null) {
+		try {
+			EntityAttribute uuidEA = beaUtils.getEntityAttribute(productCode, definitionCode, Prefix.ATT_.concat(Attribute.PRI_UUID));
 			log.debug("Creating user base entity");
 			item = createUser(definition);
-		} else {
+		} catch(ItemNotFoundException e) {
 			String prefix = defUtils.getDefinitionPrefix(productCode, definitionCode);
 			if (StringUtils.isBlank(prefix)) {
 				throw new DefinitionException("No prefix set for the def: " + definitionCode);
