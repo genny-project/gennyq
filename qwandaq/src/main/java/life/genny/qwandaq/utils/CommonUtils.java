@@ -104,10 +104,10 @@ public class CommonUtils {
     }
 
     public static <K, V> void printMap(Map<K, V> map, FIGetStringCallBack<K> keyCallback, FIGetStringCallBack<V> valueCallback) {
-        for(K key : map.keySet()) {
-            String msg = new StringBuilder(keyCallback.getString(key))
+        for(Map.Entry<K, V> entry : map.entrySet()) {
+            String msg = new StringBuilder(keyCallback.getString(entry.getKey()))
                             .append(" = ")
-                            .append(valueCallback.getString(map.get(key)))
+                            .append(valueCallback.getString(entry.getValue()))
                             .toString();
             log.info(msg);
         }

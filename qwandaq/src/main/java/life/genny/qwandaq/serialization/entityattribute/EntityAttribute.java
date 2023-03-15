@@ -653,7 +653,7 @@ public class EntityAttribute implements CoreEntitySerializable {
 				case GennyConstants.JAVA_LANG_BOOLEAN, GennyConstants.BOOLEAN -> { return (T) getValueBoolean(); }
 				case GennyConstants.JAVA_TIME_LOCAL_DATE, GennyConstants.LOCAL_DATE -> { return (T) getValueDate(); }
 				case GennyConstants.ORG_JAVAMONEY_MONETA_MONEY, GennyConstants.MONEY -> { return (T) getMoney(); }
-				default -> throw new UnsupportedOperationException("Unsupported Class Type for EntityAttribute: " + dataTypeClassName);
+				// default -> throw new UnsupportedOperationException("Unsupported Class Type for EntityAttribute: " + dataTypeClassName);
 			}
 		}
 		return (T) getValueString();

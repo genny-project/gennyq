@@ -195,10 +195,10 @@ public class BaseEntityUtils {
 				log.infof("No BaseEntityAttributes found for base entity [%s:%s]", productCode, code);
 				//throw new ItemNotFoundException();
 			} else {
-				log.debugf("%s BaseEntityAttributes found for base entity [%s:%s]. Setting them to BE...", entityAttributesForBaseEntity.size(), productCode, code);
+				log.tracef("%s BaseEntityAttributes found for base entity [%s:%s]. Setting them to BE...", entityAttributesForBaseEntity.size(), productCode, code);
 			}
 			baseEntity.setBaseEntityAttributes(entityAttributesForBaseEntity);
-			log.debugf("Added %s BaseEntityAttributes to BE [%s:%s]", baseEntity.getBaseEntityAttributesMap().size(), baseEntity.getRealm(), baseEntity.getCode());
+			log.tracef("Added %s BaseEntityAttributes to BE [%s:%s]", baseEntity.getBaseEntityAttributesMap().size(), baseEntity.getRealm(), baseEntity.getCode());
 		}
 		return baseEntity;
 	}

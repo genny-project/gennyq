@@ -53,4 +53,8 @@ public class ANSIColour {
      */
     public static final String WHITE = "\033[0;37m";
 
+    public static final String doColour(String text, String colourCode) {
+        return colourCode + text + ANSIColour.RESET;
+    }
+
 }

@@ -583,7 +583,7 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 				case GennyConstants.JAVA_LANG_BOOLEAN, GennyConstants.BOOLEAN -> { return (T) getValueBoolean(); }
 				case GennyConstants.JAVA_TIME_LOCAL_DATE, GennyConstants.LOCAL_DATE -> { return (T) getValueDate(); }
 				case GennyConstants.ORG_JAVAMONEY_MONETA_MONEY, GennyConstants.MONEY -> { return (T) getValueMoney(); }
-				default -> throw new UnsupportedOperationException("Unsupported DataType Class for Entity Attribute: " + getBaseEntityCode() + ":" + getAttributeCode() + " = " + dataTypeClassName);
+				// default -> throw new UnsupportedOperationException("Unsupported DataType Class for Entity Attribute: " + getBaseEntityCode() + ":" + getAttributeCode() + " = " + dataTypeClassName);
 			}
 		}
 		return (T) getValueString();
