@@ -1,5 +1,6 @@
 package life.genny.bootq.models;
 
+import java.io.File;
 import java.util.EnumMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -31,6 +32,9 @@ public class LoadReport {
     @Inject
     Logger log;
 
+
+    File outputFile;
+
     private List<Tuple2<EReportCategoryType, Integer>> successes = new LinkedList<>();
 
     private Map<ReportType, Map<EReportCategoryType, List<ReportLog>>> loadReportMap = new EnumMap<>(ReportType.class);
@@ -51,6 +55,14 @@ public class LoadReport {
 
             loadReportMap.put(reportType, map);
         }
+    }
+
+    public void setOutputFile(String path) {
+
+    }
+
+    public File getOutputFile() {
+        return outputFile;
     }
 
     /**
@@ -118,6 +130,19 @@ public class LoadReport {
         return total;
     }
 
+    public void clear() {
+        for(ReportType reportType : ReportType.values()) {
+            for(EReportCategoryType type : EReportCategoryType.values()) {
+                loadReportMap.get(reportType).get(type).clear();
+            }
+        }
+    }
+
+    private void infoAndDump(Object msg) {
+
+        log.info(msg);
+    }
+
     public void printCategory(ReportType reportType, Map.Entry<EReportCategoryType, List<ReportLog>> reportEntry, boolean showStackTraces) {
         EReportCategoryType category = reportEntry.getKey();
 
@@ -125,17 +150,9 @@ public class LoadReport {
         log.info(ANSIColour.GREEN + CATEGORY_INDENTATION + "-" + category.getLogLine() + ANSIColour.RESET);
         // Print errors if exists
         if(hasErrors(category, reportType)) {
-            CommonUtils.printCollection(logs, log::info, reportLog -> ANSIColour.RED + reportLog.getReportLine(showStackTraces) + ANSIColour.RESET);
+            CommonUtils.printCollection(logs, this::infoAndDump, reportLog -> ANSIColour.RED + reportLog.getReportLine(showStackTraces) + ANSIColour.RESET);
         } else {
             log.info(REPORT_INDENTATION + ANSIColour.doColour("No " + CommonUtils.normalizeString(reportType.name()) + " Errors for type" + category.getLogLine() + "!", ANSIColour.GREEN));
-        }
-    }
-
-    public void clear() {
-        for(ReportType reportType : ReportType.values()) {
-            for(EReportCategoryType type : EReportCategoryType.values()) {
-                loadReportMap.get(reportType).get(type).clear();
-            }
         }
     }
 
@@ -163,29 +180,7 @@ public class LoadReport {
         } else {
             log.info(ANSIColour.GREEN + TYPE_INDENTATION + "- NO Persist Errors :)" + ANSIColour.RESET);
         }
-        /**
-         * BUILD ERRORS
-         *  - VALIDATION:
-         *          - FJSRDIFGJRSFDI
-         *          - FDJIFDSJ had bad code
-         *  - ATTRIBUTE:
-         *          - GFJIGJFIG
-         * PERSIST_ERRORS
-         *  - VALIDATION:
-         *          - FAILED TO PERSIST BLA BLA BLA 
-         */
 
-
-
-            // log.info("    " + entry.getKey() + ":");
-            // List<String> errorCodes = entry.getValue();
-            // if(errorCodes.size() == 1 && errorCodes.get(0).endsWith(MSG_LOADED_SUCCESSFULLY))
-            //     log.info("        " + errorCodes);
-            // else {
-            //     log.info("        Loading failed for the following " + entry.getKey() + ":");
-            //     log.info("        " + CommonUtils.getCommaAndSingleQuoteSeparatedString(errorCodes));
-            // }
-        // }
         log.info(ANSIColour.doColour("/************ Load Summary END ************/", ANSIColour.YELLOW));
     }
     
@@ -220,7 +215,7 @@ public class LoadReport {
                     .append(EXCEPTION_INDENTATION);
 
                 for(StackTraceElement element : exception.getStackTrace()) {
-                    sb.append(element.toString());
+                    sb.append("\n").append(EXCEPTION_INDENTATION).append(element.toString());
                 }
             } else if(showStackTraces) {
                 sb.append("\n")

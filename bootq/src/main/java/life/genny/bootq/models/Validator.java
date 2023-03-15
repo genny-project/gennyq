@@ -20,6 +20,8 @@ import life.genny.qwandaq.validation.Validation;
 
 @ApplicationScoped
 public class Validator {
+    public static final String KEY_PARENT = "parent";
+    public static final String KEY_CHILD = "child";
     
     protected static final String[] DEF_PREFIXES = new String[] {
         Prefix.ATT_,
@@ -50,8 +52,8 @@ public class Validator {
             }
 
         return Map.of
-        ("parent", parentQuestion,
-        "child", childQuestion);
+        (KEY_PARENT, parentQuestion,
+        KEY_CHILD, childQuestion);
     }
 
     public Map<Class<?>, Object> validateQuestion(Map<String, String> row, String realmName)

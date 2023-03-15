@@ -335,8 +335,8 @@ public class GoogleSheetBuilder {
     public QuestionQuestion buildQuestionQuestion(Map<String, String> row, String realmName) {
 
 		Map<String, Object> dependencies = validator.validateQuestionQuestion(row, realmName);
-		Question parent = (Question) dependencies.get("parent");
-		Question child = (Question) dependencies.get("child");
+		Question parent = (Question) dependencies.get(Validator.KEY_PARENT);
+		Question child = (Question) dependencies.get(Validator.KEY_CHILD);
 
         Double weight = toDouble(row.get(WEIGHT));
         boolean mandatory = toBoolean(row.get(MANDATORY));
