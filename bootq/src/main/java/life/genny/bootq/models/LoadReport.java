@@ -88,7 +88,7 @@ public class LoadReport {
      */
     public void addBuildError(EReportCategoryType model, String identifier, Exception error) {
         ReportLog reportLog = new ReportLog(model.getLogLine() + "\t" + identifier, error);
-        log.error(ANSIColour.RED + String.format(MSG_ERROR_WHILE_BUILDING, identifier, model.getLogLine(), error.getMessage()) + "! Skipping." + ANSIColour.RESET);
+        log.error(ANSIColour.doColour(String.format(MSG_ERROR_WHILE_BUILDING, identifier, model.getLogLine(), error.getMessage()) + "! Skipping.", ANSIColour.RED));
         loadReportMap.get(ReportType.BUILD_ERRORS).get(model).add(reportLog);
     }
 
@@ -157,10 +157,10 @@ public class LoadReport {
         EReportCategoryType category = reportEntry.getKey();
 
         List<ReportLog> logs = reportEntry.getValue();
-        logAndDump(ANSIColour.GREEN + CATEGORY_INDENTATION + "-" + category.getLogLine() + ANSIColour.RESET);
+        logAndDump(ANSIColour.doColour(CATEGORY_INDENTATION + "-" + category.getLogLine(), ANSIColour.GREEN));
         // Print errors if exists
         if(hasErrors(category, reportType)) {
-            CommonUtils.printCollection(logs, this::logAndDump, reportLog -> ANSIColour.RED + reportLog.getReportLine(showStackTraces) + ANSIColour.RESET);
+            CommonUtils.printCollection(logs, this::logAndDump, reportLog -> ANSIColour.doColour(reportLog.getReportLine(showStackTraces), ANSIColour.RED));
         } else {
             logAndDump(REPORT_INDENTATION + ANSIColour.doColour("No " + CommonUtils.normalizeString(reportType.name()) + " Errors for type" + category.getLogLine() + "!", ANSIColour.GREEN));
         }

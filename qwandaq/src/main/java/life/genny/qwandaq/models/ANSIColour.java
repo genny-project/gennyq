@@ -28,7 +28,7 @@ public enum ANSIColour {
     }
 
     public static final String doColour(Object msg, ANSIColour colour) {
-        return colour.colour + msg + ANSIColour.RESET;
+        return colour.colour + msg + ANSIColour.RESET.colour;
     }
 
     public static final String strip(String text) {

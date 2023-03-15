@@ -429,11 +429,10 @@ public class BatchLoading {
 
             for(Map.Entry<String, EntityAttribute> eas : inheritedEas.entrySet()) {
                 EntityAttribute entityAttribute = eas.getValue();
-                log.debug("Adding " + defBe.getCode() + ":" + entityAttribute.getAttributeCode());
+                log.trace("Adding " + defBe.getCode() + ":" + entityAttribute.getAttributeCode());
                 Attribute attribute = attributeUtils.getAttribute(entityAttribute.getRealm(), entityAttribute.getAttributeCode(), true);
                 entityAttribute.setAttribute(attribute);
-                log.debug("\t- Value: " + beaUtils.getValue(realmName, entityAttribute.getBaseEntityCode(), entityAttribute.getAttributeCode()));
-                log.debug("\t- DataType: " + entityAttribute.getAttribute().getDataType());
+                
                 EntityAttribute newEa = defBe.addEntityAttribute(attribute, entityAttribute.getWeight() != null ? entityAttribute.getWeight() : 0.0, entityAttribute.getInferred(), entityAttribute.getValue());
                 newEa.setPrivacyFlag(entityAttribute.getPrivacyFlag());
                 newEa.setConfirmationFlag(entityAttribute.getConfirmationFlag());
