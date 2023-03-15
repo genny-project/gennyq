@@ -130,6 +130,9 @@ public class BatchLoading {
 			case "questionquestion":
 				persistQuestionQuestions(rx.getQuestionQuestions(), realm);
 				break;
+            case "linking":
+                linkEntityAttributes(rx.getDef_entityAttributes().values(), realm);
+                break;
             default:
                 throw new IllegalStateException("Bad Table: " + table);
 		}
@@ -342,14 +345,14 @@ public class BatchLoading {
                 continue;
             }
 
-            log.info("Found LNK_INCLUDE for BE: " + defBe);
+            log.debug("Found LNK_INCLUDE for BE: " + defBe);
 
             Map<String, EntityAttribute> inheritedEas = beaUtils.getAllEntityAttributesInParent(Definition.from(defBe));
-            log.info("Found " + inheritedEas.size() + " inherited entity attributes");
+            log.debug("Found " + inheritedEas.size() + " inherited entity attributes");
 
             for(Map.Entry<String, EntityAttribute> eas : inheritedEas.entrySet()) {
                 EntityAttribute entityAttribute = eas.getValue();
-                log.info("Adding " + defBe.getCode() + ":" + entityAttribute.getAttributeCode());
+                log.trace("Adding " + defBe.getCode() + ":" + entityAttribute.getAttributeCode());
                 Attribute attribute = attributeUtils.getAttribute(entityAttribute.getRealm(), entityAttribute.getAttributeCode());
                 EntityAttribute newEa = defBe.addEntityAttribute(attribute, entityAttribute.getWeight() != null ? entityAttribute.getWeight() : 0.0, entityAttribute.getInferred(), entityAttribute.getValue());
                 newEa.setPrivacyFlag(entityAttribute.getPrivacyFlag());
