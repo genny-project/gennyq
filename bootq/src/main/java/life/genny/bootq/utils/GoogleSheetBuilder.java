@@ -297,14 +297,15 @@ public class GoogleSheetBuilder {
     public Question buildQuestion(Map<String, String> row, String realmName) {
 
         String code = row.get("code");
+		Map<Class<?>, Object> dependencies = validator.validateQuestion(row, realmName);
+		Attribute attribute = (Attribute) dependencies.get(Attribute.class);
+        
 		Question question = questionUtils.getQuestionFromQuestionCode(realmName, code);
 		if (question == null) {
 			question = new Question();
 			question.setCode(code);
 		}
 
-		Map<Class<?>, Object> dependencies = validator.validateQuestion(row, realmName);
-		Attribute attribute = (Attribute) dependencies.get(Attribute.class);
 
         String name = row.get("name");
         String html = row.get("html");

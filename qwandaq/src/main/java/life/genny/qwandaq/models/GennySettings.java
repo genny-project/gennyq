@@ -13,28 +13,16 @@ import org.jboss.logging.Logger;
 public class GennySettings {
 	private static final Logger log = Logger.getLogger(GennySettings.class);
 
-	/**
-	 * Get System environment variable, providing a fallback if necessary. Will throw {@link IllegalStateException} if
-	 * no fallback is present
-	 * @param env - key of the system environment variable to get
-	 * @param fallback - default value in the case the environment variable is not present
-	 * @param alert - whether or not to log a warning if the environment variable is missing
-	 * */
-	private static final String getConfig(String env, String fallback) 
-		throws IllegalStateException {
-		return getConfig(env, fallback, false);
-	}
 
 	/**
 	 * Get System environment variable, providing a fallback if necessary. Will throw {@link IllegalStateException} if
 	 * no fallback is present
 	 * @param env - key of the system environment variable to get
 	 * @param fallback - default value in the case the environment variable is not present
-	 * @param alert - whether or not to log a warning if the environment variable is missing
 	 * */
-	private static final String getConfig(String env, String fallback, boolean alert) // env: PROJECT_URL, fallback:"http://alyson.genny.life", alert: true
+	private static final String getConfig(String env, String fallback) // env: PROJECT_URL, fallback:"http://alyson.genny.life", alert: true
 		throws IllegalStateException {
-		String value = CommonUtils.getSystemEnv(env, alert && fallback == null);
+		String value = CommonUtils.getSystemEnv(env, fallback);
 		if(StringUtils.isBlank(value)) {
 			if(fallback != null) {
 				log.warn("Using fallback for " + env + ": " + fallback);
@@ -60,7 +48,7 @@ public class GennySettings {
 	 * @return dummy user password as a string
 	 */
 	public static String dummyUserPassword() {
-		return getConfig("GENNY_DUMMY_PASSWORD", null, true);
+		return getConfig("GENNY_DUMMY_PASSWORD", null);
 	}
 
 	/* ############ URL Methods ############## */
@@ -71,7 +59,7 @@ public class GennySettings {
 	 * @return String
 	 */
 	public static String projectUrl() {
-		return getConfig("PROJECT_URL", "http://alyson.genny.life", true);
+		return getConfig("PROJECT_URL", "http://alyson.genny.life");
 	}
 	
 	/** 
@@ -85,35 +73,35 @@ public class GennySettings {
 	 * @return String
 	 */
 	public static String fyodorServiceUrl() {
-		return getConfig("FYODOR_SERVICE_API", projectUrl() + ":4242", true);
+		return getConfig("FYODOR_SERVICE_API", projectUrl() + ":4242");
 	}
 
 	/**
 	* @return String
 	 */
 	public static String gadaqServiceUrl() {
-		return getConfig("GENNY_GADAQ_SERVICE_URL", projectUrl() + ":6590", true);
+		return getConfig("GENNY_GADAQ_SERVICE_URL", projectUrl() + ":6590");
 	}
 
 	/**
 	* @return String
 	 */
 	public static String kogitoServiceUrl() {
-		return getConfig("GENNY_KOGITO_SERVICE_URL", projectUrl() + ":6590", true);
+		return getConfig("GENNY_KOGITO_SERVICE_URL", projectUrl() + ":6590");
 	}
 
 	/** 
 	 * @return String
 	 */
 	public static String shleemyServiceUrl() {
-		return getConfig("SHLEEMY_SERVICE_API", projectUrl() + ":6969", true);
+		return getConfig("SHLEEMY_SERVICE_API", projectUrl() + ":6969");
 	}
 
 	/** 
 	 * @return String
 	 */
 	public static String dataIndexUrl() {
-		return getConfig("GENNY_KOGITO_DATAINDEX_HTTP_URL", projectUrl() + ":8582", true);
+		return getConfig("GENNY_KOGITO_DATAINDEX_HTTP_URL", projectUrl() + ":8582");
 	}
 	
 	/** 
@@ -122,7 +110,7 @@ public class GennySettings {
 	 * @return String
 	 */
 	public static String infinispanHost() {
-		return getConfig("INFINISPAN_URL", projectUrl() + ":11222", true);
+		return getConfig("INFINISPAN_URL", projectUrl() + ":11222");
 	}
 
 	/** 
@@ -177,7 +165,7 @@ public class GennySettings {
 	 * @return String
 	 */
 	public static String minIOServerUrl() {
-		return getConfig("MINIO_SERVER_URL", "http://localhost:9000", true);
+		return getConfig("MINIO_SERVER_URL", "http://localhost:9000");
 	}
 
 	/**
@@ -185,20 +173,20 @@ public class GennySettings {
 	 * @return String
 	 */
 	public static String minIOAccessKey() {
-		return getConfig("MINIO_ACCESS_KEY", "accessKey", true);
+		return getConfig("MINIO_ACCESS_KEY", "accessKey");
 	}
 	/**
 	 * Get minIO secret key
 	 * @return String
 	 */
 	public static String minIOSecretKey() {
-		return getConfig("MINIO_SECRET_KEY", "secretKey", true);
+		return getConfig("MINIO_SECRET_KEY", "secretKey");
 	}
 	/**
 	 * Get minIO bucket name
 	 * @return String
 	 */
 	public static String minIOBucketName() {
-		return getConfig("BUCKET_NAME", "media", true);
+		return getConfig("BUCKET_NAME", "media");
 	}
 }

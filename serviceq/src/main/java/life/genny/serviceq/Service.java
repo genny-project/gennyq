@@ -118,7 +118,7 @@ public class Service {
 	 */
 	public String[] getProductCodes() {
 
-		String projectRealm = CommonUtils.getSystemEnv("PROJECT_REALM", false);
+		String projectRealm = CommonUtils.getSystemEnv("PROJECT_REALM");
 		String allowedProducts = CommonUtils.getSystemEnv("PRODUCT_CODES");
 
 		if (allowedProducts != null) {
@@ -129,7 +129,7 @@ public class Service {
 			return new String[]{ projectRealm };
 		}
 
-		return null;
+		return new String[]{};
 	}
 
 	/**

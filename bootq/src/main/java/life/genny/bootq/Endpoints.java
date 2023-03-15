@@ -4,7 +4,7 @@ import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
 
 import life.genny.bootq.models.BatchLoading;
-import life.genny.bootq.models.LoadReport;
+import life.genny.bootq.models.reporting.LoadReport;
 import life.genny.bootq.sheets.realm.Realm;
 import life.genny.bootq.sheets.realm.RealmUnit;
 import life.genny.qwandaq.models.UserToken;
@@ -52,7 +52,7 @@ public class Endpoints {
     @Inject
     LoadReport loadReport;
 
-    private static boolean SHOW_STACK_TRACES = false;
+    private static final boolean SHOW_STACK_TRACES = false;
 
     public boolean getIsTaskRunning() {
         return isBatchLoadingRunning;
@@ -87,8 +87,8 @@ public class Endpoints {
     @Produces(MediaType.TEXT_PLAIN)
     @Transactional
     public Response loadSheetsUsingDefaultSheetId() {
-        String defaultSheetId = CommonUtils.getSystemEnv("GOOGLE_HOSTING_SHEET_ID", false);
-        if (defaultSheetId != null) {
+        String defaultSheetId = CommonUtils.getSystemEnv("GOOGLE_HOSTING_SHEET_ID", "");
+        if (StringUtils.isBlank(defaultSheetId)) {
             return loadSheetsById(defaultSheetId);
         } else {
             return Response.status(Response.Status.BAD_REQUEST)
@@ -139,7 +139,14 @@ public class Endpoints {
         setIsTaskRunning(false);
         Long end = System.currentTimeMillis();
         log.infof("Total time taken to load the sheet %s : %s (millis)", sheetId, (end - start));
-        loadReport.printLoadReport(SHOW_STACK_TRACES);
+        try {
+            loadReport.printLoadReport(SHOW_STACK_TRACES);
+        } catch(java.io.IOException e) {
+            log.error("Error dumping to file");
+            log.error(e.getMessage());
+            e.printStackTrace();
+        }
+
         return Response.ok().entity(msg).build();
     }
 
@@ -176,6 +183,8 @@ public class Endpoints {
                     try {
                         bl.persistTable(realmUnit, table);
                     } catch (IllegalStateException e) {
+                        // TODO: lint the table name ealier
+                        log.error("Bad Table: " + table);
                         return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
                     }
                     log.info("Finished Persisting table " + table);
@@ -191,7 +200,13 @@ public class Endpoints {
             setIsTaskRunning(false);
         }
         log.info(msg);
-        loadReport.printLoadReport(SHOW_STACK_TRACES);
+        try {
+            loadReport.printLoadReport(SHOW_STACK_TRACES);
+        } catch(java.io.IOException e) {
+            log.error("Error dumping to file");
+            log.error(e.getMessage());
+            e.printStackTrace();
+        }
         return Response.ok().entity(msg).build();
     }
 

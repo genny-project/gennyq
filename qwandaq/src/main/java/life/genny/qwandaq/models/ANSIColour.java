@@ -1,57 +1,46 @@
 package life.genny.qwandaq.models;
 
+import life.genny.qwandaq.utils.callbacks.FILogCallback;
+
 /**
  * A Class for storing ANSI text colours 
  * used in logging, or anything else.
  */
-public class ANSIColour {
+public enum ANSIColour {
+    RED("\033[0;31m"),
+    BLACK("\033[0;30m"),
+    GREEN("\033[0;32m"),
+    YELLOW("\033[0;33m"),
+    BLUE("\033[0;34m"),
+    PURPLE("\033[0;35m"),
+    CYAN("\033[0;36m"),
+    WHITE("\033[0;37m"),
+    RESET("\033[0m");
 
-    private ANSIColour() { /* constants class */}
+    private String colour;
 
-    /**
-     * ansi reset
-     */
-    public static final String RESET = "\033[0m";
+    private ANSIColour(String colour) {
+        this.colour = colour;
+    }
 
-    /**
-     * ansi black
-     */
-    public static final String BLACK = "\033[0;30m";
+    public static final void logColour(FILogCallback log, Object msg, ANSIColour colour) {
+        log.log(doColour(msg, colour));
+    }
 
-    /**
-     * ansi red
-     */
-    public static final String RED = "\033[0;31m";
+    public static final String doColour(Object msg, ANSIColour colour) {
+        return colour.colour + msg + ANSIColour.RESET.colour;
+    }
 
-    /**
-     * ansi green
-     */
-    public static final String GREEN = "\033[0;32m";
+    public static final String strip(String text) {
+        for(ANSIColour col : values()) {
+            text = text.replace(col.colour, "");
+        }
+        return text;
+    }
 
-    /**
-     * ansi yellow
-     */
-    public static final String YELLOW = "\033[0;33m";
-
-    /**
-     * ansi blue
-     */
-    public static final String BLUE = "\033[0;34m";
-
-    /**
-     * ansi purple
-     */
-    public static final String PURPLE = "\033[0;35m";
-
-    /**
-     * ansi cyan
-     */
-    public static final String CYAN = "\033[0;36m";
-
-    /**
-     * ansi white
-     */
-    public static final String WHITE = "\033[0;37m";
+    public String getColour() {
+        return colour;
+    }
 
     public static final String doColour(String text, String colourCode) {
         return colourCode + text + ANSIColour.RESET;

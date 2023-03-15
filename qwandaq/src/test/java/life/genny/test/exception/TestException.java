@@ -22,8 +22,8 @@ public class TestException extends GennyRuntimeException {
 
     @Override
     public void printStackTrace() {
-        log.error(ANSIColour.RED + "[!] Error executing test: " + testName);
-        if(msg != null) log.error(ANSIColour.RED + "[!] Details: " + msg);
+        log.error(ANSIColour.doColour("[!] Error executing test: " + testName, ANSIColour.RED));
+        if(msg != null) log.error(ANSIColour.doColour("[!] Details: " + msg, ANSIColour.RED));
 
         super.printStackTrace();
     }

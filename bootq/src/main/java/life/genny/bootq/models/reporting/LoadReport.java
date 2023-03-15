@@ -1,6 +1,11 @@
-package life.genny.bootq.models;
+package life.genny.bootq.models.reporting;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -33,6 +38,7 @@ public class LoadReport {
     Logger log;
 
 
+    List<Object> linesToOutput = new ArrayList<>();
     File outputFile;
 
     private List<Tuple2<EReportCategoryType, Integer>> successes = new LinkedList<>();
@@ -55,10 +61,18 @@ public class LoadReport {
 
             loadReportMap.put(reportType, map);
         }
+
+        String path = CommonUtils.getSystemEnv("GENNY_BOOTQ_OUTPUT_FILE_PATH", "output/");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-LLLL-yyyy");
+        LocalDate localDate = LocalDate.now();
+        String fmtedString = localDate.format(formatter);
+        String output = CommonUtils.getSystemEnv("GENNY_BOOTQ_OUTPUT_FILE", "output-" + fmtedString + ".log");
+
+        setOutputFile(path + "/" + output);
     }
 
     public void setOutputFile(String path) {
-
+        outputFile = new File(path);
     }
 
     public File getOutputFile() {
@@ -73,7 +87,7 @@ public class LoadReport {
      */
     public void addBuildError(EReportCategoryType model, String identifier, Exception error) {
         ReportLog reportLog = new ReportLog(model.getLogLine() + "\t" + identifier, error);
-        log.error(ANSIColour.RED + String.format(MSG_ERROR_WHILE_BUILDING, identifier, model.getLogLine(), error.getMessage()) + "! Skipping." + ANSIColour.RESET);
+        log.error(ANSIColour.doColour(String.format(MSG_ERROR_WHILE_BUILDING, identifier, model.getLogLine(), error.getMessage()) + "! Skipping.", ANSIColour.RED));
         loadReportMap.get(ReportType.BUILD_ERRORS).get(model).add(reportLog);
     }
 
@@ -138,93 +152,68 @@ public class LoadReport {
         }
     }
 
-    private void infoAndDump(Object msg) {
-
-        log.info(msg);
-    }
-
     public void printCategory(ReportType reportType, Map.Entry<EReportCategoryType, List<ReportLog>> reportEntry, boolean showStackTraces) {
         EReportCategoryType category = reportEntry.getKey();
 
         List<ReportLog> logs = reportEntry.getValue();
-        log.info(ANSIColour.GREEN + CATEGORY_INDENTATION + "-" + category.getLogLine() + ANSIColour.RESET);
+        logAndDump(ANSIColour.doColour(CATEGORY_INDENTATION + "-" + category.getLogLine(), ANSIColour.GREEN));
         // Print errors if exists
         if(hasErrors(category, reportType)) {
-            CommonUtils.printCollection(logs, this::infoAndDump, reportLog -> ANSIColour.RED + reportLog.getReportLine(showStackTraces) + ANSIColour.RESET);
+            CommonUtils.printCollection(logs, this::logAndDump, reportLog -> ANSIColour.doColour(reportLog.getReportLine(showStackTraces), ANSIColour.RED));
         } else {
-            log.info(REPORT_INDENTATION + ANSIColour.doColour("No " + CommonUtils.normalizeString(reportType.name()) + " Errors for type" + category.getLogLine() + "!", ANSIColour.GREEN));
+            logAndDump(REPORT_INDENTATION + ANSIColour.doColour("No " + CommonUtils.normalizeString(reportType.name()) + " Errors for type" + category.getLogLine() + "!", ANSIColour.GREEN));
         }
     }
 
-    public void printLoadReport(boolean showStackTraces) {
-        log.info(ANSIColour.YELLOW + "/************ Load Summary Start ************/" + ANSIColour.RESET);
+    private void logAndDump(Object msg) {
+        linesToOutput.add(ANSIColour.strip(msg + "\n"));
+        log.info(msg);
+    }
+
+    public void printLoadReport(boolean showStackTraces) throws java.io.IOException {
+        logAndDump(ANSIColour.doColour("/************ Load Summary Start ************/", ANSIColour.YELLOW));
 
         // Print all build errors (if exists)
         if(hasErrors(ReportType.BUILD_ERRORS)) {
-            log.info(ANSIColour.RED + TYPE_INDENTATION + "- Build Errors" + ANSIColour.RESET);
+            logAndDump(ANSIColour.doColour(TYPE_INDENTATION + "- Build Errors", ANSIColour.RED));
             Map<EReportCategoryType, List<ReportLog>> buildErrorMap = loadReportMap.get(ReportType.BUILD_ERRORS);
             for(Map.Entry<EReportCategoryType, List<ReportLog>> reportEntry : buildErrorMap.entrySet()) {
                 printCategory(ReportType.BUILD_ERRORS, reportEntry, showStackTraces);
             }
         } else {
-            log.info(ANSIColour.GREEN + TYPE_INDENTATION + "- NO Build Errors :)" + ANSIColour.RESET);
+            logAndDump(ANSIColour.doColour(TYPE_INDENTATION + "- NO Build Errors :)", ANSIColour.GREEN));
         }
 
         // Print all persist errors (if exists)
         if(hasErrors(ReportType.PERSIST_ERRORS)) {
-            log.info(ANSIColour.CYAN + TYPE_INDENTATION + "- Persist Errors" + ANSIColour.RESET);
+            logAndDump(ANSIColour.doColour(TYPE_INDENTATION + "- Persist Errors", ANSIColour.CYAN));
             Map<EReportCategoryType, List<ReportLog>> buildErrorMap = loadReportMap.get(ReportType.BUILD_ERRORS);
             for(Map.Entry<EReportCategoryType, List<ReportLog>> reportEntry : buildErrorMap.entrySet()) {
                 printCategory(ReportType.PERSIST_ERRORS, reportEntry, showStackTraces);
             }
         } else {
-            log.info(ANSIColour.GREEN + TYPE_INDENTATION + "- NO Persist Errors :)" + ANSIColour.RESET);
+            logAndDump(ANSIColour.doColour(TYPE_INDENTATION + "- NO Persist Errors :)", ANSIColour.GREEN));
         }
 
-        log.info(ANSIColour.doColour("/************ Load Summary END ************/", ANSIColour.YELLOW));
+        logAndDump(ANSIColour.doColour("/************ Load Summary END ************/", ANSIColour.YELLOW));
+
+
+        FileWriter fw = null;
+        try {
+            fw = new FileWriter(outputFile);
+        } catch (java.io.IOException e) {
+            log.error("Error opening file: " + outputFile);
+            e.printStackTrace();
+        }
+        try(BufferedWriter writer = new BufferedWriter(fw)) {
+            for(Object msg : linesToOutput) {
+                writer.append(msg.toString());
+            }
+        }
+        if(fw != null)
+            fw.close();
     }
     
-    public class ReportLog {
-
-        public final String identifier;
-        public Exception exception;
-        public final String details;
-
-        public ReportLog(String identifier, String details) {
-            this(identifier, null, details);
-        }
-
-        public ReportLog(String identifier, Exception exception) {
-            this(identifier, exception, exception.getMessage());
-        }
-
-        public ReportLog(String identifier, Exception exception, String details) {
-            this.identifier = identifier;
-            this.exception = exception;
-            this.details = details;
-        }
-
-        public String getReportLine(boolean showStackTraces) {
-            StringBuilder sb = new StringBuilder(REPORT_INDENTATION)
-                .append("- ")
-                .append(identifier)
-                .append(details);
-            
-            if(showStackTraces && exception != null) {
-                sb.append("\n")
-                    .append(EXCEPTION_INDENTATION);
-
-                for(StackTraceElement element : exception.getStackTrace()) {
-                    sb.append("\n").append(EXCEPTION_INDENTATION).append(element.toString());
-                }
-            } else if(showStackTraces) {
-                sb.append("\n")
-                .append(EXCEPTION_INDENTATION)
-                .append("- No Exception Provided");
-            }
-
-            return sb.toString();
-        }
-    }
+    
 
 }

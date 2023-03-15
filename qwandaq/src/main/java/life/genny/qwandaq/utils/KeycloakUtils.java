@@ -17,7 +17,6 @@ import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -154,8 +153,7 @@ public class KeycloakUtils {
 
         String token = fetchOIDCToken(keycloakUrl, realm, params);
 
-        GennyToken gennyToken = new GennyToken(token);
-        return gennyToken;
+        return new GennyToken(token);
     }
 
     /**
@@ -173,7 +171,7 @@ public class KeycloakUtils {
         String keycloakUrl = gennyToken.getKeycloakUrl();
 
         if (userBE == null) {
-            log.error(ANSIColour.RED + "User BE is NULL" + ANSIColour.RESET);
+            log.error(ANSIColour.doColour("User BE is NULL", ANSIColour.RED));
             return null;
         }
 
@@ -182,14 +180,14 @@ public class KeycloakUtils {
 
         if (uuid == null) {
 
-            log.warn(ANSIColour.YELLOW + "No PRI_UUID found for user " + userBE.getCode()
-                    + ", attempting to use PRI_EMAIL instead" + ANSIColour.RESET);
+            log.warn(ANSIColour.doColour("No PRI_UUID found for user " + userBE.getCode()
+                    + ", attempting to use PRI_EMAIL instead",  ANSIColour.YELLOW));
 
             // grab email to fetch token
             String email = userBE.getValue("PRI_EMAIL", null);
 
             if (email == null) {
-                log.error(ANSIColour.RED + "No PRI_EMAIL found for user " + userBE.getCode() + ANSIColour.RESET);
+                log.error(ANSIColour.doColour("No PRI_EMAIL found for user " + userBE.getCode(),  ANSIColour.RED));
                 return null;
             }
 

@@ -84,7 +84,7 @@ public class MessageProcessor {
         String realm = userToken.getProductCode();
 
         if (message == null) {
-            log.error(ANSIColour.RED + "GENNY COM MESSAGE IS NULL" + ANSIColour.RESET);
+            log.error(ANSIColour.doColour("GENNY COM MESSAGE IS NULL", ANSIColour.RED));
         }
 
         log.debug("Realm is " + realm + " - Incoming Message :: " + message.toString());
@@ -124,7 +124,7 @@ public class MessageProcessor {
         baseEntityContextMap.put("PROJECT", projectBe);
 
         if (templateBe == null) {
-            log.warn(ANSIColour.YELLOW + "No Template found for " + message.getTemplateCode() + ANSIColour.RESET);
+            log.warn(ANSIColour.doColour("No Template found for " + message.getTemplateCode(), ANSIColour.YELLOW));
         } else {
             log.info("Using TemplateBE " + templateBe.getCode());
 
@@ -228,7 +228,7 @@ public class MessageProcessor {
             if (recipientBe != null) {
                 recipientBeList.add(recipientBe);
             } else {
-                log.error(ANSIColour.RED + "Could not process recipient " + recipient + ANSIColour.RESET);
+                log.error(ANSIColour.doColour("Could not process recipient " + recipient, ANSIColour.RED));
             }
         }
 

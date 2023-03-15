@@ -25,6 +25,8 @@ public class CommonUtils {
 
     public static final String STR_ARRAY_EMPTY = "[]";
 
+    private CommonUtils() {/* utilities class */}
+
     /**
      * Normalize a String by forcing uppercase on first character and lowercase on the rest
      * e.g: 
@@ -97,9 +99,9 @@ public class CommonUtils {
      * works well assuming that the toString methods of the keys and values are well defined
      * @param map map to print
      */
-    public static void printMap(Map<?, ?> map) {
-        for(Object key : map.keySet()) {
-            log.info(key + "=" + map.get(key));
+    public static <K, V> void printMap(Map<K, V> map) {
+        for(Map.Entry<K, V> entry : map.entrySet()) {
+            log.info(entry.getKey() + "=" + entry.getValue());
         }
     }
 
@@ -118,17 +120,11 @@ public class CommonUtils {
      * @param <T> type
      * @param objA Object1 to compare
      * @param objB Object2 to compare
-     * @return true if both strings are the same or false if not
+     * @return true if both values are the same or false if not. 2 values are assumed equals if objA.equals(objB) OR both objA and objB are null
      */
     public static <T> Boolean compare(T objA, T objB) {
-        // Case string a is null
-        if(objA == null) {
-            return (objB == null);
-        }
-
-        // Case string b is null
-        if(objB == null) {
-            return (objA == null);
+        if(objA == null || objB == null) {
+            return objB == null && objA == null;
         }
 
         return objA.equals(objB);
@@ -137,16 +133,19 @@ public class CommonUtils {
     /**
      * A method to retrieve a system environment variable, and optionally log it if it is missing (default, do log)
      * @param env Env to retrieve
-     * @param alert whether or not to throw an excpetion or just log if it is missing or not (default: true)
+     * @param fallback the fallback to use if the env cannot be found.
      * @return the value of the environment variable, or null if it cannot be found
+     * 
+     * @throws {@link MissingEnvironmentVariableException} if env can be null 
      */
-    public static String getSystemEnv(String env, boolean alert) {
+    public static String getSystemEnv(String env, String fallback) {
         String result = System.getenv(env);
         
-        if(result == null && alert) {
+        if(result == null && fallback == null) {
             throw new MissingEnvironmentVariableException(env);
-        } else {
+        } else if(result == null) {
             log.warn("Could not find System Environment Variable: " + env);
+            return fallback;
         }
 
         return result;
@@ -158,7 +157,7 @@ public class CommonUtils {
      * @return the value of the environment variable, or null if it cannot be found
      */
     public static String getSystemEnv(String env) {
-        return getSystemEnv(env, true);
+        return getSystemEnv(env, null);
     }
 
     /**
