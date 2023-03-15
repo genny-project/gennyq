@@ -336,21 +336,25 @@ public class BatchLoading {
 
             BaseEntity defBe;
             try {
-                defBe = beUtils.getBaseEntity(row.get("baseentitycode"));
+                defBe = beUtils.getBaseEntity(realmName, row.get("baseentitycode"));
             } catch(ItemNotFoundException e) {
                 log.error(ANSIColour.RED + e.getMessage() + ". Skipping" + ANSIColour.RESET);
                 continue;
             }
 
+            log.info("Found LNK_INCLUDE for BE: " + defBe);
+
             Map<String, EntityAttribute> inheritedEas = beaUtils.getAllEntityAttributesInParent(Definition.from(defBe));
+            log.info("Found " + inheritedEas.size() + " inherited entity attributes");
 
             for(Map.Entry<String, EntityAttribute> eas : inheritedEas.entrySet()) {
-                EntityAttribute entityAttribute = eas.getValue().clone();
-                entityAttribute.setBaseEntity(defBe);
-                EntityAttribute newEa = defBe.addEntityAttribute(entityAttribute.getAttribute(), entityAttribute.getWeight(), entityAttribute.getInferred(), entityAttribute.getValue());
+                EntityAttribute entityAttribute = eas.getValue();
+                log.info("Adding " + defBe.getCode() + ":" + entityAttribute.getAttributeCode());
+                Attribute attribute = attributeUtils.getAttribute(entityAttribute.getRealm(), entityAttribute.getAttributeCode());
+                EntityAttribute newEa = defBe.addEntityAttribute(attribute, entityAttribute.getWeight() != null ? entityAttribute.getWeight() : 0.0, entityAttribute.getInferred(), entityAttribute.getValue());
                 newEa.setPrivacyFlag(entityAttribute.getPrivacyFlag());
                 newEa.setConfirmationFlag(entityAttribute.getConfirmationFlag());
-
+                newEa.setCapabilityRequirements(entityAttribute.getCapabilityRequirements());
                 beaUtils.updateEntityAttribute(newEa);
             }
         }

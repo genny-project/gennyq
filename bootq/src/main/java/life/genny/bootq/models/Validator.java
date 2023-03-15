@@ -8,6 +8,7 @@ import javax.inject.Inject;
 
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
@@ -102,7 +103,7 @@ public class Validator {
     public Map<Class<?>, Object> validateEntityAttribute(Map<String, String> row, String realmName) {
         String baseEntityCode = row.get("baseentitycode");
 
-        BaseEntity baseEntity = (BaseEntity) cm.getPersistableEntity(realmName, new BaseEntityKey(realmName, baseEntityCode));
+        BaseEntity baseEntity = (BaseEntity) cm.getPersistableEntity(GennyConstants.CACHE_NAME_BASEENTITY, new BaseEntityKey(realmName, baseEntityCode));
         if(baseEntity == null)
             throw new BadDataException("No Persisted BaseEntity found for code: " + baseEntityCode + " in product " + realmName);
 
