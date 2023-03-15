@@ -10,7 +10,6 @@ import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.data.GennyCache;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import life.genny.qwandaq.serialization.attribute.AttributeKey;
@@ -312,11 +311,7 @@ public class CacheManager {
      */
     public Attribute getAttribute(String productCode, String code) {
         AttributeKey key = new AttributeKey(productCode, code);
-		Attribute attribute = (Attribute) getPersistableEntity(GennyConstants.CACHE_NAME_ATTRIBUTE, key);
-		if (attribute == null) {
-			throw new ItemNotFoundException(productCode, code);
-		}
-        return attribute;
+		return (Attribute) getPersistableEntity(GennyConstants.CACHE_NAME_ATTRIBUTE, key);
     }
 
 	/**

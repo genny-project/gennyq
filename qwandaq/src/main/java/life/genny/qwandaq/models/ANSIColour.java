@@ -5,6 +5,9 @@ package life.genny.qwandaq.models;
  * used in logging, or anything else.
  */
 public class ANSIColour {
+
+    private ANSIColour() { /* constants class */}
+
     /**
      * ansi reset
      */
@@ -49,5 +52,9 @@ public class ANSIColour {
      * ansi white
      */
     public static final String WHITE = "\033[0;37m";
+
+    public static final String doColour(String text, String colourCode) {
+        return colourCode + text + ANSIColour.RESET;
+    }
 
 }

@@ -310,7 +310,7 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 	 * 
 	 * @see {@link EntityAttribute}
 	 */
-	public EntityAttribute addEntityAttribute(Attribute attribute, double weight, boolean inferred, Object value) {
+	public EntityAttribute addEntityAttribute(Attribute attribute, Double weight, Boolean inferred, Object value) {
 
 		Optional<EntityAttribute> eaOpt = findEntityAttribute(attribute);
 		EntityAttribute ea;

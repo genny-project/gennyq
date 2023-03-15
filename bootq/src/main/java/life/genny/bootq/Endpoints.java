@@ -4,6 +4,7 @@ import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
 
 import life.genny.bootq.models.BatchLoading;
+import life.genny.bootq.models.LoadReport;
 import life.genny.bootq.sheets.realm.Realm;
 import life.genny.bootq.sheets.realm.RealmUnit;
 import life.genny.qwandaq.models.UserToken;
@@ -22,6 +23,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -46,6 +48,11 @@ public class Endpoints {
 
 	@Inject
 	BatchLoading bl;
+
+    @Inject
+    LoadReport loadReport;
+
+    private static boolean SHOW_STACK_TRACES = false;
 
     public boolean getIsTaskRunning() {
         return isBatchLoadingRunning;
@@ -132,7 +139,7 @@ public class Endpoints {
         setIsTaskRunning(false);
         Long end = System.currentTimeMillis();
         log.infof("Total time taken to load the sheet %s : %s (millis)", sheetId, (end - start));
-        bl.printLoadReport();
+        loadReport.printLoadReport(SHOW_STACK_TRACES);
         return Response.ok().entity(msg).build();
     }
 
@@ -166,7 +173,11 @@ public class Endpoints {
 
                 if (!realmUnit.getDisable() && !realmUnit.getSkipGoogleDoc()) {
                     log.info("Persisting table " + table + "...");
-                    bl.persistTable(realmUnit, table);
+                    try {
+                        bl.persistTable(realmUnit, table);
+                    } catch (IllegalStateException e) {
+                        return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+                    }
                     log.info("Finished Persisting table " + table);
                 } else {
                     log.info("SKIPPING sheet " + realmUnit.getUri() + " for realm " + realmUnit.getName());
@@ -180,7 +191,7 @@ public class Endpoints {
             setIsTaskRunning(false);
         }
         log.info(msg);
-        bl.printLoadReport();
+        loadReport.printLoadReport(SHOW_STACK_TRACES);
         return Response.ok().entity(msg).build();
     }
 

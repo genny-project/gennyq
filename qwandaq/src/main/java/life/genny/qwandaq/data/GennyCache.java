@@ -251,7 +251,8 @@ public class GennyCache {
 			cache.put(key, value);
 		} catch (Exception e) {
 			log.error(ANSIColour.RED + "Exception when inserting entity (key=" + key.getKeyString() + ") into cache: " + cacheName);
-			log.error("Value: " + (value != null ? value.toString() : "null"));
+			log.error("Key: " + key.getKeyString());
+			log.error("Value: " + value.toString());
 			if(value instanceof EntityAttribute ea) {
 				log.error("EntityAttribute ATTRIBUTE: " + ea.getAttributeCode());
 				log.error("EntityAttribute ATTRIBUTE_ID: " + ea.getAttributeId());
@@ -264,7 +265,7 @@ public class GennyCache {
 			}
 			sb.append(ANSIColour.RESET);
 			log.error(sb.toString());
-			return false;
+			throw e;
 		}
 		
 		return true;

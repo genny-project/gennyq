@@ -297,7 +297,7 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 	 *               the weight to set
 	 */
 	public void setWeight(final Double weight) {
-		this.weight = weight;
+		this.weight = weight != null ? weight : 0.0;
 	}
 
 	/**
@@ -418,20 +418,6 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 		this.valueBoolean = valueBoolean;
 	}
 
-	// /**
-	// * @return the valueDateRange
-	// */
-	// public Range<LocalDate> getValueDateRange() {
-	// return valueDateRange;
-	// }
-	//
-	// /**
-	// * @param valueDateRange the valueDateRange to set
-	// */
-	// public void setValueDateRange(Range<LocalDate> valueDateRange) {
-	// this.valueDateRange = valueDateRange;
-	// }
-
 	/**
 	 * @return the valueMoney
 	 */
@@ -544,10 +530,7 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 	@JsonIgnore
 	@JsonbTransient
 	public Date getCreatedDate() {
-
-		final Date out = Date.from(created.atZone(ZoneId.systemDefault()).toInstant());
-
-		return out;
+		return Date.from(created.atZone(ZoneId.systemDefault()).toInstant());
 	}
 
 	/**
@@ -559,9 +542,7 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 	public Date getUpdatedDate() {
 		if (updated == null)
 			return null;
-		final Date out = Date.from(updated.atZone(ZoneId.systemDefault()).toInstant());
-
-		return out;
+		return Date.from(updated.atZone(ZoneId.systemDefault()).toInstant());
 	}
 
 	public Attribute getAttribute() {
@@ -602,6 +583,7 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 				case GennyConstants.JAVA_LANG_BOOLEAN, GennyConstants.BOOLEAN -> { return (T) getValueBoolean(); }
 				case GennyConstants.JAVA_TIME_LOCAL_DATE, GennyConstants.LOCAL_DATE -> { return (T) getValueDate(); }
 				case GennyConstants.ORG_JAVAMONEY_MONETA_MONEY, GennyConstants.MONEY -> { return (T) getValueMoney(); }
+				// default -> throw new UnsupportedOperationException("Unsupported DataType Class for Entity Attribute: " + getBaseEntityCode() + ":" + getAttributeCode() + " = " + dataTypeClassName);
 			}
 		}
 		return (T) getValueString();
@@ -624,16 +606,14 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 	/**
 	 * Set the value, specifying a lock status
 	 *
-	 * @param <T>   the Type
 	 * @param value the value to set
 	 * @param lock  should lock
 	 */
-	@SuppressWarnings("unchecked")
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
 	@XmlTransient
-	public <T> void setValue(final Object value, final Boolean lock) {
+	public void setValue(final Object value, final boolean lock) {
 
 		if (this.getReadonly()) {
 			log.error("Trying to set the value of a readonly EntityAttribute! " + this.getBaseEntityCode() + ":"
@@ -796,30 +776,27 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 	/**
 	 * Set the loop value
 	 *
-	 * @param <T>   the Type
 	 * @param value the value to set
 	 */
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
 	@XmlTransient
-	public <T> void setLoopValue(final Object value) {
+	public void setLoopValue(final Object value) {
 		setLoopValue(value, false);
 	}
 
 	/**
 	 * Set the loop value, specifying a lock status
 	 *
-	 * @param <T>   the Type
 	 * @param value the value to set
 	 * @param lock  should lock
 	 */
-	@SuppressWarnings("unchecked")
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
 	@XmlTransient
-	public <T> void setLoopValue(final Object value, final Boolean lock) {
+	public void setLoopValue(final Object value, final boolean lock) {
 
 		if (this.getReadonly()) {
 			log.error("Trying to set the value of a readonly EntityAttribute! " + this.getBaseEntityCode() + ":"
