@@ -528,7 +528,12 @@ public class BatchLoading {
                 loadReport.addBuildError(EReportCategoryType.QUESTION, entityInfo, e);
                 continue;
             }
-            question.setId(id++);
+
+            Question preExisting = questionUtils.getQuestionFromQuestionCode(realmName, question.getCode());
+            if(preExisting != null) {
+                question.setId(preExisting.getId());
+            } else
+                question.setId(id++);
 
             try {
                 questionUtils.saveQuestion(question);
