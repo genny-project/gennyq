@@ -4,7 +4,7 @@ import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
 
 import life.genny.bootq.models.BatchLoading;
-import life.genny.bootq.models.LoadReport;
+import life.genny.bootq.models.reporting.LoadReport;
 import life.genny.bootq.sheets.realm.Realm;
 import life.genny.bootq.sheets.realm.RealmUnit;
 import life.genny.qwandaq.models.UserToken;

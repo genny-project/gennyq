@@ -77,16 +77,7 @@ public class Attributes {
 			return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
 		}
 	}
-
-	// @PUT
-	// @Consumes(MediaType.APPLICATION_JSON)
-	// @Path("/{realm}")
-	// public Response edit(@PathParam("realm") final String realm, @Valid Attribute attribute) {
-	// 	log.debug("[!] call to GET /attributes/" + realm + "/");
-	// 	log.debug("Editing Attribute: " + attribute.getCode());
-
-	// }
-
+	
 	/**
 	 * Read an item from the cache.
 	 *

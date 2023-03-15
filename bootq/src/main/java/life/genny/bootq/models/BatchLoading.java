@@ -1,5 +1,6 @@
 package life.genny.bootq.models;
 
+import life.genny.bootq.models.reporting.LoadReport;
 import life.genny.bootq.models.sheets.EReportCategoryType;
 import life.genny.bootq.sheets.realm.RealmUnit;
 import life.genny.bootq.utils.GoogleSheetBuilder;
