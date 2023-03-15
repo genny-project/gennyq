@@ -240,6 +240,7 @@ public class BaseEntityUtils {
 				}
 				if (bea.getBaseEntityCode() == null) {
 					bea.setBaseEntityCode(baseEntity.getCode());
+					bea.setBaseEntityId(baseEntity.getId());
 				}
 				if (bea.getAttribute() == null) {
 					Attribute attribute = attributeUtils.getAttribute(baseEntity.getRealm(), bea.getAttributeCode());

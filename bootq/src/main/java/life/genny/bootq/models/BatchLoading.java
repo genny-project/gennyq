@@ -33,8 +33,9 @@ import java.util.Map;
 @ApplicationScoped
 public class BatchLoading {
 
+    public static final int LOG_BATCH_SIZE = 100;
     private static boolean isSynchronise;
-    
+
     @Inject
     CacheManager cm;
 
@@ -145,10 +146,13 @@ public class BatchLoading {
     public void persistDatatypes(Map<String, Map<String, String>> project, String realmName) {
         log.debug("Persisting datatypes.");
         Instant start = Instant.now();
+        int count = 1;
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
 			try {
 				DataType dataType = googleSheetBuilder.buildDataType(entry.getValue(), realmName);
 				attributeUtils.saveDataType(dataType);
+                if (count++ % LOG_BATCH_SIZE == 0)
+                    log.debugf("Saved %s datatypes. Continuing...", count);
 			} catch (ItemNotFoundException e) {
 				log.warn(e.getMessage());
 			}
@@ -264,6 +268,8 @@ public class BatchLoading {
 			Prefix.UNQ_, dttText
 		);
 
+        int count = 1;
+        long attrId = cm.getMaxAttributeId() + 1;
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
             Map<String, String> row = entry.getValue();
 			
@@ -273,7 +279,7 @@ public class BatchLoading {
 				     // find or create attribute 
             Attribute defAttr;
             try {
-                defAttr = attributeUtils.getAttribute(attributeCode); 
+                defAttr = attributeUtils.getAttribute(realmName, attributeCode);
             } catch (ItemNotFoundException e) {
                 String combined = new StringBuilder(baseEntityCode).append(":").append(attributeCode).toString();
                 log.warn(new StringBuilder("[DEF_EntityAttribute] Missing attribute ")
@@ -283,7 +289,7 @@ public class BatchLoading {
                 // Find the attribute without ATT_ (attribute defined in attribute table)
                 String baseAttributeCode = attributeCode.substring(4);
                 try {
-                    Attribute baseAttribute = attributeUtils.getAttribute(baseAttributeCode);
+                    attributeUtils.getAttribute(realmName, baseAttributeCode);
                 } catch(ItemNotFoundException notFoundError) {
                     log.error("[DEF_EntityAttribute] Could not find Real Attribute: " + baseAttributeCode + " in database. Please fix in sheets. Skipping");
                     continue;
@@ -292,6 +298,7 @@ public class BatchLoading {
                 DataType dataType = dttPrefixMap.get(attributeCode.substring(0, 4));               
                 defAttr = new Attribute(attributeCode, attributeCode, dataType);
                 defAttr.setRealm(realmName);
+                defAttr.setId(attrId++);
                 attributeUtils.saveAttribute(defAttr);
                 log.trace("Saving attribute: " + defAttr + " successful");
             }
@@ -303,6 +310,8 @@ public class BatchLoading {
                 String combined = new StringBuilder(baseEntityCode).append(":").append(attributeCode).toString();
                 log.error("Error occurred when persisting: " + combined + ". " + e.getMessage());
             }
+            if (count++ % LOG_BATCH_SIZE == 0)
+                log.debugf("Processed %s definition entity attributes. Continuing...", count);
         }
 
         Instant end = Instant.now();
@@ -365,11 +374,13 @@ public class BatchLoading {
     public void persistQuestions(Map<String, Map<String, String>> project, String realmName) {
         log.debug("Persisting questions.");
         Instant start = Instant.now();
-
+        int count = 1;
+        long id = cm.getMaxQuestionId() + 1;
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
 			Question question;
             try {
 				question = googleSheetBuilder.buildQuestion(entry.getValue(), realmName);
+                question.setId(id++);
 			} catch (ItemNotFoundException e) {
 				log.warn("Error Building Question: " + e.getMessage());
                 continue;
@@ -394,6 +405,8 @@ public class BatchLoading {
             }
 
             questionUtils.saveQuestion(question);
+            if (count++ % LOG_BATCH_SIZE == 0)
+                log.debugf("Processed %s questions. Continuing...", count);
 
 		}
         Instant end = Instant.now();
@@ -410,7 +423,7 @@ public class BatchLoading {
     public void persistQuestionQuestions(Map<String, Map<String, String>> project, String realmName) {
         log.debug("Persisting question questions.");
         Instant start = Instant.now();
-
+        int count = 1;
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
 			try {
 				QuestionQuestion questionQuestion = googleSheetBuilder.buildQuestionQuestion(entry.getValue(), realmName);
@@ -418,6 +431,8 @@ public class BatchLoading {
 			} catch (ItemNotFoundException e) {
 				log.warn(e.getMessage());
 			}
+            if (count++ % LOG_BATCH_SIZE == 0)
+                log.debugf("Processed %s questionquestions. Continuing...", count);
         }
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
