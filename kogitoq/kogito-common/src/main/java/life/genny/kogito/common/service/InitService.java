@@ -100,9 +100,9 @@ public class InitService extends KogitoService {
 		log.info("Sending Attributes for " + userToken.getProductCode());
 		String productCode = userToken.getProductCode();
 
-		/*Long attributesUpdatedAt = attributeUtils.getAttributesLastUpdatedAt();
-		if (this.attributesLastUpdatedAt.compareTo(attributesUpdatedAt) >= 0) {
-			log.debugf("No change to attributes since previous read. Sending out the locally cached batch of attributes...");
+		Long attributesUpdatedAt = attributeUtils.getAttributesLastUpdatedAt();
+		if (attributesLastUpdatedAt.compareTo(attributesUpdatedAt) >= 0) {
+			log.debugf("No change to attributes since previous read. Sending out the locally cached batch of attributes");
 			long start = System.nanoTime();
 			int batchNum = 0;
 			for (List<Attribute> attributesBatch : batchedAttributesList) {
@@ -111,14 +111,14 @@ public class InitService extends KogitoService {
 			long end = System.nanoTime();
 			log.debugf("Time taken to send out the locally cached batch of attributes: %s (nanos)", end-start);
 			return;
-		}*/
+		}
 
 		long start = System.nanoTime();
 		Collection<Attribute> allAttributes = attributeUtils.getAttributesForProduct(productCode);
 		long end = System.nanoTime();
 		log.debugf("Time taken to read all attributes: %s (nanos)", end-start);
 
-		batchedAttributesList.clear();
+		List<List<Attribute>> newBatchedAttributesList = new LinkedList<>();
 		int BATCH_SIZE = 500;
 		int count = 0;
 		int batchNum = 1;
@@ -151,7 +151,7 @@ public class InitService extends KogitoService {
 				attributesBatch.clear();
 				count = 0;
 				batchNum++;
-				batchedAttributesList.add(attributesBatch);
+				newBatchedAttributesList.add(attributesBatch);
 			}
 		}
 		// Dispatch the last batch, if any
@@ -160,8 +160,9 @@ public class InitService extends KogitoService {
 		}
 		end = System.nanoTime();
 		log.debugf("Total time taken to send out the attributes (for the first time): %s (nanos)", end-start);
-		batchedAttributesList.add(attributesBatch);
-		// this.attributesLastUpdatedAt = attributesUpdatedAt;
+		newBatchedAttributesList.add(attributesBatch);
+		batchedAttributesList = newBatchedAttributesList;
+		attributesLastUpdatedAt = attributesUpdatedAt;
 	}
 
 	/**
