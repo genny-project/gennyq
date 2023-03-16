@@ -32,11 +32,11 @@ public class RoleManager extends Manager {
 	@Inject
 	AttributeUtils attributeUtils;
 
-	private final static AttributeProductDecorator lnkRoleAttribute = new AttributeProductDecorator(
+	private static final AttributeProductDecorator lnkRoleAttribute = new AttributeProductDecorator(
 		new Attribute(Attribute.LNK_ROLE, "Role Link", new DataType(String.class))
 	);
 	
-	private final static AttributeProductDecorator lnkChildAttribute = new AttributeProductDecorator(
+	private static final AttributeProductDecorator lnkChildAttribute = new AttributeProductDecorator(
 		new Attribute(Attribute.LNK_CHILDREN, "Child Roles Link", new DataType(String.class))
 	);
 
