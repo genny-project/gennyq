@@ -198,22 +198,22 @@ public class LoadReport {
         logAndDump(ANSIColour.doColour("/************ Load Summary END ************/", ANSIColour.YELLOW));
 
 
-        FileWriter fw = null;
-        try {
-            fw = new FileWriter(outputFile);
-        } catch (java.io.IOException e) {
-            log.error("Error opening file: " + outputFile);
-        }
-        try(BufferedWriter writer = new BufferedWriter(fw)) {
-            for(Object msg : linesToOutput) {
-                writer.append(msg.toString());
-            }
-        } catch(NullPointerException e) {
-            log.error("Error opening file: " + outputFile);
-            return;
-        }
-        if(fw != null)
-            fw.close();
+        // FileWriter fw = null;
+        // try {
+        //     fw = new FileWriter(outputFile);
+        // } catch (java.io.IOException e) {
+        //     log.error("Error opening file: " + outputFile);
+        // }
+        // try(BufferedWriter writer = new BufferedWriter(fw)) {
+        //     for(Object msg : linesToOutput) {
+        //         writer.append(msg.toString());
+        //     }
+        // } catch(NullPointerException e) {
+        //     log.error("Error opening file: " + outputFile);
+        //     return;
+        // }
+        // if(fw != null)
+        //     fw.close();
     }
     
     
