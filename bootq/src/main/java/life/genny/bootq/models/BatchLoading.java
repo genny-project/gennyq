@@ -331,7 +331,7 @@ public class BatchLoading {
 
 		Map<String, DataType> dttPrefixMap = Map.of(
 			Prefix.ATT_, dttBoolean,
-			// Prefix.SER_, dttText, // TODO: Didn't the dropdowns start getting cached in SearchCaching for each product?
+			Prefix.SER_, dttText, // TODO: Didn't the dropdowns start getting cached in SearchCaching for each product?
 			Prefix.DFT_, dttText,
 			Prefix.DEP_, dttText,
 			Prefix.UNQ_, dttText
@@ -346,12 +346,12 @@ public class BatchLoading {
             String baseEntityCode = row.get("baseentitycode");
             String attributeCode = row.get("attributecode");
 
-            if(blacklistedDEFAttrs.contains(attributeCode.substring(0, 4))) {
-                String entityInfo = realmName + ":" + baseEntityCode + ":" + attributeCode;
-                loadReport.addBuildError(EReportCategoryType.DEF_BASEENTITY_ATTRIBUTE, entityInfo, 
-                    new Exception("Detected blacklisted definition attribute: " + attributeCode + ". Skipping"));
-                continue;
-            }
+            // if(blacklistedDEFAttrs.contains(attributeCode.substring(0, 4))) {
+            //     String entityInfo = realmName + ":" + baseEntityCode + ":" + attributeCode;
+            //     loadReport.addBuildError(EReportCategoryType.DEF_BASEENTITY_ATTRIBUTE, entityInfo, 
+            //         new Exception("Detected blacklisted definition attribute: " + attributeCode + ". Skipping"));
+            //     continue;
+            // }
             
             // ensure valid attribute, base entity both exist
             // For a DEF EA a valid attribute is one that exists in the attribute sheet
