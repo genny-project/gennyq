@@ -398,8 +398,10 @@ public class Dispatch {
 			List<String> codes = null;
 			if (target.getCode().startsWith(Prefix.QBE_)) {
 				// get list from target
-				String value = target.findEntityAttribute(ask.getQuestion().getAttributeCode()).get().getValueString();
-				codes = Arrays.asList(CommonUtils.getArrayFromString(value));
+				String value = target.getValueAsString(ask.getQuestion().getAttributeCode());
+				if (value != null) {
+					codes = Arrays.asList(CommonUtils.getArrayFromString(value));
+				}
 			} else {
 				// get list of value codes from cache
 				codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(target,
