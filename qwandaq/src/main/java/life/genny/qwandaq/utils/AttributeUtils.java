@@ -144,8 +144,14 @@ public class AttributeUtils {
             throw new ItemNotFoundException(productCode, "attribute: " + code);
         }
         if(bundleDataType) {
+            try {
             DataType dataType = getDataType(attribute, bundleValidationList);
             attribute.setDataType(dataType);
+            } catch(ItemNotFoundException e) {
+                log.error("DataType not found for Attribute: " + code);
+                log.error("DataType code: " + attribute.getDttCode());
+                throw e;
+            }
         }
         return attribute;
     }

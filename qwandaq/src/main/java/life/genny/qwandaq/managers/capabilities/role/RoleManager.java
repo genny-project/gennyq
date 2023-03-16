@@ -20,7 +20,6 @@ import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.persistence.NoResultException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -329,15 +328,9 @@ public class RoleManager extends Manager {
 		}
 
 		String value = baseEntityAttribute.getValueString();
-		if(!StringUtils.isBlank(value)) {
-			Set<String> values = Arrays.asList(CommonUtils.cleanUpAttributeValue(value).split(",")).stream().collect(Collectors.toSet());
-			values.add(role.getCode());
-			value = CommonUtils.getArrayString(values, (String v) -> v);			
-		} else {
-			value = "[\"" + role.getCode() + "\"]";
-		}
+		value = CommonUtils.addToStringArray(value, role.getCode());
 
-		baseEntityAttribute.setValue(value);
+		baseEntityAttribute.setValueString(value);
 
 		beaUtils.updateEntityAttribute(baseEntityAttribute);
 		return target;
