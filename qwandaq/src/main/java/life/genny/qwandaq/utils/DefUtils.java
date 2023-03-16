@@ -1,5 +1,6 @@
 package life.genny.qwandaq.utils;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,7 @@ import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.exception.runtime.DefinitionException;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.ANSIColour;
@@ -94,7 +96,13 @@ public class DefUtils {
 		if (entity.getCode().startsWith(Prefix.DEF_))
 			return Definition.from(entity);
 
-		List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(entity, Attribute.LNK_DEF);
+		// check for a linked definition
+		List<String> codes = null;
+		try {
+			codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(entity, Attribute.LNK_DEF);
+		} catch (ItemNotFoundException e) {
+			log.trace(e.getMessage());
+		}
 
 		// if no defs specified, go by prefix
 		if (codes == null || codes.isEmpty()) {
