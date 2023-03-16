@@ -395,7 +395,7 @@ public class Dispatch {
 		// check for dropdown attribute
 		if (ask.getQuestion().getAttribute().getCode().startsWith(Prefix.LNK_)) {
 
-			List<String> codes = new ArrayList(0);
+			List<String> codes = new ArrayList<>(0);
 			if (target.getCode().startsWith(Prefix.QBE_)) {
 				// get list from target
 				String value = target.getValueAsString(ask.getQuestion().getAttributeCode());
@@ -408,7 +408,7 @@ public class Dispatch {
 						ask.getQuestion().getAttributeCode());
 			}
 
-			if (codes == null || codes.isEmpty())
+			if (codes.isEmpty())
 				sendDropdownItems(ask, target, parentCode);
 			else
 				collectSelections(codes, msg);
