@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -43,6 +44,7 @@ import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.AttributeUtils;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.EntityAttributeUtils;
@@ -393,9 +395,16 @@ public class Dispatch {
 		// check for dropdown attribute
 		if (ask.getQuestion().getAttribute().getCode().startsWith(Prefix.LNK_)) {
 
-			// get list of value codes
-			List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(target,
-					ask.getQuestion().getAttributeCode());
+			List<String> codes = null;
+			if (target.getCode().startsWith(Prefix.QBE_)) {
+				// get list from target
+				String value = target.getValueAsString(ask.getQuestion().getAttributeCode());
+				codes = Arrays.asList(CommonUtils.getArrayFromString(value));
+			} else {
+				// get list of value codes from cache
+				codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(target,
+						ask.getQuestion().getAttributeCode());
+			}
 
 			if (codes == null || codes.isEmpty())
 				sendDropdownItems(ask, target, parentCode);
