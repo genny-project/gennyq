@@ -1,5 +1,6 @@
 package life.genny.bootq.models;
 
+import life.genny.bootq.models.reporting.LoadReport;
 import life.genny.bootq.models.sheets.EReportCategoryType;
 import life.genny.bootq.sheets.realm.RealmUnit;
 import life.genny.bootq.utils.GoogleSheetBuilder;
@@ -23,14 +24,14 @@ import life.genny.qwandaq.validation.Validation;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @ApplicationScoped
 public class BatchLoading {
@@ -326,6 +327,8 @@ public class BatchLoading {
 		DataType dttBoolean = attributeUtils.getDataType(realmName, "DTT_BOOLEAN", false);
 		DataType dttText = attributeUtils.getDataType(realmName, "DTT_TEXT", false);
 
+        Set<String> blacklistedDEFAttrs = Set.of(Prefix.SER_);
+
 		Map<String, DataType> dttPrefixMap = Map.of(
 			Prefix.ATT_, dttBoolean,
 			Prefix.SER_, dttText, // TODO: Didn't the dropdowns start getting cached in SearchCaching for each product?
@@ -334,7 +337,6 @@ public class BatchLoading {
 			Prefix.UNQ_, dttText
 		);
 
-        List<String> errorCodes = new LinkedList<>();
         int successFullySaved = 0;
         int count = 1;
         long attrId = cm.getMaxAttributeId() + 1;
@@ -343,6 +345,13 @@ public class BatchLoading {
 
             String baseEntityCode = row.get("baseentitycode");
             String attributeCode = row.get("attributecode");
+
+            // if(blacklistedDEFAttrs.contains(attributeCode.substring(0, 4))) {
+            //     String entityInfo = realmName + ":" + baseEntityCode + ":" + attributeCode;
+            //     loadReport.addBuildError(EReportCategoryType.DEF_BASEENTITY_ATTRIBUTE, entityInfo, 
+            //         new Exception("Detected blacklisted definition attribute: " + attributeCode + ". Skipping"));
+            //     continue;
+            // }
             
             // ensure valid attribute, base entity both exist
             // For a DEF EA a valid attribute is one that exists in the attribute sheet
@@ -372,11 +381,18 @@ public class BatchLoading {
                 } catch(Exception persistException) {
                     String entityInfo = realmName + ":" + defAttr.getCode();
                     loadReport.addPersistError(EReportCategoryType.ATTRIBUTE, entityInfo, persistException);
-                    log.error("DEF_ATTRIBUTE PERSIST ERROR. SKIPPING ENTITY ATTRIBUTE: " + baseEntityCode + ":" + attributeCode);
                     continue;
                 }
             }
 
+            if(StringUtils.isBlank(defAttr.getDttCode())) {
+                log.warn("Detected blank dtt code at: " + baseEntityCode + ":" + attributeCode + ". Manually assigning based on prefix");
+                String pref = attributeCode.substring(0, 4);
+                DataType dataType = dttPrefixMap.get(pref);
+                defAttr.setDataType(dataType);
+                attributeUtils.saveAttribute(defAttr);
+            }
+            
             EntityAttribute entityAttribute = googleSheetBuilder.buildEntityAttribute(row, realmName, defBe, defAttr);
 
             try {
@@ -431,9 +447,12 @@ public class BatchLoading {
 
             for(Map.Entry<String, EntityAttribute> eas : inheritedEas.entrySet()) {
                 EntityAttribute entityAttribute = eas.getValue();
-                log.trace("Adding " + defBe.getCode() + ":" + entityAttribute.getAttributeCode());
-                Attribute attribute = attributeUtils.getAttribute(entityAttribute.getRealm(), entityAttribute.getAttributeCode());
+                log.trace("Adding " + defBe.getCode() + ":" + entityAttribute.getAttributeCode() + ", value: " + entityAttribute.getValue());
+                Attribute attribute = attributeUtils.getAttribute(entityAttribute.getRealm(), entityAttribute.getAttributeCode(), true);
+                entityAttribute.setAttribute(attribute);
+                
                 EntityAttribute newEa = defBe.addEntityAttribute(attribute, entityAttribute.getWeight() != null ? entityAttribute.getWeight() : 0.0, entityAttribute.getInferred(), entityAttribute.getValue());
+
                 newEa.setPrivacyFlag(entityAttribute.getPrivacyFlag());
                 newEa.setConfirmationFlag(entityAttribute.getConfirmationFlag());
                 newEa.setCapabilityRequirements(entityAttribute.getCapabilityRequirements());
@@ -529,10 +548,8 @@ public class BatchLoading {
                 continue;
             }
 
-            Question preExisting = questionUtils.getQuestionFromQuestionCode(realmName, question.getCode());
-            if(preExisting != null) {
-                question.setId(preExisting.getId());
-            } else
+            // only null id if hasn't been set in buildQuestion (preexisting question found)
+            if(question.getId() == null)
                 question.setId(id++);
 
             try {
@@ -576,13 +593,15 @@ public class BatchLoading {
                 loadReport.addBuildError(EReportCategoryType.QUESTION_QUESTION, entityInfo, e);
                 continue;
             }
-            
+            Map<String, String> row = entry.getValue();
+
+            String parentCode = row.get("parentcode");
+            String targetCode = row.get("targetcode");
+            log.debug("persisting: " + parentCode + ":" + targetCode);
+
             try {
 				questionUtils.saveQuestionQuestion(questionQuestion);
 			} catch (Exception e) {
-                Map<String, String> row = entry.getValue();
-                String parentCode = row.get("parentcode");
-                String targetCode = row.get("targetcode");
                 String entityInfo = realmName + ":" + parentCode + ":" + targetCode;
                 loadReport.addPersistError(EReportCategoryType.QUESTION_QUESTION, entityInfo, e);
 			}

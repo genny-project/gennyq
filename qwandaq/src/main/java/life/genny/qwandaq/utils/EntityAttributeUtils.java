@@ -93,7 +93,7 @@ public class EntityAttributeUtils {
 			// Ensure children override parent entity attributes
 			// exclude lnk includes
 			for (EntityAttribute ea : current.getBaseEntityAttributes()) {
-				if (!ea.getAttributeCode().equals(Attribute.LNK_INCLUDE))
+				if (!ea.getAttributeCode().equals(Attribute.LNK_INCLUDE) && ea.getValue() != null) 
 					allEntityAttributes.putIfAbsent(ea.getAttributeCode(), ea);
 			}
 
@@ -159,9 +159,13 @@ public class EntityAttributeUtils {
 	 *         if not found.
 	 */
 	public <T> T getValue(BaseEntity baseEntity, String attributeCode) {
-		EntityAttribute ea = getEntityAttribute(baseEntity.getRealm(), baseEntity.getCode(), attributeCode, true, true);
+		return getValue(baseEntity.getRealm(), baseEntity.getCode(), attributeCode);
+	}
+
+	public <T> T getValue(String product, String baseEntityCode, String attributeCode) {
+		EntityAttribute ea = getEntityAttribute(product, baseEntityCode, attributeCode, true, true);
 		if (ea == null) {
-			throw new ItemNotFoundException(baseEntity.getRealm(), baseEntity.getCode(), attributeCode);
+			throw new ItemNotFoundException(product, baseEntityCode, attributeCode);
 		}
 		return ea.getValue();
 	}

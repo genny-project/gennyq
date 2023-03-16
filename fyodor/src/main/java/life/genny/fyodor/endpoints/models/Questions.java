@@ -1,4 +1,4 @@
-package life.genny.fyodor.endpoints;
+package life.genny.fyodor.endpoints.models;
 
 import javax.inject.Inject;
 import javax.transaction.Transactional;
@@ -14,12 +14,9 @@ import javax.ws.rs.core.Response.Status;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.Question;
-import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.utils.EntityAttributeUtils;
-import life.genny.qwandaq.utils.QuestionUtils;
 
 @Path("question")
 public class Questions {

@@ -21,7 +21,7 @@ public final class QErrorManager extends QMessageProvider {
 		 * If a message makes it to this point, then something is probably
 		 * wrong with the message or the template.
 		 */
-		log.error(ANSIColour.RED+"Message Type Supplied was bad. Please check the Message and Template Code!!!!!"+ANSIColour.RESET);
+		log.error(ANSIColour.doColour("Message Type Supplied was bad. Please check the Message and Template Code!!!!!", ANSIColour.RED));
 
 	}
 }

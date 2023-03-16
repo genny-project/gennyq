@@ -6,14 +6,12 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
 import java.util.Arrays;
-import java.util.stream.Collectors;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import org.jboss.logging.Logger;
 
 import io.quarkus.arc.Arc;
-import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.data.GennyCache;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
@@ -118,18 +116,13 @@ public class Service {
 	 */
 	public String[] getProductCodes() {
 
-		String projectRealm = CommonUtils.getSystemEnv("PROJECT_REALM", false);
 		String allowedProducts = CommonUtils.getSystemEnv("PRODUCT_CODES");
 
 		if (allowedProducts != null) {
-			// Ensure we have unique product codes
-			return Arrays.stream(allowedProducts.split(":")).distinct().toArray(String[]::new);
-
-		} else if (projectRealm != null) {
-			return new String[]{ projectRealm };
+			return allowedProducts.split(":");
 		}
 
-		return null;
+		return new String[]{};
 	}
 
 	/**
