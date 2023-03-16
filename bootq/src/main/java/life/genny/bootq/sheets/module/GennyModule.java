@@ -23,7 +23,7 @@ public class GennyModule extends SheetReferralType<ModuleUnit> {
 
     @Override
     public void init() {
-        setDataUnits(getService().fetchModuleUnit(sheetURI));
+        setDataUnits(getService().fetchModuleUnits(sheetURI));
     }
 
     @Override

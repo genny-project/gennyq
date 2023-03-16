@@ -592,13 +592,18 @@ public class BatchLoading {
                 loadReport.addBuildError(EReportCategoryType.QUESTION_QUESTION, entityInfo, e);
                 continue;
             }
-            
+            Map<String, String> row = entry.getValue();
+
+            String parentCode = row.get("parentcode");
+            String targetCode = row.get("targetcode");
+            log.debug("persisting: " + parentCode + ":" + targetCode);
+
             try {
 				questionUtils.saveQuestionQuestion(questionQuestion);
 			} catch (Exception e) {
-                Map<String, String> row = entry.getValue();
-                String parentCode = row.get("parentcode");
-                String targetCode = row.get("targetcode");
+                // Map<String, String> row = entry.getValue();
+                // String parentCode = row.get("parentcode");
+                // String targetCode = row.get("targetcode");
                 String entityInfo = realmName + ":" + parentCode + ":" + targetCode;
                 loadReport.addPersistError(EReportCategoryType.QUESTION_QUESTION, entityInfo, e);
 			}

@@ -51,12 +51,14 @@ public class ImportService {
             if (!rawData.isEmpty()) {
                 RealmUnit name = new RealmUnit(rawData);
                 list.add(name);
+            } else {
+                log.warn("No RAW DATA");
             }
         }
         return list;
     }
 
-    public List<ModuleUnit> fetchModuleUnit(String sheetURI) {
+    public List<ModuleUnit> fetchModuleUnits(String sheetURI) {
         String key = sheetURI + "Modules";
         XlsxImport createXlsImport = createXlsImport(key);
         List<Map<String, String>> data = createXlsImport.mappingRawToHeaderAndValuesFmt(sheetURI, "Modules");
