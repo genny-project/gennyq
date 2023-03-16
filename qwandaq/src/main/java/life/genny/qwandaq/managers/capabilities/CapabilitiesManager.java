@@ -67,6 +67,10 @@ public class CapabilitiesManager extends Manager {
 	 */
 	@Deprecated(forRemoval = false)
 	public CapabilitySet getUserCapabilities(BaseEntity target) {
+		if(target == null) {
+			log.warn("[Capabilities] Got null target for capability set compilation. Returning blank capabilities");
+			return new CapabilitySet(target);
+		}
 		if(!ACCEPTED_PREFIXES.contains(target.getCode().substring(0, 4)))
 			throw new RoleException(ANSIColour.doColour(target.getCode() + " IS NOT A CAPABILITY BEARING BASE ENTITY. PLEASE USE ANYTHING WITH THE FOLLOWING PREFIXES: " + CommonUtils.getArrayString(ACCEPTED_PREFIXES), ANSIColour.RED));
 // this is a necessary log, since we are trying to minimize how often this

@@ -4,7 +4,6 @@ import static life.genny.kogito.common.utils.KogitoUtils.UseService.GADAQ;
 import static life.genny.qwandaq.entity.PCM.PCM_TREE;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -119,7 +118,7 @@ public class Dispatch {
 		String targetCode = processData.getTargetCode();
 		BaseEntity source = beUtils.getBaseEntity(productCode, sourceCode, false);
 		BaseEntity target = beUtils.getBaseEntity(productCode, targetCode, false);
-		CapabilitySet userCapabilities = capMan.getUserCapabilities(target);
+		CapabilitySet userCapabilities = capMan.getUserCapabilities(beUtils.getUserBaseEntity());
 
 		pcm = (pcm == null ? beUtils.getPCM(processData.getPcmCode()) : pcm);
 		// ensure target codes match
