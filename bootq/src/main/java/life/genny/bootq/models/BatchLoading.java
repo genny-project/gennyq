@@ -428,11 +428,21 @@ public class BatchLoading {
 
             for(Map.Entry<String, EntityAttribute> eas : inheritedEas.entrySet()) {
                 EntityAttribute entityAttribute = eas.getValue();
-                log.trace("Adding " + defBe.getCode() + ":" + entityAttribute.getAttributeCode());
+                log.info("Adding " + defBe.getCode() + ":" + entityAttribute.getAttributeCode() + ", value: " + entityAttribute.getValue());
                 Attribute attribute = attributeUtils.getAttribute(entityAttribute.getRealm(), entityAttribute.getAttributeCode(), true);
                 entityAttribute.setAttribute(attribute);
                 
                 EntityAttribute newEa = defBe.addEntityAttribute(attribute, entityAttribute.getWeight() != null ? entityAttribute.getWeight() : 0.0, entityAttribute.getInferred(), entityAttribute.getValue());
+
+				// ensure all value types are correct
+				newEa.setValueString(entityAttribute.getValueString());
+				newEa.setValueInteger(entityAttribute.getValueInteger());
+				newEa.setValueDouble(entityAttribute.getValueDouble());
+				newEa.setValueLong(entityAttribute.getValueLong());
+				newEa.setValueBoolean(entityAttribute.getValueBoolean());
+				newEa.setValueDate(entityAttribute.getValueDate());
+				newEa.setValueDateTime(entityAttribute.getValueDateTime());
+
                 newEa.setPrivacyFlag(entityAttribute.getPrivacyFlag());
                 newEa.setConfirmationFlag(entityAttribute.getConfirmationFlag());
                 newEa.setCapabilityRequirements(entityAttribute.getCapabilityRequirements());
