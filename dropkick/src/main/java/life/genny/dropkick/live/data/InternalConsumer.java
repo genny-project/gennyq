@@ -214,18 +214,14 @@ public class InternalConsumer {
 		log.info("DROPDOWN :Loaded " + msg.getItems().size() + " baseentitys");
 
 		for (BaseEntity item : msg.getItems()) {
-			String name = null;
+			String name = item.getName();
 			String itemCode = item.getCode();
-			EntityAttribute nameAttribute = beaUtils.getEntityAttribute(productCode, itemCode, Attribute.PRI_NAME, false);
-			if (nameAttribute != null) {
-				name = nameAttribute.getValueString();
-			}
 			String logStr = String.format("DROPDOWN : item: %s ===== %s", itemCode, name);
 			if (StringUtils.isEmpty(name)) {
 				log.warn(logStr);
-			}
-			else
+			} else {
 				log.info(logStr);
+			}
 		}
 
 		// Set all required message fields and return msg
