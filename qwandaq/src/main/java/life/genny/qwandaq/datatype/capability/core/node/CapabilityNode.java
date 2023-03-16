@@ -119,21 +119,23 @@ public class CapabilityNode {
 		throws BadDataException {
 		CapabilityMode capMode;
 		PermissionMode permMode;
-		boolean negate = false;
-
 		int len = capabilityString.length();
-		if(!(len == 3 || len == 4)) {
+		
+		boolean negate = capabilityString.startsWith(NEGATE_IDENTIFIER);
+		if(!(len == 3 || (len == 4 && negate))) {
 			log.error("Expected length 3 - 4. Got: " + len);
 			throw new BadDataException("Could not deserialize capability node: " + capabilityString);
 		}
-		int offset = 0;
-		if(capabilityString.startsWith(NEGATE_IDENTIFIER)) {
-			offset = 1;
-			negate = true;
-		}
-
+		int offset = negate ? 1 : 0;
 		capMode = CapabilityMode.getByIdentifier(capabilityString.charAt(offset));
 		permMode = PermissionMode.getByIdentifier(capabilityString.charAt(offset + 2));
+		if(capMode == null) {
+			throw new BadDataException("Could not parse CapabilityMode Identifier: " + capabilityString.charAt(offset) + " in node string: " + capabilityString);
+		}
+
+		if(permMode == null) {
+			throw new BadDataException("Could not parse CapabilityMode Identifier: " + capabilityString.charAt(offset + 2) + " in node string: " + capabilityString);
+		}
 
 		CapabilityNode node = new CapabilityNode(capMode, permMode);
 		node.negate = negate;
