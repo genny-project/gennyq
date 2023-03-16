@@ -185,7 +185,7 @@ public class Service {
 	 *
 	 * @return should show values
 	 */
-	public Boolean showValues() {
+	public boolean showValues() {
 		return showValues;
 	}
 }

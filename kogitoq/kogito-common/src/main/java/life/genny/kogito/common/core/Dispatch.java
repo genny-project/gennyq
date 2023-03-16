@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -43,6 +44,7 @@ import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.AttributeUtils;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.EntityAttributeUtils;
@@ -393,11 +395,20 @@ public class Dispatch {
 		// check for dropdown attribute
 		if (ask.getQuestion().getAttribute().getCode().startsWith(Prefix.LNK_)) {
 
-			// get list of value codes
-			List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(target,
-					ask.getQuestion().getAttributeCode());
+			List<String> codes = new ArrayList<>(0);
+			if (target.getCode().startsWith(Prefix.QBE_)) {
+				// get list from target
+				String value = target.getValueAsString(ask.getQuestion().getAttributeCode());
+				if (value != null) {
+					codes = Arrays.asList(CommonUtils.getArrayFromString(value));
+				}
+			} else {
+				// get list of value codes from cache
+				codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(target,
+						ask.getQuestion().getAttributeCode());
+			}
 
-			if (codes == null || codes.isEmpty())
+			if (codes.isEmpty())
 				sendDropdownItems(ask, target, parentCode);
 			else
 				collectSelections(codes, msg);
@@ -446,37 +457,6 @@ public class Dispatch {
 		Attribute attribute = question.getAttribute();
 
 		if (attribute.getCode().startsWith(Prefix.LNK_)) {
-
-			// check for already selected items
-			List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(target, attribute.getCode());
-			if (codes != null && !codes.isEmpty()) {
-
-				// grab selection baseentitys
-				QDataBaseEntityMessage selectionMsg = new QDataBaseEntityMessage();
-				for (String code : codes) {
-					if (StringUtils.isBlank(code)) {
-						continue;
-					}
-
-					BaseEntity selection = beUtils.getBaseEntity(code);
-
-					// Ensure only the PRI_NAME attribute exists in the selection
-					selection = beUtils.addNonLiteralAttributes(selection);
-					selection = beUtils.privacyFilter(selection,
-							Collections.singleton(Attribute.PRI_NAME));
-					selectionMsg.add(selection);
-				}
-
-				// send selections
-				if (selectionMsg.getItems() != null) {
-					selectionMsg.setToken(userToken.getToken());
-					selectionMsg.setReplace(true);
-					log.info("Sending selection items with " + selectionMsg.getItems().size() + " items");
-					KafkaUtils.writeMsg(KafkaTopic.WEBDATA, selectionMsg);
-				} else {
-					log.info("No selection items found for " + attribute.getCode());
-				}
-			}
 
 			// trigger dropdown search in dropkick
 			JsonObject json = Json.createObjectBuilder()
