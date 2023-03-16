@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import javax.transaction.Transactional;
 
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
@@ -30,12 +29,12 @@ import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
 
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
-import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.managers.Manager;
 import life.genny.qwandaq.managers.capabilities.role.RoleManager;
-import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.models.ANSIColour;
 
 /*
  * A non-static utility class for managing roles and capabilities.
@@ -46,33 +45,17 @@ import life.genny.qwandaq.models.UserToken;
 @ApplicationScoped
 public class CapabilitiesManager extends Manager {
 
+	protected static final Set<String> ACCEPTED_PREFIXES = Set.of(Prefix.ROL_, Prefix.PER_);
+
 	@Inject
 	Logger log;
 
 	@Inject
 	private RoleManager roleMan;
 
-	@Inject
-	CacheManager cm;
-
-	@Inject
-	BaseEntityUtils beUtils;
-
-	@Inject
-	QuestionUtils questionUtils;
-
-	@Inject
-	AttributeUtils attributeUtils;
-
 	public CapabilitiesManager() {
 		super();
 	}
-
-	// == TODO LIST
-	// 1. I want to get rid of the productCode chain here. When we have multitenancy
-	// properly established this should be possible
-	// but until then this is my best bet for getting this working reliably (don't
-	// trust the tokens just yet, as service token has productCode improperly set)
 
 	/**
 	 * Return a Set of Capabilities based on a BaseEntity's LNK_ROLE and its own set
@@ -84,6 +67,8 @@ public class CapabilitiesManager extends Manager {
 	 */
 	@Deprecated(forRemoval = false)
 	public CapabilitySet getUserCapabilities(BaseEntity target) {
+		if(!ACCEPTED_PREFIXES.contains(target.getCode().substring(0, 4)))
+			throw new RoleException(ANSIColour.doColour(target.getCode() + " IS NOT A CAPABILITY BEARING BASE ENTITY. PLEASE USE ANYTHING WITH THE FOLLOWING PREFIXES: " + CommonUtils.getArrayString(ACCEPTED_PREFIXES), ANSIColour.RED));
 // this is a necessary log, since we are trying to minimize how often this
 		// function is called
 		// it is good to see how often it comes up

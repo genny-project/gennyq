@@ -8,10 +8,10 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
 import life.genny.qwandaq.utils.EntityAttributeUtils;
-import org.jboss.logging.Logger;
-
+import life.genny.qwandaq.utils.QuestionUtils;
 import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.AttributeUtils;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 
@@ -33,6 +33,16 @@ public abstract class Manager {
 
 	@Inject
 	protected EntityAttributeUtils beaUtils;
+
+
+	@Inject
+	protected QuestionUtils questionUtils;
+
+	@Inject
+	protected AttributeUtils attributeUtils;
+	
+	@Inject
+	protected CacheManager cm;
 
     protected String className() {
 		String str = this.getClass().getSimpleName();
