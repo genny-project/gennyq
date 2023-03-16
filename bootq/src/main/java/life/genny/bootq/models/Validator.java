@@ -2,6 +2,7 @@ package life.genny.bootq.models;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -10,7 +11,9 @@ import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.constants.Prefix;
+import life.genny.qwandaq.converter.CapabilityConverter;
 import life.genny.qwandaq.datatype.DataType;
+import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.managers.CacheManager;
@@ -34,7 +37,36 @@ public class Validator {
     @Inject
     CacheManager cm;
 
+    /**
+     * Validate a Capability Requirements String from the google sheets
+     * @param capabilityString - string of requirements to interpret
+     * @return - a valid capability set if no error occurred
+     * @throws BadDataException if the capability string could not be parsed properly
+     * 
+     * @see {@link CapabilityConverter#convertToEa} to see where BadDataExceptions are thrown
+     */
+    public Set<Capability> validateCapabilities(String capabilityString) 
+        throws BadDataException {
+            try {
+                return CapabilityConverter.convertToEA(capabilityString);
+            } catch (BadDataException e) {
+                throw new BadDataException("Exception occurred when validating Capability Requirements: " + capabilityString + ". " + e.getMessage(), e);
+            }
+    }
 
+    /**
+     * Validate a Question Question by first finding its dependencies (source question and child question )
+     * @param row the corresponding google sheets row
+     * @param realmName the product these questions belong in
+     * @return - a map containing the valid dependencies
+     * <pre>e.g
+     * {
+     * "parent": [parent question object],
+     * "child": [child question object]
+     * }
+     * </pre>
+     * @throws BadDataException if the parent question or child question could not be found in the given product
+     */
     public Map<String, Object> validateQuestionQuestion(Map<String, String> row, String realmName) 
         throws BadDataException {
 
@@ -56,6 +88,13 @@ public class Validator {
         KEY_CHILD, childQuestion);
     }
 
+    /**
+     * Validate a single question (find its Attribute dependeny in cache)
+     * @param row - the google sheets row pertaining to the Question
+     * @param realmName - the product the Question belongs in
+     * @return - a Map of the question's dependencies (in this case just the Attribute)
+     * @throws BadDataException if the dependent attribute cannot be found
+     */
     public Map<Class<?>, Object> validateQuestion(Map<String, String> row, String realmName)
         throws BadDataException {
 
@@ -72,6 +111,13 @@ public class Validator {
             );
         }
 
+    /**
+     * Validate a given Attribute (find its dependent DataType)
+     * @param row - the google sheets row pertaining to the DataType
+     * @param realmName - the product the Attribute lives in
+     * @return a map of the Attributes dependencies (in this case containing 1 entry for the DataType)
+     * @throws BadDataException if the DataType could not be found
+     */
     public Map<Class<?>, Object> validateAttribute(Map<String, String> row, String realmName) 
         throws BadDataException {
             String dataTypeCode = row.get("datatype");
@@ -102,7 +148,18 @@ public class Validator {
             return Map.of(Validation.class.arrayType(), validations);
     }
 
-    public Map<Class<?>, Object> validateEntityAttribute(Map<String, String> row, String realmName) {
+    /**
+     * Validate an Entity Attribute or a DEF_EntityAttribute
+     * @param row - the Entity Attribute row in the google sheets
+     * @param realmName - the product the EntityAttribute lives in
+     * @return the base entity and attribute dependencies in a map (if they exist)
+     * 
+     * @throws BadDataException if the base entity or attribute corresponding to the entity attribute does not exist
+     * <p> this will throw a bad data exception for a DEF attribute if its base attribute does not exist. E.g DEF_USER:ATT_PRI_NAME will throw
+     *  an exception if the attribute: PRI_NAME does not exist</p>
+     */
+    public Map<Class<?>, Object> validateEntityAttribute(Map<String, String> row, String realmName) 
+        throws BadDataException {
         String baseEntityCode = row.get("baseentitycode");
 
         BaseEntity baseEntity = (BaseEntity) cm.getPersistableEntity(GennyConstants.CACHE_NAME_BASEENTITY, new BaseEntityKey(realmName, baseEntityCode));

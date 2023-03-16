@@ -132,7 +132,7 @@ public class DefUtils {
 		Collections.reverse(codes);
 		for (String code : codes) {
 
-			Definition definition = beUtils.getDefinition(code);
+			Definition definition = beUtils.getDefinition(code, false);
 
 			// merge into new def
 			for (EntityAttribute ea : beaUtils.getAllEntityAttributesForBaseEntity(definition)) {
@@ -157,7 +157,7 @@ public class DefUtils {
 	 */
 	public Definition getDEF(final String baseEntityCode) {
 		if(baseEntityCode == null)
-			throw new NullParameterException(baseEntityCode);
+			throw new NullParameterException("baseEntityCode");
 		BaseEntity target = beUtils.getBaseEntity(baseEntityCode);
 		return getDEF(target);
 	}
