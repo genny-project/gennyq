@@ -24,12 +24,14 @@ import life.genny.qwandaq.validation.Validation;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 
 @ApplicationScoped
 public class BatchLoading {
@@ -325,9 +327,11 @@ public class BatchLoading {
 		DataType dttBoolean = attributeUtils.getDataType(realmName, "DTT_BOOLEAN", false);
 		DataType dttText = attributeUtils.getDataType(realmName, "DTT_TEXT", false);
 
+        Set<String> blacklistedDEFAttrs = Set.of(Prefix.SER_);
+
 		Map<String, DataType> dttPrefixMap = Map.of(
 			Prefix.ATT_, dttBoolean,
-			Prefix.SER_, dttText, // TODO: Didn't the dropdowns start getting cached in SearchCaching for each product?
+			// Prefix.SER_, dttText, // TODO: Didn't the dropdowns start getting cached in SearchCaching for each product?
 			Prefix.DFT_, dttText,
 			Prefix.DEP_, dttText,
 			Prefix.UNQ_, dttText
@@ -341,6 +345,13 @@ public class BatchLoading {
 
             String baseEntityCode = row.get("baseentitycode");
             String attributeCode = row.get("attributecode");
+
+            if(blacklistedDEFAttrs.contains(attributeCode.substring(0, 4))) {
+                String entityInfo = realmName + ":" + baseEntityCode + ":" + attributeCode;
+                loadReport.addBuildError(EReportCategoryType.DEF_BASEENTITY_ATTRIBUTE, entityInfo, 
+                    new Exception("Detected blacklisted definition attribute: " + attributeCode + ". Skipping"));
+                continue;
+            }
             
             // ensure valid attribute, base entity both exist
             // For a DEF EA a valid attribute is one that exists in the attribute sheet
@@ -374,6 +385,13 @@ public class BatchLoading {
                 }
             }
 
+            if(StringUtils.isBlank(defAttr.getDttCode())) {
+                log.warn("Detected blank dtt code at: " + baseEntityCode + ":" + attributeCode + ". Manually assigning based on prefix");
+                String pref = attributeCode.substring(0, 4);
+                DataType dataType = dttPrefixMap.get(pref);
+                defAttr.setDataType(dataType);
+            }
+            
             EntityAttribute entityAttribute = googleSheetBuilder.buildEntityAttribute(row, realmName, defBe, defAttr);
 
             try {
