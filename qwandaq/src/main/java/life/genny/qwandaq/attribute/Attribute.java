@@ -364,8 +364,8 @@ public class Attribute extends CodedEntity implements CoreEntityPersistable {
 
 	@Override
 	public boolean equals(Object otherObject) {
-		return this.getRealm().equals(((HAttribute) otherObject).getRealm())
-				&& this.getCode().equals(((HAttribute) otherObject).getCode());
+		return this.getRealm().equals(((Attribute) otherObject).getRealm())
+				&& this.getCode().equals(((Attribute) otherObject).getCode());
 	}
 
 	public HAttribute toHAttribute() {

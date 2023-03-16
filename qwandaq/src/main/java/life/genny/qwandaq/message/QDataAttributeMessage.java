@@ -37,7 +37,7 @@ public class QDataAttributeMessage extends QDataMessage{
 	}
 
 
-	public void add(List<Attribute> attributes) {
+	public void add(Collection<Attribute> attributes) {
 		Collection<Attribute> items = this.getItems() != null ? new CopyOnWriteArrayList<>(this.getItems())
 				: new CopyOnWriteArrayList<>();
 		items.addAll(attributes);
