@@ -119,6 +119,9 @@ public class ModuleUnit extends DataUnit {
     	if (valueRanges == null) {
     		return;
     	}
+
+        log.info("Processing Module: " + this.name);
+
         for (ValueRange valueRange : valueRanges) {
             String title = valueRange.getRange().split("!")[0];
 
@@ -126,7 +129,7 @@ public class ModuleUnit extends DataUnit {
                 ESheetConfiguration titleData = ESheetConfiguration.getByTitle(title);
 
                 List<List<Object>> values = valueRange.getValues();
-                log.info("processing " + titleData.name() + ", value size:" + values.size());
+                log.info("\tprocessing " + titleData.name() + ", value size:" + values.size());
                 
                 switch (titleData) {
                     case VALIDATION:
