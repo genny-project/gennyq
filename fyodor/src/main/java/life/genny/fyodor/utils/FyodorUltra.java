@@ -121,7 +121,7 @@ public class FyodorUltra {
 						ea = getAssociatedColumnValue(baseEntity, attributeCode);
 						// De-escalate the known issue and skip the bad ea
 					} catch(BadDataException e) {
-						log.error(ANSIColour.RED + e.getMessage() + ANSIColour.RESET);
+						log.error(ANSIColour.doColour(e.getMessage(), ANSIColour.RED));
 						continue;
 					}
 					
@@ -131,11 +131,11 @@ public class FyodorUltra {
 				} else {
 					// otherwise fetch entity attribute
 					if (PRI_NAME.equals(attributeCode)) {
-						ea = new EntityAttribute(baseEntity, attributeUtils.getAttribute(PRI_NAME), 1.0, null);
+						ea = new EntityAttribute(baseEntity, attributeUtils.getAttribute(PRI_NAME, true), 1.0, null);
 						ea.setValueString(baseEntity.getName());
 					}
 					else if (PRI_CREATED.equals(attributeCode)) {
-						ea = new EntityAttribute(baseEntity, attributeUtils.getAttribute(PRI_CREATED), 1.0, null);
+						ea = new EntityAttribute(baseEntity, attributeUtils.getAttribute(PRI_CREATED, true), 1.0, null);
 						ea.setValueDateTime(baseEntity.getCreated());
 					}
 					else {

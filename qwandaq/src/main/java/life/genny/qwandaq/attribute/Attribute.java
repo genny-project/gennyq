@@ -194,6 +194,7 @@ public class Attribute extends CodedEntity implements CoreEntityPersistable {
 	 */
 	public void setDataType(DataType dataType) {
 		this.dataType = dataType;
+		setDttCode(dataType.getDttCode());
 	}
 
 	public String getDttCode() {

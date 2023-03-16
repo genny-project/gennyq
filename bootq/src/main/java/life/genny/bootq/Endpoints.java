@@ -4,6 +4,7 @@ import io.quarkus.runtime.ShutdownEvent;
 import io.quarkus.runtime.StartupEvent;
 
 import life.genny.bootq.models.BatchLoading;
+import life.genny.bootq.models.reporting.LoadReport;
 import life.genny.bootq.sheets.realm.Realm;
 import life.genny.bootq.sheets.realm.RealmUnit;
 import life.genny.qwandaq.models.UserToken;
@@ -22,6 +23,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -46,6 +48,11 @@ public class Endpoints {
 
 	@Inject
 	BatchLoading bl;
+
+    @Inject
+    LoadReport loadReport;
+
+    private static final boolean SHOW_STACK_TRACES = false;
 
     public boolean getIsTaskRunning() {
         return isBatchLoadingRunning;
@@ -80,8 +87,8 @@ public class Endpoints {
     @Produces(MediaType.TEXT_PLAIN)
     @Transactional
     public Response loadSheetsUsingDefaultSheetId() {
-        String defaultSheetId = CommonUtils.getSystemEnv("GOOGLE_HOSTING_SHEET_ID", false);
-        if (defaultSheetId != null) {
+        String defaultSheetId = CommonUtils.getSystemEnv("GOOGLE_HOSTING_SHEET_ID", "");
+        if (StringUtils.isBlank(defaultSheetId)) {
             return loadSheetsById(defaultSheetId);
         } else {
             return Response.status(Response.Status.BAD_REQUEST)
@@ -112,10 +119,13 @@ public class Endpoints {
         }
 
         setIsTaskRunning(true);
+        Long start = System.currentTimeMillis();
 
         Realm realm = new Realm(sheetId);
         List<RealmUnit> realmUnits = realm.getDataUnits();
+        log.info("FOUND " + realmUnits.size() + " realmUnits");
         for (RealmUnit realmUnit : realmUnits) {
+            log.info("Module Unit: " + realmUnit.getModule());
             log.info("Importing from sheet " + realmUnit.getUri() + " for realm " + realmUnit.getName());
 
             if (!realmUnit.getDisable() && !realmUnit.getSkipGoogleDoc()) {
@@ -128,6 +138,17 @@ public class Endpoints {
             msg = "Finished batch loading for all realms in google sheets";
         }
         log.info(msg);
+        setIsTaskRunning(false);
+        Long end = System.currentTimeMillis();
+        log.infof("Total time taken to load the sheet %s : %s (millis)", sheetId, (end - start));
+        try {
+            loadReport.printLoadReport(SHOW_STACK_TRACES);
+        } catch(Exception e) {
+            log.error("Error dumping to file");
+            log.error(e.getMessage());
+            e.printStackTrace();
+        }
+
         return Response.ok().entity(msg).build();
     }
 
@@ -161,7 +182,13 @@ public class Endpoints {
 
                 if (!realmUnit.getDisable() && !realmUnit.getSkipGoogleDoc()) {
                     log.info("Persisting table " + table + "...");
-                    bl.persistTable(realmUnit, table);
+                    try {
+                        bl.persistTable(realmUnit, table);
+                    } catch (IllegalStateException e) {
+                        // TODO: lint the table name ealier
+                        log.error("Bad Table: " + table);
+                        return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+                    }
                     log.info("Finished Persisting table " + table);
                 } else {
                     log.info("SKIPPING sheet " + realmUnit.getUri() + " for realm " + realmUnit.getName());
@@ -175,6 +202,13 @@ public class Endpoints {
             setIsTaskRunning(false);
         }
         log.info(msg);
+        try {
+            loadReport.printLoadReport(SHOW_STACK_TRACES);
+        } catch(java.io.IOException e) {
+            log.error("Error dumping to file");
+            log.error(e.getMessage());
+            e.printStackTrace();
+        }
         return Response.ok().entity(msg).build();
     }
 

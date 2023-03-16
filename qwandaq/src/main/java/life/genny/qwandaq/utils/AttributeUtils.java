@@ -139,14 +139,19 @@ public class AttributeUtils {
      * @see {@link Validation}
      */
     public Attribute getAttribute(String productCode, String code, boolean bundleDataType, boolean bundleValidationList) {
-        AttributeKey key = new AttributeKey(productCode, code);
-        Attribute attribute = (Attribute) cm.getPersistableEntity(GennyConstants.CACHE_NAME_ATTRIBUTE, key);
+        Attribute attribute = cm.getAttribute(productCode, code);
         if (attribute == null) {
             throw new ItemNotFoundException(productCode, "attribute: " + code);
         }
         if(bundleDataType) {
+            try {
             DataType dataType = getDataType(attribute, bundleValidationList);
             attribute.setDataType(dataType);
+            } catch(ItemNotFoundException e) {
+                log.error("DataType not found for Attribute: " + code);
+                log.error("DataType code: " + attribute.getDttCode());
+                throw e;
+            }
         }
         return attribute;
     }

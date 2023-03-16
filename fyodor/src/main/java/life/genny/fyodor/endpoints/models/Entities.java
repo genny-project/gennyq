@@ -1,4 +1,4 @@
-package life.genny.fyodor.endpoints;
+package life.genny.fyodor.endpoints.models;
 
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
@@ -52,6 +52,9 @@ public class Entities {
 
 	@Inject
 	BaseEntityUtils beUtils;
+
+	@Inject
+	EntityAttributeUtils beaUtils;
 
 	@Inject
 	AttributeUtils attributeUtils;
@@ -160,11 +163,16 @@ public class Entities {
 		BaseEntity be = new BaseEntity("TST_ENTITY", "Test Entity");
 
 		log.info("Created BaseEntity " + be.getCode());
-		Attribute attr = attributeUtils.getAttribute("LNK_AUTHOR");
+		Attribute attr = attributeUtils.getAttribute("LNK_AUTHOR", true);
 		EntityAttribute attribute = new EntityAttribute(be, attr, 1.0, "TEST");
-		attribute.setBaseEntityCode(be.getCode());
-		attribute.setAttribute(attr);
-		be.addAttribute(attribute);
+		try {
+			be.addAttribute(attribute);
+			attribute.setBaseEntityCode(be.getCode());
+			attribute.setAttribute(attr);
+			beaUtils.updateEntityAttribute(attribute);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
 		BaseEntity saved = beUtils.updateBaseEntity(be);
 

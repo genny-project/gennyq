@@ -30,11 +30,14 @@ public class ModuleUnit extends DataUnit {
     
     private static final String RANGE = "!A1:Z";
 
-    public ModuleUnit(String sheetURI) {
-        log.info("Processing spreadsheet:" + sheetURI);
-        Sheets sheetsService = GoogleImportService.getInstance().getService();
-        ArrayList<Sheet> sheets = getSheets(sheetsService,sheetURI);
+    public ModuleUnit() {
+        super();
+    }
 
+    public void init(String sheetURI) {
+        Sheets sheetsService = GoogleImportService.getInstance().getService();
+
+        ArrayList<Sheet> sheets = getSheets(sheetsService,sheetURI);
         // get tiles
         Set<String> titles = new HashSet<>();
         for (Sheet sheet : sheets) {
@@ -47,6 +50,7 @@ public class ModuleUnit extends DataUnit {
         ArrayList<ValueRange> valueRanges = getValueRanges(sheetsService, sheetURI, titles);
 
         processValues(sheetsService, titles, valueRanges, sheetURI);
+
     }
 
     // Get all sheets from spreadSheet
@@ -119,6 +123,9 @@ public class ModuleUnit extends DataUnit {
     	if (valueRanges == null) {
     		return;
     	}
+
+        log.info("Processing Module: " + this.name);
+
         for (ValueRange valueRange : valueRanges) {
             String title = valueRange.getRange().split("!")[0];
 
@@ -126,7 +133,7 @@ public class ModuleUnit extends DataUnit {
                 ESheetConfiguration titleData = ESheetConfiguration.getByTitle(title);
 
                 List<List<Object>> values = valueRange.getValues();
-                log.info("processing " + titleData.name() + ", value size:" + values.size());
+                log.info("\tprocessing " + titleData.name() + ", value size:" + values.size());
                 
                 switch (titleData) {
                     case VALIDATION:

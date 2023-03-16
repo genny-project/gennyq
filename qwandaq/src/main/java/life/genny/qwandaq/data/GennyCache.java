@@ -223,12 +223,7 @@ public class GennyCache {
 		if (cache == null) {
 			throw new NullPointerException("Could not find a cache called " + cacheName);
 		}
-
-		CoreEntityPersistable coreEntityPersistable = cache.get(key);
-		if (coreEntityPersistable == null) {
-			return null;
-		}
-		return coreEntityPersistable;
+		return cache.get(key);
 	}
 
 	/**
@@ -255,21 +250,21 @@ public class GennyCache {
 		try {
 			cache.put(key, value);
 		} catch (Exception e) {
-			log.error(ANSIColour.RED + "Exception when inserting entity (key=" + key.getKeyString() + ") into cache: " + cacheName);
-			log.error("Value: " + (value != null ? value.toString() : "null"));
+			log.error(ANSIColour.doColour("Exception when inserting entity (key=" + key.getKeyString() + ") into cache: " + cacheName, ANSIColour.RED));
+			log.error("Key: " + key.getKeyString());
+			log.error("Value: " + value.toString());
 			if(value instanceof EntityAttribute ea) {
 				log.error("EntityAttribute ATTRIBUTE: " + ea.getAttributeCode());
 				log.error("EntityAttribute ATTRIBUTE_ID: " + ea.getAttributeId());
 			}
 			log.error(e.getMessage());
-			StringBuilder sb = new StringBuilder(ANSIColour.RED);
+			StringBuilder sb = new StringBuilder();
 			for(StackTraceElement stack : e.getStackTrace()) {
-				sb.append(stack.toString())
+				sb.append(ANSIColour.doColour(stack.toString(), ANSIColour.RED))
 					.append('\n');
 			}
-			sb.append(ANSIColour.RESET);
 			log.error(sb.toString());
-			return false;
+			throw e;
 		}
 		
 		return true;

@@ -3,6 +3,7 @@ package life.genny.messages.managers;
 
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.AttributeUtils;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.EntityAttributeUtils;
 
@@ -17,6 +18,9 @@ public abstract sealed class QMessageProvider
         permits QEmailMessageManager, QErrorManager, QSlackMessageManager, QSMSMessageManager,
         QSendGridMessageManager, QToastMessageManager {
 
+    @Inject
+    AttributeUtils attributeUtils;
+    
     @Inject
     BaseEntityUtils beUtils;
 

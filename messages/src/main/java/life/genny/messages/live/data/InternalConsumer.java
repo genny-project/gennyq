@@ -71,8 +71,8 @@ public class InternalConsumer {
 			log.info("Deserialising Message");
 			message = jsonb.fromJson(data, QMessageGennyMSG.class);
 		} catch (Exception e) {
-			log.error(ANSIColour.RED+"Message Deserialisation Failed!!!!!"+ANSIColour.RESET);
-			log.error(ANSIColour.RED+ExceptionUtils.getStackTrace(e)+ANSIColour.RESET);
+			log.error(ANSIColour.doColour("Message Deserialisation Failed!!!!!", ANSIColour.RED));
+			log.error(ANSIColour.doColour(ExceptionUtils.getStackTrace(e), ANSIColour.RED));
 			scope.destroy();
 			return;
 		}

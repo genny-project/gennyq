@@ -25,6 +25,8 @@ public class CommonUtils {
 
     public static final String STR_ARRAY_EMPTY = "[]";
 
+    private CommonUtils() {/* utilities class */}
+
     /**
      * Normalize a String by forcing uppercase on first character and lowercase on the rest
      * e.g: 
@@ -97,17 +99,17 @@ public class CommonUtils {
      * works well assuming that the toString methods of the keys and values are well defined
      * @param map map to print
      */
-    public static void printMap(Map<?, ?> map) {
-        for(Object key : map.keySet()) {
-            log.info(key + "=" + map.get(key));
+    public static <K, V> void printMap(Map<K, V> map) {
+        for(Map.Entry<K, V> entry : map.entrySet()) {
+            log.info(entry.getKey() + "=" + entry.getValue());
         }
     }
 
     public static <K, V> void printMap(Map<K, V> map, FIGetStringCallBack<K> keyCallback, FIGetStringCallBack<V> valueCallback) {
-        for(K key : map.keySet()) {
-            String msg = new StringBuilder(keyCallback.getString(key))
+        for(Map.Entry<K, V> entry : map.entrySet()) {
+            String msg = new StringBuilder(keyCallback.getString(entry.getKey()))
                             .append(" = ")
-                            .append(valueCallback.getString(map.get(key)))
+                            .append(valueCallback.getString(entry.getValue()))
                             .toString();
             log.info(msg);
         }
@@ -118,17 +120,11 @@ public class CommonUtils {
      * @param <T> type
      * @param objA Object1 to compare
      * @param objB Object2 to compare
-     * @return true if both strings are the same or false if not
+     * @return true if both values are the same or false if not. 2 values are assumed equals if objA.equals(objB) OR both objA and objB are null
      */
     public static <T> Boolean compare(T objA, T objB) {
-        // Case string a is null
-        if(objA == null) {
-            return (objB == null);
-        }
-
-        // Case string b is null
-        if(objB == null) {
-            return (objA == null);
+        if(objA == null || objB == null) {
+            return objB == null && objA == null;
         }
 
         return objA.equals(objB);
@@ -137,16 +133,19 @@ public class CommonUtils {
     /**
      * A method to retrieve a system environment variable, and optionally log it if it is missing (default, do log)
      * @param env Env to retrieve
-     * @param alert whether or not to throw an excpetion or just log if it is missing or not (default: true)
+     * @param fallback the fallback to use if the env cannot be found.
      * @return the value of the environment variable, or null if it cannot be found
+     * 
+     * @throws {@link MissingEnvironmentVariableException} if env can be null 
      */
-    public static String getSystemEnv(String env, boolean alert) {
+    public static String getSystemEnv(String env, String fallback) {
         String result = System.getenv(env);
         
-        if(result == null && alert) {
+        if(result == null && fallback == null) {
             throw new MissingEnvironmentVariableException(env);
-        } else {
+        } else if(result == null) {
             log.warn("Could not find System Environment Variable: " + env);
+            return fallback;
         }
 
         return result;
@@ -158,7 +157,7 @@ public class CommonUtils {
      * @return the value of the environment variable, or null if it cannot be found
      */
     public static String getSystemEnv(String env) {
-        return getSystemEnv(env, true);
+        return getSystemEnv(env, null);
     }
 
     /**
@@ -253,15 +252,78 @@ public class CommonUtils {
         return instance;
     }
 
+
+    /**
+     * Get a String Array of A JSONified String Array
+     * @param arrayString - the JSONified String Array
+     * @return A String array with each entry the mapped equivalent through {@link Object#toString} on each entry in the Jsonified String array
+     * 
+     * <p>E.g
+     * <pre>
+     *  String intData = "[\"1\",\"2\",\"3\"]"; // this reads as ["1","2","3"]
+     * 
+     * String[] ints = getArrayFromString(intData);
+     * 
+     * // ints is now a *String* array containing: ["1","2","3"]
+     * </pre>
+     * </p>
+     */
+    public static String[] getArrayFromString(String arrayString) {
+        return getArrayFromString(arrayString, Object::toString);
+    }
+
+    
+
+    /**
+     * Get a String Array of A JSONified String Array
+     * @param arrayString - the JSONified String Array
+     * @param mapCallback - the mapping function to apply on each entry
+     * @return A String array with each entry the mapped equivalent using the mapCallback on each entry in the Jsonified String array
+     * 
+     * <p>E.g
+     * <pre>
+     *  String intData = "[\"1\",\"2\",\"3\"]"; // this reads as ["1","2","3"]
+     * 
+     * String[] ints = getArrayFromString(intData, (integer) -> integer.concat("abcde"));
+     * 
+     * // ints is now a *String* array containing: ["1abcde","2abcde","3abcde"]
+     * </pre>
+     * </p>
+     */
+    public static String[] getArrayFromString(String arrayString, FIGetObjectCallback<String> mapCallback) {
+        return getArrayFromString(arrayString, String.class, mapCallback);
+    }
+
+    /**
+     * Get an Array From A JSONified String Array
+     * @param <T> - Type of the array to collect
+     * @param arrayString - the JSONified String Array
+     * @param type - the Class referring to {@link T the type}
+     * @param objectCallback - a lambda that maps one entry in the string array to the requested Type
+     * @return an array of type {@link T} with each entry the mapped equivalent according to objectCallback of each entry in the Jsonified String array
+     * 
+     * <p>E.g
+     * <pre>
+     *  String intData = "[\"1\",\"2\",\"3\"]"; // this reads as ["1","2","3"]
+     * 
+     * // Both of these are logically equivalent
+     * Integer[] ints = getArrayFromString(intData, Integer.class, (data -> Integer.parseInt(data)));
+     * 
+     * // SonarLint Compliant Solution
+     * Integer[] ints = getArrayFromString(intData, Integer.class, Integer::parseInt);
+     * 
+     * // ints is now an Integer array containing {1, 2, 3}
+     * </pre>
+     * </p>
+     */
     @SuppressWarnings("unchecked")
     public static <T> T[] getArrayFromString(String arrayString, Class<T> type, FIGetObjectCallback<T> objectCallback) {
-        arrayString = arrayString.substring(1, arrayString.length() - 1).replaceAll("\"", "").strip();
+        arrayString = arrayString.substring(1, arrayString.length() - 1).replace("\"", "").strip();
         
-
 		if(StringUtils.isBlank(arrayString))
             return (T[])Array.newInstance(type, 0);
 
-        String components[] = arrayString.split(",");
+        String[] components = arrayString.split(",");
         T[] array = (T[])Array.newInstance(type, components.length);
                 
         for(int i = 0; i < components.length; i++) {
@@ -367,7 +429,13 @@ public class CommonUtils {
      */
     public static <T>boolean isInArray(T[] array, T obj) {
         for(T o : array) {
-            if(o.equals(obj))
+            if(o == null && obj != null || o != null && obj == null) {
+                continue;
+            }
+
+            // Now o and obj can only be both null or not null
+            // so testing if 1 is null tests if both are null
+            if(o == null || o.equals(obj))
                 return true;
         }
 
