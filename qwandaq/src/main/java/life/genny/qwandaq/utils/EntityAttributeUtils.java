@@ -93,11 +93,18 @@ public class EntityAttributeUtils {
 			// Ensure children override parent entity attributes
 			// exclude lnk includes
 			for (EntityAttribute ea : current.getBaseEntityAttributes()) {
+
+
+				// For ea.getValue to work as intended, need to ensure datatype is assigned to the EntityAttribute
+				if(ea.getAttribute() == null) {
+					Attribute attribute = attributeUtils.getAttribute(ea.getAttributeCode(), true);
+					ea.setAttribute(attribute);
+				}
 				if (!ea.getAttributeCode().equals(Attribute.LNK_INCLUDE) && ea.getValue() != null) 
 					allEntityAttributes.putIfAbsent(ea.getAttributeCode(), ea);
 			}
 
-			log.trace("[BFS] Iterated through and potentially added: " + current.getBaseEntityAttributes().size()
+			log.trace("[BFS] Iterated through and lk added: " + current.getBaseEntityAttributes().size()
 					+ " attributes from " + current.getCode());
 
 			visited.add(current);
