@@ -203,12 +203,14 @@ public class LoadReport {
             fw = new FileWriter(outputFile);
         } catch (java.io.IOException e) {
             log.error("Error opening file: " + outputFile);
-            e.printStackTrace();
         }
         try(BufferedWriter writer = new BufferedWriter(fw)) {
             for(Object msg : linesToOutput) {
                 writer.append(msg.toString());
             }
+        } catch(NullPointerException e) {
+            log.error("Error opening file: " + outputFile);
+            return;
         }
         if(fw != null)
             fw.close();
