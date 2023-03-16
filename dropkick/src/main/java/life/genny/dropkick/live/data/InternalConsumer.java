@@ -197,9 +197,9 @@ public class InternalConsumer {
 		// init context map
 		Map<String, Object> ctxMap = new ConcurrentHashMap<>();
 		if (source != null)
-		ctxMap.put("SOURCE", source);
+			ctxMap.put("SOURCE", source);
 		if (target != null)
-		ctxMap.put("TARGET", target);
+			ctxMap.put("TARGET", target);
 
 		searchEntity.setRealm(userToken.getProductCode());
 		searchEntity = defUtils.mergeFilterValueVariables(searchEntity, ctxMap);
@@ -217,8 +217,8 @@ public class InternalConsumer {
 			String name = item.getName();
 			String itemCode = item.getCode();
 			String logStr = String.format("DROPDOWN : item: %s ===== %s", itemCode, name);
-			if (StringUtils.isEmpty(name)) {
-				log.warn(logStr);
+			if (StringUtils.isBlank(name)) {
+				log.warn("No Name Set for Item: " + item.getCode());
 			} else {
 				log.info(logStr);
 			}
