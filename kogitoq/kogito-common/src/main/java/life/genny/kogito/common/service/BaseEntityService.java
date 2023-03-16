@@ -220,15 +220,10 @@ public class BaseEntityService extends KogitoService {
 
 		// iterate our stored process updates and create an answer
 		for (EntityAttribute ea : beaUtils.getAllEntityAttributesForBaseEntity(processEntity)) {
-			Attribute attribute = attributeUtils.getAttribute(ea.getAttributeCode(), true);
-			ea.setAttribute(attribute);
 			ea.setBaseEntityCode(entity.getCode());
 			ea.setBaseEntityId(entity.getId());
-			entity.addAttribute(ea);
+			beaUtils.updateEntityAttribute(ea);
 		}
-
-		// save these answrs to db and cache
-		beUtils.updateBaseEntity(entity);
 		log.info("Saved answers for entity " + entityCode);
 	}
 

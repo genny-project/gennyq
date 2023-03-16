@@ -157,8 +157,8 @@ public class AttributeUtils {
     }
 
     /**
-	 * Retrieve a DataType from the specified cache
-	 *
+	   * Retrieve a DataType from the specified cache
+	   *
      * @param productCode - product to retrieve the datatype from
      * @param dttCode - code of the datatype
      * @param bundleValidationList - whether or not to include its {@link DataType#getValidationList()}
@@ -170,22 +170,19 @@ public class AttributeUtils {
     public DataType getDataType(String productCode, String dttCode, boolean bundleValidationList) {
         DataTypeKey key = new DataTypeKey(productCode, dttCode);
         DataType dataType = (DataType) cm.getPersistableEntity(GennyConstants.CACHE_NAME_DATATYPE, key);
-
         if(dataType == null) {
-            throw new ItemNotFoundException(productCode, dttCode);
+            throw new ItemNotFoundException(productCode, "DataType Code: " + dttCode);
         }
-
         if (bundleValidationList) {
             List<Validation> validationList = getValidationList(dataType);
             dataType.setValidationList(validationList);
         }
-
         return dataType;
 	}
 
     /**
-	 * Retrieve a DataType for an {@link Attribute} from the Infinispan cache that is tied to the Attribute (same product)
-	 * Will return DataType already attached to the specified Attribute object if one exists, otherwise will check cache
+	   * Retrieve a DataType for an {@link Attribute} from the Infinispan cache that is tied to the Attribute (same product)
+	   * Will return DataType already attached to the specified Attribute object if one exists, otherwise will check cache
      * 
      * @param attribute - attribute to retrieve the datatype of
      * @param bundleValidationList - whether or not to include the DataType's {@link DataType#getValidationList()}
@@ -198,40 +195,54 @@ public class AttributeUtils {
         if(attribute == null) {
             throw new NullParameterException("attribute");
         }
-
         if(attribute.getDataType() != null) {
             return attribute.getDataType();
         }
-
-        return getDataType(attribute.getRealm(), attribute.getDttCode(), bundleValidationList);
+        DataType dataType = getDataType(attribute.getRealm(), attribute.getDttCode(), bundleValidationList);
+        if(dataType == null) {
+            throw new ItemNotFoundException("productCode: " + attribute.getRealm() + ". DataType attached to Attribute: " + attribute.getCode() + ". DataType Code: " + attribute.getDttCode());
+        }
+        return dataType;
     }
 
+    /**
+     * Get the datatype for an attribute using an attribute.
+     *
+     * @param dataType
+     * @return List of validations associated with a data type
+     */
     public List<Validation> getValidationList(DataType dataType) {
         return cm.getValidations(dataType.getRealm(), dataType.getValidationCodes());
     }
 
     /**
-     * @param validation
+     * @param validation The validation to be saved
      */
     public void saveValidation(Validation validation) {
-        ValidationKey key = new ValidationKey(validation.getRealm(), validation.getCode());
+        String productCode = validation.getRealm();
+        ValidationKey key = new ValidationKey(productCode, validation.getCode());
         cm.saveEntity(GennyConstants.CACHE_NAME_VALIDATION, key, validation);
+        updateAttributesLastUpdatedAt(productCode, System.currentTimeMillis());
     }
 
     /**
-     * @param dataType
+     * @param dataType The data type to be saved
      */
     public void saveDataType(DataType dataType) {
-        DataTypeKey key = new DataTypeKey(dataType.getRealm(), dataType.getDttCode());
+        String productCode = dataType.getRealm();
+        DataTypeKey key = new DataTypeKey(productCode, dataType.getDttCode());
         cm.saveEntity(GennyConstants.CACHE_NAME_DATATYPE, key, dataType);
+        updateAttributesLastUpdatedAt(productCode, System.currentTimeMillis());
     }
 
     /**
-     * @param attribute
+     * @param attribute The attribute to be saved
      */
     public void saveAttribute(Attribute attribute) {
-        AttributeKey key = new AttributeKey(attribute.getRealm(), attribute.getCode());
+        String productCode = attribute.getRealm();
+        AttributeKey key = new AttributeKey(productCode, attribute.getCode());
         cm.saveEntity(GennyConstants.CACHE_NAME_ATTRIBUTE, key, attribute);
+        updateAttributesLastUpdatedAt(productCode, System.currentTimeMillis());
     }
 
 	/**
@@ -247,7 +258,7 @@ public class AttributeUtils {
      * Fetch all attributes for a product.
      *
      * @param productCode
-     * @return
+     * @return Collection of all attributes for a product.
      */
     public List<Attribute> getAttributesForProduct(String productCode) {
         return cm.getAttributesForProduct(productCode);
@@ -274,16 +285,16 @@ public class AttributeUtils {
         return cm.getAttributesWithPrefixForProduct(productCode, prefix);
     }
 
-    public Long getAttributesLastUpdatedAt() {
-        Long entityLastUpdatedAt = cm.getEntityLastUpdatedAt(GennyConstants.CACHE_NAME_ATTRIBUTE);
+    public Long getAttributesLastUpdatedAt(String productCode) {
+        Long entityLastUpdatedAt = cm.getEntityLastUpdatedAt(GennyConstants.CACHE_NAME_ATTRIBUTE, productCode);
         if(entityLastUpdatedAt != null)
             return entityLastUpdatedAt;
         entityLastUpdatedAt = System.currentTimeMillis();
-        updateAttributesLastUpdatedAt(entityLastUpdatedAt);
+        updateAttributesLastUpdatedAt(productCode, entityLastUpdatedAt);
         return entityLastUpdatedAt;
     }
 
-    public void updateAttributesLastUpdatedAt(Long updatedTime) {
-        cm.updateEntityLastUpdatedAt(GennyConstants.CACHE_NAME_ATTRIBUTE, updatedTime);
+    public void updateAttributesLastUpdatedAt(String productCode, Long updatedTime) {
+        cm.updateEntityLastUpdatedAt(GennyConstants.CACHE_NAME_ATTRIBUTE, productCode, updatedTime);
     }
 }

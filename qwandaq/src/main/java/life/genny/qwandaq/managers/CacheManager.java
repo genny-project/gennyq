@@ -757,12 +757,12 @@ public class CacheManager {
 		});
 	}
 
-	public Long getEntityLastUpdatedAt(String entityName) {
-		return cache.getEntityLastUpdatedAt(entityName);
+	public Long getEntityLastUpdatedAt(String entityName, String productCode) {
+		return cache.getEntityLastUpdatedAt(entityName, productCode);
 	}
 
-	public void updateEntityLastUpdatedAt(String entityName, Long updatedTime) {
-		cache.updateEntityLastUpdatedAt(entityName, updatedTime);
+	public void updateEntityLastUpdatedAt(String entityName, String productCode, Long updatedTime) {
+		cache.updateEntityLastUpdatedAt(entityName, productCode, updatedTime);
 	}
 }
 
