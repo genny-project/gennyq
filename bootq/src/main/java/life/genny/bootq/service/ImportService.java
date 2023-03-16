@@ -65,9 +65,10 @@ public class ImportService {
         for(Map<String, String> module : data) {
             if(module.isEmpty())
                 continue;
-            ModuleUnit moduleUnit = new ModuleUnit(module.get("sheetid"));
+            ModuleUnit moduleUnit = new ModuleUnit();
             moduleUnit.setName(module.get("name"));
             log.info("Loading Module: " + moduleUnit.getName());
+            moduleUnit.init(module.get("sheetid"));
 			modules.add(moduleUnit);
         }
 

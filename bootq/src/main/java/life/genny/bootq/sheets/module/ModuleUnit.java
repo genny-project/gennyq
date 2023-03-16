@@ -30,11 +30,14 @@ public class ModuleUnit extends DataUnit {
     
     private static final String RANGE = "!A1:Z";
 
-    public ModuleUnit(String sheetURI) {
-        log.info("Processing spreadsheet:" + sheetURI);
-        Sheets sheetsService = GoogleImportService.getInstance().getService();
-        ArrayList<Sheet> sheets = getSheets(sheetsService,sheetURI);
+    public ModuleUnit() {
+        super();
+    }
 
+    public void init(String sheetURI) {
+        Sheets sheetsService = GoogleImportService.getInstance().getService();
+
+        ArrayList<Sheet> sheets = getSheets(sheetsService,sheetURI);
         // get tiles
         Set<String> titles = new HashSet<>();
         for (Sheet sheet : sheets) {
@@ -47,6 +50,7 @@ public class ModuleUnit extends DataUnit {
         ArrayList<ValueRange> valueRanges = getValueRanges(sheetsService, sheetURI, titles);
 
         processValues(sheetsService, titles, valueRanges, sheetURI);
+
     }
 
     // Get all sheets from spreadSheet
