@@ -2,6 +2,7 @@ package life.genny.bootq.models;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -10,7 +11,9 @@ import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.constants.Prefix;
+import life.genny.qwandaq.converter.CapabilityConverter;
 import life.genny.qwandaq.datatype.DataType;
+import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.managers.CacheManager;
@@ -34,6 +37,14 @@ public class Validator {
     @Inject
     CacheManager cm;
 
+    public Set<Capability> validateCapabilities(String capabilityString) 
+        throws BadDataException {
+            try {
+                return CapabilityConverter.convertToEA(capabilityString);
+            } catch (BadDataException e) {
+                throw new BadDataException("Exception occurred when validating Capability Requirements: " + capabilityString + ". " + e.getMessage(), e);
+            }
+    }
 
     public Map<String, Object> validateQuestionQuestion(Map<String, String> row, String realmName) 
         throws BadDataException {
