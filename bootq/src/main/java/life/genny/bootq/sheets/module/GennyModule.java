@@ -25,4 +25,9 @@ public class GennyModule extends SheetReferralType<ModuleUnit> {
     public void init() {
         setDataUnits(getService().fetchModuleUnit(sheetURI));
     }
+
+    @Override
+    public String toString() {
+        return "ModuleUnit: [name: " + name + ", sheetURI: " + sheetURI + "]";
+    }
 }

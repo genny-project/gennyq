@@ -67,6 +67,7 @@ public class ImportService {
                 continue;
             ModuleUnit moduleUnit = new ModuleUnit(module.get("sheetid"));
             moduleUnit.setName(module.get("name"));
+            log.info("Loading Module: " + moduleUnit.getName());
 			modules.add(moduleUnit);
         }
 
