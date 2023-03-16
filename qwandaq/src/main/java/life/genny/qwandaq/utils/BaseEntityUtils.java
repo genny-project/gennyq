@@ -448,27 +448,32 @@ public class BaseEntityUtils {
 
 		created.setValueDateTime(entity.getCreated());
 		entity.addAttribute(created);
+		beaUtils.updateEntityAttribute(created);
 
 		Attribute createdDateAttr = new Attribute(PRI_CREATED_DATE, "Created", new DataType(LocalDate.class));
 		EntityAttribute createdDate = new EntityAttribute(entity, createdDateAttr, 1.0, null);
 
 		createdDate.setValueDate(entity.getCreated().toLocalDate());
 		entity.addAttribute(createdDate);
+		beaUtils.updateEntityAttribute(createdDate);
 
 		// last updated
 		Attribute updatedAttr = new Attribute(PRI_UPDATED, "Updated", new DataType(LocalDateTime.class));
 		EntityAttribute updated = new EntityAttribute(entity, updatedAttr, 1.0, null);
 		updated.setValueDateTime(entity.getUpdated());
 		entity.addAttribute(updated);
+		beaUtils.updateEntityAttribute(updated);
 		try {
 			updated.setValueDateTime(entity.getUpdated());
 			entity.addAttribute(updated);
+			beaUtils.updateEntityAttribute(updated);
 
 		// last updated date
 		Attribute updatedDateAttr = new Attribute(PRI_UPDATED_DATE, "Updated", new DataType(LocalDate.class));
 		EntityAttribute updatedDate = new EntityAttribute(entity, updatedDateAttr, 1.0, null);
 		updatedDate.setValueDate(entity.getUpdated().toLocalDate());
 		entity.addAttribute(updatedDate);
+		beaUtils.updateEntityAttribute(updatedDate);
 		} catch (NullPointerException e) {
 			log.error("NPE for PRI_UPDATED");
 		}
@@ -478,12 +483,14 @@ public class BaseEntityUtils {
 		EntityAttribute code = new EntityAttribute(entity, codeAttr, 1.0, null);
 		code.setValueString(entity.getCode());
 		entity.addAttribute(code);
+		beaUtils.updateEntityAttribute(code);
 
 		// name
 		Attribute nameAttr = new Attribute(PRI_NAME, "Name", new DataType(String.class));
 		EntityAttribute name = new EntityAttribute(entity, nameAttr, 1.0, null);
 		name.setValueString(entity.getName());
 		entity.addAttribute(name);
+		beaUtils.updateEntityAttribute(name);
 
 		return entity;
 	}
@@ -582,17 +589,22 @@ public class BaseEntityUtils {
 				newEA.setRealm(userToken.getProductCode());
 				log.info("Adding mandatory/default -> " + attribute.getCode());
 				item.addAttribute(newEA);
+				beaUtils.updateEntityAttribute(newEA);
 			}
 		}
 
 		Attribute linkDef = attributeUtils.getAttribute(Attribute.LNK_DEF, true);
-		item.addAttribute(new EntityAttribute(item, linkDef, 1.0, "[\"" + definitionCode + "\"]"));
+		EntityAttribute linkDefEA = new EntityAttribute(item, linkDef, 1.0, "[\"" + definitionCode + "\"]");
+		item.addAttribute(linkDefEA);
+		beaUtils.updateEntityAttribute(linkDefEA);
 
 		// author of the BE
 		Attribute lnkAuthorAttr = attributeUtils.getAttribute(Attribute.LNK_AUTHOR, true);
-		item.addAttribute(new EntityAttribute(item, lnkAuthorAttr, 1.0, "[\"" + userToken.getUserCode() + "\"]"));
+		EntityAttribute linkAuthorEA = new EntityAttribute(item, lnkAuthorAttr, 1.0, "[\"" + userToken.getUserCode() + "\"]");
+		item.addAttribute(linkAuthorEA);
+		beaUtils.updateEntityAttribute(linkAuthorEA);
 
-		updateBaseEntity(item, true);
+		updateBaseEntity(item, false);
 
 		return item;
 	}

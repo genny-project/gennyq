@@ -27,7 +27,6 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
-import life.genny.serviceq.Service;
 
 /**
  * Entities --- Endpoints providing database entity access
@@ -52,13 +51,7 @@ public class Entities {
 	UserToken userToken;
 
 	@Inject
-	Service service;
-
-	@Inject
 	BaseEntityUtils beUtils;
-
-	@Inject
-	EntityAttributeUtils beaUtils;
 
 	@Inject
 	AttributeUtils attributeUtils;
@@ -68,8 +61,8 @@ public class Entities {
 	/**
 	 * Read an item from the cache.
 	 *
-	 * @param key The key of the cache item
-	 * @return The json item
+	 * @param code The code of the base entity to be read
+	 * @return OK response containing the read base entity
 	 */
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
@@ -103,8 +96,8 @@ public class Entities {
 	/**
 	 * Read an item from the cache.
 	 *
-	 * @param key The key of the cache item
-	 * @return The json item
+	 * @param code The code of the base entity to be deleted
+	 * @return OK response containing the deleted base entity
 	 */
 	@DELETE
 	@Produces(MediaType.APPLICATION_JSON)
@@ -125,10 +118,10 @@ public class Entities {
 	}
 	
 	/**
-	 * Read an item from the cache.
+	 * Update a base entity the cache.
 	 *
-	 * @param key The key of the cache item
-	 * @return The json item
+	 * @param entity The base entity to be updated
+	 * @return OK response containing the updated base entity
 	 */
 	@PUT
 	@Produces(MediaType.APPLICATION_JSON)
@@ -152,10 +145,9 @@ public class Entities {
 	}
 
 	/**
-	 * Read an item from the cache.
+	 * Create an empty test base entity
 	 *
-	 * @param key The key of the cache item
-	 * @return The json item
+	 * @return OK response containing the created base entity
 	 */
 	@GET
 	@Path("/create")
@@ -168,27 +160,25 @@ public class Entities {
 		BaseEntity be = new BaseEntity("TST_ENTITY", "Test Entity");
 
 		log.info("Created BaseEntity " + be.getCode());
-		Attribute attr = attributeUtils.getAttribute("LNK_AUTHOR", true);
+		Attribute attr = attributeUtils.getAttribute("LNK_AUTHOR");
 		EntityAttribute attribute = new EntityAttribute(be, attr, 1.0, "TEST");
-		try {
-			be.addAttribute(attribute);
-			beaUtils.updateEntityAttribute(attribute);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		attribute.setBaseEntityCode(be.getCode());
+		attribute.setAttribute(attr);
+		be.addAttribute(attribute);
 
 		BaseEntity saved = beUtils.updateBaseEntity(be);
 
-		log.info("SAVED = " + jsonb.toJson(saved));
+		log.debug("SAVED = " + jsonb.toJson(saved));
 
 		return Response.ok(be).build();
 	}
 
 	/**
-	 * Read an item from the cache.
+	 * Create a base entity from json for a given product
 	 *
-	 * @param key The key of the cache item
-	 * @return The json item
+	 * @param productCode The product code
+	 * @param baseentityJson The json representation of the base entity to be created
+	 * @return OK response containing the id of the created base entity
 	 */
 	@POST
 	@Path("/{productCode}")
