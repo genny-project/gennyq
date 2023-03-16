@@ -123,7 +123,9 @@ public class Endpoints {
 
         Realm realm = new Realm(sheetId);
         List<RealmUnit> realmUnits = realm.getDataUnits();
+        log.info("FOUND " + realmUnits.size() + " realmUnits");
         for (RealmUnit realmUnit : realmUnits) {
+            log.info("Module Unit: " + realmUnit.getModule());
             log.info("Importing from sheet " + realmUnit.getUri() + " for realm " + realmUnit.getName());
 
             if (!realmUnit.getDisable() && !realmUnit.getSkipGoogleDoc()) {
@@ -141,7 +143,7 @@ public class Endpoints {
         log.infof("Total time taken to load the sheet %s : %s (millis)", sheetId, (end - start));
         try {
             loadReport.printLoadReport(SHOW_STACK_TRACES);
-        } catch(java.io.IOException e) {
+        } catch(Exception e) {
             log.error("Error dumping to file");
             log.error(e.getMessage());
             e.printStackTrace();
