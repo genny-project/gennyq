@@ -390,6 +390,7 @@ public class BatchLoading {
                 String pref = attributeCode.substring(0, 4);
                 DataType dataType = dttPrefixMap.get(pref);
                 defAttr.setDataType(dataType);
+                attributeUtils.saveAttribute(defAttr);
             }
             
             EntityAttribute entityAttribute = googleSheetBuilder.buildEntityAttribute(row, realmName, defBe, defAttr);
