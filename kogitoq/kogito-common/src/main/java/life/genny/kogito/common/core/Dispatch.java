@@ -398,7 +398,7 @@ public class Dispatch {
 			List<String> codes = null;
 			if (target.getCode().startsWith(Prefix.QBE_)) {
 				// get list from target
-				String value = target.getValueAsString(ask.getQuestion().getAttributeCode());
+				String value = target.findEntityAttribute(ask.getQuestion().getAttributeCode()).get().getValueString();
 				codes = Arrays.asList(CommonUtils.getArrayFromString(value));
 			} else {
 				// get list of value codes from cache
