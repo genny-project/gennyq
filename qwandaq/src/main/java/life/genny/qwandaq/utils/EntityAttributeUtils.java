@@ -93,7 +93,7 @@ public class EntityAttributeUtils {
 			// Ensure children override parent entity attributes
 			// exclude lnk includes
 			for (EntityAttribute ea : current.getBaseEntityAttributes()) {
-				if (!ea.getAttributeCode().equals(Attribute.LNK_INCLUDE))
+				if (!ea.getAttributeCode().equals(Attribute.LNK_INCLUDE) && ea.getValue() != null) 
 					allEntityAttributes.putIfAbsent(ea.getAttributeCode(), ea);
 			}
 
