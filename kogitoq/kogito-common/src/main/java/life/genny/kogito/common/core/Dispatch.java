@@ -458,37 +458,6 @@ public class Dispatch {
 
 		if (attribute.getCode().startsWith(Prefix.LNK_)) {
 
-			// check for already selected items
-			List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(target, attribute.getCode());
-			if (codes != null && !codes.isEmpty()) {
-
-				// grab selection baseentitys
-				QDataBaseEntityMessage selectionMsg = new QDataBaseEntityMessage();
-				for (String code : codes) {
-					if (StringUtils.isBlank(code)) {
-						continue;
-					}
-
-					BaseEntity selection = beUtils.getBaseEntity(code);
-
-					// Ensure only the PRI_NAME attribute exists in the selection
-					selection = beUtils.addNonLiteralAttributes(selection);
-					selection = beUtils.privacyFilter(selection,
-							Collections.singleton(Attribute.PRI_NAME));
-					selectionMsg.add(selection);
-				}
-
-				// send selections
-				if (selectionMsg.getItems() != null) {
-					selectionMsg.setToken(userToken.getToken());
-					selectionMsg.setReplace(true);
-					log.info("Sending selection items with " + selectionMsg.getItems().size() + " items");
-					KafkaUtils.writeMsg(KafkaTopic.WEBDATA, selectionMsg);
-				} else {
-					log.info("No selection items found for " + attribute.getCode());
-				}
-			}
-
 			// trigger dropdown search in dropkick
 			JsonObject json = Json.createObjectBuilder()
 					.add("event_type", "DD")
