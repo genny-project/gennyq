@@ -174,7 +174,7 @@ public class GoogleSheetBuilder {
 		} catch (ItemNotFoundException e) {
 			// create new datatype if not found
 			dataType = new DataType();
-			dataType.setDttCode(code);
+			dataType.setCode(code);
 		}
 
 		// Ensure there is an actual validation sitting behind validations column

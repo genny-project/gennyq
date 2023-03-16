@@ -5,8 +5,6 @@ import life.genny.qwandaq.serialization.common.CoreEntityKey;
 
 public class AttributeKey implements CoreEntityKey {
 
-	public static final String ATTRIBUTE_KEY_DELIMITER = ":";
-
 	private String realm;
 	private String attributeCode;
 
@@ -39,11 +37,6 @@ public class AttributeKey implements CoreEntityKey {
 	}
 
 	// Core Entity Key Overrides
-
-	@Override
-	public String getDelimiter() {
-		return ATTRIBUTE_KEY_DELIMITER;
-	}
 
 	@Override
 	public String getKeyString() {

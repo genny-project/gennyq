@@ -154,19 +154,19 @@ public class AttributeUtils {
 	 * Retrieve a DataType from the specified cache
 	 *
      * @param productCode - product to retrieve the datatype from
-     * @param dttCode - code of the datatype
+     * @param code - code of the datatype
      * @param bundleValidationList - whether or not to include its {@link DataType#getValidationList()}
      * @return the datatype and optionally its Validation List
      * 
      * @throws {@link ItemNotFoundException} if the DataType cannot be found
      * @see {@link Validation}
      */
-    public DataType getDataType(String productCode, String dttCode, boolean bundleValidationList) {
-        DataTypeKey key = new DataTypeKey(productCode, dttCode);
+    public DataType getDataType(String productCode, String code, boolean bundleValidationList) {
+        DataTypeKey key = new DataTypeKey(productCode, code);
         DataType dataType = (DataType) cm.getPersistableEntity(GennyConstants.CACHE_NAME_DATATYPE, key);
 
         if(dataType == null) {
-            throw new ItemNotFoundException(productCode, dttCode);
+            throw new ItemNotFoundException(productCode, code);
         }
 
         if (bundleValidationList) {
@@ -216,7 +216,7 @@ public class AttributeUtils {
      * @param dataType
      */
     public void saveDataType(DataType dataType) {
-        DataTypeKey key = new DataTypeKey(dataType.getRealm(), dataType.getDttCode());
+        DataTypeKey key = new DataTypeKey(dataType.getRealm(), dataType.getCode());
         cm.saveEntity(GennyConstants.CACHE_NAME_DATATYPE, key, dataType);
     }
 

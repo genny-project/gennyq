@@ -63,9 +63,6 @@ public class QuestionQuestion implements CoreEntitySerializable {
 	private Double weight;
 
 	@ProtoField(17)
-	private Long source_id;
-
-	@ProtoField(18)
 	private String capreqs;
 
 	@ProtoFactory
@@ -200,14 +197,6 @@ public class QuestionQuestion implements CoreEntitySerializable {
 		this.weight = weight;
 	}
 
-	public Long getSourceId() {
-		return source_id;
-	}
-
-	public void setSourceId(Long source_id) {
-		this.source_id = source_id;
-	}
-
 	public String getCapreqs() {
 		return capreqs;
 	}
@@ -231,7 +220,6 @@ public class QuestionQuestion implements CoreEntitySerializable {
 		questionQuestion.setUpdated(getUpdated());
 		questionQuestion.setVersion(getVersion());
 		questionQuestion.setWeight(getWeight());
-		questionQuestion.setParentId(getSourceId());
 		questionQuestion.setCapabilityRequirements(CapabilityConverter.convertToEA(getCapreqs()));
 		return questionQuestion;
 	}

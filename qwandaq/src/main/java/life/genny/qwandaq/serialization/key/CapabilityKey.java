@@ -27,11 +27,6 @@ public class CapabilityKey implements CoreEntityKey {
     }
 
     @Override
-    public String getDelimiter() {
-        return null;
-    }
-
-    @Override
     public String getEntityCode() {
         return getComponents()[0];
     }

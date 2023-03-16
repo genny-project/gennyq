@@ -26,6 +26,7 @@ import javax.persistence.Convert;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlTransient;
 
+import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.converter.CapabilityConverter;
 import life.genny.qwandaq.datatype.DataType;
@@ -142,11 +143,9 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 
 	private Attribute attribute;
 
-	private Long baseEntityId;
-
-	private Long attributeId;
-
 	private Set<Capability> capabilityRequirements;
+
+	private EEntityStatus status = EEntityStatus.ACTIVE;
 
 	public EntityAttribute() {
 	}
@@ -179,7 +178,6 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 
 	public void setBaseEntity(BaseEntity baseEntity) {
 		setBaseEntityCode(baseEntity.getCode());
-		setBaseEntityId(baseEntity.getId());
 	}
 
 	@JsonbTransient
@@ -490,22 +488,6 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 		this.feedback = feedback;
 	}
 
-	public Long getBaseEntityId() {
-		return baseEntityId;
-	}
-
-	public void setBaseEntityId(Long baseEntityId) {
-		this.baseEntityId = baseEntityId;
-	}
-
-	public Long getAttributeId() {
-		return attributeId;
-	}
-
-	public void setAttributeId(Long attributeId) {
-		this.attributeId = attributeId;
-	}
-
 	public void autocreateUpdate() {
 		if (valueString != null && valueString.length() > 0) {
             this.valueString = AttributeMinIOHandler.convertToMinIOObject(valueString,baseEntityCode,attributeCode);
@@ -551,9 +533,16 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 
 	public void setAttribute(Attribute attribute) {
 		this.attribute = attribute;
-		setAttributeId(attribute.getId());
 		setAttributeCode(attribute.getCode());
 		setAttributeName(attribute.getName());
+	}
+
+	public EEntityStatus getStatus() {
+		return status;
+	}
+
+	public void setStatus(EEntityStatus status) {
+		this.status = status;
 	}
 
 	/**
@@ -1230,11 +1219,9 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 		bea.setValueString(getValueString());
 		bea.setUpdated(getUpdated());
 		bea.setWeight(getWeight());
-		bea.setAttributeId(getAttributeId());
-		bea.setBaseEntityId(getBaseEntityId());
-		// bea.setIcon(geticon);
 		bea.setConfirmationFlag(getConfirmationFlag());
 		bea.setCapreqs(CapabilityConverter.convertToDBColumn(getCapabilityRequirements()));
+		bea.setStatus(getStatus());
 		return bea;
 	}
 
@@ -1270,9 +1257,8 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 		clone.setUpdated(getUpdated());
 		clone.setWeight(getWeight());
 		clone.setConfirmationFlag(getConfirmationFlag());
-		clone.setAttributeId(getAttributeId());
-		clone.setBaseEntityId(getBaseEntityId());
 		clone.setCapabilityRequirements(getCapabilityRequirements());
+		clone.setStatus(getStatus());
 		return clone;
 	}
 

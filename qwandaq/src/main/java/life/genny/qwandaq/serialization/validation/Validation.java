@@ -18,64 +18,42 @@ import org.infinispan.protostream.annotations.ProtoField;
 public class Validation implements CoreEntitySerializable {
 
 	@ProtoField(1)
-	private String dtype;
-
-	@ProtoField(2)
-	private Long id;
-
-	@ProtoField(3)
 	private LocalDateTime created;
 
-	@ProtoField(4)
+	@ProtoField(2)
 	private String name;
 
-	@ProtoField(5)
+	@ProtoField(3)
 	private String realm;
 
-	@ProtoField(6)
+	@ProtoField(4)
 	private LocalDateTime updated;
 
-	@ProtoField(7)
+	@ProtoField(5)
 	private String code;
 
-	@ProtoField(8)
+	@ProtoField(6)
 	private Integer status;
 
-	@ProtoField(9)
+	@ProtoField(7)
 	private String errorMsg;
 
-	@ProtoField(10)
+	@ProtoField(8)
 	private Boolean multiAllowed;
 
-	@ProtoField(11)
+	@ProtoField(9)
 	private String options;
 
-	@ProtoField(12)
+	@ProtoField(10)
 	private Boolean recursiveGroup;
 
-	@ProtoField(13)
+	@ProtoField(11)
 	private String regex;
 
-	@ProtoField(11)
+	@ProtoField(12)
 	private String selectionGroup;
 
 	public Validation() {
-	}
-
-	public String getDtype() {
-		return dtype;
-	}
-
-	public void setDtype(String dtype) {
-		this.dtype = dtype;
-	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
 	}
 
 	public LocalDateTime getCreated() {

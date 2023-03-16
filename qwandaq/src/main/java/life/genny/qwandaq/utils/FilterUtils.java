@@ -162,7 +162,6 @@ public class FilterUtils {
 
                     String baseCode = FilterConst.FILTER_SEL + Prefix.FLC_ + attrCode;
                     ea.setBaseEntityCode(baseCode);
-                    ea.setBaseEntityId(baseEntity.getId());
                     ea.setValueString(e.getAttributeName());
 
                     entityAttributes.add(ea);

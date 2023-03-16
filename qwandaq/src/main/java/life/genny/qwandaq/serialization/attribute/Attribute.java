@@ -1,13 +1,11 @@
 package life.genny.qwandaq.serialization.attribute;
 
 import java.time.LocalDateTime;
-import java.util.List;
+
 import life.genny.qwandaq.EEntityStatus;
-import life.genny.qwandaq.converter.ValidationListConverter;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
-import life.genny.qwandaq.validation.Validation;
 
 /*
  * A representation of BaseEntity in the cache
@@ -15,10 +13,6 @@ import life.genny.qwandaq.validation.Validation;
  * @author Varun Shastry
  */
 public class Attribute implements CoreEntitySerializable {
-	
-	private String dtype;
-	
-	private Long id;
 	
 	private LocalDateTime created;
 	
@@ -30,15 +24,7 @@ public class Attribute implements CoreEntitySerializable {
 	
 	private String code;
 
-	private String className;
-
 	private String dttCode;
-
-	private String inputMask;
-
-	private String typeName;
-
-	private String validationList;
 
 	private Boolean defaultPrivacyFlag;
 
@@ -50,17 +36,7 @@ public class Attribute implements CoreEntitySerializable {
 
 	private String placeholder;
 
-	private String component;
-
 	private String icon;
-
-	public String getClassName() {
-		return className;
-	}
-
-	public void setClassName(String className) {
-		this.className = className;
-	}
 
 	public String getDttCode() {
 		return dttCode;
@@ -68,30 +44,6 @@ public class Attribute implements CoreEntitySerializable {
 
 	public void setDttCode(String dttCode) {
 		this.dttCode = dttCode;
-	}
-
-	public String getInputMask() {
-		return inputMask;
-	}
-
-	public void setInputMask(String inputMask) {
-		this.inputMask = inputMask;
-	}
-
-	public String getTypeName() {
-		return typeName;
-	}
-
-	public void setTypeName(String typeName) {
-		this.typeName = typeName;
-	}
-
-	public String getValidationList() {
-		return validationList;
-	}
-
-	public void setValidationList(String validationList) {
-		this.validationList = validationList;
 	}
 
 	public Boolean getDefaultPrivacyFlag() {
@@ -134,14 +86,6 @@ public class Attribute implements CoreEntitySerializable {
 		this.placeholder = placeholder;
 	}
 
-	public String getComponent() {
-		return component;
-	}
-
-	public void setComponent(String component) {
-		this.component = component;
-	}
-
 	public String getIcon() {
 		return icon;
 	}
@@ -151,22 +95,6 @@ public class Attribute implements CoreEntitySerializable {
 	}
 
 	private Integer status;
-
-	public String getDtype() {
-		return dtype;
-	}
-
-	public void setDtype(String dtype) {
-		this.dtype = dtype;
-	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
 
 	public LocalDateTime getCreated() {
 		return created;
@@ -221,19 +149,13 @@ public class Attribute implements CoreEntitySerializable {
 		life.genny.qwandaq.attribute.Attribute attribute = new life.genny.qwandaq.attribute.Attribute();
 		attribute.setCode(getCode());
 		attribute.setCreated(getCreated());
-		attribute.setId(getId());
 		attribute.setName(getName());
 		attribute.setRealm(getRealm());
 		attribute.setStatus(EEntityStatus.valueOf(getStatus()));
 		attribute.setUpdated(getUpdated());
 		attribute.setDefaultPrivacyFlag(getDefaultPrivacyFlag());
 		DataType dataType = new DataType();
-		dataType.setDttCode(getDttCode());
-		dataType.setClassName(getClassName());
-		dataType.setComponent(getComponent());
-		dataType.setTypeName(getTypeName());
-		List<Validation> validations = new ValidationListConverter().convertToEntityAttribute(getValidationList());
-		dataType.setValidationList(validations);
+		dataType.setCode(getDttCode());
 		attribute.setDataType(dataType);
 		return attribute;
 	}

@@ -17,64 +17,36 @@ import org.infinispan.protostream.annotations.ProtoField;
 public class BaseEntity implements CoreEntitySerializable {
 
 	@ProtoField(1)
-	private String dtype;
-
-	@ProtoField(2)
-	private Long id;
-
-	@ProtoField(3)
 	private LocalDateTime created;
 
-	@ProtoField(4)
+	@ProtoField(2)
 	private String name;
 
-	@ProtoField(5)
+	@ProtoField(3)
 	private String realm;
 
-	@ProtoField(6)
+	@ProtoField(4)
 	private LocalDateTime updated;
 
-	@ProtoField(7)
+	@ProtoField(5)
 	private String code;
 
-	@ProtoField(8)
-	private Integer status;
-
-	@ProtoField(9)
+	@ProtoField(6)
 	private String capreqs;
 
 	@ProtoFactory
-	public BaseEntity(String dtype, Long id, LocalDateTime created, String name, String realm, LocalDateTime updated,
-			String code, Integer status, String capreqs) {
+	public BaseEntity(LocalDateTime created, String name, String realm, LocalDateTime updated,
+			String code, String capreqs) {
 		super();
-		this.dtype = dtype;
-		this.id = id;
 		this.created = created;
 		this.name = name;
 		this.realm = realm;
 		this.updated = updated;
 		this.code = code;
-		this.status = status;
 		this.capreqs = capreqs;
 	}
 
 	public BaseEntity() {
-	}
-
-	public String getDtype() {
-		return dtype;
-	}
-
-	public void setDtype(String dtype) {
-		this.dtype = dtype;
-	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
 	}
 
 	public LocalDateTime getCreated() {
@@ -117,14 +89,6 @@ public class BaseEntity implements CoreEntitySerializable {
 		this.code = code;
 	}
 
-	public Integer getStatus() {
-		return status;
-	}
-
-	public void setStatus(Integer status) {
-		this.status = status;
-	}
-
 	public String getCapreqs() {
 		return capreqs;
 	}
@@ -138,11 +102,8 @@ public class BaseEntity implements CoreEntitySerializable {
 		life.genny.qwandaq.entity.BaseEntity baseEntity = new life.genny.qwandaq.entity.BaseEntity();
 		baseEntity.setCode(getCode());
 		baseEntity.setCreated(getCreated());
-		// baseEntity.setDtype();
-		baseEntity.setId(getId());
 		baseEntity.setName(getName());
 		baseEntity.setRealm(getRealm());
-		baseEntity.setStatus(EEntityStatus.valueOf(getStatus()));
 		baseEntity.setUpdated(getUpdated());
 		baseEntity.setCapabilityRequirements();
 		return baseEntity;

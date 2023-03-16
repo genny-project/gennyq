@@ -26,7 +26,6 @@ public class AttributeMessageMarshaller implements MessageMarshaller<Attribute> 
 	// @Override
 	public Attribute readFrom(ProtoStreamReader reader) throws IOException {
 		Attribute att = new Attribute();
-		att.setId(reader.readLong("id"));
 		att.setCode(reader.readString("code"));
 		Long createdLong = reader.readLong("created");
 		if (createdLong != null) {
@@ -53,7 +52,6 @@ public class AttributeMessageMarshaller implements MessageMarshaller<Attribute> 
 
 	// @Override
 	public void writeTo(ProtoStreamWriter writer, Attribute att) throws IOException {
-		writer.writeLong("id", att.getId());
 		writer.writeString("code", att.getCode());
 		LocalDateTime created = att.getCreated();
 		Long createdLong = created != null ? created.toEpochSecond(ZoneOffset.UTC) * 1000 : null;
@@ -64,13 +62,11 @@ public class AttributeMessageMarshaller implements MessageMarshaller<Attribute> 
 		Long updatedLong = created != null ? updated.toEpochSecond(ZoneOffset.UTC) * 1000 : null;
 		writer.writeLong("updated", updatedLong);
 		writer.writeString("dttCode", att.getDttCode());
-		// writer.writeString("validation_list", new ValidationListConverter().convertToDatabaseColumn(att.getDataType().getValidationList()));
 		writer.writeBoolean("defaultPrivacyFlag", att.getDefaultPrivacyFlag());
 		writer.writeString("defaultValue", att.getDefaultValue());
 		writer.writeString("description", att.getDescription());
 		writer.writeString("help", att.getHelp());
 		writer.writeString("placeholder", att.getPlaceholder());
-		//writer.writeString("component", att.getComponent());
 		writer.writeString("icon", att.getIcon());
 		writer.writeInt("status", att.getStatus().ordinal());
 	}

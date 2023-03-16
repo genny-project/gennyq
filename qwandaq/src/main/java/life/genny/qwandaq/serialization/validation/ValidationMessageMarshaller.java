@@ -26,7 +26,6 @@ public class ValidationMessageMarshaller implements MessageMarshaller<Validation
 	// @Override
 	public Validation readFrom(ProtoStreamReader reader) throws IOException {
 		Validation validation = new Validation();
-		validation.setId(reader.readLong("id"));
 		validation.setCode(reader.readString("code"));
 		Long createdLong = reader.readLong("created");
 		if (createdLong != null) {
@@ -52,7 +51,6 @@ public class ValidationMessageMarshaller implements MessageMarshaller<Validation
 
 	// @Override
 	public void writeTo(ProtoStreamWriter writer, Validation validation) throws IOException {
-		// writer.writeLong("id", validation.getId());
 		writer.writeString("code", validation.getCode());
 		LocalDateTime created = validation.getCreated();
 		Long createdLong = created != null ? created.toEpochSecond(ZoneOffset.UTC)*1000 : null;

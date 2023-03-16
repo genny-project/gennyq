@@ -281,9 +281,7 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 		final EntityAttribute entityAttribute = new EntityAttribute(this, attribute, weight, value);
 		entityAttribute.setRealm(getRealm());
 		entityAttribute.setBaseEntityCode(getCode());
-		entityAttribute.setBaseEntityId(getId());
 		entityAttribute.setAttribute(attribute);
-		entityAttribute.setAttributeId(attribute.getId());
 		this.baseEntityAttributes.put(attribute.getCode(), entityAttribute);
 
 		return entityAttribute;
@@ -323,7 +321,6 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 			ea.setWeight(weight);
 			ea.setRealm(getRealm());
 			ea.setBaseEntityCode(getCode());
-			ea.setBaseEntityId(getId());
 		} else {
 			ea = new EntityAttribute(this, attribute, weight, value);
 			ea.setRealm(getRealm());
@@ -783,10 +780,8 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 		life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntitySerializable = new life.genny.qwandaq.serialization.baseentity.BaseEntity();
 		baseEntitySerializable.setCode(getCode());
 		baseEntitySerializable.setCreated(getCreated());
-		// baseEntitySerializable.setDtype();
 		baseEntitySerializable.setName(getName());
 		baseEntitySerializable.setRealm(getRealm());
-		baseEntitySerializable.setStatus(getStatus().ordinal());
 		baseEntitySerializable.setUpdated(getUpdated());
 		baseEntitySerializable.setCapreqs(CapabilityConverter.convertToDBColumn(getCapabilityRequirements()));
 		return baseEntitySerializable;
@@ -831,7 +826,6 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 		HBaseEntity hBaseEntity = new HBaseEntity();
 		hBaseEntity.setCode(getCode());
 		hBaseEntity.setCreated(getCreated());
-		// hBaseEntity.setDtype();
 		hBaseEntity.setName(getName());
 		hBaseEntity.setRealm(getRealm());
 		hBaseEntity.setStatus(getStatus());
@@ -845,7 +839,6 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 		clone.setCreated(getCreated());
 		clone.setName(getName());
 		clone.setRealm(getRealm());
-		clone.setStatus(getStatus());
 		clone.setUpdated(getUpdated());
 		clone.setCapabilityRequirements(getCapabilityRequirements());
 		if(includeAttributes) {

@@ -27,7 +27,7 @@ public class ValidationKeyMessageMarshaller implements MessageMarshaller<Validat
 	@Override
 	public void writeTo(ProtoStreamWriter writer, ValidationKey validationKey) throws IOException {
 		writer.writeString("realm", validationKey.getRealm());
-		writer.writeString("code", validationKey.getDttCode());
+		writer.writeString("code", validationKey.getCode());
 	}
 
 }

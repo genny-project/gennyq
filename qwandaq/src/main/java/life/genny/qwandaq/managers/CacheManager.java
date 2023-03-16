@@ -383,8 +383,8 @@ public class CacheManager {
 		return attributeList;
 	}
 
-	public DataType getDataType(String productCode, String dttCode) {
-		DataTypeKey key = new DataTypeKey(productCode, dttCode);
+	public DataType getDataType(String productCode, String code) {
+		DataTypeKey key = new DataTypeKey(productCode, code);
 		return (DataType) cache.getPersistableEntityFromCache(GennyConstants.CACHE_NAME_DATATYPE, key);
 	}
 
@@ -559,7 +559,7 @@ public class CacheManager {
 	 */
 	public int removeDataType(String productCode, String code) {
 		String persistenceObject = "life.genny.qwandaq.persistence.datatype.DataType";
-		String conditional = "dttcode = '" + code + "'";
+		String conditional = "code = '" + code + "'";
 		String deleteQuery = constructDeleteQuery(persistenceObject, productCode, conditional);
 		return removePersistableEntities(GennyConstants.CACHE_NAME_DATATYPE, deleteQuery);
 	}

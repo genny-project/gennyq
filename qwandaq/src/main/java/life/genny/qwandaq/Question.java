@@ -156,8 +156,6 @@ public class Question extends CodedEntity implements CoreEntityPersistable, ICap
 
 	private String icon;
 
-	private Long attributeId;
-
 	/**
 	 * @return String
 	 */
@@ -320,7 +318,6 @@ public class Question extends CodedEntity implements CoreEntityPersistable, ICap
 	public void setAttribute(final Attribute attribute) {
 		this.attribute = attribute;
 		setAttributeCode(attribute.getCode());
-		setAttributeId(attribute.getId());
 	}
 
 	/**
@@ -498,14 +495,6 @@ public class Question extends CodedEntity implements CoreEntityPersistable, ICap
 		return questionLink;
 	}
 
-	public Long getAttributeId() {
-		return attributeId;
-	}
-
-	public void setAttributeId(Long attributeId) {
-		this.attributeId = attributeId;
-	}
-
 	/**
 	 * removeChildQuestion This removes a child Question from the question group.
 	 * For efficiency we assume the child question exists
@@ -648,8 +637,6 @@ public class Question extends CodedEntity implements CoreEntityPersistable, ICap
 		life.genny.qwandaq.serialization.question.Question question = new life.genny.qwandaq.serialization.question.Question();
 		question.setCode(getCode());
 		question.setCreated(getCreated());
-		// question.setDtype();
-		question.setId(getId());
 		question.setName(getName());
 		question.setRealm(getRealm());
 		question.setStatus(getStatus().ordinal());

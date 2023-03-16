@@ -78,7 +78,7 @@ public class DataType implements CoreEntityPersistable {
 
 	@NotNull
 	@Size(max = 120)
-	private String dttCode; // e.g. java.util.String
+	private String code;
 
 	@NotNull
 	@Size(max = 120)
@@ -171,9 +171,9 @@ public class DataType implements CoreEntityPersistable {
 			type = strs[0];
 		}
 		if (str.contains("DTT")) {
-			setDttCode(str);
+			setCode(str);
 		} else {
-			setDttCode("DTT_" + type.toUpperCase());
+			setCode("DTT_" + type.toUpperCase());
 		}
 	}
 
@@ -248,16 +248,16 @@ public class DataType implements CoreEntityPersistable {
 	/**
 	 * @return the name
 	 */
-	public String getDttCode() {
-		return this.dttCode;
+	public String getCode() {
+		return this.code;
 	}
 
 	/**
 	 * @param code
 	 *             the name to set
 	 */
-	public void setDttCode(String code) {
-		this.dttCode = code;
+	public void setCode(String code) {
+		this.code = code;
 	}
 
 	/**
@@ -390,7 +390,7 @@ public class DataType implements CoreEntityPersistable {
 	public CoreEntitySerializable toSerializableCoreEntity() {
 		life.genny.qwandaq.serialization.datatype.DataType dataType = new life.genny.qwandaq.serialization.datatype.DataType();
 		dataType.setRealm(getRealm());
-		dataType.setDttCode(getDttCode());
+		dataType.setCode(getCode());
 		dataType.setClassName(getClassName());
 		dataType.setTypeName(getTypeName());
 		dataType.setComponent(getComponent());

@@ -28,9 +28,6 @@ import java.util.Optional;
 public class BaseEntityService extends KogitoService {
 
 	@Inject
-	ServiceToken serviceToken;
-
-	@Inject
 	UserToken userToken;
 
 	@Inject
@@ -223,7 +220,6 @@ public class BaseEntityService extends KogitoService {
 			Attribute attribute = attributeUtils.getAttribute(ea.getAttributeCode(), true);
 			ea.setAttribute(attribute);
 			ea.setBaseEntityCode(entity.getCode());
-			ea.setBaseEntityId(entity.getId());
 			entity.addAttribute(ea);
 		}
 

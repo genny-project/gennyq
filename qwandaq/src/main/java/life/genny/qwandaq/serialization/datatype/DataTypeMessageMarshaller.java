@@ -21,7 +21,7 @@ public class DataTypeMessageMarshaller implements MessageMarshaller<DataType> {
 	public DataType readFrom(ProtoStreamReader reader) throws IOException {
 		DataType dataType = new DataType();
 		dataType.setRealm(reader.readString("realm"));
-		dataType.setDttCode(reader.readString("dttcode"));
+		dataType.setCode(reader.readString("code"));
 		dataType.setClassName(reader.readString("classname"));
 		dataType.setTypeName(reader.readString("typename"));
 		dataType.setComponent(reader.readString("component"));
@@ -34,7 +34,7 @@ public class DataTypeMessageMarshaller implements MessageMarshaller<DataType> {
 	public void writeTo(ProtoStreamWriter writer, DataType dataType) throws IOException {
 		// writer.writeLong("id", dataType.getId());
 		writer.writeString("realm", dataType.getRealm());
-		writer.writeString("dttcode", dataType.getDttCode());
+		writer.writeString("code", dataType.getCode());
 		writer.writeString("classname", dataType.getClassName());
 		writer.writeString("typename", dataType.getTypeName());
 		writer.writeString("component", dataType.getComponent());

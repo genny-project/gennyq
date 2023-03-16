@@ -6,8 +6,6 @@ public class EntityAttributeKey implements CoreEntityKey {
 
 	private static final long serialVersionUID = -5177661824086700199L;
 
-	public static final String BEA_KEY_DELIMITER = ":";
-
 	private String realm;
 	private String baseEntityCode;
 	private String attributeCode;
@@ -52,11 +50,6 @@ public class EntityAttributeKey implements CoreEntityKey {
 	}
 
 	// Core Entity Key Overrides
-
-	@Override
-	public String getDelimiter() {
-		return BEA_KEY_DELIMITER;
-	}
 
 	@Override
 	public EntityAttributeKey fromKey(String key) {

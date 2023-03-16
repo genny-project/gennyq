@@ -19,15 +19,15 @@ public class DataTypeKeyMessageMarshaller implements MessageMarshaller<DataTypeK
 	@Override
 	public DataTypeKey readFrom(ProtoStreamReader reader) throws IOException {
 		String productCode = reader.readString("realm");
-		String beCode = reader.readString("dttcode");
-		DataTypeKey bek = new DataTypeKey(productCode, beCode);
-		return bek;
+		String dtCode = reader.readString("code");
+		DataTypeKey dataTypeKey = new DataTypeKey(productCode, dtCode);
+		return dataTypeKey;
 	}
 
 	@Override
-	public void writeTo(ProtoStreamWriter writer, DataTypeKey bek) throws IOException {
-		writer.writeString("realm", bek.getRealm());
-		writer.writeString("dttcode", bek.getDttCode());
+	public void writeTo(ProtoStreamWriter writer, DataTypeKey dataTypeKey) throws IOException {
+		writer.writeString("realm", dataTypeKey.getRealm());
+		writer.writeString("code", dataTypeKey.getCode());
 	}
 
 }

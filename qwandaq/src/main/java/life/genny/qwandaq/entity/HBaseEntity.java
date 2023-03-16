@@ -910,11 +910,8 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 		life.genny.qwandaq.serialization.baseentity.BaseEntity baseEntitySerializable = new life.genny.qwandaq.serialization.baseentity.BaseEntity();
 		baseEntitySerializable.setCode(getCode());
 		baseEntitySerializable.setCreated(getCreated());
-		// baseEntitySerializable.setDtype();
-		baseEntitySerializable.setId(getId());
 		baseEntitySerializable.setName(getName());
 		baseEntitySerializable.setRealm(getRealm());
-		baseEntitySerializable.setStatus(getStatus().ordinal());
 		baseEntitySerializable.setUpdated(getUpdated());
 		return baseEntitySerializable;
 	}

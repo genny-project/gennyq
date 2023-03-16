@@ -3,10 +3,8 @@ package life.genny.qwandaq.serialization.validation;
 import life.genny.qwandaq.serialization.common.CoreEntityKey;
 
 public class ValidationKey implements CoreEntityKey {
-	public static final String BE_KEY_DELIMITER = "|";
-
 	private String realm;
-	private String dttCode;
+	private String code;
 
 	// No-arg constructor
 	public ValidationKey() { }
@@ -14,7 +12,7 @@ public class ValidationKey implements CoreEntityKey {
 	public ValidationKey(String realm, String code) {
 		super(); // TODO: Why call java.lang.Object constructor?
 		this.realm = realm;
-		this.dttCode = code;
+		this.code = code;
 	}
 
 	public String getRealm() {
@@ -25,12 +23,12 @@ public class ValidationKey implements CoreEntityKey {
 		this.realm = realm;
 	}
 
-	public String getDttCode() {
-		return dttCode;
+	public String getCode() {
+		return code;
 	}
 
-	public void setDttCode(String dttCode) {
-		this.dttCode = dttCode;
+	public void setCode(String code) {
+		this.code = code;
 	}
 
 
@@ -42,18 +40,13 @@ public class ValidationKey implements CoreEntityKey {
 	// Core Entity Key Overrides
 
 	@Override
-	public String getDelimiter() {
-		return BE_KEY_DELIMITER;
-	}
-
-	@Override
 	public ValidationKey fromKey(String key) {
 		String[] args = key.split(getDelimiter());
 		return new ValidationKey(args[0], args[1]);
 	}
 	@Override
 	public String getKeyString() {
-		return realm + getDelimiter() + dttCode;
+		return realm + getDelimiter() + code;
 	}
 
 	@Override

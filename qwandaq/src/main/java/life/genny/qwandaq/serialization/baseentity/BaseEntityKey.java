@@ -3,8 +3,6 @@ package life.genny.qwandaq.serialization.baseentity;
 import life.genny.qwandaq.serialization.common.CoreEntityKey;
 
 public class BaseEntityKey implements CoreEntityKey {
-	public static final String BE_KEY_DELIMITER = "|";
-
 	private String realm;
 	private String code;
 
@@ -40,11 +38,6 @@ public class BaseEntityKey implements CoreEntityKey {
 	}
 
 	// Core Entity Key Overrides
-
-	@Override
-	public String getDelimiter() {
-		return BE_KEY_DELIMITER;
-	}
 
 	@Override
 	public BaseEntityKey fromKey(String key) {

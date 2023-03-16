@@ -3,8 +3,6 @@ package life.genny.qwandaq.serialization.userstore;
 import life.genny.qwandaq.serialization.common.CoreEntityKey;
 
 public class UserStoreKey implements CoreEntityKey {
-	public static final String BE_KEY_DELIMITER = ":";
-
 	private String realm;
 	private String usercode;
 
@@ -40,11 +38,6 @@ public class UserStoreKey implements CoreEntityKey {
 	}
 
 	// Core Entity Key Overrides
-
-	@Override
-	public String getDelimiter() {
-		return BE_KEY_DELIMITER;
-	}
 
 	@Override
 	public UserStoreKey fromKey(String key) {

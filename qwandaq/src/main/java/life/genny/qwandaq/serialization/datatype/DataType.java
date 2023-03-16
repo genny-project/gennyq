@@ -1,9 +1,5 @@
 package life.genny.qwandaq.serialization.datatype;
 
-import java.time.LocalDateTime;
-
-import life.genny.qwandaq.CoreEntity;
-import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import org.infinispan.protostream.annotations.ProtoFactory;
@@ -20,7 +16,7 @@ public class DataType implements CoreEntitySerializable {
 	private String realm;
 
 	@ProtoField(2)
-	private String dttCode;
+	private String code;
 
 	@ProtoField(3)
 	private String className;
@@ -38,10 +34,10 @@ public class DataType implements CoreEntitySerializable {
 	private String validationCodes;
 
 	@ProtoFactory
-	public DataType(String realm, String dttCode, String className, String typeName, String component, String inputMask) {
+	public DataType(String realm, String code, String className, String typeName, String component, String inputMask) {
 		super();
 		this.realm = realm;
-		this.dttCode = dttCode;
+		this.code = code;
 		this.className = className;
 		this.typeName = typeName;
 		this.component = component;
@@ -59,12 +55,12 @@ public class DataType implements CoreEntitySerializable {
 		this.realm = realm;
 	}
 
-	public String getDttCode() {
-		return dttCode;
+	public String getCode() {
+		return code;
 	}
 
-	public void setDttCode(String dttCode) {
-		this.dttCode = dttCode;
+	public void setCode(String code) {
+		this.code = code;
 	}
 
 	public String getClassName() {
@@ -111,7 +107,7 @@ public class DataType implements CoreEntitySerializable {
 	public CoreEntityPersistable toPersistableCoreEntity() {
 		life.genny.qwandaq.datatype.DataType dataType = new life.genny.qwandaq.datatype.DataType();
 		dataType.setRealm(getRealm());
-		dataType.setDttCode(getDttCode());
+		dataType.setCode(getCode());
 		dataType.setClassName(getClassName());
 		dataType.setTypeName(getTypeName());
 		dataType.setComponent(getComponent());

@@ -17,68 +17,57 @@ import java.time.LocalDateTime;
 public class Question implements CoreEntitySerializable {
 
 	@ProtoField(1)
-	private String dtype;
-
-	@ProtoField(2)
-	private Long id;
-
-	@ProtoField(3)
 	private LocalDateTime created;
 
-	@ProtoField(4)
+	@ProtoField(2)
 	private String name;
 
-	@ProtoField(5)
+	@ProtoField(3)
 	private String realm;
 
-	@ProtoField(6)
+	@ProtoField(3)
 	private LocalDateTime updated;
 
-	@ProtoField(7)
+	@ProtoField(4)
 	private String code;
 
-	@ProtoField(8)
+	@ProtoField(5)
 	private Integer status;
 
-	@ProtoField(9)
+	@ProtoField(6)
 	private String attributeCode;
 
-	@ProtoField(10)
+	@ProtoField(7)
 	private String directions;
 
-	@ProtoField(11)
+	@ProtoField(8)
 	private String helper = "";
 
-	@ProtoField(12)
+	@ProtoField(9)
 	private String html;
 
-	@ProtoField(13)
+	@ProtoField(10)
 	private String icon;
 
-	@ProtoField(14)
+	@ProtoField(11)
 	private Boolean mandatory;
 
-	@ProtoField(15)
+	@ProtoField(12)
 	private Boolean oneshot;
 
-	@ProtoField(16)
+	@ProtoField(13)
 	private String placeholder;
 
-	@ProtoField(17)
+	@ProtoField(14)
 	private Boolean readonly;
 
-	@ProtoField(18)
-	private Long attributeId;
-
-	@ProtoField(19)
+	@ProtoField(15)
 	private String capreqs;
 
 	@ProtoFactory
 	public Question(String dtype, Long id, LocalDateTime created, String name, String realm, LocalDateTime updated,
 			String code, Integer status) {
 		super();
-		this.dtype = dtype;
-		this.id = id;
 		this.created = created;
 		this.name = name;
 		this.realm = realm;
@@ -88,22 +77,6 @@ public class Question implements CoreEntitySerializable {
 	}
 
 	public Question() {
-	}
-
-	public String getDtype() {
-		return dtype;
-	}
-
-	public void setDtype(String dtype) {
-		this.dtype = dtype;
-	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
 	}
 
 	public LocalDateTime getCreated() {
@@ -226,14 +199,6 @@ public class Question implements CoreEntitySerializable {
 		this.readonly = readonly;
 	}
 
-	public Long getAttributeId() {
-		return attributeId;
-	}
-
-	public void setAttributeId(Long attributeId) {
-		this.attributeId = attributeId;
-	}
-
 	public String getCapreqs() {
 		return capreqs;
 	}
@@ -247,8 +212,6 @@ public class Question implements CoreEntitySerializable {
 		life.genny.qwandaq.Question question = new life.genny.qwandaq.Question();
 		question.setCode(getCode());
 		question.setCreated(getCreated());
-		// question.setDtype();
-		question.setId(getId());
 		question.setName(getName());
 		question.setRealm(getRealm());
 		question.setStatus(EEntityStatus.valueOf(getStatus()));

@@ -20,10 +20,13 @@ import javax.json.bind.annotation.JsonbProperty;
 import javax.json.bind.annotation.JsonbTransient;
 import javax.money.CurrencyUnit;
 import javax.money.Monetary;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.converter.CapabilityConverter;
 import life.genny.qwandaq.datatype.DataType;
@@ -96,6 +99,8 @@ public class EntityAttribute implements CoreEntitySerializable {
 
 	@Transient
 	private String capreqs;
+
+	private EEntityStatus status = EEntityStatus.ACTIVE;
 
 	public EntityAttribute() {
 	}
@@ -345,6 +350,14 @@ public class EntityAttribute implements CoreEntitySerializable {
 		this.capreqs = capreqs;
 	}
 
+	public EEntityStatus getStatus() {
+		return status;
+	}
+
+	public void setStatus(EEntityStatus status) {
+		this.status = status;
+	}
+
 	@Override
 	public CoreEntityPersistable toPersistableCoreEntity() {
 		life.genny.qwandaq.attribute.EntityAttribute ea = new life.genny.qwandaq.attribute.EntityAttribute();
@@ -366,11 +379,10 @@ public class EntityAttribute implements CoreEntitySerializable {
 		ea.setValueString(getValueString());
 		ea.setUpdated(getUpdated());
 		ea.setWeight(getWeight());
-		ea.setAttributeId(getAttributeId());
-		ea.setBaseEntityId(getBaseEntityId());
-		// bea.setIcon(geticon);
+		ea.setStatus(getStatus());
 		ea.setConfirmationFlag(getConfirmationFlag());
 		ea.setCapabilityRequirements(CapabilityConverter.convertToEA(getCapreqs()));
+		ea.setStatus(getStatus());
 		return ea;
 	}
 
@@ -574,7 +586,6 @@ public class EntityAttribute implements CoreEntitySerializable {
 	/**
 	 * Set the loop value, specifying a lock status
 	 *
-	 * @param <T>   the Type
 	 * @param value the value to set
 	 * @param lock  should lock
 	 */

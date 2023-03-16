@@ -76,7 +76,6 @@ public class QuestionUtils {
         baseEntity.setCreated(question.getCreated());
         baseEntity.setName(question.getName());
         baseEntity.setRealm(question.getRealm());
-        baseEntity.setStatus(question.getStatus().ordinal());
         baseEntity.setUpdated(question.getUpdated());
         return baseEntity;
     }
@@ -135,7 +134,7 @@ public class QuestionUtils {
 
     public BaseEntity getSerializableBaseEntityFromQuestionQuestion(QuestionQuestion questionQuestion) {
         BaseEntity baseEntity = new BaseEntity();
-        baseEntity.setCode(questionQuestion.getParentCode() + BaseEntityKey.BE_KEY_DELIMITER + questionQuestion.getChildCode());
+        baseEntity.setCode(questionQuestion.getParentCode() + BaseEntityKey.KEY_DELIMITER + questionQuestion.getChildCode());
         baseEntity.setCreated(questionQuestion.getCreated());
         baseEntity.setRealm(questionQuestion.getRealm());
         baseEntity.setUpdated(questionQuestion.getUpdated());
@@ -159,7 +158,7 @@ public class QuestionUtils {
     public EntityAttribute createSerializableBaseEntityAttributeFromQuestionQuestion(QuestionQuestion questionQuestion, String attributeCode, Object value) {
         EntityAttribute attribute = new EntityAttribute();
         attribute.setRealm(questionQuestion.getRealm());
-        attribute.setBaseEntityCode(questionQuestion.getParentCode() + BaseEntityKey.BE_KEY_DELIMITER + questionQuestion.getChildCode());
+        attribute.setBaseEntityCode(questionQuestion.getParentCode() + BaseEntityKey.KEY_DELIMITER + questionQuestion.getChildCode());
         attribute.setAttributeCode(attributeCode);
         attribute.setCreated(questionQuestion.getCreated());
         attribute.setUpdated(questionQuestion.getUpdated());
@@ -288,7 +287,7 @@ public class QuestionUtils {
     public QuestionQuestion getQuestionQuestionFromBaseEntity(life.genny.qwandaq.entity.BaseEntity baseEntity) {
         QuestionQuestion questionQuestion = new QuestionQuestion();
         String beCode = baseEntity.getCode();
-        String[] sourceTargetCodes = StringUtils.split(beCode, BaseEntityKey.BE_KEY_DELIMITER);
+        String[] sourceTargetCodes = StringUtils.split(beCode, BaseEntityKey.KEY_DELIMITER);
         questionQuestion.setParentCode(sourceTargetCodes[0]);
         questionQuestion.setChildCode(sourceTargetCodes[1]);
         questionQuestion.setCreated(baseEntity.getCreated());

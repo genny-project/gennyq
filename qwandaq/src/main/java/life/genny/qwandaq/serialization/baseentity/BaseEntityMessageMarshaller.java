@@ -25,7 +25,6 @@ public class BaseEntityMessageMarshaller implements MessageMarshaller<BaseEntity
 	// @Override
 	public BaseEntity readFrom(ProtoStreamReader reader) throws IOException {
 		BaseEntity be = new BaseEntity();
-		be.setId(reader.readLong("id"));
 		be.setCode(reader.readString("code"));
 		Long createdLong = reader.readLong("created");
 		if (createdLong != null) {
@@ -33,8 +32,6 @@ public class BaseEntityMessageMarshaller implements MessageMarshaller<BaseEntity
 		}
 		be.setName(reader.readString("name"));
 		be.setRealm(reader.readString("realm"));
-		Integer statusInt = reader.readInt("status");
-		be.setStatus(EEntityStatus.valueOf(statusInt));
 		Long updatedLong = reader.readLong("updated");
 		if (updatedLong != null) {
 			be.setUpdated(LocalDateTime.ofEpochSecond(updatedLong / 1000, 0, ZoneOffset.UTC));
@@ -52,7 +49,6 @@ public class BaseEntityMessageMarshaller implements MessageMarshaller<BaseEntity
 		writer.writeLong("created", createdLong);
 		writer.writeString("name", be.getName());
 		writer.writeString("realm", be.getRealm());
-		writer.writeInt("status", be.getStatus().ordinal());
 		LocalDateTime updated = be.getUpdated();
 		Long updatedLong = created != null ? updated.toEpochSecond(ZoneOffset.UTC)*1000 : null;
 		writer.writeLong("updated", updatedLong);
