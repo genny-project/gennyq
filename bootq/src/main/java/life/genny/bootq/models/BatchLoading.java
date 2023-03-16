@@ -602,9 +602,6 @@ public class BatchLoading {
             try {
 				questionUtils.saveQuestionQuestion(questionQuestion);
 			} catch (Exception e) {
-                // Map<String, String> row = entry.getValue();
-                // String parentCode = row.get("parentcode");
-                // String targetCode = row.get("targetcode");
                 String entityInfo = realmName + ":" + parentCode + ":" + targetCode;
                 loadReport.addPersistError(EReportCategoryType.QUESTION_QUESTION, entityInfo, e);
 			}
