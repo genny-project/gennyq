@@ -215,6 +215,8 @@ public class EntityAttributeUtils {
 	 * @param embedAttribute Defines if "Attribute" will be embedded into the
 	 *                       returned EntityAttribute
 	 * @return The corresponding BaseEntityAttribute, or null if not found.
+	 * 
+	 * @throws ItemNotFoundException if the requested EntityAttribute could not be found
 	 */
 	public EntityAttribute getEntityAttribute(String productCode, String baseEntityCode, String attributeCode,
 			boolean embedAttribute, boolean embedDataType) {

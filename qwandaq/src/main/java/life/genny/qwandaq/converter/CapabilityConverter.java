@@ -15,6 +15,7 @@ import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
+import life.genny.qwandaq.utils.CommonUtils;
 
 public class CapabilityConverter implements AttributeConverter<Set<Capability>, String> {
     private static final Logger log = Logger.getLogger(CapabilityConverter.class);
@@ -78,6 +79,6 @@ public class CapabilityConverter implements AttributeConverter<Set<Capability>, 
     }
 
     private static StringBuilder serializeOneCapability(StringBuilder sb, Capability capability) {
-        return sb.append(capability.code).append(CapabilitiesManager.getModeString(capability.nodes));
+        return sb.append(capability.code).append(CommonUtils.getArrayString(capability.nodes));
     }
 }
