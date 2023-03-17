@@ -226,7 +226,6 @@ public class BatchLoading {
     public void persistAttributes(Map<String, Map<String, String>> project, String realmName) {
         int successFullySaved = 0;
         Instant start = Instant.now();
-        long id = cm.getMaxAttributeId() + 1;
         int count = 1;
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
             Attribute attribute;
@@ -238,10 +237,6 @@ public class BatchLoading {
                 continue;
             }
 
-
-            if(attribute.getId() == null) {
-                attribute.setId(id++);
-            }
             try {
                 if (count++ % LOG_BATCH_SIZE == 0)
                     log.debugf("Saved %s attributes. Continuing...", count);
@@ -284,7 +279,6 @@ public class BatchLoading {
     public void persistEntities(Map<String, Map<String, String>> project, String realmName) {
         int successFullySaved = 0;
         int count = 1;
-        long id = cm.getMaxAttributeId() + 1;
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
 
             BaseEntity baseEntity;
@@ -294,10 +288,6 @@ public class BatchLoading {
                 String entityInfo = realmName + ":" + entry.getValue().get("code");
                 loadReport.addBuildError(EReportCategoryType.BASE_ENTITY, entityInfo, e);
                 continue;
-            }
-
-            if (baseEntity.getId() == null) {
-                baseEntity.setId(id++);
             }
 
             try {
@@ -339,7 +329,6 @@ public class BatchLoading {
 
         int successFullySaved = 0;
         int count = 1;
-        long attrId = cm.getMaxAttributeId() + 1;
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
             Map<String, String> row = entry.getValue();
 
@@ -374,7 +363,6 @@ public class BatchLoading {
                 DataType dataType = dttPrefixMap.get(attributeCode.substring(0, 4));
                 defAttr = new Attribute(attributeCode, attributeCode, dataType);
                 defAttr.setRealm(realmName);
-                defAttr.setId(attrId++);
                 try {
                     attributeUtils.saveAttribute(defAttr);
                     log.trace("Saving attribute: " + defAttr + " successful");
@@ -536,7 +524,6 @@ public class BatchLoading {
         int successFullySaved = 0;
         Instant start = Instant.now();
         int count = 1;
-        long id = cm.getMaxQuestionId() + 1;
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
 			Question question;
             try {
@@ -547,10 +534,6 @@ public class BatchLoading {
                 loadReport.addBuildError(EReportCategoryType.QUESTION, entityInfo, e);
                 continue;
             }
-
-            // only null id if hasn't been set in buildQuestion (preexisting question found)
-            if(question.getId() == null)
-                question.setId(id++);
 
             try {
                 questionUtils.saveQuestion(question);

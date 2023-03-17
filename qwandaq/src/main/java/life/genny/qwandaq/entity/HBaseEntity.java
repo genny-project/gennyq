@@ -931,8 +931,6 @@ public class HBaseEntity extends CodedEntity implements CoreEntityPersistable, B
 		BaseEntity baseEntity = new BaseEntity();
 		baseEntity.setCode(getCode());
 		baseEntity.setCreated(getCreated());
-		// baseEntity.setDtype();
-		baseEntity.setId(getId());
 		baseEntity.setName(getName());
 		baseEntity.setRealm(getRealm());
 		baseEntity.setStatus(getStatus());

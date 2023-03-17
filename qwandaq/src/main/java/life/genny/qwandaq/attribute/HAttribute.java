@@ -277,18 +277,6 @@ public class HAttribute extends CodedEntity {
 	 * @return true if all fields are the same. False if one is different
 	 */
 	public boolean equals(HAttribute other) {
-		return equals(other, false);
-	}
-
-	/**
-	 * Deep-compare two attributes
-	 * 
-	 * @param other   attribute to compare against
-	 * @param checkId whether to check the id or not (database equality) (default:
-	 *                false)
-	 * @return true if all fields are the same. False if one is different
-	 */
-	public boolean equals(HAttribute other, boolean checkId) {
 		EqualsBuilder equalsBuilder = new EqualsBuilder();
 		equalsBuilder.append(description, other.description);
 		equalsBuilder.append(defaultPrivacyFlag, other.defaultPrivacyFlag);
@@ -297,9 +285,6 @@ public class HAttribute extends CodedEntity {
 		equalsBuilder.append(placeholder, other.placeholder);
 		equalsBuilder.append(defaultValue, other.defaultValue);
 		equalsBuilder.append(icon, other.icon);
-		if(checkId) {
-			equalsBuilder.append(getId(), other.getId());
-		}
 		return equalsBuilder.isEquals();
 	}
 

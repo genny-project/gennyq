@@ -5,10 +5,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import life.genny.qwandaq.EEntityStatus;
-import life.genny.qwandaq.converter.ValidationListConverter;
-import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.validation.Validation;
 import org.infinispan.protostream.MessageMarshaller;
 
 public class AttributeMessageMarshaller implements MessageMarshaller<Attribute> {

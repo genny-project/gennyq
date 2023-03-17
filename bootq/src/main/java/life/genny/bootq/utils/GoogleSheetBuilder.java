@@ -357,7 +357,6 @@ public class GoogleSheetBuilder {
 		questionQuestion.setHidden(hidden);
 		questionQuestion.setIcon(icon);
 		questionQuestion.setRealm(realmName);
-		questionQuestion.setParentId(parent.getId());
 		return questionQuestion;
     }
 

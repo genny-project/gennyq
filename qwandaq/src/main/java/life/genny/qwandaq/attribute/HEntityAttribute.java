@@ -33,6 +33,8 @@ import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.PrePersist;
@@ -45,6 +47,7 @@ import javax.xml.bind.annotation.XmlTransient;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import life.genny.qwandaq.CoreEntityPersistable;
+import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.converter.CapabilityConverter;
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.entity.HBaseEntity;
@@ -213,6 +216,9 @@ public class HEntityAttribute implements CoreEntityPersistable, Comparable<Objec
 	@Column(name = "capreqs")
 	@Convert(converter = CapabilityConverter.class)
 	private Set<Capability> capabilityRequirements;
+
+	@Enumerated(EnumType.ORDINAL)
+	private EEntityStatus status = EEntityStatus.ACTIVE;
 
 	public HEntityAttribute() {
 	}
@@ -674,6 +680,20 @@ public class HEntityAttribute implements CoreEntityPersistable, Comparable<Objec
 		final Date out = Date.from(created.atZone(ZoneId.systemDefault()).toInstant());
 
 		return out;
+	}
+
+	/**
+	 * @return the status
+	 */
+	public EEntityStatus getStatus() {
+		return status;
+	}
+
+	/**
+	 * @param status the status to set
+	 */
+	public void setStatus(EEntityStatus status) {
+		this.status = status;
 	}
 
 	/**
@@ -1405,9 +1425,8 @@ public class HEntityAttribute implements CoreEntityPersistable, Comparable<Objec
 		serializableEntityAttribute.setInferred(getInferred());
 		serializableEntityAttribute.setPrivacyFlag(getPrivacyFlag());
 		serializableEntityAttribute.setConfirmationFlag(getConfirmationFlag());
-		serializableEntityAttribute.setAttributeId(getAttribute().getId());
-		serializableEntityAttribute.setBaseEntityId(getBaseEntity().getId());
 		serializableEntityAttribute.setCapreqs(CapabilityConverter.convertToDBColumn(getCapabilityRequirements()));
+		serializableEntityAttribute.setStatus(getStatus());
 		return serializableEntityAttribute;
 	}
 }

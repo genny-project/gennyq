@@ -150,20 +150,6 @@ public abstract class CoreEntity implements Comparable<Object> {
 	}
 
 	/**
-	 * @return the id
-	 */
-	public Long getId() {
-		return id;
-	}
-
-	/**
-	 * @param id The id to set
-	 */
-	public void setId(final Long id) {
-		this.id = id;
-	}
-
-	/**
 	 * @return name
 	 */
 	public String getName() {

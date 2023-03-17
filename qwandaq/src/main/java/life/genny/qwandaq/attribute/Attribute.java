@@ -194,7 +194,7 @@ public class Attribute extends CodedEntity implements CoreEntityPersistable {
 	 */
 	public void setDataType(DataType dataType) {
 		this.dataType = dataType;
-		setDttCode(dataType.getDttCode());
+		setDttCode(dataType.getCode());
 	}
 
 	public String getDttCode() {
@@ -313,18 +313,6 @@ public class Attribute extends CodedEntity implements CoreEntityPersistable {
 	 * @return true if all fields are the same. False if one is different
 	 */
 	public boolean equals(Attribute other) {
-		return equals(other, false);
-	}
-
-	/**
-	 * Deep-compare two attributes
-	 * 
-	 * @param other   attribute to compare against
-	 * @param checkId whether to check the id or not (database equality) (default:
-	 *                false)
-	 * @return true if all fields are the same. False if one is different
-	 */
-	public boolean equals(Attribute other, boolean checkId) {
 		EqualsBuilder equalsBuilder = new EqualsBuilder();
 		equalsBuilder.append(description, other.description);
 		equalsBuilder.append(defaultPrivacyFlag, other.defaultPrivacyFlag);
@@ -333,9 +321,6 @@ public class Attribute extends CodedEntity implements CoreEntityPersistable {
 		equalsBuilder.append(placeholder, other.placeholder);
 		equalsBuilder.append(defaultValue, other.defaultValue);
 		equalsBuilder.append(icon, other.icon);
-		if(checkId) {
-			equalsBuilder.append(getId(), other.getId());
-		}
 		return equalsBuilder.isEquals();
 	}
 
