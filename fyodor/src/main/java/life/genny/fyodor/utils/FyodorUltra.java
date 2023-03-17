@@ -139,7 +139,11 @@ public class FyodorUltra {
 						ea.setValueDateTime(baseEntity.getCreated());
 					}
 					else {
-						ea = beaUtils.getEntityAttribute(baseEntity.getRealm(), baseEntity.getCode(), attributeCode, true, true);
+						try {
+							ea = beaUtils.getEntityAttribute(baseEntity.getRealm(), baseEntity.getCode(), attributeCode, true, true);
+						} catch (ItemNotFoundException e) {
+							log.trace(e.getMessage());
+						}
 					}
 				}
 				if (ea != null) {
