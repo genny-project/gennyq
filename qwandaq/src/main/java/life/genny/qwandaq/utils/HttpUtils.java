@@ -166,6 +166,7 @@ public class HttpUtils {
 			response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 			return response;
 		} catch (IOException | InterruptedException e) {
+			e.printStackTrace();
 			GennyResponseException.newBuilder(uri)
 					.setRequestBody(body)
 					.setToken(token)
