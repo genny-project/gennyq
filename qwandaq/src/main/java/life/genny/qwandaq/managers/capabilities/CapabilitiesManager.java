@@ -380,6 +380,10 @@ public class CapabilitiesManager extends Manager {
 
 		filterable.setCapabilityRequirements(capabilityRequirements);
 
+		if(filterable instanceof Question q) {
+			log.info("Attaching Capability Requirements: " + CommonUtils.getArrayString(capabilityRequirements) + " to Question: " + realm + ":" + q.getCode());
+			return questionUtils.saveQuestion(q);
+		}
 
 		if(filterable instanceof QuestionQuestion qq) {
 			log.info("Attaching Capability Requirements: " + CommonUtils.getArrayString(capabilityRequirements) + " to QuestionQuestion: " + realm + ":" + qq.getParentCode() + ":" + qq.getChildCode());
@@ -387,23 +391,17 @@ public class CapabilitiesManager extends Manager {
 			return questionUtils.saveQuestionQuestion(qq);
 		}
 
-		if(filterable instanceof Question q) {
-			log.info("Attaching Capability Requirements: " + CommonUtils.getArrayString(capabilityRequirements) + " to Question: " + realm + ":" + q.getCode());
-			return questionUtils.saveQuestion(q);
-		}
-
 		// TODO: Turn this into a sustainable solution
 
 		if(filterable instanceof BaseEntity be) {
 			log.info("Attaching Capability Requirements: " + CommonUtils.getArrayString(capabilityRequirements) + " to BaseEntity: " + realm + ":" + be.getCode());
-			beUtils.updateBaseEntity(be.toBaseEntity());
+			beUtils.updateBaseEntity(be);
 			return true;
 		}
 
 		if(filterable instanceof EntityAttribute ea) {
 			log.info("Attaching Capability Requirements: " + CommonUtils.getArrayString(capabilityRequirements) + " to EntityAttribute: " + realm + ":" + ea.getBaseEntityCode() + ":" + ea.getAttributeCode());
-			HBaseEntity be = ea.getBaseEntity();
-			beUtils.updateBaseEntity(be.toBaseEntity());
+			beaUtils.updateEntityAttribute(ea);
 			return true;
 		}
 
