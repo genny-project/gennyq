@@ -90,7 +90,7 @@ public class RoleManager extends Manager {
 
 		EntityAttribute children;
 		try {
-			children = beaUtils.getEntityAttribute(productCode, targetRole.getCode(), Attribute.LNK_CHILDREN, true, true);
+			children = beaUtils.getEntityAttribute(productCode, targetRole.getCode(), Attribute.LNK_CHILDREN);
 			children.setValueString(CommonUtils.getArrayString(childrenCodes));
 		} catch(ItemNotFoundException e) {
 			log.warn("LNK_CHILDREN missing from role: " + targetRole.getCode() + ". Generating with children: " + CommonUtils.getArrayString(childrenCodes));
