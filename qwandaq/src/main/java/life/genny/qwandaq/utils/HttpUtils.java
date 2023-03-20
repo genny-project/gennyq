@@ -73,17 +73,14 @@ public class HttpUtils {
 				.PUT(HttpRequest.BodyPublishers.ofString(body))
 				.build();
 
-		HttpResponse<String> response = null;
 		try {
-			response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-			return response;
+			return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 		} catch (IOException | InterruptedException e) {
 			GennyResponseException.newBuilder(uri)
 					.setRequestBody(body)
 					.setToken(token)
 					.setRequestType(PUT)
 					.includeRequest(request)
-					.fromHttpResponse(response)
 					.setAssociatedException(e)
 					.build()
 					.printStackTrace();
@@ -207,16 +204,13 @@ public class HttpUtils {
 				.timeout(DEFAULT_TIMEOUT)
 				.GET().build();
 
-		HttpResponse<String> response = null;
 		try {
-			response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-			return response;
+			return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 		} catch (IOException | InterruptedException e) {
 			GennyResponseException.newBuilder(uri)
 					.setToken(token)
 					.setRequestType(GET)
 					.includeRequest(request)
-					.fromHttpResponse(response)
 					.setAssociatedException(e)
 					.build()
 					.printStackTrace();
@@ -255,16 +249,13 @@ public class HttpUtils {
 				.timeout(DEFAULT_TIMEOUT)
 				.DELETE().build();
 
-		HttpResponse<String> response = null;
 		try {
-			response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-			return response;
+			return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 		} catch (IOException | InterruptedException e) {
 			GennyResponseException.newBuilder(uri)
 					.setToken(token)
 					.setRequestType(DELETE)
 					.includeRequest(request)
-					.fromHttpResponse(response)
 					.setAssociatedException(e)
 					.build()
 					.printStackTrace();
