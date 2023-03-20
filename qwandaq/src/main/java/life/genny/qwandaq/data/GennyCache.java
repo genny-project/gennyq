@@ -263,7 +263,7 @@ public class GennyCache {
 				sb.append(ANSIColour.doColour(stack.toString(), ANSIColour.RED))
 					.append('\n');
 			}
-			log.error(sb.toString());
+			log.trace(sb.toString());
 			throw e;
 		}
 		

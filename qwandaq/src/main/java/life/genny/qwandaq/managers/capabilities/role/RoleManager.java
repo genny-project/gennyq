@@ -3,18 +3,14 @@ package life.genny.qwandaq.managers.capabilities.role;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
-import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
-import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.managers.Manager;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
-import life.genny.qwandaq.utils.AttributeUtils;
 import life.genny.qwandaq.utils.CommonUtils;
-import life.genny.qwandaq.utils.EntityAttributeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
@@ -30,26 +26,10 @@ public class RoleManager extends Manager {
 	Logger log;
 
 	@Inject
-	AttributeUtils attributeUtils;
-
-	private final static AttributeProductDecorator lnkRoleAttribute = new AttributeProductDecorator(
-		new Attribute(Attribute.LNK_ROLE, "Role Link", new DataType(String.class))
-	);
-	
-	private final static AttributeProductDecorator lnkChildAttribute = new AttributeProductDecorator(
-		new Attribute(Attribute.LNK_CHILDREN, "Child Roles Link", new DataType(String.class))
-	);
-
-	@Inject
-	CacheManager cm;
-
-	@Inject
 	CapabilitiesManager capManager;
 
-	@Inject
-	EntityAttributeUtils beaUtils;
+	public RoleManager() {/* no arg constructor */}
 
-	public RoleManager() {}
     
 	/**
 	 * Attach a role to a person base entity
@@ -106,22 +86,19 @@ public class RoleManager extends Manager {
 	public BaseEntity setChildren(String productCode, BaseEntity targetRole, String... childrenCodes) {
 		if (targetRole == null)
 			throw new NullParameterException("targetRole");
-		String attributeCode = lnkChildAttribute.get(productCode).getCode();
-		EntityAttribute children = beaUtils.getEntityAttribute(productCode, targetRole.getCode(), attributeCode, true, true);
-		String codeString = CommonUtils.getArrayString(childrenCodes);
 
-		// add/edit LNK_CHILDREN
-		if(children == null) {
-			EntityAttribute addedAttribute = targetRole.addAttribute(lnkChildAttribute.get(productCode), 1.0, codeString);
-			beaUtils.updateEntityAttribute(addedAttribute);
-		} else {
-			children.setAttribute(attributeUtils.getAttribute(productCode, attributeCode, true));
-			children.setValue(codeString);
-			beaUtils.updateEntityAttribute(children);
+
+		EntityAttribute children;
+		try {
+			children = beaUtils.getEntityAttribute(productCode, targetRole.getCode(), Attribute.LNK_CHILDREN);
+			children.setValueString(CommonUtils.getArrayString(childrenCodes));
+		} catch(ItemNotFoundException e) {
+			log.warn("LNK_CHILDREN missing from role: " + targetRole.getCode() + ". Generating with children: " + CommonUtils.getArrayString(childrenCodes));
+			// If LNK_CHILDREN can't be found we have bigger problems. Check sheets if missing
+			Attribute lnkChildren = attributeUtils.getAttribute(productCode, Attribute.LNK_CHILDREN, true);
+			children = targetRole.addAttribute(lnkChildren, 0.0, CommonUtils.getArrayString(childrenCodes));
 		}
-
-		// TODO: Keep an eye on this because it may have just broken
-		beUtils.updateBaseEntity(targetRole);
+		beaUtils.updateEntityAttribute(children);
 		return targetRole;
 	}
 
@@ -136,26 +113,19 @@ public class RoleManager extends Manager {
 		if(targetRole == null)
 			throw new NullParameterException("targetRole");
 
-		EntityAttribute children = beaUtils.getEntityAttribute(productCode, targetRole.getCode(), Attribute.LNK_CHILDREN);
+		String newChildren = "";
 
-		List<String> childrenCodeList = Arrays.asList(childrenCodes);
-		Attribute attribute = lnkChildAttribute.get(productCode);
-		// add/edit LNK_CHILDREN
-		if(children == null) {
-			children = targetRole.addAttribute(attribute, 1.0);
-		} else {
-			children.setAttribute(attribute);
-			String[] preexistingChildren = CommonUtils.cleanUpAttributeValue(children.getValueString()).split(",");
-			childrenCodeList.addAll(Arrays.asList(preexistingChildren));
+		// make an attempt to grab pre existing children
+		try {
+			EntityAttribute children = beaUtils.getEntityAttribute(productCode, targetRole.getCode(), Attribute.LNK_CHILDREN);
+			newChildren = children.getValueString();
+		} catch(ItemNotFoundException e) {
+			log.warn("No Children previously set for role: " + targetRole.getCode());
 		}
 
-		String codeString = CommonUtils.getArrayString(childrenCodeList);
-		children.setValue(codeString);
+		newChildren = CommonUtils.addToStringArray(newChildren, childrenCodes);
 
-		// TODO: Keep an eye on this becasue it may have just broken
-		beUtils.updateBaseEntity(targetRole);
-		beaUtils.updateEntityAttribute(children);
-		return targetRole;
+		return setChildren(productCode, targetRole, newChildren);
 	}
 
 	/**
@@ -319,20 +289,20 @@ public class RoleManager extends Manager {
 
 	public BaseEntity attachRole(BaseEntity target, BaseEntity role) {
 		String productCode = target.getRealm();
-		EntityAttribute baseEntityAttribute = beaUtils.getEntityAttribute(productCode, target.getCode(), Attribute.LNK_ROLE, true, true);
-		// Create it
-		if (baseEntityAttribute == null) {
-			baseEntityAttribute = target.addAttribute(lnkRoleAttribute.get(productCode), 1.0, "[" + role.getCode() + "]");
-			beaUtils.updateEntityAttribute(baseEntityAttribute);
-			return target;
+
+		EntityAttribute targetLNKRole;
+		try {
+			targetLNKRole = beaUtils.getEntityAttribute(productCode, target.getCode(), Attribute.LNK_ROLE, true, true);
+		} catch(ItemNotFoundException e) {
+			Attribute lnkRoleAttrib = attributeUtils.getAttribute(productCode, Attribute.LNK_ROLE);
+			targetLNKRole = target.addAttribute(lnkRoleAttrib, 1.0, "[" + role.getCode() + "]");
 		}
 
-		String value = baseEntityAttribute.getValueString();
+		String value = targetLNKRole.getValueString();
 		value = CommonUtils.addToStringArray(value, role.getCode());
+		targetLNKRole.setValueString(value);
+		beaUtils.updateEntityAttribute(targetLNKRole);
 
-		baseEntityAttribute.setValueString(value);
-
-		beaUtils.updateEntityAttribute(baseEntityAttribute);
 		return target;
 	}
 

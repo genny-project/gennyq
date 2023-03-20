@@ -183,12 +183,11 @@ public class CapabilityBuilder {
         // TODO: add negate to rolebuilder
         if(roleBuilder == null)
             throw new UnsupportedOperationException("Cannot call build() on a CapabilityBuilder that was instantiated with new CapabilityBuilder(String code). Use .buildCap() instead");
-        roleBuilder.getCapabilities().put(capabilityCode, nodes.toArray(new CapabilityNode[0]));
+        roleBuilder.getCapabilities().put(capabilityCode, buildCap());
         return roleBuilder;
     }
 
     public Capability buildCap() {
-        Capability c = new Capability(capabilityCode, nodes);
-        return c;
+        return new Capability(capabilityCode, nodes);
     }
 }
