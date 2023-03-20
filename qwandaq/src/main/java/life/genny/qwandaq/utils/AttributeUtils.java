@@ -19,6 +19,7 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -278,7 +279,7 @@ public class AttributeUtils {
         if(validationCodes.contains(",")) {
             return cm.getValidations(dataType.getRealm(), validationCodes);
         }
-        return Arrays.asList(getValidation(dataType.getRealm(), validationCodes));
+        return Collections.singletonList(getValidation(dataType.getRealm(), validationCodes));
     }
 
     /**
