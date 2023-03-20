@@ -60,31 +60,16 @@ public class InitService extends KogitoService {
 	 * Send the User.
 	 */
 	public void sendUser() {
-
-		log.info("$$$$$$$$$$$$$$$$ Got to Sending User...");
-
 		String userCode = userToken.getUserCode();
 		String productCode = userToken.getProductCode();
 
-		log.infof("$$$$$$$$$$$$$$$$ userCode: %s, productCode: %s", userCode, productCode);
-
 		// fetch the users baseentity, and names
 		BaseEntity user = beUtils.getBaseEntity(userCode);
-		log.infof("$$$$$$$$$$$$$$$$ userBE: %s, %s", user.getCode(), user.getName());
 		EntityAttribute name = new EntityAttribute(user, attributeUtils.getAttribute(Attribute.PRI_NAME, true), 1.0, user.getName());
-		log.infof("$$$$$$$$$$$$$$$$ userBE nameEA: [%s:%s]", name.getAttributeCode(), name.getValueString());
 		user.addAttribute(name);
 		EntityAttribute firstName = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_FIRSTNAME);
-		if (firstName == null) {
-			log.error("$$$$$$$$$$$$$$$ Can't find firstName!!");
-		}
-		log.infof("$$$$$$$$$$$$$$$$ userBE firstNameEA: [%s:%s]", firstName.getAttributeCode(), firstName.getValueString());
 		user.addAttribute(firstName);
 		EntityAttribute lastName = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_LASTNAME);
-		if (lastName == null) {
-			log.error("$$$$$$$$$$$$$$$ Can't find lastName!!");
-		}
-		log.infof("$$$$$$$$$$$$$$$$ userBE lastNameEA: [%s:%s]", lastName.getAttributeCode(), lastName.getValueString());
 		user.addAttribute(lastName);
 
 		// configure msg and send

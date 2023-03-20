@@ -161,18 +161,14 @@ public class HttpUtils {
 				.POST(HttpRequest.BodyPublishers.ofString(body))
 				.build();
 		
-		HttpResponse<String> response = null;
 		try {
-			response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-			return response;
+			return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 		} catch (IOException | InterruptedException e) {
-			e.printStackTrace();
 			GennyResponseException.newBuilder(uri)
 					.setRequestBody(body)
 					.setToken(token)
 					.setRequestType(POST)
 					.includeRequest(request)
-					.fromHttpResponse(response)
 					.setAssociatedException(e)
 					.build()
 					.printStackTrace();

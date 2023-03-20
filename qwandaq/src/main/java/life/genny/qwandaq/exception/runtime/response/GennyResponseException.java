@@ -41,9 +41,12 @@ public class GennyResponseException extends GennyRuntimeException {
         log.debug(token);
 		if (requestHeaders != null) {
 			log.debug("======== RESPONSE HEADERS ===========");
-			// LogUtils.logHeaders(log::debug, responseHeaders);
 		}
-
+        if (associatedException != null) {
+            log.info("======== Associated Exception Start ===========");
+            associatedException.printStackTrace();
+            log.info("======== Associated Exception End ===========");
+        }
         super.printStackTrace();
     }
 
