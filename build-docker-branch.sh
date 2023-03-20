@@ -12,7 +12,7 @@ elif [ "$#" -ge 2 ]; then
 else
 	TAG=$1
 	dependencies=( qwandaq serviceq kogito-common )
-	projects=( gadaq bridge fyodor dropkick lauchy messages shleemy )
+	projects=( gadaq bridge fyodor dropkick lauchy messages )
 fi
 
 # iterate dependencies

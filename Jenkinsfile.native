@@ -52,10 +52,7 @@ pipeline {
                     "Build Messages" : {
                         sh "./build-docker-native.sh messages"
                     }
-                ),
-                "Build Shleemy" : {
-                    sh "./build-docker-native.sh shleemy"
-                }
+                )
             }
         }
         stage("Push Docker Images") {

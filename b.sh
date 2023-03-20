@@ -24,7 +24,4 @@ mvn clean package -U -DskipTests=true
 cd ../messages
 mvn clean package -U -DskipTests=true
 ./build-docker.sh
-cd ../shleemy
-mvn clean package -U -DskipTests=true
-./build-docker.sh
 cd ..
