@@ -227,7 +227,7 @@ public class Dispatch {
 	 */
 	public void sendButtonEvents(Set<Ask> asks) {
 		for (Ask ask : asks) {
-			if (ask.getQuestionCode().equals(Question.QUE_EVENTS)) {
+			if (Question.QUE_EVENTS.equals(ask.getQuestionCode())) {
 				QDataAskMessage msg = new QDataAskMessage(ask);
 				msg.setReplace(true);
 				msg.setToken(userToken.getToken());
