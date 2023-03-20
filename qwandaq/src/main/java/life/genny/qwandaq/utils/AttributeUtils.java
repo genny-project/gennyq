@@ -17,6 +17,8 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -271,7 +273,12 @@ public class AttributeUtils {
      * @return List of validations associated with a data type
      */
     public List<Validation> getValidationList(DataType dataType) {
-        return cm.getValidations(dataType.getRealm(), dataType.getValidationCodes());
+        String validationCodes = dataType.getValidationCodes();
+        // Fire ickle query only in the case of multiple validation codes
+        if(validationCodes.contains(",")) {
+            return cm.getValidations(dataType.getRealm(), validationCodes);
+        }
+        return Arrays.asList(getValidation(dataType.getRealm(), validationCodes));
     }
 
     /**
