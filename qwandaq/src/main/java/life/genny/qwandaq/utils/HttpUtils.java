@@ -36,9 +36,7 @@ public class HttpUtils {
 	public static final String POST = "POST";
 	public static final String GET = "GET";
 	public static final String DELETE = "DELETE";
-	public static final int HTTP_REQUEST_TIMEOUT_MILLIS = 5000;
-
-	public static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(2);
+	public static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(10);
 
 	private static Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 
@@ -240,18 +238,18 @@ public class HttpUtils {
 	 * @return The newly created HttpClient object.
 	 */
 	public static HttpClient getNewHttpClient() {
-		return getNewHttpClient(HTTP_REQUEST_TIMEOUT_MILLIS);
+		return getNewHttpClient(DEFAULT_TIMEOUT);
 	}
 
 	/**
 	 * Create a new HttpClient using HttpClient.Builder with the passed request timeout value.
 	 *
-	 * @param timeoutInMillis The request timeout value in milliseconds
+	 * @param timeout The request timeout value in milliseconds
 	 * @return The newly created HttpClient object.
 	 */
-	public static HttpClient getNewHttpClient(long timeoutInMillis) {
+	public static HttpClient getNewHttpClient(Duration timeout) {
 		return HttpClient.newBuilder()
-				.connectTimeout(Duration.ofMillis(timeoutInMillis))
+				.connectTimeout(timeout)
 				.build();
 	}
 
