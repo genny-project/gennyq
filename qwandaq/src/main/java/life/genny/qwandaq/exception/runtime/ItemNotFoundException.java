@@ -9,15 +9,19 @@ import life.genny.qwandaq.exception.GennyRuntimeException;
  */
 public class ItemNotFoundException extends GennyRuntimeException {
 
-	static String ERR_TEXT = "%s could not be found";
-	static String PRD_TXT = ERR_TEXT + " in product %s";
+	public static final String ERR_TEXT = "%s could not be found";
+	public static final String PRD_TXT = ERR_TEXT + " in product %s";
 
 	public ItemNotFoundException() {
 		super();
 	}
 
 	public ItemNotFoundException(String code) {
-		super(String.format(ERR_TEXT, code));
+		this(code, true);
+	}
+
+	public ItemNotFoundException(String code, boolean useFormat) {
+		super(useFormat ? String.format(ERR_TEXT, code) : code);
 	}
 
 	public ItemNotFoundException(String productCode, String code) {
@@ -25,7 +29,11 @@ public class ItemNotFoundException extends GennyRuntimeException {
 	}
 	
 	public ItemNotFoundException(String code, Throwable err) {
-		super(String.format(ERR_TEXT, code), err);
+		this(code, err, true);
+	}
+
+	public ItemNotFoundException(String code, Throwable err, boolean useFormat) {
+		super(useFormat ? String.format(ERR_TEXT, code) : code, err);
 	}
 
 	public ItemNotFoundException(String productCode, String code, Throwable err) {
@@ -34,5 +42,30 @@ public class ItemNotFoundException extends GennyRuntimeException {
 
 	public ItemNotFoundException(String productCode, String baseEntityCode, String attributeCode) {
 		super(String.format(PRD_TXT, "[" + baseEntityCode + ":" + attributeCode + "]", productCode));
+	}
+
+	/**
+	 * Generate a plain ItemNotFoundException without using the predefined format.
+	 * @param errorMsg - the details of this exception
+	 * @param cause - the cause of this Exception
+	 * @return a new unformatted ItemNotFoundException
+	 * 
+	 * @see {@link ItemNotFoundException#ERR_TEXT}
+	 * @see {@link ItemNotFoundException#PRD_TXT}
+	 */
+	public static ItemNotFoundException general(String errorMsg, Throwable cause) {
+		return new ItemNotFoundException(errorMsg, cause, false);
+	}
+
+	/**
+	 * Generate a plain ItemNotFoundException without using the predefined format.
+	 * @param errorMsg - the details of this exception
+	 * @return a new unformatted ItemNotFoundException
+	 * 
+	 * @see {@link ItemNotFoundException#ERR_TEXT}
+	 * @see {@link ItemNotFoundException#PRD_TXT}
+	 */
+	public static ItemNotFoundException general(String errorMsg) {
+		return new ItemNotFoundException(errorMsg, false);
 	}
 }

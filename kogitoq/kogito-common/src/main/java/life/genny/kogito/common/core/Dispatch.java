@@ -207,15 +207,33 @@ public class Dispatch {
 		// update any button Events
 		for (String event : BUTTON_EVENTS) {
 			Ask evt = flatMapOfAsks.get(event);
-			if (evt != null)
+			if (evt != null) {
 				evt.setDisabled(!answered);
+			}
 		}
+		sendButtonEvents(asks);
+
 		// this is ok since flatmap is referencing asks
 		msg.setAsks(asks);
 		// filter unwanted attributes
 		log.debug("ProcessEntity contains " + processEntity.getBaseEntityAttributesMap().size() + " attributes");
 
 		return processEntity;
+	}
+
+	/**
+	 * Send the button events
+	 * @param asks
+	 */
+	public void sendButtonEvents(Set<Ask> asks) {
+		for (Ask ask : asks) {
+			if (Question.QUE_EVENTS.equals(ask.getQuestionCode())) {
+				QDataAskMessage msg = new QDataAskMessage(ask);
+				msg.setReplace(true);
+				msg.setToken(userToken.getToken());
+				KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
+			}
+		}
 	}
 
 	/**
