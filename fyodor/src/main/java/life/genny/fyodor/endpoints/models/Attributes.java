@@ -1,18 +1,22 @@
-package life.genny.fyodor.endpoints;
+package life.genny.fyodor.endpoints.models;
 
 import io.vertx.core.http.HttpServerRequest;
 
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.validation.Valid;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
+import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.hibernate.annotations.UpdateTimestamp;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.annotations.jaxrs.PathParam;
 
@@ -73,7 +77,7 @@ public class Attributes {
 			return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
 		}
 	}
-
+	
 	/**
 	 * Read an item from the cache.
 	 *
@@ -89,11 +93,10 @@ public class Attributes {
 			return Response.status(Response.Status.FORBIDDEN)
 					.entity("Not authorized to make this request").build();
 		}
-		AttributeKey key = new AttributeKey(realm, code);
-		CoreEntityPersistable attribute = cm.removePersistableEntity(realm, key);
-		if(attribute != null)
-			return Response.ok().entity("Attribute " + code + " found and deleted").build();
+		int numAffected = cm.removeAttribute(realm, code);
+		if(numAffected > 0)
+			return Response.ok().entity("Num Entities affected: " + numAffected).build();
 		else
-			return Response.status(Response.Status.NOT_FOUND).entity("Attribute " + code + " not found").build();
+			return Response.status(Response.Status.NOT_FOUND).entity("No entities affected by delete of " + realm + ":" + code).build();
 	}
 }

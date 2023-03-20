@@ -130,13 +130,10 @@ public class EntityAttribute implements CoreEntitySerializable {
 		this.confirmationFlag = confirmationFlag;
 	}
 
-	public EntityAttribute(BaseEntity processEntity, Attribute attribute, Double value, Object o) {
+	public EntityAttribute(BaseEntity baseEntity, Attribute attribute, Double value) {
 		autocreateCreated();
-		this.baseEntityCode = baseEntity.getCode();
+		setBaseEntity(baseEntity);
 		setAttribute(attribute);
-		if (weight == null) {
-			weight = 0.0;
-		}
 		setWeight(weight);
 		if (value != null) {
 			setValue(value);
@@ -289,7 +286,7 @@ public class EntityAttribute implements CoreEntitySerializable {
 	}
 
 	public void setWeight(Double weight) {
-		this.weight = weight;
+		this.weight = weight != null ? weight : 0.0;
 	}
 
 	public Long getAttributeId() {
@@ -390,30 +387,27 @@ public class EntityAttribute implements CoreEntitySerializable {
 	/**
 	 * Set the value
 	 *
-	 * @param <T>   the Type
 	 * @param value the value to set
 	 */
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
 	@XmlTransient
-	public <T> void setValue(final Object value) {
+	public void setValue(final Object value) {
 		setValue(value, false);
 	}
 
 	/**
 	 * Set the value, specifying a lock status
 	 *
-	 * @param <T>   the Type
 	 * @param value the value to set
 	 * @param lock  should lock
 	 */
-	@SuppressWarnings("unchecked")
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
 	@XmlTransient
-	public <T> void setValue(final Object value, final Boolean lock) {
+	public void setValue(final Object value, final boolean lock) {
 
 		if (this.getReadonly()) {
 			log.error("Trying to set the value of a readonly EntityAttribute! " + this.getBaseEntityCode() + ":"
@@ -567,14 +561,13 @@ public class EntityAttribute implements CoreEntitySerializable {
 	/**
 	 * Set the loop value
 	 *
-	 * @param <T>   the Type
 	 * @param value the value to set
 	 */
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
 	@XmlTransient
-	public <T> void setLoopValue(final Object value) {
+	public void setLoopValue(final Object value) {
 		setLoopValue(value, false);
 	}
 
@@ -585,12 +578,11 @@ public class EntityAttribute implements CoreEntitySerializable {
 	 * @param value the value to set
 	 * @param lock  should lock
 	 */
-	@SuppressWarnings("unchecked")
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
 	@XmlTransient
-	public <T> void setLoopValue(final Object value, final Boolean lock) {
+	public void setLoopValue(final Object value, final boolean lock) {
 
 		if (this.getReadonly()) {
 			log.error("Trying to set the value of a readonly EntityAttribute! " + this.getBaseEntityCode() + ":"
@@ -614,7 +606,7 @@ public class EntityAttribute implements CoreEntitySerializable {
 			setValueDouble((Double) value);
 		else if (value instanceof Boolean)
 			setValueBoolean((Boolean) value);
-		else if (value instanceof BigDecimal)
+		else if (value instanceof BigDecimal) {
 			// NOTE: This assumes at least one will not be null and defaults to int
 			// otherwise
 			// This could cause issues with deserialisation.
@@ -625,6 +617,7 @@ public class EntityAttribute implements CoreEntitySerializable {
 			} else {
 				setValueInteger(((BigDecimal) value).intValue());
 			}
+		}
 		else
 			setValueString((String) value);
 
@@ -660,6 +653,7 @@ public class EntityAttribute implements CoreEntitySerializable {
 				case GennyConstants.JAVA_LANG_BOOLEAN, GennyConstants.BOOLEAN -> { return (T) getValueBoolean(); }
 				case GennyConstants.JAVA_TIME_LOCAL_DATE, GennyConstants.LOCAL_DATE -> { return (T) getValueDate(); }
 				case GennyConstants.ORG_JAVAMONEY_MONETA_MONEY, GennyConstants.MONEY -> { return (T) getMoney(); }
+				// default -> throw new UnsupportedOperationException("Unsupported Class Type for EntityAttribute: " + dataTypeClassName);
 			}
 		}
 		return (T) getValueString();

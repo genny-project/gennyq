@@ -197,9 +197,9 @@ public class InternalConsumer {
 		// init context map
 		Map<String, Object> ctxMap = new ConcurrentHashMap<>();
 		if (source != null)
-		ctxMap.put("SOURCE", source);
+			ctxMap.put("SOURCE", source);
 		if (target != null)
-		ctxMap.put("TARGET", target);
+			ctxMap.put("TARGET", target);
 
 		searchEntity.setRealm(userToken.getProductCode());
 		searchEntity = defUtils.mergeFilterValueVariables(searchEntity, ctxMap);
@@ -214,18 +214,14 @@ public class InternalConsumer {
 		log.info("DROPDOWN :Loaded " + msg.getItems().size() + " baseentitys");
 
 		for (BaseEntity item : msg.getItems()) {
-			String name = null;
+			String name = item.getName();
 			String itemCode = item.getCode();
-			EntityAttribute nameAttribute = beaUtils.getEntityAttribute(productCode, itemCode, Attribute.PRI_NAME, false);
-			if (nameAttribute != null) {
-				name = nameAttribute.getValueString();
-			}
 			String logStr = String.format("DROPDOWN : item: %s ===== %s", itemCode, name);
-			if (StringUtils.isEmpty(name)) {
-				log.warn(logStr);
-			}
-			else
+			if (StringUtils.isBlank(name)) {
+				log.warn("No Name Set for Item: " + item.getCode());
+			} else {
 				log.info(logStr);
+			}
 		}
 
 		// Set all required message fields and return msg

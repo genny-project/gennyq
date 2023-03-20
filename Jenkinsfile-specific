@@ -48,9 +48,6 @@ pipeline {
                     },
                     "Build Messages" : {
 						sh "./build-docker-branch.sh ${TAG} messages"
-                    },
-                    "Build Shleemy" : {
-						sh "./build-docker-branch.sh ${TAG} shleemy"
                     }
                 )
             }

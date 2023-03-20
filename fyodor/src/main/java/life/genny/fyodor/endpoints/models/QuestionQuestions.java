@@ -1,4 +1,4 @@
-package life.genny.fyodor.endpoints;
+package life.genny.fyodor.endpoints.models;
 
 import javax.inject.Inject;
 import javax.transaction.Transactional;
@@ -61,6 +61,9 @@ public class QuestionQuestions {
 
                 try {
                     QuestionQuestion question = questionUtils.findQuestionQuestionBySourceAndTarget(product, parentCode, childCode);
+                    if(question == null) {
+                        return Response.status(Response.Status.NOT_FOUND).entity("Could not find question: " + parentCode + ":" + childCode + " in product " + product).build();
+                    }
                     log.info("Found QQ: " + (question.getParentCode() != null ? question.getParentCode() : "null") + ":" + (question.getChildCode() != null ? question.getChildCode() : "null"));
                     return Response.ok(question).build();
                 } catch(ItemNotFoundException e) {

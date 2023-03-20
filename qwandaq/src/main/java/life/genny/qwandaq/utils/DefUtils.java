@@ -9,8 +9,6 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
-import life.genny.qwandaq.entity.search.trait.Ord;
-import life.genny.qwandaq.entity.search.trait.Sort;
 import org.jboss.logging.Logger;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
@@ -23,6 +21,7 @@ import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.exception.runtime.DefinitionException;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.ANSIColour;
@@ -75,7 +74,7 @@ public class DefUtils {
 	@Inject
 	AttributeUtils attributeUtils;
 
-	public DefUtils() {
+	public DefUtils() { /* no-arg constructor */
 	}
 
 	/**
@@ -85,16 +84,23 @@ public class DefUtils {
 	 * @return BaseEntity The corresponding definition {@link BaseEntity}
 	 */
 	public Definition getDEF(final BaseEntity entity) {
-		entity.setBaseEntityAttributes(beaUtils.getAllEntityAttributesForBaseEntity(entity));
 
 		if (entity == null)
 			throw new NullParameterException("entity");
+
+		entity.setBaseEntityAttributes(beaUtils.getAllEntityAttributesForBaseEntity(entity));
 
 		// save processing time on particular entities
 		if (entity.getCode().startsWith(Prefix.DEF_))
 			return Definition.from(entity);
 
-		List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(entity, Attribute.LNK_DEF);
+		// check for a linked definition
+		List<String> codes = null;
+		try {
+			codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(entity, Attribute.LNK_DEF);
+		} catch (ItemNotFoundException e) {
+			log.trace(e.getMessage());
+		}
 
 		// if no defs specified, go by prefix
 		if (codes == null || codes.isEmpty()) {
@@ -124,11 +130,13 @@ public class DefUtils {
 		Collections.reverse(codes);
 		for (String code : codes) {
 
-			Definition definition = beUtils.getDefinition(code);
+			Definition definition = beUtils.getDefinition(code, false);
 
 			// merge into new def
-			for (EntityAttribute ea : beaUtils.getAllEntityAttributesForBaseEntity(definition, true)) {
+			for (EntityAttribute ea : beaUtils.getAllEntityAttributesForBaseEntity(definition)) {
 				try {
+					Attribute attr = attributeUtils.getAttribute(ea.getRealm(), ea.getAttributeCode(), true);
+					ea.setAttribute(attr);
 					mergedDef.addAttribute(ea);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -147,7 +155,7 @@ public class DefUtils {
 	 */
 	public Definition getDEF(final String baseEntityCode) {
 		if(baseEntityCode == null)
-			throw new NullParameterException(baseEntityCode);
+			throw new NullParameterException("baseEntityCode");
 		BaseEntity target = beUtils.getBaseEntity(baseEntityCode);
 		return getDEF(target);
 	}
@@ -178,7 +186,7 @@ public class DefUtils {
 	 * @param answer     the answer to check
 	 * @return Boolean
 	 */
-	public Boolean answerValidForDEF(Definition definition, Answer answer) {
+	public boolean answerValidForDEF(Definition definition, Answer answer) {
 
 		if (definition == null)
 			throw new NullParameterException("definition");
@@ -189,9 +197,9 @@ public class DefUtils {
 		String attributeCode = answer.getAttributeCode();
 
 		// allow if it is Capability saved to a Role
-		if (targetCode.startsWith(Prefix.ROL_) && attributeCode.startsWith(Prefix.PRM_)) {
-			return true;
-		} else if (targetCode.startsWith(Prefix.SBE_) && (attributeCode.startsWith(Prefix.COL_)
+		// TODO: Make this nicer
+		boolean isCapabilities = targetCode.startsWith(Prefix.ROL_) && attributeCode.startsWith(Prefix.CAP_);
+		if (isCapabilities || targetCode.startsWith(Prefix.SBE_) && (attributeCode.startsWith(Prefix.COL_)
 				|| attributeCode.startsWith(Prefix.SRT_) || attributeCode.startsWith(Prefix.ACT_))) {
 			return true;
 		}
@@ -211,8 +219,8 @@ public class DefUtils {
 				}
 			}
 		}
-		log.error(ANSIColour.RED + "Invalid attribute " + attributeCode + " for " + answer.getTargetCode()
-				+ " with def= " + definition.getCode() + ANSIColour.RESET);
+		log.error(ANSIColour.doColour("Invalid attribute " + attributeCode + " for " + answer.getTargetCode()
+				+ " with def= " + definition.getCode(), ANSIColour.RED));
 			
 		return false;
 	}
@@ -253,7 +261,7 @@ public class DefUtils {
 	 * @param acvs     the attribute code value to check
 	 * @return Boolean
 	 */
-	public Boolean attributeValueValidForDEF(BaseEntity defBE, AttributeCodeValueString acvs) {
+	public boolean attributeValueValidForDEF(BaseEntity defBE, AttributeCodeValueString acvs) {
 
 		if (defBE == null) {
 			throw new NullParameterException("defBE");
@@ -267,10 +275,7 @@ public class DefUtils {
 		if (attribute == null)
 			throw new NullParameterException("attribute");
 
-		// allow if it is Capability saved to a Role
-		if (defBE.getCode().equals("DEF_ROLE") && attribute.getCode().startsWith(Prefix.PRM_)) {
-			return true;
-		} else if (defBE.getCode().equals("DEF_SEARCH")
+		if (defBE.getCode().equals("DEF_SEARCH")
 				&& (attribute.getCode().startsWith(Prefix.COL_) 
 				|| attribute.getCode().startsWith(Prefix.SRT_) || attribute.getCode().startsWith(Prefix.ACT_))) {
 			return true;
@@ -278,14 +283,13 @@ public class DefUtils {
 
 		// just make use of the faster attribute lookup
 		if (!defBE.containsEntityAttribute(Prefix.ATT_.concat(attribute.getCode()))) {
-			log.error(ANSIColour.RED + "Invalid attribute " + attribute.getCode() + " for "
-					+ defBE.getCode() + ANSIColour.RESET);
+			log.error(ANSIColour.doColour("Invalid attribute " + attribute.getCode() + " for "
+					+ defBE.getCode(), ANSIColour.RED));
 			return false;
 		}
 
 		// Now do a value validation check
-		Boolean result = qwandaUtils.validationsAreMet(attribute, acvs.getValue());
-		return result;
+		return qwandaUtils.validationsAreMet(attribute, acvs.getValue());
 	}
 
 	/**
@@ -338,13 +342,14 @@ public class DefUtils {
 						if (mergeUtils.contextsArePresent(attrValStr, ctxMap)) {
 							// TODO: mergeUtils should be taking care of this bracket replacement - Jasper
 							// (6/08/2021)
+							// TODO: God I wish we had time to fix and test this - Bryn
+							// (17/03/2023)
 							Object mergedObj = mergeUtils.wordMerge(attrValStr.replace("[[", "").replace("]]", ""),
 									ctxMap);
 							// Ensure Datatype is Correct, then set Value
 							entityAttribute.setValue(mergedObj);
 						} else {
-							log.warn(ANSIColour.RED + "Not all contexts are present for " + attrValStr
-									+ ANSIColour.RESET);
+							log.warn(ANSIColour.doColour("Not all contexts are present for " + attrValStr, ANSIColour.RED));
 							return null;
 						}
 					} else {
@@ -353,7 +358,7 @@ public class DefUtils {
 					}
 				} else {
 					log.error(
-							ANSIColour.RED + "Value is NULL for entity attribute " + attributeCode + ANSIColour.RESET);
+							ANSIColour.doColour("Value is NULL for entity attribute " + attributeCode,  ANSIColour.RED));
 					return null;
 				}
 			}

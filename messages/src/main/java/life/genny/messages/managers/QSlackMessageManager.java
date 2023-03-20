@@ -25,19 +25,19 @@ public final class QSlackMessageManager extends QMessageProvider {
 
     @Override
     public void sendMessage(BaseEntity templateBe, Map<String, Object> contextMap) {
-        log.info(ANSIColour.GREEN + ">>>>>>>>>>> About to trigger SLACK <<<<<<<<<<<<<<" + ANSIColour.RESET);
+        log.info(ANSIColour.doColour(">>>>>>>>>>> About to trigger SLACK <<<<<<<<<<<<<<", ANSIColour.GREEN));
 
         BaseEntity projectBe = (BaseEntity) contextMap.get("PROJECT");
         BaseEntity target = (BaseEntity) contextMap.get("RECIPIENT");
 
         if (target == null) {
-            log.error(ANSIColour.RED + "Target is NULL" + ANSIColour.RESET);
+            log.error(ANSIColour.doColour("Target is NULL", ANSIColour.RED));
             return;
         }
         log.info("Target is " + target.getCode());
 
         if (projectBe == null) {
-            log.error(ANSIColour.RED + "ProjectBe is NULL" + ANSIColour.RESET);
+            log.error(ANSIColour.doColour("ProjectBe is NULL", ANSIColour.RED));
             return;
         }
         log.info("Project is " + projectBe.getCode());
@@ -45,7 +45,7 @@ public final class QSlackMessageManager extends QMessageProvider {
         EntityAttribute targetUrlAttribute = beaUtils.getEntityAttribute(projectBe.getRealm(), projectBe.getCode(), "PRI_URL");
         String targetUrl = targetUrlAttribute != null ? targetUrlAttribute.getValueString() : null;
         if (targetUrl == null) {
-            log.error(ANSIColour.RED + "targetUrl is NULL" + ANSIColour.RESET);
+            log.error(ANSIColour.doColour("targetUrl is NULL", ANSIColour.RED));
             return;
         }
 
@@ -57,7 +57,7 @@ public final class QSlackMessageManager extends QMessageProvider {
             body = bodyAttribute != null ? bodyAttribute.getValueString() : null;
         }
         if (body == null) {
-            log.error(ANSIColour.RED + "Body is NULL" + ANSIColour.RESET);
+            log.error(ANSIColour.doColour("Body is NULL", ANSIColour.RED));
             return;
         }
         log.info("Body is " + body);
@@ -80,9 +80,9 @@ public final class QSlackMessageManager extends QMessageProvider {
         }
 
         if (response != null) {
-            log.info(ANSIColour.GREEN + "SLACK response status code = " + response.statusCode() + ANSIColour.RESET);
+            log.info(ANSIColour.doColour("SLACK response status code = " + response.statusCode(), ANSIColour.GREEN));
         } else {
-            log.info(ANSIColour.RED + "SLACK response is NULL" + ANSIColour.RESET);
+            log.info(ANSIColour.doColour("SLACK response is NULL", ANSIColour.RED));
         }
 
     }

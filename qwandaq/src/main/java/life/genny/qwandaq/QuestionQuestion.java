@@ -508,6 +508,7 @@ public class QuestionQuestion implements CoreEntityPersistable, Comparable<Objec
 		questionQuestion.setUpdated(getUpdated());
 		questionQuestion.setVersion(getVersion());
 		questionQuestion.setWeight(getWeight());
+		questionQuestion.setSourceId(getParentId());
 		questionQuestion.setCapreqs(CapabilityConverter.convertToDBColumn(getCapabilityRequirements()));
 		return questionQuestion;
 	}

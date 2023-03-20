@@ -1,12 +1,12 @@
 package life.genny.bootq.utils;
 
+import life.genny.bootq.models.Validator;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
-import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.utils.AttributeUtils;
@@ -54,6 +54,9 @@ public class GoogleSheetBuilder {
 	@Inject
 	CacheManager cm;
 
+    @Inject
+    Validator validator;
+
 	@Inject
 	AttributeUtils attributeUtils;
 
@@ -68,18 +71,6 @@ public class GoogleSheetBuilder {
 
     public GoogleSheetBuilder() { }
 
-    /**
-	 * Convert a String to a Boolean
-	 *
-     * @param booleanString
-     * @return Boolean or null.
-     */
-    public static Boolean toBoolean(final String booleanString) {
-        if (StringUtils.isBlank(booleanString)) {
-            return null;
-        }
-        return "TRUE".equalsIgnoreCase(booleanString);
-    }
 
     /**
 	 * Convert a String to a Double
@@ -148,7 +139,7 @@ public class GoogleSheetBuilder {
 		
 		// handle the group codes
 		String group_codes = row.get("groupcodes");
-		List<String> groups = StringUtils.isBlank(group_codes) ? new ArrayList<>() : Arrays.asList(group_codes.replaceAll(" ", "").split(","));
+		List<String> groups = StringUtils.isBlank(group_codes) ? new ArrayList<>() : Arrays.asList(group_codes.replace(" ", "").split(","));
 		validation.setSelectionBaseEntityGroupList(groups);
 
 		validation.setRealm(realmName);
@@ -174,6 +165,9 @@ public class GoogleSheetBuilder {
 			dataType.setDttCode(code);
 		}
 
+		// Ensure there is an actual validation sitting behind validations column
+		validator.validateDataType(row, realmName);
+
 		dataType.setClassName(row.get("classname"));
 		dataType.setInputmask(row.get("inputmask"));
 		dataType.setComponent(row.get("component"));
@@ -195,6 +189,9 @@ public class GoogleSheetBuilder {
         String code = row.get("code");
         String name = row.get("name");
 
+		// Ensure valid datatype exists
+		DataType datatype = (DataType) validator.validateAttribute(row, realmName).get(DataType.class);
+
 		Attribute attribute;
 		try {
 			attribute = attributeUtils.getAttribute(realmName, code, false);
@@ -202,16 +199,12 @@ public class GoogleSheetBuilder {
 		} catch(ItemNotFoundException e) {
 			log.trace("[!] Creating new Attribute: " + code);
 			// create new attribute if not found
-			attribute = new Attribute();
-			attribute.setCode(code);
-			attribute.setName(name);
-			Long id = cm.getMaxAttributeId();
-			attribute.setId(id+1);
+			attribute = new Attribute(code, name);
 		}
-		Boolean privacy = toBoolean(row.get("privacy"));
+		boolean privacy = Boolean.parseBoolean(row.get("privacy"));
 		
-		attribute.setDttCode(row.get("datatype"));
-        attribute.setDefaultPrivacyFlag(privacy == null ? false : privacy);
+		attribute.setDttCode(datatype.getDttCode());
+        attribute.setDefaultPrivacyFlag(privacy);
         attribute.setDescription(row.get("description"));
         attribute.setHelp(row.get("help"));
         attribute.setPlaceholder(row.get("placeholder"));
@@ -237,8 +230,6 @@ public class GoogleSheetBuilder {
 		} catch (ItemNotFoundException e) {
 			baseEntity = new BaseEntity();
 			baseEntity.setCode(code);
-			Long id = cm.getMaxBaseEntityId();
-			baseEntity.setId(id+1);
 		}
         String name = row.get("name");
 		baseEntity.setName(name);
@@ -253,53 +244,21 @@ public class GoogleSheetBuilder {
      * @param realmName The realm
      * @return A EntityAttribute object
      */
-    public EntityAttribute buildEntityAttribute(Map<String, String> row, String realmName) {
-		return buildEntityAttribute(row, realmName, row.get("attributecode"));
-	}
+    public EntityAttribute buildEntityAttribute(Map<String, String> row, String realmName, BaseEntity be, Attribute attribute) {
 
-    /**
-	 * Build a EntityAttribute object from a row.
-	 *
-     * @param row THe row from the sheets
-     * @param realmName The realm
-     * @param attributeCode The attributeCode to set
-     * @return A EntityAttribute object
-     */
-    public EntityAttribute buildEntityAttribute(Map<String, String> row, String realmName, String attributeCode) {
-
-		EntityAttribute entityAttribute = new EntityAttribute();
-		String baseEntityCode = row.get("baseentitycode");
-
-		BaseEntity baseEntity;
-		Attribute attribute;
-
-		try {
-			baseEntity = beUtils.getBaseEntity(realmName, baseEntityCode, false);
-		} catch(ItemNotFoundException e) {
-			throw new BadDataException("Bad or missing BaseEntity: " + baseEntityCode + " in product " + realmName, e);
-		}
-
-		try {
-			attribute = attributeUtils.getAttribute(realmName, attributeCode, false);
-		} catch(ItemNotFoundException e) {
-			throw new BadDataException("Bad or missing Attribute: " + attributeCode + " in product " + realmName, e);
-		}
-
-		entityAttribute.setBaseEntityCode(baseEntityCode);
-		entityAttribute.setBaseEntityId(baseEntity.getId());
-		entityAttribute.setAttribute(attribute);
+		EntityAttribute entityAttribute = new EntityAttribute(be, attribute);
 		entityAttribute.setRealm(realmName);
         
         String valueString = row.get(VALUESTRING);
         Integer valueInt = toInt(row.get(VALUEINTEGER));
         Long valueLong = toLong(row.get(VALUELONG));
         Double valueDouble = toDouble(row.get(VALUEDOUBLE));
-        Boolean valueBoolean = toBoolean(row.get(VALUEBOOLEAN));
+        boolean valueBoolean = Boolean.parseBoolean(row.get(VALUEBOOLEAN));
 
         Double weight = toDouble(row.get(WEIGHT));
 
-        Boolean privacy = toBoolean(row.get(PRIVACY));
-        Boolean confirmation = toBoolean(row.get(CONFIRMATION));
+        boolean privacy = Boolean.parseBoolean(row.get(PRIVACY));
+        boolean confirmation = Boolean.parseBoolean(row.get(CONFIRMATION));
 
 		entityAttribute.setValueString(valueString);
 		entityAttribute.setValueInteger(valueInt);
@@ -308,8 +267,8 @@ public class GoogleSheetBuilder {
 		entityAttribute.setValueBoolean(valueBoolean);
 
 		entityAttribute.setWeight(weight);
-		entityAttribute.setPrivacyFlag(privacy == null ? false : privacy);
-		entityAttribute.setConfirmationFlag(confirmation == null ? false : confirmation);
+		entityAttribute.setPrivacyFlag(privacy);
+		entityAttribute.setConfirmationFlag(confirmation);
 
         return entityAttribute;
     }
@@ -324,31 +283,29 @@ public class GoogleSheetBuilder {
     public Question buildQuestion(Map<String, String> row, String realmName) {
 
         String code = row.get("code");
+		Map<Class<?>, Object> dependencies = validator.validateQuestion(row, realmName);
+		Attribute attribute = (Attribute) dependencies.get(Attribute.class);
+        
 		Question question = questionUtils.getQuestionFromQuestionCode(realmName, code);
 		if (question == null) {
 			question = new Question();
 			question.setCode(code);
 		}
-        String attributeCode = row.get("attributecode");
 
-		Attribute attribute = attributeUtils.getAttribute(realmName, attributeCode, false);
-		if (attribute == null) {
-			throw new ItemNotFoundException(realmName, attributeCode);
-		}
 
         String name = row.get("name");
         String html = row.get("html");
         String placeholder = row.get("placeholder");
-        Boolean readonly = toBoolean(row.get(READONLY));
-        Boolean mandatory = toBoolean(row.get(MANDATORY));
+        boolean readonly = Boolean.parseBoolean(row.get(READONLY));
+        boolean mandatory = Boolean.parseBoolean(row.get(MANDATORY));
         String icon = row.get("icon");
 
 		question.setName(name);
 		question.setAttribute(attribute);
         question.setHtml(html);
 		question.setPlaceholder(placeholder);
-        question.setReadonly(readonly == null ? false : readonly);
-        question.setMandatory(mandatory == null ? false : mandatory);
+        question.setReadonly(readonly);
+        question.setMandatory(mandatory);
         question.setIcon(icon);
         question.setRealm(realmName);
 
@@ -364,36 +321,29 @@ public class GoogleSheetBuilder {
      */
     public QuestionQuestion buildQuestionQuestion(Map<String, String> row, String realmName) {
 
-        String parentCode = row.get("parentcode");
-		Question source = questionUtils.getQuestionFromQuestionCode(realmName, parentCode);
-		if (source == null) {
-			throw new ItemNotFoundException(realmName, parentCode);
-		}
-        String targetCode = row.get("targetcode");
-		Question target = questionUtils.getQuestionFromQuestionCode(realmName, targetCode);
-		if (target == null) {
-			throw new ItemNotFoundException(realmName, parentCode);
-		}
+		Map<String, Object> dependencies = validator.validateQuestionQuestion(row, realmName);
+		Question parent = (Question) dependencies.get(Validator.KEY_PARENT);
+		Question child = (Question) dependencies.get(Validator.KEY_CHILD);
 
         Double weight = toDouble(row.get(WEIGHT));
-        Boolean mandatory = toBoolean(row.get(MANDATORY));
-        Boolean readonly = toBoolean(row.get(READONLY));
+        boolean mandatory = Boolean.parseBoolean(row.get(MANDATORY));
+        boolean readonly = Boolean.parseBoolean(row.get(READONLY));
 
         String icon = row.get("icon");
-        Boolean disabled = toBoolean(row.get("disabled"));
-        Boolean hidden = toBoolean(row.get("hidden"));
+        boolean disabled = Boolean.parseBoolean(row.get("disabled"));
+        boolean hidden = Boolean.parseBoolean(row.get("hidden"));
 
 		QuestionQuestion questionQuestion = new QuestionQuestion();
-		questionQuestion.setParentCode(parentCode);
-		questionQuestion.setChildCode(targetCode);
+		questionQuestion.setParentCode(parent.getCode());
+		questionQuestion.setChildCode(child.getCode());
 		questionQuestion.setWeight(weight);
-        questionQuestion.setReadonly(readonly == null ? false : readonly);
-        questionQuestion.setMandatory(mandatory == null ? false : mandatory);
-		questionQuestion.setDisabled(disabled == null ? false : disabled);
-		questionQuestion.setHidden(hidden == null ? false : hidden);
+        questionQuestion.setReadonly(readonly);
+        questionQuestion.setMandatory(mandatory);
+		questionQuestion.setDisabled(disabled);
+		questionQuestion.setHidden(hidden);
 		questionQuestion.setIcon(icon);
 		questionQuestion.setRealm(realmName);
-
+		questionQuestion.setParentId(parent.getId());
 		return questionQuestion;
     }
 

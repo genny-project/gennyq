@@ -41,10 +41,6 @@ public class Capability implements Serializable {
         this.nodes = nodes;
     }
 
-    public Capability(String capabilityCode, String capNodes) {
-        this(capabilityCode, CapabilitiesManager.deserializeCapArray(capNodes));
-    }
-
     public Capability(String capabilityCode, CapabilityNode... nodes) {
         this(capabilityCode, new LinkedHashSet<>(Arrays.asList(nodes)));
     }

@@ -11,8 +11,9 @@ import javax.inject.Inject;
 
 @ApplicationScoped
 public class QMessageFactory {
-
-	private static final Logger log = Logger.getLogger(QMessageFactory.class);
+	
+	@Inject
+	Logger log;
 
 	@Inject
 	QSMSMessageManager smsManager;
@@ -50,7 +51,7 @@ public class QMessageFactory {
 		};
 
 		if (provider == null) {
-			CommonUtils.logAndReturn(log::error, ANSIColour.RED + ">>>>>> Provider is NULL for entity: " + ", msgType: " + messageType + " <<<<<<<<<" + ANSIColour.RESET);
+			log.error(ANSIColour.doColour(">>>>>> Provider is NULL for entity: " + ", msgType: " + messageType + " <<<<<<<<<", ANSIColour.RED));
 			throw new NullParameterException("Provider for message type: " + messageType);
 		}
 

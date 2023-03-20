@@ -107,7 +107,7 @@ public class XlsxImport {
             data = fetchSpreadSheet(sheetId, sheetName);
             data = new ArrayList<>(data);
         } catch (IOException e) {
-            log.error("Function2: There was a Error " + e.getMessage() + " in SheetName:" + sheetName + " and SheetID:" + sheetId);
+            log.error("getRows: There was a Error " + e.getMessage() + " in SheetName:" + sheetName + " and SheetID:" + sheetId);
             return new ArrayList<>();
         }
         return mappingHeaderToValues(data);

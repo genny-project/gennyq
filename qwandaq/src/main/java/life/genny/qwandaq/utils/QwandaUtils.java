@@ -593,14 +593,15 @@ public class QwandaUtils {
 		for (String code : attributeCodes) {
 
 			// check for existing attribute in target
-			EntityAttribute ea = beaUtils.getEntityAttribute(productCode, targetCode, code, true, true);
 			Attribute attribute;
-			if(ea == null) {
+			EntityAttribute ea;
+			try {
+				ea = beaUtils.getEntityAttribute(productCode, targetCode, code, true, true);
+				attribute = ea.getAttribute();
+			} catch (ItemNotFoundException e) {
 				attribute = attributeUtils.getAttribute(productCode, code, true);
 				// otherwise create new attribute
 				ea = new EntityAttribute(processEntity, attribute, 1.0, null);
-			} else {
-				attribute = ea.getAttribute();
 			}
 
 			if(attribute.getDataType() == null) {
@@ -765,9 +766,6 @@ public class QwandaUtils {
 	 * @return Ask
 	 */
 	public Ask generateAskGroupUsingBaseEntity(BaseEntity baseEntity) {
-		// grab def entity
-		Definition definition = defUtils.getDEF(baseEntity);
-
 		String sourceCode = userToken.getUserCode();
 		String targetCode = baseEntity.getCode();
 
@@ -791,6 +789,8 @@ public class QwandaUtils {
 		entityMessage.setToken(userToken.getToken());
 		entityMessage.setReplace(true);
 
+		// grab def entity
+		Definition definition = defUtils.getDEF(baseEntity);
 		// create a child ask for every valid attribute
 		definition.getBaseEntityAttributes().forEach(ea -> {
 			String attributeCode = ea.getAttributeCode();

@@ -195,10 +195,10 @@ public class BaseEntityUtils {
 				log.infof("No BaseEntityAttributes found for base entity [%s:%s]", productCode, code);
 				//throw new ItemNotFoundException();
 			} else {
-				log.debugf("%s BaseEntityAttributes found for base entity [%s:%s]. Setting them to BE...", entityAttributesForBaseEntity.size(), productCode, code);
+				log.tracef("%s BaseEntityAttributes found for base entity [%s:%s]. Setting them to BE...", entityAttributesForBaseEntity.size(), productCode, code);
 			}
 			baseEntity.setBaseEntityAttributes(entityAttributesForBaseEntity);
-			log.debugf("Added %s BaseEntityAttributes to BE [%s:%s]", baseEntity.getBaseEntityAttributesMap().size(), baseEntity.getRealm(), baseEntity.getCode());
+			log.tracef("Added %s BaseEntityAttributes to BE [%s:%s]", baseEntity.getBaseEntityAttributesMap().size(), baseEntity.getRealm(), baseEntity.getCode());
 		}
 		return baseEntity;
 	}
@@ -236,6 +236,7 @@ public class BaseEntityUtils {
 				}
 				if (bea.getBaseEntityCode() == null) {
 					bea.setBaseEntityCode(baseEntity.getCode());
+					bea.setBaseEntityId(baseEntity.getId());
 				}
 				if (bea.getAttribute() == null) {
 					Attribute attribute = attributeUtils.getAttribute(baseEntity.getRealm(), bea.getAttributeCode());
@@ -274,7 +275,7 @@ public class BaseEntityUtils {
 		try {
 			return getBaseEntity(newBaseEntityCode, bundleAttributes);
 		} catch (ItemNotFoundException e) {
-			log.error(ANSIColour.RED + "Could not find entity: " + newBaseEntityCode + ANSIColour.RESET);
+			log.error(ANSIColour.doColour("Could not find entity: " + newBaseEntityCode, ANSIColour.RED));
 			return null;
 		}
 	}
@@ -463,11 +464,11 @@ public class BaseEntityUtils {
 			updated.setValueDateTime(entity.getUpdated());
 			entity.addAttribute(updated);
 
-		// last updated date
-		Attribute updatedDateAttr = new Attribute(PRI_UPDATED_DATE, "Updated", new DataType(LocalDate.class));
-		EntityAttribute updatedDate = new EntityAttribute(entity, updatedDateAttr, 1.0, null);
-		updatedDate.setValueDate(entity.getUpdated().toLocalDate());
-		entity.addAttribute(updatedDate);
+			// last updated date
+			Attribute updatedDateAttr = new Attribute(PRI_UPDATED_DATE, "Updated", new DataType(LocalDate.class));
+			EntityAttribute updatedDate = new EntityAttribute(entity, updatedDateAttr, 1.0, null);
+			updatedDate.setValueDate(entity.getUpdated().toLocalDate());
+			entity.addAttribute(updatedDate);
 		} catch (NullPointerException e) {
 			log.error("NPE for PRI_UPDATED");
 		}
@@ -526,11 +527,11 @@ public class BaseEntityUtils {
 		BaseEntity item;
 		String productCode = definition.getRealm();
 		String definitionCode = definition.getCode();
-		EntityAttribute uuidEA = beaUtils.getEntityAttribute(productCode, definitionCode, Prefix.ATT_.concat(Attribute.PRI_UUID));
-		if (uuidEA != null) {
+		try {
+			EntityAttribute uuidEA = beaUtils.getEntityAttribute(productCode, definitionCode, Prefix.ATT_.concat(Attribute.PRI_UUID));
 			log.debug("Creating user base entity");
 			item = createUser(definition);
-		} else {
+		} catch(ItemNotFoundException e) {
 			String prefix = defUtils.getDefinitionPrefix(productCode, definitionCode);
 			if (StringUtils.isBlank(prefix)) {
 				throw new DefinitionException("No prefix set for the def: " + definitionCode);
@@ -553,7 +554,7 @@ public class BaseEntityUtils {
 		List<EntityAttribute> atts = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(productCode, definitionCode, Prefix.ATT_);
 		for (EntityAttribute ea : atts) {
 			String attrCode = ea.getAttributeCode().substring(Prefix.ATT_.length());
-			Attribute attribute = qwandaUtils.getAttribute(attrCode);
+			Attribute attribute = attributeUtils.getAttribute(attrCode, true);
 
 			if (attribute == null) {
 				log.warn("No Attribute found for def attr " + attrCode);
@@ -581,17 +582,22 @@ public class BaseEntityUtils {
 				newEA.setRealm(userToken.getProductCode());
 				log.info("Adding mandatory/default -> " + attribute.getCode());
 				item.addAttribute(newEA);
+				beaUtils.updateEntityAttribute(newEA);
 			}
 		}
 
 		Attribute linkDef = attributeUtils.getAttribute(Attribute.LNK_DEF, true);
-		item.addAttribute(new EntityAttribute(item, linkDef, 1.0, "[\"" + definitionCode + "\"]"));
+		EntityAttribute linkDefEA = new EntityAttribute(item, linkDef, 1.0, "[\"" + definitionCode + "\"]");
+		item.addAttribute(linkDefEA);
+		beaUtils.updateEntityAttribute(linkDefEA);
 
 		// author of the BE
 		Attribute lnkAuthorAttr = attributeUtils.getAttribute(Attribute.LNK_AUTHOR, true);
-		item.addAttribute(new EntityAttribute(item, lnkAuthorAttr, 1.0, "[\"" + userToken.getUserCode() + "\"]"));
+		EntityAttribute linkAuthorEA = new EntityAttribute(item, lnkAuthorAttr, 1.0, "[\"" + userToken.getUserCode() + "\"]");
+		item.addAttribute(linkAuthorEA);
+		beaUtils.updateEntityAttribute(linkAuthorEA);
 
-		updateBaseEntity(item, true);
+		updateBaseEntity(item, false);
 
 		return item;
 	}
@@ -657,7 +663,7 @@ public class BaseEntityUtils {
 			throw new NullParameterException("attributeCode");
 		}
 
-		Attribute attribute = attributeUtils.getAttribute(attributeCode);
+		Attribute attribute = attributeUtils.getAttribute(attributeCode, true);
 
 		EntityAttribute ea = new EntityAttribute(be, attribute, 1.0, value);
 		be.addAttribute(ea);

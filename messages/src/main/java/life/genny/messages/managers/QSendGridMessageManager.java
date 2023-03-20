@@ -13,9 +13,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.GennySettings;
-import life.genny.qwandaq.utils.AttributeUtils;
 import life.genny.qwandaq.utils.CommonUtils;
-import life.genny.qwandaq.utils.EntityAttributeUtils;
 import life.genny.qwandaq.utils.TimeUtils;
 import org.jboss.logging.Logger;
 
@@ -33,12 +31,8 @@ import java.util.Map;
 public final class QSendGridMessageManager extends QMessageProvider {
 
 	@Inject
-	EntityAttributeUtils beaUtils;
-	@Inject
-	AttributeUtils attributeUtils;
-
-	private static final Logger log = Logger.getLogger(QSendGridMessageManager.class);
-
+	Logger log;
+	
 	@Override
 	public void sendMessage(BaseEntity templateBe, Map<String, Object> contextMap) {
 
@@ -55,7 +49,7 @@ public final class QSendGridMessageManager extends QMessageProvider {
 		}
 
 		if (recipientBe == null) {
-			log.error(ANSIColour.RED+"Target (recipientBe) is NULL"+ANSIColour.RESET);
+			log.error(ANSIColour.doColour("Target (recipientBe) is NULL", ANSIColour.RED));
 			throw new NullParameterException("recipientBe");
 		}
 
@@ -192,7 +186,7 @@ public final class QSendGridMessageManager extends QMessageProvider {
 
 				if (email != null && !email.equals(to.getEmail())) {
 					personalization.addCc(new Email(email));
-					log.info(ANSIColour.BLUE+"Found CC Email: " + email+ANSIColour.RESET);
+					log.info(ANSIColour.doColour("Found CC Email: " + email, ANSIColour.BLUE));
 				}
 			}
 		}
@@ -214,7 +208,7 @@ public final class QSendGridMessageManager extends QMessageProvider {
 
 				if (email != null && !email.equals(to.getEmail())) {
 					personalization.addBcc(new Email(email));
-					log.info(ANSIColour.BLUE + "Found BCC Email: " + email + ANSIColour.RESET);
+					log.info(ANSIColour.doColour("Found BCC Email: " + email, ANSIColour.BLUE));
 				}
 			}
 		}
@@ -235,12 +229,12 @@ public final class QSendGridMessageManager extends QMessageProvider {
 			request.setBody(mail.build());
 			Response response = sg.api(request);
 			if(response.getStatusCode() == javax.ws.rs.core.Response.Status.ACCEPTED.getStatusCode()) {
-				log.info(ANSIColour.GREEN+"SendGrid Message Sent to " + recipient + "!"+ANSIColour.RESET);
+				log.info(ANSIColour.doColour("SendGrid Message Sent to " + recipient + "!", ANSIColour.GREEN));
 			} else {
-				log.error(ANSIColour.RED+"Error sending to SendGrid!");
-				log.error(ANSIColour.RED+response.getStatusCode());
-				log.error(ANSIColour.RED+response.getBody());
-				log.error(ANSIColour.RED+response.getHeaders());
+				log.error(ANSIColour.doColour("Error sending to SendGrid!", ANSIColour.RED));
+				log.error(ANSIColour.doColour(response.getStatusCode(), ANSIColour.RED));
+				log.error(ANSIColour.doColour(response.getBody(), ANSIColour.RED));
+				log.error(ANSIColour.doColour(response.getHeaders(), ANSIColour.RED));
 			}
 		} catch (IOException e) {
 			e.printStackTrace();

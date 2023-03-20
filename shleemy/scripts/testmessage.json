@@ -1,9 +1,0 @@
-{
-	"cron": null,
-	"trigger":"2020-12-17'T'15:30:00.00",
-	"realm":"internmatch",
-	"jsonMessage":{},
-	"sourceCode":"PER_USER1",
-	"channel":"webcmds",
-	"code":"TEST123"
-}

@@ -4,10 +4,10 @@ import static life.genny.kogito.common.utils.KogitoUtils.UseService.GADAQ;
 import static life.genny.qwandaq.entity.PCM.PCM_TREE;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -43,6 +43,7 @@ import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.AttributeUtils;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.EntityAttributeUtils;
@@ -117,7 +118,7 @@ public class Dispatch {
 		String targetCode = processData.getTargetCode();
 		BaseEntity source = beUtils.getBaseEntity(productCode, sourceCode, false);
 		BaseEntity target = beUtils.getBaseEntity(productCode, targetCode, false);
-		CapabilitySet userCapabilities = capMan.getUserCapabilities(target);
+		CapabilitySet userCapabilities = capMan.getUserCapabilities(source);
 
 		pcm = (pcm == null ? beUtils.getPCM(processData.getPcmCode()) : pcm);
 		// ensure target codes match
@@ -206,15 +207,33 @@ public class Dispatch {
 		// update any button Events
 		for (String event : BUTTON_EVENTS) {
 			Ask evt = flatMapOfAsks.get(event);
-			if (evt != null)
+			if (evt != null) {
 				evt.setDisabled(!answered);
+			}
 		}
+		sendButtonEvents(asks);
+
 		// this is ok since flatmap is referencing asks
 		msg.setAsks(asks);
 		// filter unwanted attributes
 		log.debug("ProcessEntity contains " + processEntity.getBaseEntityAttributesMap().size() + " attributes");
 
 		return processEntity;
+	}
+
+	/**
+	 * Send the button events
+	 * @param asks
+	 */
+	public void sendButtonEvents(Set<Ask> asks) {
+		for (Ask ask : asks) {
+			if (Question.QUE_EVENTS.equals(ask.getQuestionCode())) {
+				QDataAskMessage msg = new QDataAskMessage(ask);
+				msg.setReplace(true);
+				msg.setToken(userToken.getToken());
+				KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
+			}
+		}
 	}
 
 	/**
@@ -393,11 +412,20 @@ public class Dispatch {
 		// check for dropdown attribute
 		if (ask.getQuestion().getAttribute().getCode().startsWith(Prefix.LNK_)) {
 
-			// get list of value codes
-			List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(target,
-					ask.getQuestion().getAttributeCode());
+			List<String> codes = new ArrayList<>(0);
+			if (target.getCode().startsWith(Prefix.QBE_)) {
+				// get list from target
+				String value = target.getValueAsString(ask.getQuestion().getAttributeCode());
+				if (value != null) {
+					codes = Arrays.asList(CommonUtils.getArrayFromString(value));
+				}
+			} else {
+				// get list of value codes from cache
+				codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(target,
+						ask.getQuestion().getAttributeCode());
+			}
 
-			if (codes == null || codes.isEmpty())
+			if (codes.isEmpty())
 				sendDropdownItems(ask, target, parentCode);
 			else
 				collectSelections(codes, msg);
@@ -446,37 +474,6 @@ public class Dispatch {
 		Attribute attribute = question.getAttribute();
 
 		if (attribute.getCode().startsWith(Prefix.LNK_)) {
-
-			// check for already selected items
-			List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(target, attribute.getCode());
-			if (codes != null && !codes.isEmpty()) {
-
-				// grab selection baseentitys
-				QDataBaseEntityMessage selectionMsg = new QDataBaseEntityMessage();
-				for (String code : codes) {
-					if (StringUtils.isBlank(code)) {
-						continue;
-					}
-
-					BaseEntity selection = beUtils.getBaseEntity(code);
-
-					// Ensure only the PRI_NAME attribute exists in the selection
-					selection = beUtils.addNonLiteralAttributes(selection);
-					selection = beUtils.privacyFilter(selection,
-							Collections.singleton(Attribute.PRI_NAME));
-					selectionMsg.add(selection);
-				}
-
-				// send selections
-				if (selectionMsg.getItems() != null) {
-					selectionMsg.setToken(userToken.getToken());
-					selectionMsg.setReplace(true);
-					log.info("Sending selection items with " + selectionMsg.getItems().size() + " items");
-					KafkaUtils.writeMsg(KafkaTopic.WEBDATA, selectionMsg);
-				} else {
-					log.info("No selection items found for " + attribute.getCode());
-				}
-			}
 
 			// trigger dropdown search in dropkick
 			JsonObject json = Json.createObjectBuilder()

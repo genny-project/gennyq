@@ -130,12 +130,15 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 
 	@JsonbTransient
 	public void setBaseEntityAttributes(final Set<EntityAttribute> baseEntityAttributes) {
-		baseEntityAttributes.forEach(bea -> this.baseEntityAttributes.put(bea.getAttributeCode(), bea));
+		setBaseEntityAttributes((Collection<EntityAttribute>) baseEntityAttributes);
 	}
 
 	@JsonbTransient
 	public void setBaseEntityAttributes(final Collection<EntityAttribute> baseEntityAttributes) {
-		baseEntityAttributes.forEach(bea -> this.baseEntityAttributes.put(bea.getAttributeCode(), bea));
+		baseEntityAttributes.forEach(bea -> {
+			if (bea != null)
+				this.baseEntityAttributes.put(bea.getAttributeCode(), bea);
+		});
 	}
 
 	/**
@@ -189,15 +192,16 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 	 * baseEntity. It auto creates the EntityAttribute object. For efficiency we
 	 * assume the attribute does not already exist
 	 * 
-	 * @param ea the ea to add
+	 * @param entityAttribute the ea to add
 	 * @return EntityAttribute
 	 * @throws BadDataException if the attribute could not be added
 	 */
-	public EntityAttribute addAttribute(final EntityAttribute ea) throws BadDataException {
-		if (ea == null) {
+	public EntityAttribute addAttribute(final EntityAttribute entityAttribute) throws BadDataException {
+		if (entityAttribute == null) {
 			throw new BadDataException("missing Attribute");
 		}
-		return addAttribute(ea.getAttribute(), ea.getWeight(), ea.getValue());
+		this.baseEntityAttributes.put(entityAttribute.getAttributeCode(), entityAttribute);
+		return entityAttribute;
 	}
 
 	/**
@@ -253,7 +257,7 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 			entityAttribute.setValue(value);
 		}
 		entityAttribute.setWeight(weight);
-		this.baseEntityAttributes.put(attribute.getCode(), entityAttribute);
+		addAttribute(entityAttribute);
 		return entityAttribute;
 	}
 
@@ -307,7 +311,7 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 	 * 
 	 * @see {@link EntityAttribute}
 	 */
-	public EntityAttribute addEntityAttribute(Attribute attribute, double weight, boolean inferred, Object value) {
+	public EntityAttribute addEntityAttribute(Attribute attribute, Double weight, Boolean inferred, Object value) {
 
 		Optional<EntityAttribute> eaOpt = findEntityAttribute(attribute);
 		EntityAttribute ea;

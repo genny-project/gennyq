@@ -49,7 +49,7 @@ public final class QEmailMessageManager extends QMessageProvider {
 		}
 
 		if (recipientBe == null) {
-			log.error(ANSIColour.RED + "Target is NULL" + ANSIColour.RESET);
+			log.error(ANSIColour.doColour("Target is NULL", ANSIColour.RED));
 			throw new NullParameterException("recipientBe");
 		}
 
@@ -74,7 +74,7 @@ public final class QEmailMessageManager extends QMessageProvider {
 		log.info("Recipient BeCode: " + recipientBe.getCode() + " Recipient Email: " + recipient + ", Timezone: " + timezone);
 
 		if (recipient == null) {
-			log.error(ANSIColour.RED + "Target " + recipientBe.getCode() + ", PRI_EMAIL is NULL" + ANSIColour.RESET);
+			log.error(ANSIColour.doColour("Target " + recipientBe.getCode() + ", PRI_EMAIL is NULL", ANSIColour.RED));
 			throw new NullParameterException("recipient");
 		}
 
@@ -216,7 +216,7 @@ public final class QEmailMessageManager extends QMessageProvider {
 									.add("email", email)
 									.build()
 					);
-					log.info(ANSIColour.BLUE + "Found CC Email: " + email + ANSIColour.RESET);
+					log.info(ANSIColour.doColour("Found CC Email: " + email, ANSIColour.BLUE));
 				}
 			}
 			personalizationInnerObjectWrapper.add("cc", ccJsonArrayBuilder.build());
@@ -246,7 +246,7 @@ public final class QEmailMessageManager extends QMessageProvider {
 									.add("email", email)
 									.build()
 					);
-					log.info(ANSIColour.BLUE + "Found BCC Email: " + email + ANSIColour.RESET);
+					log.info(ANSIColour.doColour("Found BCC Email: " + email, ANSIColour.BLUE));
 				}
 			}
 			personalizationInnerObjectWrapper.add("bcc", bccJsonArrayBuilder.build());

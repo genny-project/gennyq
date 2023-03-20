@@ -20,8 +20,8 @@ public class RealmUnit extends DataUnit {
     private String urlList;
     private String clientSecret;
     private String keycloakUrl;
-    private Boolean disable;
-    private Boolean skipGoogleDoc;
+    private boolean disable;
+    private boolean skipGoogleDoc;
     private String securityKey;
     private String servicePassword;
     private String uri;
@@ -50,7 +50,7 @@ public class RealmUnit extends DataUnit {
         this.keycloakUrl = keycloakUrl;
     }
 
-    public Boolean getDisable() {
+    public boolean getDisable() {
         return disable;
     }
 
@@ -58,7 +58,7 @@ public class RealmUnit extends DataUnit {
         this.disable = disable;
     }
 
-    public Boolean getSkipGoogleDoc() {
+    public boolean getSkipGoogleDoc() {
         return skipGoogleDoc;
     }
 
