@@ -250,9 +250,11 @@ public class EntityAttributeUtils {
 	public EntityAttribute getEntityAttribute(String productCode, String baseEntityCode, String attributeCode,
 			boolean embedAttribute, boolean embedDataType, boolean embedValidationInfo) {
 		EntityAttributeKey key = new EntityAttributeKey(productCode, baseEntityCode, attributeCode);
+		log.infof("$$$$$$$$$$$$$$$$ Fetching EA for [%s:%s:%s]", productCode, baseEntityCode, attributeCode);
 		EntityAttribute entityAttribute = (EntityAttribute) cm
 				.getPersistableEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, key);
 
+		log.infof("$$$$$$$$$$$$$$$$ Fetched EA for [%s:%s:%s]", productCode, baseEntityCode, attributeCode);
 		if (entityAttribute == null) {
 			throw new ItemNotFoundException(productCode, "EntityAttribute: " + baseEntityCode + ":" + attributeCode);
 		}
