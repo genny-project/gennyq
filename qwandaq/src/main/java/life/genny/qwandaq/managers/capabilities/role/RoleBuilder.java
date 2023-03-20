@@ -11,8 +11,8 @@ import org.jboss.logging.Logger;
 
 import io.quarkus.arc.Arc;
 import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.datatype.capability.core.CapabilityBuilder;
-import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
@@ -40,12 +40,10 @@ public class RoleBuilder {
     /**
      * A map from Capability Code to Capabilities to add to the role for that Capability
      */
-    private Map<String, CapabilityNode[]> roleCapabilities = new HashMap<>();
+    private Map<String, Capability> roleCapabilities = new HashMap<>();
 
     private String redirectCode;
 
-    // TODO: Again I want to get rid of product code chains like this
-    // TODO: Hopefully we can firm up how product codes are assigned to tokens
     public RoleBuilder(String roleCode, String roleName, String productCode) {
         this.capManager = Arc.container().select(CapabilitiesManager.class).get();
         this.roleMan = capManager.getRoleManager();
@@ -114,7 +112,7 @@ public class RoleBuilder {
         return this;
     }
 
-    public Map<String, CapabilityNode[]> getCapabilities() {
+    public Map<String, Capability> getCapabilities() {
         return roleCapabilities;
     }
 
@@ -128,7 +126,7 @@ public class RoleBuilder {
 
         // Capabilities
         for(String capabilityCode : roleCapabilities.keySet()) {
-            capManager.addCapabilityToBaseEntity(productCode, targetRole, fetch(capabilityCode), roleCapabilities.get(capabilityCode));
+            capManager.addCapabilityToBaseEntity(targetRole, roleCapabilities.get(capabilityCode));
         }
         
         // Role inherits

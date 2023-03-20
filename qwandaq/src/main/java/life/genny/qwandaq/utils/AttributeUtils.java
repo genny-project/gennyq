@@ -18,6 +18,7 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A non-static utility class used for standard
@@ -36,6 +37,64 @@ public class AttributeUtils {
 
     @Inject
     CacheManager cm;
+
+    /**
+     * Create and save a new id-safe {@link Attribute} object (if it does not already exist)
+     * @param productCode - product to store attribute in
+     * @param attributeCode - attribute code of the attribute
+     * @param dataType - datatype of the attribute
+     * @return the new attribute object, or the currently existing one if found in the cache
+     * @throws ItemNotFoundException if the existing Attribute's DataType is unable to be found
+     */
+    public Attribute getOrCreateAttribute(String productCode, String attributeCode, DataType dataType) {
+        return getOrCreateAttribute(productCode, attributeCode, dataType, Map.of());
+    }
+
+    /**
+     * Create and save a new id-safe {@link Attribute} object (if it does not already exist)
+     * @param productCode - product to store attribute in
+     * @param attributeCode - attribute code of the attribute
+     * @param dataType - datatype of the attribute
+     * @param opts - extra optional flags/properties to add to the attribute. If not set, will use defaults based on the Attribute class
+     * <p>Current opts:\n
+     *  <ul>
+     *      <li>boolean privacy</li>
+     *      <li>String description</li>
+     *      <li>String help</li>
+     *      <li>String placeholder</li>
+     *      <li>String defaultValue</li>
+     *      <li>String icon</li>
+     *  </ul>
+     * </p>
+     * @return the new attribute object, or the currently existing one if found in the cache
+     * @throws ItemNotFoundException if the existing
+     */
+    public Attribute getOrCreateAttribute(String productCode, String attributeCode, DataType dataType, Map<String, String> opts) {
+        Attribute attribute;
+        try {
+            attribute = getAttribute(productCode, attributeCode, true);
+            log.trace("Found existing attribute: " + productCode + ":" + attribute.getCode() + " with id: " + attribute.getId() + ". Stopping creation");
+            return attribute;
+        } catch(ItemNotFoundException e) {
+            log.debug("Creating attribute: " + productCode + ":" + attributeCode + " using datatype: " + dataType.getDttCode());
+        }
+
+        long id = cm.getMaxAttributeId() + 1;
+        attribute = new Attribute(attributeCode, opts.getOrDefault("name", attributeCode));
+        attribute.setId(id);
+        attribute.setDataType(dataType);
+        attribute.setRealm(productCode);
+
+        // bunch of optional niceties (respecting defaults from Attribute class)
+        attribute.setDefaultPrivacyFlag(Boolean.parseBoolean(opts.getOrDefault("privacy", "true")));
+        attribute.setDescription(opts.getOrDefault("description", null));
+        attribute.setHelp(opts.getOrDefault("help", null));
+        attribute.setPlaceholder(opts.getOrDefault("placeholder", null));
+        attribute.setDefaultValue(opts.getOrDefault("defaultvalue", null));
+        attribute.setIcon(opts.getOrDefault("icon", null));
+        saveAttribute(attribute);
+        return attribute;
+    }
 
     /**
      * @param productCode
@@ -150,7 +209,7 @@ public class AttributeUtils {
             } catch(ItemNotFoundException e) {
                 log.error("DataType not found for Attribute: " + code);
                 log.error("DataType code: " + attribute.getDttCode());
-                throw e;
+                throw new ItemNotFoundException("DataType not found for attribute: " + productCode + ":" + code, e);
             }
         }
         return attribute;

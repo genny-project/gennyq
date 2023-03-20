@@ -1,6 +1,5 @@
 package life.genny.qwandaq.utils;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -10,8 +9,6 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
-import life.genny.qwandaq.entity.search.trait.Ord;
-import life.genny.qwandaq.entity.search.trait.Sort;
 import org.jboss.logging.Logger;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.attribute.Attribute;
@@ -77,7 +74,7 @@ public class DefUtils {
 	@Inject
 	AttributeUtils attributeUtils;
 
-	public DefUtils() {
+	public DefUtils() { /* no-arg constructor */
 	}
 
 	/**
@@ -87,10 +84,11 @@ public class DefUtils {
 	 * @return BaseEntity The corresponding definition {@link BaseEntity}
 	 */
 	public Definition getDEF(final BaseEntity entity) {
-		entity.setBaseEntityAttributes(beaUtils.getAllEntityAttributesForBaseEntity(entity));
 
 		if (entity == null)
 			throw new NullParameterException("entity");
+
+		entity.setBaseEntityAttributes(beaUtils.getAllEntityAttributesForBaseEntity(entity));
 
 		// save processing time on particular entities
 		if (entity.getCode().startsWith(Prefix.DEF_))
@@ -188,7 +186,7 @@ public class DefUtils {
 	 * @param answer     the answer to check
 	 * @return Boolean
 	 */
-	public Boolean answerValidForDEF(Definition definition, Answer answer) {
+	public boolean answerValidForDEF(Definition definition, Answer answer) {
 
 		if (definition == null)
 			throw new NullParameterException("definition");
@@ -200,10 +198,8 @@ public class DefUtils {
 
 		// allow if it is Capability saved to a Role
 		// TODO: Make this nicer
-		// TODO: Get rid of PRM_ ????
-		if (targetCode.startsWith(Prefix.ROL_) && attributeCode.startsWith(Prefix.PRM_)) {
-			return true;
-		} else if (targetCode.startsWith(Prefix.SBE_) && (attributeCode.startsWith(Prefix.COL_)
+		boolean isCapabilities = targetCode.startsWith(Prefix.ROL_) && attributeCode.startsWith(Prefix.CAP_);
+		if (isCapabilities || targetCode.startsWith(Prefix.SBE_) && (attributeCode.startsWith(Prefix.COL_)
 				|| attributeCode.startsWith(Prefix.SRT_) || attributeCode.startsWith(Prefix.ACT_))) {
 			return true;
 		}
@@ -265,7 +261,7 @@ public class DefUtils {
 	 * @param acvs     the attribute code value to check
 	 * @return Boolean
 	 */
-	public Boolean attributeValueValidForDEF(BaseEntity defBE, AttributeCodeValueString acvs) {
+	public boolean attributeValueValidForDEF(BaseEntity defBE, AttributeCodeValueString acvs) {
 
 		if (defBE == null) {
 			throw new NullParameterException("defBE");
@@ -279,10 +275,7 @@ public class DefUtils {
 		if (attribute == null)
 			throw new NullParameterException("attribute");
 
-		// allow if it is Capability saved to a Role
-		if (defBE.getCode().equals("DEF_ROLE") && attribute.getCode().startsWith(Prefix.PRM_)) {
-			return true;
-		} else if (defBE.getCode().equals("DEF_SEARCH")
+		if (defBE.getCode().equals("DEF_SEARCH")
 				&& (attribute.getCode().startsWith(Prefix.COL_) 
 				|| attribute.getCode().startsWith(Prefix.SRT_) || attribute.getCode().startsWith(Prefix.ACT_))) {
 			return true;
@@ -296,8 +289,7 @@ public class DefUtils {
 		}
 
 		// Now do a value validation check
-		Boolean result = qwandaUtils.validationsAreMet(attribute, acvs.getValue());
-		return result;
+		return qwandaUtils.validationsAreMet(attribute, acvs.getValue());
 	}
 
 	/**
@@ -350,6 +342,8 @@ public class DefUtils {
 						if (mergeUtils.contextsArePresent(attrValStr, ctxMap)) {
 							// TODO: mergeUtils should be taking care of this bracket replacement - Jasper
 							// (6/08/2021)
+							// TODO: God I wish we had time to fix and test this - Bryn
+							// (17/03/2023)
 							Object mergedObj = mergeUtils.wordMerge(attrValStr.replace("[[", "").replace("]]", ""),
 									ctxMap);
 							// Ensure Datatype is Correct, then set Value
