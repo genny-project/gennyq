@@ -316,7 +316,7 @@ public class BaseEntityUtils {
 			EntityAttribute entityAttribute = beaUtils.getEntityAttribute(baseEntity.getRealm(), baseEntity.getCode(), attributeCode, true);
 			return entityAttribute.getValue();
 		} catch(ItemNotFoundException e) {
-			return null;
+			throw ItemNotFoundException.general("EntityAttribute not found when fetching value: " + baseEntity.getCode() + ":" + attributeCode, e);
 		}
 	}
 
