@@ -6,6 +6,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpRequest.Builder;
+import java.net.http.HttpTimeoutException;
 import java.time.Duration;
 import java.net.http.HttpResponse;
 import javax.json.Json;
@@ -35,6 +36,7 @@ public class HttpUtils {
 	public static final String POST = "POST";
 	public static final String GET = "GET";
 	public static final String DELETE = "DELETE";
+	public static final int HTTP_REQUEST_TIMEOUT_MILLIS = 5000;
 
 	public static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(2);
 
@@ -74,7 +76,7 @@ public class HttpUtils {
 				.build();
 
 		try {
-			return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+			return getNewHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 		} catch (IOException | InterruptedException e) {
 			GennyResponseException.newBuilder(uri)
 					.setRequestBody(body)
@@ -157,10 +159,23 @@ public class HttpUtils {
 		HttpRequest request = requestBuilder
 				.POST(HttpRequest.BodyPublishers.ofString(body))
 				.build();
-		
+
+		long start = System.currentTimeMillis();
 		try {
-			return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-		} catch (IOException | InterruptedException e) {
+			return getNewHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+		} catch (HttpTimeoutException e) {
+			long end = System.currentTimeMillis();
+			log.errorf("$$$$$$$$$$$$$ HttpTimeoutException - request timed out after %s millis", end - start);
+			GennyResponseException.newBuilder(uri)
+					.setRequestBody(body)
+					.setToken(token)
+					.setRequestType(POST)
+					.includeRequest(request)
+					.setAssociatedException(e)
+					.build()
+					.printStackTrace();
+		}
+		catch (IOException | InterruptedException e) {
 			GennyResponseException.newBuilder(uri)
 					.setRequestBody(body)
 					.setToken(token)
@@ -205,7 +220,7 @@ public class HttpUtils {
 				.GET().build();
 
 		try {
-			return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+			return getNewHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 		} catch (IOException | InterruptedException e) {
 			GennyResponseException.newBuilder(uri)
 					.setToken(token)
@@ -217,6 +232,27 @@ public class HttpUtils {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Create a new HttpClient using HttpClient.Builder with default request timeout value.
+	 *
+	 * @return The newly created HttpClient object.
+	 */
+	public static HttpClient getNewHttpClient() {
+		return getNewHttpClient(HTTP_REQUEST_TIMEOUT_MILLIS);
+	}
+
+	/**
+	 * Create a new HttpClient using HttpClient.Builder with the passed request timeout value.
+	 *
+	 * @param timeoutInMillis The request timeout value in milliseconds
+	 * @return The newly created HttpClient object.
+	 */
+	public static HttpClient getNewHttpClient(long timeoutInMillis) {
+		return HttpClient.newBuilder()
+				.connectTimeout(Duration.ofMillis(timeoutInMillis))
+				.build();
 	}
 
 	/**
@@ -250,7 +286,7 @@ public class HttpUtils {
 				.DELETE().build();
 
 		try {
-			return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
+			return getNewHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 		} catch (IOException | InterruptedException e) {
 			GennyResponseException.newBuilder(uri)
 					.setToken(token)
