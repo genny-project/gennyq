@@ -219,10 +219,12 @@ public class GennyCache {
 	 * @return The persistable core entity
 	 */
 	public CoreEntityPersistable getPersistableEntityFromCache(String cacheName, CoreEntityKey key) {
+		log.infof("$$$$$$$$$$$$$$$$ Getting remote cache for entity %s", cacheName);
 		RemoteCache<CoreEntityKey, CoreEntityPersistable> cache = getRemoteCacheForEntity(cacheName);
 		if (cache == null) {
 			throw new NullPointerException("Could not find a cache called " + cacheName);
 		}
+		log.infof("$$$$$$$$$$$$$$$$ Getting value from cache for entity %s & key %s", cacheName);
 		return cache.get(key);
 	}
 
