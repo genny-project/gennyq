@@ -205,9 +205,6 @@ public class TaskService extends KogitoService {
 			return processData;
 		}
 
-		// send data to FE
-		dispatch.sendData(msg);
-
 		// update cached process data
 		qwandaUtils.storeProcessData(processData);
 
@@ -266,24 +263,4 @@ public class TaskService extends KogitoService {
 		navigationService.redirect();
 	}
 
-	/**
-	 * Disable buttons if it is not valid data
-	 * @param processData Process Data
-	 */
-	public void disableButtons(ProcessData processData) {
-		Set<Ask> asks = qwandaUtils.fetchAsks(processData);
-		Map<String, Ask> flatMapOfAsks = QwandaUtils.buildAskFlatMap(asks);
-
-		for (String event : Dispatch.BUTTON_EVENTS) {
-			Ask evt = flatMapOfAsks.get(event);
-			if (evt != null)
-				evt.setDisabled(true);
-		}
-
-		QDataAskMessage msg = new QDataAskMessage(asks);
-		msg.setReplace(true);
-		msg.setToken(userToken.getToken());
-
-		KafkaUtils.writeMsg(KafkaTopic.WEBCMDS, msg);
-	}
 }
