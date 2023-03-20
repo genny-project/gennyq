@@ -202,8 +202,6 @@ public class TaskService extends KogitoService {
 
 		//check duplicate records
 		if (!processAnswers.checkUniqueness(processData)) {
-			disableButtons(processData);
-
 			return processData;
 		}
 
