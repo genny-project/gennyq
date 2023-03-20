@@ -60,7 +60,6 @@ public class InitService extends KogitoService {
 	 * Send the User.
 	 */
 	public void sendUser() {
-
 		String userCode = userToken.getUserCode();
 		String productCode = userToken.getProductCode();
 
@@ -68,9 +67,9 @@ public class InitService extends KogitoService {
 		BaseEntity user = beUtils.getBaseEntity(userCode);
 		EntityAttribute name = new EntityAttribute(user, attributeUtils.getAttribute(Attribute.PRI_NAME, true), 1.0, user.getName());
 		user.addAttribute(name);
-		EntityAttribute firstName = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_FIRSTNAME, true, true);
+		EntityAttribute firstName = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_FIRSTNAME);
 		user.addAttribute(firstName);
-		EntityAttribute lastName = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_LASTNAME, true, true);
+		EntityAttribute lastName = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_LASTNAME);
 		user.addAttribute(lastName);
 
 		// configure msg and send
