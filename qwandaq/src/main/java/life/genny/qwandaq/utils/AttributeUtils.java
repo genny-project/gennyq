@@ -11,6 +11,7 @@ import life.genny.qwandaq.serialization.attribute.AttributeKey;
 import life.genny.qwandaq.serialization.datatype.DataTypeKey;
 import life.genny.qwandaq.serialization.validation.ValidationKey;
 import life.genny.qwandaq.validation.Validation;
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -273,6 +274,9 @@ public class AttributeUtils {
      */
     public List<Validation> getValidationList(DataType dataType) {
         String validationCodes = dataType.getValidationCodes();
+        if (StringUtils.isBlank(validationCodes)) {
+            return Collections.EMPTY_LIST;
+        }
         // Fire ickle query only in the case of multiple validation codes
         if(validationCodes.contains(",")) {
             return cm.getValidations(dataType.getRealm(), validationCodes);
