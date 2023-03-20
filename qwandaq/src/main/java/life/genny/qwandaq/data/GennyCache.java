@@ -191,7 +191,9 @@ public class GennyCache {
 	 */
 	public RemoteCache<CoreEntityKey, CoreEntityPersistable> getRemoteCacheForEntity(final String entityName) {
 		if (remoteCacheManager == null) {
+			log.infof("$$$$$$$$$$$$$$$$ Initializing remote cache...");
 			initRemoteCacheManager();
+			log.infof("$$$$$$$$$$$$$$$$ Initializing remote cache complete");
 		}
 		return remoteCacheManager.getCache(entityName);
 	}
@@ -224,7 +226,7 @@ public class GennyCache {
 		if (cache == null) {
 			throw new NullPointerException("Could not find a cache called " + cacheName);
 		}
-		log.infof("$$$$$$$$$$$$$$$$ Getting value from cache for entity %s & key %s", cacheName);
+		log.infof("$$$$$$$$$$$$$$$$ Getting value from cache for entity %s & key %s", cacheName, key);
 		return cache.get(key);
 	}
 
