@@ -5,7 +5,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 import life.genny.qwandaq.exception.GennyRuntimeException;
-import life.genny.qwandaq.utils.LogUtils;
 
 public class GennyResponseException extends GennyRuntimeException {
     
@@ -27,6 +26,7 @@ public class GennyResponseException extends GennyRuntimeException {
     
     public GennyResponseException(String uri) {
         super("Error with response from uri: " + uri);
+        this.uri = uri;
     }
 
     @Override
