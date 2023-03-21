@@ -242,7 +242,15 @@ public class SearchUtils {
 				continue;
 			}
 
-			Object wordMerge = mergeUtils.wordMerge((String) clause.getFilter().getValue(), ctxMap);
+			String filterVal = (String) clause.getFilter().getValue();
+
+			Object wordMerge = mergeUtils.wordMerge(filterVal, ctxMap);
+			if(wordMerge instanceof String wordString) {
+				if(StringUtils.isBlank(wordString)) {
+					log.debug("Could not merge: " + filterVal);
+					continue;
+				}
+			}
 			log.debug("Inserting " + wordMerge + " into " + clause.getFilter().getValue());
 			clause.getFilter().setValue(wordMerge);
 		}
