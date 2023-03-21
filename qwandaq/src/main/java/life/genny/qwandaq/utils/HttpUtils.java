@@ -76,12 +76,11 @@ public class HttpUtils {
 		try {
 			return getNewHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 		} catch (IOException | InterruptedException e) {
-			GennyResponseException.newBuilder(uri)
+			GennyResponseException.newBuilder(uri, e)
 					.setRequestBody(body)
 					.setToken(token)
 					.setRequestType(PUT)
 					.includeRequest(request)
-					.setAssociatedException(e)
 					.build()
 					.printStackTrace();
 		}
@@ -164,22 +163,20 @@ public class HttpUtils {
 		} catch (HttpTimeoutException e) {
 			long end = System.currentTimeMillis();
 			log.errorf("$$$$$$$$$$$$$ HttpTimeoutException - request timed out after %s millis", end - start);
-			GennyResponseException.newBuilder(uri)
+			GennyResponseException.newBuilder(uri, e)
 					.setRequestBody(body)
 					.setToken(token)
 					.setRequestType(POST)
 					.includeRequest(request)
-					.setAssociatedException(e)
 					.build()
 					.printStackTrace();
 		}
 		catch (IOException | InterruptedException e) {
-			GennyResponseException.newBuilder(uri)
+			GennyResponseException.newBuilder(uri, e)
 					.setRequestBody(body)
 					.setToken(token)
 					.setRequestType(POST)
 					.includeRequest(request)
-					.setAssociatedException(e)
 					.build()
 					.printStackTrace();
 		}
@@ -220,11 +217,10 @@ public class HttpUtils {
 		try {
 			return getNewHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 		} catch (IOException | InterruptedException e) {
-			GennyResponseException.newBuilder(uri)
+			GennyResponseException.newBuilder(uri, e)
 					.setToken(token)
 					.setRequestType(GET)
 					.includeRequest(request)
-					.setAssociatedException(e)
 					.build()
 					.printStackTrace();
 		}
@@ -286,11 +282,10 @@ public class HttpUtils {
 		try {
 			return getNewHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
 		} catch (IOException | InterruptedException e) {
-			GennyResponseException.newBuilder(uri)
+			GennyResponseException.newBuilder(uri, e)
 					.setToken(token)
 					.setRequestType(DELETE)
 					.includeRequest(request)
-					.setAssociatedException(e)
 					.build()
 					.printStackTrace();
 		}

@@ -21,8 +21,11 @@ public class GennyResponseException extends GennyRuntimeException {
     HttpResponse<?> response;
 
     int statusCode;
-
-    Exception associatedException;
+    
+    public GennyResponseException(String uri, Throwable cause) {
+        super("Error with response from uri: " + uri, cause);
+        this.uri = uri;
+    }
     
     public GennyResponseException(String uri) {
         super("Error with response from uri: " + uri);
@@ -42,11 +45,7 @@ public class GennyResponseException extends GennyRuntimeException {
 		if (requestHeaders != null) {
 			log.debug("======== RESPONSE HEADERS ===========");
 		}
-        if (associatedException != null) {
-            log.info("======== Associated Exception Start ===========");
-            associatedException.printStackTrace();
-            log.info("======== Associated Exception End ===========");
-        }
+        
         super.printStackTrace();
     }
 
@@ -54,16 +53,19 @@ public class GennyResponseException extends GennyRuntimeException {
         return new Builder(uri);
     }
 
+    public static Builder newBuilder(String uri, Throwable cause) {
+        return new Builder(uri, cause);
+    }
+
     public static class Builder {
         private GennyResponseException exception;
 
-        public Builder(String uri) {
-            exception = new GennyResponseException(uri);
+        public Builder(String uri, Throwable cause) {
+            exception = new GennyResponseException(uri, cause);
         }
 
-        public Builder setAssociatedException(Exception e) {
-            exception.associatedException = e;
-            return this;
+        public Builder(String uri) {
+            exception = new GennyResponseException(uri);
         }
 
         public Builder setHttpResponse(HttpResponse<?> response) {
