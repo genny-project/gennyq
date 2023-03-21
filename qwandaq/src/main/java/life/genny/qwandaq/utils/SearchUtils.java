@@ -243,7 +243,7 @@ public class SearchUtils {
 			}
 
 			String filterVal = (String) clause.getFilter().getValue();
-
+			filterVal = filterVal.replace("[[", "").replace("]]", "");
 			Object wordMerge = mergeUtils.wordMerge(filterVal, ctxMap);
 			if(wordMerge instanceof String wordString) {
 				if(StringUtils.isBlank(wordString)) {
