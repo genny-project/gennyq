@@ -71,18 +71,6 @@ public class GoogleSheetBuilder {
 
     public GoogleSheetBuilder() { }
 
-    /**
-	 * Convert a String to a Boolean
-	 *
-     * @param booleanString
-     * @return Boolean or null.
-     */
-    public static boolean toBoolean(final String booleanString) {
-        if (StringUtils.isBlank(booleanString)) {
-            return false;
-        }
-        return "TRUE".equalsIgnoreCase(booleanString);
-    }
 
     /**
 	 * Convert a String to a Double
@@ -202,7 +190,7 @@ public class GoogleSheetBuilder {
         String name = row.get("name");
 
 		// Ensure valid datatype exists
-		validator.validateAttribute(row, realmName);
+		DataType datatype = (DataType) validator.validateAttribute(row, realmName).get(DataType.class);
 
 		Attribute attribute;
 		try {
@@ -211,13 +199,11 @@ public class GoogleSheetBuilder {
 		} catch(ItemNotFoundException e) {
 			log.trace("[!] Creating new Attribute: " + code);
 			// create new attribute if not found
-			attribute = new Attribute();
-			attribute.setCode(code);
-			attribute.setName(name);
+			attribute = new Attribute(code, name);
 		}
-		boolean privacy = toBoolean(row.get("privacy"));
+		boolean privacy = Boolean.parseBoolean(row.get("privacy"));
 		
-		attribute.setDttCode(row.get("datatype"));
+		attribute.setDttCode(datatype.getDttCode());
         attribute.setDefaultPrivacyFlag(privacy);
         attribute.setDescription(row.get("description"));
         attribute.setHelp(row.get("help"));
@@ -267,12 +253,12 @@ public class GoogleSheetBuilder {
         Integer valueInt = toInt(row.get(VALUEINTEGER));
         Long valueLong = toLong(row.get(VALUELONG));
         Double valueDouble = toDouble(row.get(VALUEDOUBLE));
-        boolean valueBoolean = toBoolean(row.get(VALUEBOOLEAN));
+        boolean valueBoolean = Boolean.parseBoolean(row.get(VALUEBOOLEAN));
 
         Double weight = toDouble(row.get(WEIGHT));
 
-        boolean privacy = toBoolean(row.get(PRIVACY));
-        boolean confirmation = toBoolean(row.get(CONFIRMATION));
+        boolean privacy = Boolean.parseBoolean(row.get(PRIVACY));
+        boolean confirmation = Boolean.parseBoolean(row.get(CONFIRMATION));
 
 		entityAttribute.setValueString(valueString);
 		entityAttribute.setValueInteger(valueInt);
@@ -310,8 +296,8 @@ public class GoogleSheetBuilder {
         String name = row.get("name");
         String html = row.get("html");
         String placeholder = row.get("placeholder");
-        boolean readonly = toBoolean(row.get(READONLY));
-        boolean mandatory = toBoolean(row.get(MANDATORY));
+        boolean readonly = Boolean.parseBoolean(row.get(READONLY));
+        boolean mandatory = Boolean.parseBoolean(row.get(MANDATORY));
         String icon = row.get("icon");
 
 		question.setName(name);
@@ -340,12 +326,12 @@ public class GoogleSheetBuilder {
 		Question child = (Question) dependencies.get(Validator.KEY_CHILD);
 
         Double weight = toDouble(row.get(WEIGHT));
-        boolean mandatory = toBoolean(row.get(MANDATORY));
-        boolean readonly = toBoolean(row.get(READONLY));
+        boolean mandatory = Boolean.parseBoolean(row.get(MANDATORY));
+        boolean readonly = Boolean.parseBoolean(row.get(READONLY));
 
         String icon = row.get("icon");
-        boolean disabled = toBoolean(row.get("disabled"));
-        boolean hidden = toBoolean(row.get("hidden"));
+        boolean disabled = Boolean.parseBoolean(row.get("disabled"));
+        boolean hidden = Boolean.parseBoolean(row.get("hidden"));
 
 		QuestionQuestion questionQuestion = new QuestionQuestion();
 		questionQuestion.setParentCode(parent.getCode());

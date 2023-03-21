@@ -56,7 +56,6 @@ import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.exception.runtime.QueryBuilderException;
-import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.Page;
 import life.genny.qwandaq.models.UserToken;
@@ -74,9 +73,6 @@ public class FyodorUltra {
 
 	@Inject
 	EntityManager entityManager;
-
-	@Inject
-	private CacheManager cm;
 
 	@Inject
 	BaseEntityUtils beUtils;
@@ -113,6 +109,7 @@ public class FyodorUltra {
 		for (BaseEntity baseEntity : page.getItems()) {
 			baseEntity.setIndex(index);
 			beUtils.addNonLiteralAttributes(baseEntity);
+			List<String[]> missedCodes = new ArrayList<>(allowed.size());
 			for (String attributeCode : allowed) {
 				EntityAttribute ea = null;
 				if (attributeCode.startsWith("_")) {
@@ -139,12 +136,22 @@ public class FyodorUltra {
 						ea.setValueDateTime(baseEntity.getCreated());
 					}
 					else {
-						ea = beaUtils.getEntityAttribute(baseEntity.getRealm(), baseEntity.getCode(), attributeCode, true, true);
+						try {
+							ea = beaUtils.getEntityAttribute(baseEntity.getRealm(), baseEntity.getCode(), attributeCode, true, true);
+						} catch (ItemNotFoundException e) {
+							missedCodes.add(new String[] {attributeCode, e.getMessage()});
+						}
 					}
 				}
 				if (ea != null) {
 					baseEntity.addAttribute(ea);
-				}
+				} else 
+					missedCodes.add(new String[] {attributeCode, "Entity Attribute is null after processing"});
+			}
+
+			if(!missedCodes.isEmpty() && log.isTraceEnabled()) {
+				String missedCodeStr = CommonUtils.getArrayString(missedCodes, (code) -> code[0]);
+				log.trace("Could not find in BE: " + baseEntity.getCode() + ": " + missedCodeStr);
 			}
 		}
 

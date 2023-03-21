@@ -177,6 +177,9 @@ public class CommonUtils {
      * @return a JSON style array of object
      */
     public static <T> String getArrayString(T[] arr) {
+        if(arr == null || arr.length == 0) {
+            return STR_ARRAY_EMPTY;
+        }
         return getArrayString(arr, (item) -> {
             return item != null ? item.toString() : "null";
         });
@@ -252,7 +255,6 @@ public class CommonUtils {
         return instance;
     }
 
-
     /**
      * Get a String Array of A JSONified String Array
      * @param arrayString - the JSONified String Array
@@ -271,8 +273,6 @@ public class CommonUtils {
     public static String[] getArrayFromString(String arrayString) {
         return getArrayFromString(arrayString, Object::toString);
     }
-
-    
 
     /**
      * Get a String Array of A JSONified String Array

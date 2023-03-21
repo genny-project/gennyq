@@ -211,20 +211,12 @@ public class BaseEntityService extends KogitoService {
 	 * Merge a process entity into another entity
 	 */
 	public void mergeFromProcessEntity(String entityCode, ProcessData processData) {
-
 		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
-		BaseEntity entity = beUtils.getBaseEntity(entityCode);
-
 		// iterate our stored process updates and create an answer
-		for (EntityAttribute ea : beaUtils.getAllEntityAttributesForBaseEntity(processEntity)) {
-			Attribute attribute = attributeUtils.getAttribute(ea.getAttributeCode(), true);
-			ea.setAttribute(attribute);
-			ea.setBaseEntityCode(entity.getCode());
-			entity.addAttribute(ea);
+		for (EntityAttribute ea : processEntity.getBaseEntityAttributes()) {
+			ea.setBaseEntityCode(entityCode);
+			beaUtils.updateEntityAttribute(ea);
 		}
-
-		// save these answrs to db and cache
-		beUtils.updateBaseEntity(entity);
 		log.info("Saved answers for entity " + entityCode);
 	}
 

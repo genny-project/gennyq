@@ -1,6 +1,13 @@
 package life.genny.kogito.common.service;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -8,20 +15,14 @@ import javax.inject.Inject;
 import life.genny.qwandaq.datatype.DataType;
 import org.jboss.logging.Logger;
 
-import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
-import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
-import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.kafka.KafkaTopic;
-import life.genny.qwandaq.managers.CacheManager;
-import life.genny.qwandaq.message.QDataAskMessage;
 import life.genny.qwandaq.message.QDataAttributeMessage;
 import life.genny.qwandaq.message.QDataBaseEntityMessage;
-import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.*;
 
 /**
@@ -34,23 +35,11 @@ import life.genny.qwandaq.utils.*;
 public class InitService extends KogitoService {
 
 	@Inject
-	private BaseEntityUtils beUtils;
-
-	@Inject
-	private UserToken userToken;
-
-	@Inject
-	private QwandaUtils qwandaUtils;
-
-	@Inject
-	CacheManager cacheManager;
-
-	@Inject
 	Logger log;
 
-	private static List<List<Attribute>> batchedAttributesList = new LinkedList<>();
+	private static Map<String, List<Set<Attribute>>> batchedAttributesListPerProduct = new ConcurrentHashMap<>();
 
-	private static Long attributesLastUpdatedAt = Long.valueOf(0);
+	private static Map<String, Long> attributesLastFetchedAtPerProduct = new ConcurrentHashMap<>();
 
 	/**
 	 * Send the Project BaseEntity.
@@ -71,7 +60,6 @@ public class InitService extends KogitoService {
 	 * Send the User.
 	 */
 	public void sendUser() {
-
 		String userCode = userToken.getUserCode();
 		String productCode = userToken.getProductCode();
 
@@ -79,9 +67,9 @@ public class InitService extends KogitoService {
 		BaseEntity user = beUtils.getBaseEntity(userCode);
 		EntityAttribute name = new EntityAttribute(user, attributeUtils.getAttribute(Attribute.PRI_NAME, true), 1.0, user.getName());
 		user.addAttribute(name);
-		EntityAttribute firstName = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_FIRSTNAME, true, true);
+		EntityAttribute firstName = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_FIRSTNAME);
 		user.addAttribute(firstName);
-		EntityAttribute lastName = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_LASTNAME, true, true);
+		EntityAttribute lastName = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_LASTNAME);
 		user.addAttribute(lastName);
 
 		// configure msg and send
@@ -99,26 +87,26 @@ public class InitService extends KogitoService {
 	public void sendAllAttributes() {
 		log.info("Sending Attributes for " + userToken.getProductCode());
 		String productCode = userToken.getProductCode();
+		Long attributesUpdatedAt = attributeUtils.getAttributesLastUpdatedAt(productCode);
+		Long attributesLastFetchedAt = attributesLastFetchedAtPerProduct.get(productCode);
+		List<Set<Attribute>> batchedAttributesList = batchedAttributesListPerProduct.get(productCode);
+		if (attributesUpdatedAt == null || attributesLastFetchedAt == null ||
+				attributesLastFetchedAt.compareTo(attributesUpdatedAt) < 0 ||
+				batchedAttributesList == null || batchedAttributesList.isEmpty()) {
+			cacheAttributesLocallyAndDispatch(productCode);
+			attributesLastFetchedAtPerProduct.put(productCode, attributesUpdatedAt);
+		} else {
+			log.debugf("No change to attributes since previous read. Sending out the locally cached batch of attributes");
+			dispatchLocallyCachedAttributes(batchedAttributesList);
+		}
+	}
 
-		/*Long attributesUpdatedAt = attributeUtils.getAttributesLastUpdatedAt();
-		if (this.attributesLastUpdatedAt.compareTo(attributesUpdatedAt) >= 0) {
-			log.debugf("No change to attributes since previous read. Sending out the locally cached batch of attributes...");
-			long start = System.nanoTime();
-			int batchNum = 0;
-			for (List<Attribute> attributesBatch : batchedAttributesList) {
-				dispatchAttributesToKafka(attributesBatch, batchNum++, batchedAttributesList.size());
-			}
-			long end = System.nanoTime();
-			log.debugf("Time taken to send out the locally cached batch of attributes: %s (nanos)", end-start);
-			return;
-		}*/
-
+	private void cacheAttributesLocallyAndDispatch(String productCode) {
 		long start = System.nanoTime();
 		Collection<Attribute> allAttributes = attributeUtils.getAttributesForProduct(productCode);
 		long end = System.nanoTime();
 		log.debugf("Time taken to read all attributes: %s (nanos)", end-start);
 
-		batchedAttributesList.clear();
 		int BATCH_SIZE = 500;
 		int count = 0;
 		int batchNum = 1;
@@ -127,13 +115,11 @@ public class InitService extends KogitoService {
 		if (totalAttributesCount % BATCH_SIZE != 0) {
 			totalBatches++;
 		}
-		log.infof("%s Attribute(s) to be sent in %s batch(es).", totalAttributesCount, totalBatches);
-		List<Attribute> attributesBatch = new LinkedList<>();
+		List<Set<Attribute>> batchedAttributesList = new CopyOnWriteArrayList<>();
+		Set<Attribute> attributesBatch = new CopyOnWriteArraySet<>();
 		for(Attribute attribute : allAttributes) {
-			if (attribute == null)
-				continue;
-			String attributeCode = attribute.getCode();
-			if (attributeCode.startsWith(Prefix.CAP_)) {
+			if (attribute == null || attribute.getCode().startsWith(Prefix.CAP_)) {
+				totalAttributesCount--;
 				continue;
 			}
 			// see if dtt exists
@@ -141,43 +127,55 @@ public class InitService extends KogitoService {
 				DataType dataType = attributeUtils.getDataType(attribute, true);
 				attribute.setDataType(dataType);
 			} catch (ItemNotFoundException e) {
-				e.printStackTrace();
+				log.errorf("Error fetching data type [dttcode:%s] for attribute [%s:%s]", attribute.getDttCode(), attribute.getRealm(), attribute.getCode());
+				totalAttributesCount--;
 				continue;
 			}
 			attributesBatch.add(attribute);
 			count++;
 			if (count == BATCH_SIZE) {
-				dispatchAttributesToKafka(attributesBatch, batchNum, totalBatches);
-				attributesBatch.clear();
+				dispatchAttributesToKafka(attributesBatch, "ATTRIBUTE_MESSAGE_BATCH_" + batchNum + "_OF_" + totalBatches);
+				batchedAttributesList.add(attributesBatch);
 				count = 0;
 				batchNum++;
-				batchedAttributesList.add(attributesBatch);
+				attributesBatch = new HashSet<>();
 			}
 		}
 		// Dispatch the last batch, if any
 		if (!attributesBatch.isEmpty()) {
-			dispatchAttributesToKafka(attributesBatch, batchNum, totalBatches);
+			dispatchAttributesToKafka(attributesBatch, "ATTRIBUTE_MESSAGE_BATCH_" + batchNum + "_OF_" + totalBatches);
 		}
 		end = System.nanoTime();
+		log.infof("%s Attribute(s) dispatched in %s batch(es).", totalAttributesCount, totalBatches);
 		log.debugf("Total time taken to send out the attributes (for the first time): %s (nanos)", end-start);
 		batchedAttributesList.add(attributesBatch);
-		// this.attributesLastUpdatedAt = attributesUpdatedAt;
+		batchedAttributesListPerProduct.put(productCode, batchedAttributesList);
+	}
+
+	private void dispatchLocallyCachedAttributes(List<Set<Attribute>> batchedAttributesList) {
+		long start = System.nanoTime();
+		int batchNum = 1;
+		for (Set<Attribute> attributesBatch : batchedAttributesList) {
+			dispatchAttributesToKafka(attributesBatch, "ATTRIBUTE_MESSAGE_BATCH_" + batchNum + "_OF_" + batchedAttributesList.size());
+			batchNum++;
+		}
+		long end = System.nanoTime();
+		log.debugf("Time taken to send out the locally cached batch of attributes: %s (nanos)", end-start);
 	}
 
 	/**
 	 * Dispatch a batch of attributes.
 	 *
 	 * @param attributesBatch
-	 * @param batchNum
-	 * @param totalBatches
+	 * @param aliasCode
 	 */
-	private void dispatchAttributesToKafka(List<Attribute> attributesBatch, int batchNum, int totalBatches) {
+	private void dispatchAttributesToKafka(Set<Attribute> attributesBatch, String aliasCode) {
 		QDataAttributeMessage msg = new QDataAttributeMessage();
 		msg.add(attributesBatch);
 		msg.setItems(attributesBatch);
 		// set token and send
 		msg.setToken(userToken.getToken());
-		msg.setAliasCode("ATTRIBUTE_MESSAGE_BATCH_" + batchNum + "_OF_" + totalBatches);
+		msg.setAliasCode(aliasCode);
 		KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
 	}
 

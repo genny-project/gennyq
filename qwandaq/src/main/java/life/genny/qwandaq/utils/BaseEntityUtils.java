@@ -306,11 +306,12 @@ public class BaseEntityUtils {
 
 	@Nullable
 	private <T> T getAttributeValue(BaseEntity baseEntity, String attributeCode) {
-		EntityAttribute entityAttribute = beaUtils.getEntityAttribute(baseEntity.getRealm(), baseEntity.getCode(), attributeCode, true);
-		if (entityAttribute == null) {
-			return null;
+		try {
+			EntityAttribute entityAttribute = beaUtils.getEntityAttribute(baseEntity.getRealm(), baseEntity.getCode(), attributeCode, true);
+			return entityAttribute.getValue();
+		} catch(ItemNotFoundException e) {
+			throw ItemNotFoundException.general("EntityAttribute not found when fetching value: " + baseEntity.getCode() + ":" + attributeCode, e);
 		}
-		return entityAttribute.getValue();
 	}
 
 	/**
@@ -458,11 +459,11 @@ public class BaseEntityUtils {
 			updated.setValueDateTime(entity.getUpdated());
 			entity.addAttribute(updated);
 
-		// last updated date
-		Attribute updatedDateAttr = new Attribute(PRI_UPDATED_DATE, "Updated", new DataType(LocalDate.class));
-		EntityAttribute updatedDate = new EntityAttribute(entity, updatedDateAttr, 1.0, null);
-		updatedDate.setValueDate(entity.getUpdated().toLocalDate());
-		entity.addAttribute(updatedDate);
+			// last updated date
+			Attribute updatedDateAttr = new Attribute(PRI_UPDATED_DATE, "Updated", new DataType(LocalDate.class));
+			EntityAttribute updatedDate = new EntityAttribute(entity, updatedDateAttr, 1.0, null);
+			updatedDate.setValueDate(entity.getUpdated().toLocalDate());
+			entity.addAttribute(updatedDate);
 		} catch (NullPointerException e) {
 			log.error("NPE for PRI_UPDATED");
 		}
@@ -576,17 +577,22 @@ public class BaseEntityUtils {
 				newEA.setRealm(userToken.getProductCode());
 				log.info("Adding mandatory/default -> " + attribute.getCode());
 				item.addAttribute(newEA);
+				beaUtils.updateEntityAttribute(newEA);
 			}
 		}
 
 		Attribute linkDef = attributeUtils.getAttribute(Attribute.LNK_DEF, true);
-		item.addAttribute(new EntityAttribute(item, linkDef, 1.0, "[\"" + definitionCode + "\"]"));
+		EntityAttribute linkDefEA = new EntityAttribute(item, linkDef, 1.0, "[\"" + definitionCode + "\"]");
+		item.addAttribute(linkDefEA);
+		beaUtils.updateEntityAttribute(linkDefEA);
 
 		// author of the BE
 		Attribute lnkAuthorAttr = attributeUtils.getAttribute(Attribute.LNK_AUTHOR, true);
-		item.addAttribute(new EntityAttribute(item, lnkAuthorAttr, 1.0, "[\"" + userToken.getUserCode() + "\"]"));
+		EntityAttribute linkAuthorEA = new EntityAttribute(item, lnkAuthorAttr, 1.0, "[\"" + userToken.getUserCode() + "\"]");
+		item.addAttribute(linkAuthorEA);
+		beaUtils.updateEntityAttribute(linkAuthorEA);
 
-		updateBaseEntity(item, true);
+		updateBaseEntity(item, false);
 
 		return item;
 	}

@@ -13,6 +13,7 @@ import javax.json.JsonArray;
 import javax.json.JsonObject;
 import javax.json.JsonReader;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
@@ -115,7 +116,7 @@ public class MergeUtils {
 	 */
 	public Object wordMerge(String mergeText, Map<String, Object> entitymap) {
 
-		if (mergeText == null || mergeText.isEmpty())
+		if (StringUtils.isBlank(mergeText))
 			return DEFAULT;
 
 		// we split the text to merge into 2 components: BE.PRI... becomes [BE, PRI...]
@@ -227,7 +228,7 @@ public class MergeUtils {
 	* @param templateEntityMap the mergeStr to check contexts with
 	* @return Boolean
 	 */
-	public Boolean contextsArePresent(String mergeStr, Map<String, Object> templateEntityMap) {
+	public boolean contextsArePresent(String mergeStr, Map<String, Object> templateEntityMap) {
 		
 		if (mergeStr != null) {
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 TAG=$1
 
-for project in gadaq bridge fyodor dropkick lauchy messages shleemy
+for project in gadaq bridge fyodor dropkick lauchy messages
 do
     echo "Pushing $project"
 	docker push gennyproject/${project}:${TAG} 
