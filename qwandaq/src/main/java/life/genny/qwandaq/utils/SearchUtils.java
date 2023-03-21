@@ -2,6 +2,7 @@ package life.genny.qwandaq.utils;
 
 import java.net.http.HttpResponse;
 import java.util.List;
+import java.util.Map;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -9,12 +10,14 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.ws.rs.core.Response;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.search.SearchEntity;
+import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.DebugException;
 import life.genny.qwandaq.kafka.KafkaTopic;
@@ -56,6 +59,9 @@ public class SearchUtils {
 
 	@Inject
 	UserToken userToken;
+
+	@Inject
+	MergeUtils mergeUtils;
 
 	@Inject
 	CacheManager cm;
@@ -222,6 +228,26 @@ public class SearchUtils {
 	 */
 	public void sendFilterQuestions(SearchEntity searchBE) {
 		log.error("Function not complete!");
+	}
+
+	public SearchEntity mergeFilterValues(SearchEntity searchBE, Map<String, Object> ctxMap) {
+		List<ClauseContainer> clauses = searchBE.getClauseContainers();
+		if(clauses.isEmpty())
+			return searchBE;
+
+		// For each perform word merge
+		log.debug("Performing merges for Search Entity: " + searchBE.getCode());
+		for(ClauseContainer clause : clauses) {
+			if(clause.getFilter() == null || !String.class.equals(clause.getFilter().getC())) {
+				continue;
+			}
+
+			Object wordMerge = mergeUtils.wordMerge((String) clause.getFilter().getValue(), ctxMap);
+			log.debug("Inserting " + wordMerge + " into " + clause.getFilter().getValue());
+			clause.getFilter().setValue(wordMerge);
+		}
+
+		return searchBE;
 	}
 
 	/**

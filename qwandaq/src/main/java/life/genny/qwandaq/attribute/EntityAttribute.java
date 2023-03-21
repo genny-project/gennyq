@@ -42,6 +42,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.handler.AttributeMinIOHandler;
 import life.genny.qwandaq.intf.ICapabilityHiddenFilterable;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
+import life.genny.qwandaq.utils.CommonUtils;
 
 public class EntityAttribute implements CoreEntityPersistable, ICapabilityHiddenFilterable, Comparable<Object> {
 
@@ -699,6 +700,8 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 				} catch (Exception e) {
 					log.error("Conversion Error :" + value + " for attribute " + attribute + " and SourceCode:"
 							+ this.baseEntityCode);
+					log.error(e.getClass().getName() + ":" + e.getMessage());
+					CommonUtils.printCollection(e.getStackTrace());
 				}
 			} else {
 

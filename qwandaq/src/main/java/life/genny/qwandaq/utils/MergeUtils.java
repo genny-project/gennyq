@@ -269,7 +269,7 @@ public class MergeUtils {
 
 		if (mergeStr == null) {
 			log.warn("mergeStr is NULL");
-			return null;
+			return false;
 		}
 
 		Matcher match = PATTERN_MATCHER.matcher(mergeStr);

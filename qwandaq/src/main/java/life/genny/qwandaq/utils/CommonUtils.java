@@ -23,6 +23,8 @@ import life.genny.qwandaq.utils.callbacks.FILogCallback;
 public class CommonUtils {
 	static final Logger log = Logger.getLogger(CommonUtils.class);
 
+    private static final FILogCallback DEFAULT_LOG = log::info;
+
     public static final String STR_ARRAY_EMPTY = "[]";
 
     private CommonUtils() {/* utilities class */}
@@ -75,6 +77,26 @@ public class CommonUtils {
         }
     }
 
+    public static <T> void printCollection(T[] collection, FILogCallback logCallback) {
+        printCollection(collection, logCallback, Object::toString);
+    }
+
+    public static <T> void printCollection(T[] collection, FIGetStringCallBack<T> getStringCallback) {
+        printCollection(collection, DEFAULT_LOG, getStringCallback);
+    }
+
+    public static <T> void printCollection(T[] collection) {
+        printCollection(collection, DEFAULT_LOG, Object::toString);
+    }
+
+    public static <T> void printCollection(T[] collection, int startIndex, int endIndex) {
+
+    }
+
+    public static <T> void printCollection(T[] collection, int startIndex) {
+        printCollection(collection, startIndex);
+    }
+
     public static <T>void printCollection(Collection<T> collection, FILogCallback logCallback, FIGetStringCallBack<T> logLine) {
         if(collection == null) {
             logCallback.log("Could not find collection");
@@ -87,11 +109,11 @@ public class CommonUtils {
     }
 
     public static <T>void printCollection(Collection<T> collection, FIGetStringCallBack<T> logLine) {
-        printCollection(collection, log::info, logLine);
+        printCollection(collection, DEFAULT_LOG, logLine);
     }
 
     public static <T>void printCollection(Collection<T> collection) {
-        printCollection(collection, log::info, Object::toString);
+        printCollection(collection, DEFAULT_LOG, Object::toString);
     }
 
     /**
