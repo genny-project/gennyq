@@ -637,6 +637,19 @@ public class CacheManager {
 	 * @param sourceCode - sourceCode of QuestionQuestion to remove
 	 * @return number of entities affected by deletion
 	 */
+	public int removeBaseEntity(String productCode, String code) {
+		String persistenceObject = "life.genny.qwandaq.persistence.baseentity.BaseEntity";
+		String conditional = "code = '" + code + "'";
+		String deleteQuery = constructDeleteQuery(persistenceObject, productCode, conditional);
+		return removePersistableEntities(GennyConstants.CACHE_NAME_QUESTIONQUESTION, deleteQuery);
+	}
+
+	/**
+	 * Remove Base Entity with a given code from cache/persistence
+	 * @param productCode - product to remove from
+	 * @param code - code of the base entity to remove
+	 * @return number of entities affected by deletion
+	 */
 	public int removeAllQuestionQuestionsInGroup(String productCode, String sourceCode) {
 		String persistenceObject = "life.genny.qwandaq.persistence.questionquestion.QuestionQuestion";
 		String conditional = "sourceCode = '" + sourceCode + "'";
