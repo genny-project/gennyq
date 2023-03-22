@@ -312,11 +312,12 @@ public class BaseEntityUtils {
 
 	@Nullable
 	private <T> T getAttributeValue(BaseEntity baseEntity, String attributeCode) {
-		EntityAttribute entityAttribute = beaUtils.getEntityAttribute(baseEntity.getRealm(), baseEntity.getCode(), attributeCode, true);
-		if (entityAttribute == null) {
-			return null;
+		try {
+			EntityAttribute entityAttribute = beaUtils.getEntityAttribute(baseEntity.getRealm(), baseEntity.getCode(), attributeCode, true);
+			return entityAttribute.getValue();
+		} catch(ItemNotFoundException e) {
+			throw ItemNotFoundException.general("EntityAttribute not found when fetching value: " + baseEntity.getCode() + ":" + attributeCode, e);
 		}
-		return entityAttribute.getValue();
 	}
 
 	/**

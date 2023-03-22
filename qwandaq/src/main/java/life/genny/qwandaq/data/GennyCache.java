@@ -256,6 +256,8 @@ public class GennyCache {
 			if(value instanceof EntityAttribute ea) {
 				log.error("EntityAttribute ATTRIBUTE: " + ea.getAttributeCode());
 				log.error("EntityAttribute ATTRIBUTE_ID: " + ea.getAttributeId());
+				log.error("EntityAttribute BASEENTITY: " + ea.getBaseEntityCode());
+				log.error("EntityAttribute BASEENTITY_ID: " + ea.getBaseEntityId());
 			}
 			log.error(e.getMessage());
 			StringBuilder sb = new StringBuilder();

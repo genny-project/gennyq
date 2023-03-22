@@ -90,9 +90,10 @@ public class InitService extends KogitoService {
 		Long attributesUpdatedAt = attributeUtils.getAttributesLastUpdatedAt(productCode);
 		Long attributesLastFetchedAt = attributesLastFetchedAtPerProduct.get(productCode);
 		List<Set<Attribute>> batchedAttributesList = batchedAttributesListPerProduct.get(productCode);
-		if (attributesUpdatedAt == null || attributesLastFetchedAt == null ||
-				attributesLastFetchedAt.compareTo(attributesUpdatedAt) < 0 ||
-				batchedAttributesList == null || batchedAttributesList.isEmpty()) {
+		if (batchedAttributesList == null || batchedAttributesList.isEmpty() ||
+			attributesUpdatedAt == null || attributesLastFetchedAt == null ||
+				attributesLastFetchedAt.compareTo(attributesUpdatedAt) < 0
+				) {
 			cacheAttributesLocallyAndDispatch(productCode);
 			attributesLastFetchedAtPerProduct.put(productCode, attributesUpdatedAt);
 		} else {
@@ -107,7 +108,7 @@ public class InitService extends KogitoService {
 		long end = System.nanoTime();
 		log.debugf("Time taken to read all attributes: %s (nanos)", end-start);
 
-		int BATCH_SIZE = 500;
+		final int BATCH_SIZE = 500;
 		int count = 0;
 		int batchNum = 1;
 		int totalAttributesCount = allAttributes.size();
@@ -115,13 +116,20 @@ public class InitService extends KogitoService {
 		if (totalAttributesCount % BATCH_SIZE != 0) {
 			totalBatches++;
 		}
+
+		log.debug("Discovered " + totalBatches + " batches for a total attribute count: " + totalAttributesCount);
 		List<Set<Attribute>> batchedAttributesList = new CopyOnWriteArrayList<>();
 		Set<Attribute> attributesBatch = new CopyOnWriteArraySet<>();
+		log.info("loading batch: " + batchNum);
 		for(Attribute attribute : allAttributes) {
 			if (attribute == null || attribute.getCode().startsWith(Prefix.CAP_)) {
+				if(attribute == null) {
+					log.info("\tfound null attribute");
+				}
 				totalAttributesCount--;
 				continue;
 			}
+
 			// see if dtt exists
 			try {
 				DataType dataType = attributeUtils.getDataType(attribute, true);
@@ -131,16 +139,20 @@ public class InitService extends KogitoService {
 				totalAttributesCount--;
 				continue;
 			}
+			
 			attributesBatch.add(attribute);
 			count++;
 			if (count == BATCH_SIZE) {
+				log.info("\tDispatching batch " + batchNum + " call!");
 				dispatchAttributesToKafka(attributesBatch, "ATTRIBUTE_MESSAGE_BATCH_" + batchNum + "_OF_" + totalBatches);
 				batchedAttributesList.add(attributesBatch);
 				count = 0;
 				batchNum++;
+				log.info("loading batch: " + batchNum);
 				attributesBatch = new HashSet<>();
 			}
 		}
+
 		// Dispatch the last batch, if any
 		if (!attributesBatch.isEmpty()) {
 			dispatchAttributesToKafka(attributesBatch, "ATTRIBUTE_MESSAGE_BATCH_" + batchNum + "_OF_" + totalBatches);
@@ -176,6 +188,7 @@ public class InitService extends KogitoService {
 		// set token and send
 		msg.setToken(userToken.getToken());
 		msg.setAliasCode(aliasCode);
+		log.debug("Sending attribute batch: " + aliasCode + " to webdata");
 		KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
 	}
 

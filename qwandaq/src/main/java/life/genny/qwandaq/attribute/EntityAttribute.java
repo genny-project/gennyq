@@ -962,23 +962,6 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 		} else if (getValueLong() != null) {
 			return (T) getValueLong();
 		}
-		if (getValueString() != null) {
-			return (T) getValueString();
-		} else if (getValueBoolean() != null) {
-			return (T) getValueBoolean();
-		} else if (getValueDateTime() != null) {
-			return (T) getValueDateTime();
-		} else if (getValueDouble() != null) {
-			return (T) getValueDouble();
-		} else if (getValueInteger() != null) {
-			return (T) getValueInteger();
-		} else if (getValueDate() != null) {
-			return (T) getValueDate();
-		} else if (getValueTime() != null) {
-			return (T) getValueTime();
-		} else if (getValueLong() != null) {
-			return (T) getValueLong();
-		}
 
 		return null;
 	}
