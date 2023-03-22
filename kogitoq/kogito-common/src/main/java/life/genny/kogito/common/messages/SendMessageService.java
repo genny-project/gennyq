@@ -76,7 +76,7 @@ public class SendMessageService {
 	public void send(String templateCode, String recipientBECode, String entityCode){
 		BaseEntity baseEntity = baseEntityUtils.getBaseEntity(templateCode);
 		if(baseEntity != null){
-			BaseEntity lnkMessageType = baseEntityUtils.getBaseEntityFromLinkAttribute(baseEntity, LNK_MESSAGE_TYPE);
+			BaseEntity lnkMessageType = baseEntityUtils.getBaseEntityFromLinkAttribute(baseEntity, LNK_MESSAGE_TYPE, true);
 			log.debug("lnkMessageType: "+lnkMessageType.getCode());
 			log.debug("lnkMessageType.name: "+lnkMessageType.getName());
 			String msgType = lnkMessageType.getValue(PRI_NAME, null);
