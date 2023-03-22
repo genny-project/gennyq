@@ -131,7 +131,6 @@ public class InitService extends KogitoService {
 			}
 			// see if dtt exists
 			try {
-				log.info("\tAttempting to find datatype for: " + attribute.getCode());
 				DataType dataType = attributeUtils.getDataType(attribute, true);
 				attribute.setDataType(dataType);
 			} catch (ItemNotFoundException e) {
@@ -139,7 +138,6 @@ public class InitService extends KogitoService {
 				totalAttributesCount--;
 				continue;
 			}
-			log.info("\tAdding " + attribute.getCode() + " to batch. Current count: " + ++count);
 			attributesBatch.add(attribute);
 			if (count == BATCH_SIZE) {
 				log.info("\tDispatching batch " + batchNum + " call!");
