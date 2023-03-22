@@ -160,7 +160,7 @@ public class CapabilitiesManager extends Manager {
 	/**
 	 * Add a capability to a BaseEntity.
 	 * 
-	 * @param productCode The product code
+	 * @param CONFIG_PRODUCT_CODE The product code
 	 * @param target      The target entity
 	 * @param capability        The capability attribute
 	 * @param nodes       The nodes to set
