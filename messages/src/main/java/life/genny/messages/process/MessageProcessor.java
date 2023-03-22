@@ -15,6 +15,7 @@ import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.*;
 import life.genny.qwandaq.managers.CacheManager;
 import org.eclipse.microprofile.context.ManagedExecutor;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -100,16 +101,23 @@ public class MessageProcessor {
 
         if (templateBe != null) {
             String templateBeCode = templateBe.getCode();
-            EntityAttribute ccAttribute = beaUtils.getEntityAttribute(realm, templateBeCode, "PRI_CC");
-            String cc = ccAttribute != null ? ccAttribute.getValueString() : null;
-            EntityAttribute bccAttribute = beaUtils.getEntityAttribute(realm, templateBeCode, "PRI_BCC");
-            String bcc = bccAttribute != null ? bccAttribute.getValueString() : null;
+            String cc = null;
+            String bcc = null;
+            try{
+                EntityAttribute ccAttribute = beaUtils.getEntityAttribute(realm, templateBeCode, "PRI_CC");
+                cc = ccAttribute != null ? ccAttribute.getValueString() : null;
+                EntityAttribute bccAttribute = beaUtils.getEntityAttribute(realm, templateBeCode, "PRI_BCC");
+                bcc = bccAttribute != null ? bccAttribute.getValueString() : null;
+            }catch(ItemNotFoundException ex){
+                log.error("Error fetching PRI_CC or PRI_BC");
+                log.error("Exception: "+ ex.getMessage());
+            }
 
             if (cc != null) {
                 log.debug("Using CC from template BaseEntity");
 
                 cc = CommonUtils.cleanUpAttributeValue(cc);
-                message.getMessageContextMap().put("CC", cc);
+                message.getMessageContextMap().put("CC", cc); 
             }
             if (bcc != null) {
                 log.debug("Using BCC from template BaseEntity");
@@ -127,25 +135,41 @@ public class MessageProcessor {
             log.warn(ANSIColour.doColour("No Template found for " + message.getTemplateCode(), ANSIColour.YELLOW));
         } else {
             log.info("Using TemplateBE " + templateBe.getCode());
+                EntityAttribute contextAssociationsAttribute = null;
+                try{
+                    // Handle any default context associations
+                    contextAssociationsAttribute = beaUtils.getEntityAttribute(templateBe.getRealm(), templateBe.getCode(), "PRI_CONTEXT_ASSOCIATIONS");
+                }catch(ItemNotFoundException ex){
+                    log.error("Error fetching PRI_CONTEXT_ASSOCIATIONS");
+                    log.error("Exception: "+ ex.getMessage());
+                }
 
-            // Handle any default context associations
-            EntityAttribute contextAssociationsAttribute = beaUtils.getEntityAttribute(templateBe.getRealm(), templateBe.getCode(), "PRI_CONTEXT_ASSOCIATIONS");
-            String contextAssociations = contextAssociationsAttribute != null ? contextAssociationsAttribute.getValueString() : null;
-            if (contextAssociations != null) {
-                mergeUtils.addAssociatedContexts(beUtils, baseEntityContextMap, contextAssociations, false);
-            }
+                if(contextAssociationsAttribute != null){
+                    String contextAssociations = contextAssociationsAttribute != null ? contextAssociationsAttribute.getValueString() : null;
+                    if (contextAssociations != null) {
+                        mergeUtils.addAssociatedContexts(beUtils, baseEntityContextMap, contextAssociations, false);
+                    }
+                }
 
-            // Check for Default Message
-            if (Arrays.stream(message.getMessageTypeArr()).anyMatch(item -> item == QBaseMSGMessageType.DEFAULT)) {
-                // Use default if told to do so
-                List<String> typeList = beUtils.getBaseEntityCodeArrayFromLinkAttribute(templateBe, "PRI_DEFAULT_MSG_TYPE");
-                try {
-                    messageTypeList = typeList.stream().map(QBaseMSGMessageType::valueOf).toList();
-				} catch (Exception e) {
-					log.error(e.getLocalizedMessage());
-                    return CommonUtils.logAndReturn(log::error, e);
-				}
-            }
+                // Check for Default Message
+                if (Arrays.stream(message.getMessageTypeArr()).anyMatch(item -> item == QBaseMSGMessageType.DEFAULT)) {
+                    // Use default if told to do so
+                    List<String> typeList = null;
+                    try{
+                    typeList = beUtils.getBaseEntityCodeArrayFromLinkAttribute(templateBe, "PRI_DEFAULT_MSG_TYPE");
+                    }catch(ItemNotFoundException ex){
+                        log.error("Error fetching PRI_DEFAULT_MSG_TYPE");
+                        log.error("Exception: "+ ex.getMessage());
+                    }
+                    if(typeList != null){
+                        try {
+                            messageTypeList = typeList.stream().map(QBaseMSGMessageType::valueOf).toList();
+                        } catch (Exception e) {
+                            log.error(e.getLocalizedMessage());
+                            return CommonUtils.logAndReturn(log::error, e);
+                        }
+                    }
+                }
         }
 
 		String[] recipientArr = message.getRecipientArr();
