@@ -11,7 +11,7 @@ import io.quarkus.arc.Arc;
 import life.genny.qwandaq.exception.runtime.config.MissingEnvironmentVariableException;
 import life.genny.qwandaq.exception.runtime.entity.GennyPrefixException;
 import life.genny.qwandaq.utils.callbacks.FIGetObjectCallback;
-import life.genny.qwandaq.utils.callbacks.FIGetStringCallBack;
+import life.genny.qwandaq.utils.callbacks.FIGetStringCallback;
 import life.genny.qwandaq.utils.callbacks.FILogCallback;
 
 /**
@@ -63,7 +63,7 @@ public class CommonUtils {
         return msg;
     }
 
-    public static <T> void printCollection(T[] collection, FILogCallback logCallback, FIGetStringCallBack<T> logLine) {
+    public static <T> void printCollection(T[] collection, FILogCallback logCallback, FIGetStringCallback<T> logLine) {
         if(collection == null) {
             logCallback.log("[!] Empty Collection");
             new Exception().printStackTrace();
@@ -75,7 +75,7 @@ public class CommonUtils {
         }
     }
 
-    public static <T>void printCollection(Collection<T> collection, FILogCallback logCallback, FIGetStringCallBack<T> logLine) {
+    public static <T>void printCollection(Collection<T> collection, FILogCallback logCallback, FIGetStringCallback<T> logLine) {
         if(collection == null) {
             logCallback.log("Could not find collection");
             new Exception("stack trace exception").printStackTrace();
@@ -86,7 +86,11 @@ public class CommonUtils {
         }
     }
 
-    public static <T>void printCollection(Collection<T> collection, FIGetStringCallBack<T> logLine) {
+    public static <T> void printCollection(Collection<T> collection, FILogCallback logCallback) {
+        printCollection(collection, logCallback, Object::toString);
+    }
+
+    public static <T>void printCollection(Collection<T> collection, FIGetStringCallback<T> logLine) {
         printCollection(collection, log::info, logLine);
     }
 
@@ -94,25 +98,33 @@ public class CommonUtils {
         printCollection(collection, log::info, Object::toString);
     }
 
+    public static <K, V> void printMap(Map<K, V> map) {
+        printMap(map, log::info);
+    }
+
     /**
      * Prints a map over multiple lines
      * works well assuming that the toString methods of the keys and values are well defined
      * @param map map to print
      */
-    public static <K, V> void printMap(Map<K, V> map) {
+    public static <K, V> void printMap(Map<K, V> map, FILogCallback log) {
         for(Map.Entry<K, V> entry : map.entrySet()) {
-            log.info(entry.getKey() + "=" + entry.getValue());
+            log.log(entry.getKey() + "=" + entry.getValue());
         }
     }
 
-    public static <K, V> void printMap(Map<K, V> map, FIGetStringCallBack<K> keyCallback, FIGetStringCallBack<V> valueCallback) {
+    public static <K, V> void printMap(Map<K, V> map, FILogCallback logCallback, FIGetStringCallback<K> keyCallback, FIGetStringCallback<V> valueCallback) {
         for(Map.Entry<K, V> entry : map.entrySet()) {
             String msg = new StringBuilder(keyCallback.getString(entry.getKey()))
                             .append(" = ")
                             .append(valueCallback.getString(entry.getValue()))
                             .toString();
-            log.info(msg);
+            logCallback.log(msg);
         }
+    }
+
+    public static <K, V> void printMap(Map<K, V> map, FIGetStringCallback<K> keyCallback, FIGetStringCallback<V> valueCallback) {
+        printMap(map, log::info, keyCallback, valueCallback);
     }
 
     /**
@@ -192,7 +204,7 @@ public class CommonUtils {
      * @param stringCallback - callback to use to retrieve a string value of the object
      * @return a JSON style array of objects, where each item is the value returned from stringCallback
      */
-    public static <T> String getArrayString(Collection<T> list, FIGetStringCallBack<T> stringCallback) {
+    public static <T> String getArrayString(Collection<T> list, FIGetStringCallback<T> stringCallback) {
         if(list == null)
             return "null";
         StringBuilder result = new StringBuilder("[");
@@ -221,7 +233,7 @@ public class CommonUtils {
      * @param stringCallback - callback to use to retrieve a string value of the object
      * @return a JSON style array of objects, where each item is the value returned from stringCallback
      */
-    public static <T> String getArrayString(T[] array, FIGetStringCallBack<T> stringCallback) {
+    public static <T> String getArrayString(T[] array, FIGetStringCallback<T> stringCallback) {
         if(array == null) return null;
         if(array.length == 0) return STR_ARRAY_EMPTY;
         

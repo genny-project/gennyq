@@ -597,8 +597,6 @@ public class BatchLoading {
 
             String parentCode = row.get("parentcode");
             String targetCode = row.get("targetcode");
-            log.debug("persisting: " + parentCode + ":" + targetCode);
-
             try {
 				questionUtils.saveQuestionQuestion(questionQuestion);
 			} catch (Exception e) {

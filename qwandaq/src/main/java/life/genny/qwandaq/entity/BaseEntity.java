@@ -426,11 +426,9 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 		Optional<EntityAttribute> ea = this.findEntityAttribute(attributeCode);
 
 		Optional<T> result = Optional.empty();
-		if (ea.isPresent()) {
-			if (ea.get() != null) {
-				if (ea.get().getValue() != null) {
-					result = Optional.of(ea.get().getValue());
-				}
+		if (ea.isPresent() && ea.get() != null) {
+			if (ea.get().getValue() != null) {
+				result = Optional.of(ea.get().getValue());
 			}
 		}
 		return result;
