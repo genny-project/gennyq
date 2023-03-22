@@ -120,8 +120,8 @@ public class InitService extends KogitoService {
 		log.debug("Discovered " + totalBatches + " batches for a total attribute count: " + totalAttributesCount);
 		List<Set<Attribute>> batchedAttributesList = new CopyOnWriteArrayList<>();
 		Set<Attribute> attributesBatch = new CopyOnWriteArraySet<>();
+		log.info("loading batch: " + batchNum);
 		for(Attribute attribute : allAttributes) {
-			log.info("loading batch: " + batchNum);
 			if (attribute == null || attribute.getCode().startsWith(Prefix.CAP_)) {
 				if(attribute == null) {
 					log.info("\tfound null attribute");
@@ -147,6 +147,7 @@ public class InitService extends KogitoService {
 				batchedAttributesList.add(attributesBatch);
 				count = 0;
 				batchNum++;
+				log.info("loading batch: " + batchNum);
 				attributesBatch = new HashSet<>();
 			}
 		}
