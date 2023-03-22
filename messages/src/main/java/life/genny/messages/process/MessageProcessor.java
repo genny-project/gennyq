@@ -213,7 +213,7 @@ public class MessageProcessor {
                 baseEntityContextMap.put("URL", url);
             }
 
-            sendToProvider(message, baseEntityContextMap, templateBe, recipientBe, messageTypeList);
+            // sendToProvider(message, baseEntityContextMap, templateBe, recipientBe, messageTypeList);
         }
 
         long duration = System.currentTimeMillis() - start;
