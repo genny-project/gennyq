@@ -108,7 +108,7 @@ public class InitService extends KogitoService {
 		long end = System.nanoTime();
 		log.debugf("Time taken to read all attributes: %s (nanos)", end-start);
 
-		int BATCH_SIZE = 500;
+		final int BATCH_SIZE = 500;
 		int count = 0;
 		int batchNum = 1;
 		int totalAttributesCount = allAttributes.size();
@@ -129,6 +129,7 @@ public class InitService extends KogitoService {
 				totalAttributesCount--;
 				continue;
 			}
+
 			// see if dtt exists
 			try {
 				DataType dataType = attributeUtils.getDataType(attribute, true);
@@ -138,6 +139,7 @@ public class InitService extends KogitoService {
 				totalAttributesCount--;
 				continue;
 			}
+			
 			attributesBatch.add(attribute);
 			count++;
 			if (count == BATCH_SIZE) {
