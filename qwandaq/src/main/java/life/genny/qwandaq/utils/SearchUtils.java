@@ -2,6 +2,7 @@ package life.genny.qwandaq.utils;
 
 import java.net.http.HttpResponse;
 import java.util.List;
+import java.util.ArrayList;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -77,14 +78,14 @@ public class SearchUtils {
 
 		if (response == null) {
 			log.error("Null response from " + uri);
-			return null;
+			return new ArrayList<>(0);
 		}
 
 		Integer status = response.statusCode();
 
 		if (Response.Status.Family.familyOf(status) != Response.Status.Family.SUCCESSFUL) {
 			log.errorf("Bad response status %s from %s.\nResponse body: %s", status, uri, response.body());
-			return null;
+			return new ArrayList<>(0);
 		}
 
 		try {
@@ -94,7 +95,7 @@ public class SearchUtils {
 		} catch (Exception e) {
 			log.error(e.getMessage());
 			e.printStackTrace();
-			return null;
+			return new ArrayList<>(0);
 		}
 	}
 

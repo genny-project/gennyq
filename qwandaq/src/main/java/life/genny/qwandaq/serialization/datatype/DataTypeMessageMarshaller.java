@@ -7,6 +7,8 @@ import java.io.IOException;
 
 public class DataTypeMessageMarshaller implements MessageMarshaller<DataType> {
 
+	public static final String TYPE_NAME = "life.genny.qwandaq.persistence.datatype.DataType";
+
 	@Override
 	public Class<DataType> getJavaClass() {
 		return DataType.class;
@@ -14,7 +16,7 @@ public class DataTypeMessageMarshaller implements MessageMarshaller<DataType> {
 
 	@Override
 	public String getTypeName() {
-		return "life.genny.qwandaq.persistence.datatype.DataType";
+		return TYPE_NAME;
 	}
 
 	// @Override

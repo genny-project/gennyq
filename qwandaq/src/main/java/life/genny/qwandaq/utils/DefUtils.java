@@ -82,11 +82,12 @@ public class DefUtils {
 	 *
 	 * @param entity The {@link BaseEntity} to check
 	 * @return BaseEntity The corresponding definition {@link BaseEntity}
+	 * 
+	 * @throws DefinitionException if not def baseentity codes were found in the {@link Attribute#LNK_DEF LNK_DEF} attribute for the given base entity
+	 * <b>and</b> no definitions could be found in the cache with a prefix matching the prefix of the code of the supplied base entity;
 	 */
-	public Definition getDEF(final BaseEntity entity) {
-
-		if (entity == null)
-			throw new NullParameterException("entity");
+	public Definition getDEF(final BaseEntity entity) 
+		throws DefinitionException {
 
 		entity.setBaseEntityAttributes(beaUtils.getAllEntityAttributesForBaseEntity(entity));
 
@@ -95,15 +96,9 @@ public class DefUtils {
 			return Definition.from(entity);
 
 		// check for a linked definition
-		List<String> codes = null;
-		try {
-			codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(entity, Attribute.LNK_DEF);
-		} catch (ItemNotFoundException e) {
-			log.trace(e.getMessage());
-		}
-
+		List<String> codes = beUtils.getBaseEntityCodeArrayFromLinkAttribute(entity, Attribute.LNK_DEF);
 		// if no defs specified, go by prefix
-		if (codes == null || codes.isEmpty()) {
+		if (codes.isEmpty()) {
 			String prefix = entity.getCode().substring(0, 3);
 			SearchEntity prefixSearch = new SearchEntity(SBE_DEFINITION_PREFIX, "Definition Prefix Search")
 					.add(new Filter(Attribute.PRI_PREFIX, Operator.EQUALS, prefix))
@@ -112,7 +107,7 @@ public class DefUtils {
 					.setRealm(userToken.getProductCode());
 
 			List<BaseEntity> results = searchUtils.searchBaseEntitys(prefixSearch);
-			if (results == null || results.isEmpty())
+			if (results.isEmpty())
 				throw new DefinitionException("No definition with prefix: " + prefix);
 
 			return Definition.from(results.get(0));
@@ -150,14 +145,29 @@ public class DefUtils {
 	/**
 	 * Find the corresponding definition for a given {@link BaseEntity} code.
 	 *
+	 * @param productCode - the product to check for the given {@link BaseEntity}
 	 * @param baseEntityCode The {@link BaseEntity} code to check
-	 * @return BaseEntity The corresponding definition {@link BaseEntity}
+	 * @return BaseEntity The corresponding {@link Definition} {@link BaseEntity}
+	 * 
+	 * @throws ItemNotFoundException if the baseentity corresponding to the base entity code given cannot be found in the product code supplied
 	 */
-	public Definition getDEF(final String baseEntityCode) {
-		if(baseEntityCode == null)
-			throw new NullParameterException("baseEntityCode");
-		BaseEntity target = beUtils.getBaseEntity(baseEntityCode);
+	public Definition getDEF(final String productCode, final String baseEntityCode) 
+		throws ItemNotFoundException {
+		BaseEntity target = beUtils.getBaseEntity(productCode, baseEntityCode);
 		return getDEF(target);
+	}
+
+	/**
+	 * Find the corresponding definition for a given {@link BaseEntity} code.
+	 *
+	 * @param baseEntityCode The {@link BaseEntity} code to check
+	 * @return BaseEntity The corresponding {@link Definition} {@link BaseEntity}
+	 * 
+	 * @throws ItemNotFoundException if the baseentity corresponding to the base entity code given cannot be found in the user's product
+	 */
+	public Definition getDEF(final String baseEntityCode) 
+		throws ItemNotFoundException {
+			return getDEF(userToken.getProductCode(), baseEntityCode);
 	}
 
 	/**
