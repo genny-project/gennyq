@@ -253,17 +253,14 @@ public class AttributeUtils {
      * @see {@link Validation}
      */
     public DataType getDataType(Attribute attribute, boolean bundleValidationList) {
-        if(attribute == null) {
-            throw new NullParameterException("attribute");
-        }
         if(attribute.getDataType() != null) {
             return attribute.getDataType();
         }
-        DataType dataType = getDataType(attribute.getRealm(), attribute.getDttCode(), bundleValidationList);
-        if(dataType == null) {
-            throw new ItemNotFoundException("productCode: " + attribute.getRealm() + ". DataType attached to Attribute: " + attribute.getCode() + ". DataType Code: " + attribute.getDttCode());
+        try {
+            return getDataType(attribute.getRealm(), attribute.getDttCode(), bundleValidationList);
+        } catch(ItemNotFoundException e) {
+            throw ItemNotFoundException.general("DataType attached to Attribute: " + attribute.getCode() + ". DataType Code: " + attribute.getDttCode(), e);
         }
-        return dataType;
     }
 
     /**
