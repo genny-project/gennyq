@@ -139,6 +139,7 @@ public class InitService extends KogitoService {
 				continue;
 			}
 			attributesBatch.add(attribute);
+			count++;
 			if (count == BATCH_SIZE) {
 				log.info("\tDispatching batch " + batchNum + " call!");
 				dispatchAttributesToKafka(attributesBatch, "ATTRIBUTE_MESSAGE_BATCH_" + batchNum + "_OF_" + totalBatches);
