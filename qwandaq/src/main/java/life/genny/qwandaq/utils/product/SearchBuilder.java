@@ -98,7 +98,7 @@ public class SearchBuilder {
     /**
      * Create a new Role Dropdown SearchEntity (Default Code: {@link SearchBuilder#SBE_SER_LNK_ROLE SBE_SER_LNK_ROLE})
      * @param dropdownName - {@link BaseEntity#getName() name} of the dropdown
-     * @param filters - filters to apply to get the base entities to return from teh dropdown SearchEntity
+     * @param filters - filters to apply to get the base entities to return from the dropdown SearchEntity
      * @return a role SearchEntity with the filters set to find the matching roles
      */
     public SearchEntity roleDropdown(String dropdownName, String... roleCodes) {
