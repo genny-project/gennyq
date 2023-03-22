@@ -10,6 +10,7 @@ import com.oracle.svm.core.annotate.Inject;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.search.SearchEntity;
+import life.genny.qwandaq.entity.search.clause.Or;
 import life.genny.qwandaq.entity.search.trait.Filter;
 import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.managers.CacheManager;
@@ -24,6 +25,7 @@ import life.genny.qwandaq.entity.Definition;
  */
 @ApplicationScoped
 public class SearchBuilder {
+    private static final String SBE_SER_LNK_ROLE = "SBE_SER_LNK_ROLE";
 
     @Inject
     Logger log;
@@ -91,6 +93,23 @@ public class SearchBuilder {
         }
 
         return dropdown;
+    }
+
+    /**
+     * Create a new Role Dropdown SearchEntity (Default Code: {@link SearchBuilder#SBE_SER_LNK_ROLE SBE_SER_LNK_ROLE})
+     * @param dropdownName - {@link BaseEntity#getName() name} of the dropdown
+     * @param filters - filters to apply to get the base entities to return from teh dropdown SearchEntity
+     * @return a role SearchEntity with the filters set to find the matching roles
+     */
+    public SearchEntity roleDropdown(String dropdownName, String... roleCodes) {
+        Filter[] filters = new Filter[roleCodes.length];
+        for(int i = 0; i < roleCodes.length; i++) {
+            filters[i] = new Filter(Attribute.PRI_CODE, Operator.EQUALS, roleCodes[i]);
+        }
+        
+        return new SearchEntity(SBE_SER_LNK_ROLE, dropdownName)
+            .add(new Filter(Attribute.LNK_DEF, Operator.CONTAINS, Definition.DEF_ROLE))
+            .add(new Or(filters));
     }
 
     /**
