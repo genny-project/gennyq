@@ -121,12 +121,17 @@ public class InitService extends KogitoService {
 		List<Set<Attribute>> batchedAttributesList = new CopyOnWriteArrayList<>();
 		Set<Attribute> attributesBatch = new CopyOnWriteArraySet<>();
 		for(Attribute attribute : allAttributes) {
+			log.info("loading batch: " + batchNum);
 			if (attribute == null || attribute.getCode().startsWith(Prefix.CAP_)) {
+				if(attribute == null) {
+					log.info("\tfound null attribute");
+				}
 				totalAttributesCount--;
 				continue;
 			}
 			// see if dtt exists
 			try {
+				log.info("\tAttempting to find datatype for: " + attribute.getCode());
 				DataType dataType = attributeUtils.getDataType(attribute, true);
 				attribute.setDataType(dataType);
 			} catch (ItemNotFoundException e) {
@@ -134,9 +139,10 @@ public class InitService extends KogitoService {
 				totalAttributesCount--;
 				continue;
 			}
+			log.info("\tAdding " + attribute.getCode() + " to batch. Current count: " + ++count);
 			attributesBatch.add(attribute);
-			count++;
 			if (count == BATCH_SIZE) {
+				log.info("\tDispatching batch " + batchNum + " call!");
 				dispatchAttributesToKafka(attributesBatch, "ATTRIBUTE_MESSAGE_BATCH_" + batchNum + "_OF_" + totalBatches);
 				batchedAttributesList.add(attributesBatch);
 				count = 0;
