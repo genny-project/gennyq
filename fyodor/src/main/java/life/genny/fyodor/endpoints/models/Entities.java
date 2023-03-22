@@ -108,7 +108,7 @@ public class Entities {
 	public Response delete(@PathParam("code") String code) {
 
 		if (userToken == null) {
-			return Response.status(Response.Status.BAD_REQUEST)
+			return Response.status(Response.Status.FORBIDDEN)
 					.entity(HttpUtils.error(NOT_AUTHORIZED_TO_MAKE_THIS_REQUEST)).build();
 		}
 

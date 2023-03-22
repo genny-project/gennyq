@@ -13,11 +13,15 @@ import life.genny.qwandaq.models.ServiceToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.AttributeUtils;
 import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.DefUtils;
 import life.genny.qwandaq.utils.QwandaUtils;
 
 @ApplicationScoped
 public abstract class Manager {
 	protected static Jsonb jsonb = JsonbBuilder.create();
+
+	@Inject
+	protected DefUtils defUtils;
 
 	@Inject
 	protected UserToken userToken;

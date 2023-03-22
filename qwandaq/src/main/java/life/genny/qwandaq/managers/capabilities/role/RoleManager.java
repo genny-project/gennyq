@@ -5,6 +5,7 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.entity.Definition;
 import life.genny.qwandaq.exception.checked.RoleException;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
@@ -65,11 +66,15 @@ public class RoleManager extends Manager {
 		
 		BaseEntity role = null;
 		roleCode = cleanRoleCode(roleCode);
+		log.info("Role code: " + roleCode);
 		try {
 			role = beUtils.getBaseEntity(productCode, roleCode, true);
 		} catch(ItemNotFoundException e) {
-			role = new BaseEntity(roleCode, roleName);
+			Definition def = defUtils.getDEF(productCode, Definition.DEF_ROLE);
+			Attribute priCode = attributeUtils.getAttribute(productCode, Attribute.PRI_CODE, true);
+			role = beUtils.create(def, roleName, roleCode);
 			role.setRealm(productCode);
+			role.addAttribute(priCode, 0.0, roleCode);
 			beUtils.updateBaseEntity(role);
 		}
 		
