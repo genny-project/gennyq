@@ -12,6 +12,8 @@ import life.genny.qwandaq.entity.BaseEntity;
 
 public class BaseEntityMessageMarshaller implements MessageMarshaller<BaseEntity> {
 
+	public static final String TYPE_NAME = "life.genny.qwandaq.persistence.baseentity.BaseEntity";
+
 	@Override
 	public Class<BaseEntity> getJavaClass() {
 		return BaseEntity.class;
@@ -19,7 +21,7 @@ public class BaseEntityMessageMarshaller implements MessageMarshaller<BaseEntity
 
 	@Override
 	public String getTypeName() {
-		return "life.genny.qwandaq.persistence.baseentity.BaseEntity";
+		return TYPE_NAME;
 	}
 
 	// @Override

@@ -16,6 +16,8 @@ import life.genny.qwandaq.attribute.EntityAttribute;
 
 public class EntityAttributeMessageMarshaller implements MessageMarshaller<EntityAttribute> {
 
+	public static final String TYPE_NAME = "life.genny.qwandaq.persistence.entityattribute.EntityAttribute";
+
 	@Override
 	public Class<EntityAttribute> getJavaClass() {
 		return EntityAttribute.class;
@@ -23,7 +25,7 @@ public class EntityAttributeMessageMarshaller implements MessageMarshaller<Entit
 
 	@Override
 	public String getTypeName() {
-		return "life.genny.qwandaq.persistence.entityattribute.EntityAttribute";
+		return TYPE_NAME;
 	}
 
 	// @Override

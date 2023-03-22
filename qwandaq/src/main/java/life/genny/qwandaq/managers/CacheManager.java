@@ -13,12 +13,19 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import life.genny.qwandaq.serialization.attribute.AttributeKey;
+import life.genny.qwandaq.serialization.attribute.AttributeMessageMarshaller;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
+import life.genny.qwandaq.serialization.baseentity.BaseEntityMessageMarshaller;
 import life.genny.qwandaq.serialization.common.CoreEntityKey;
 import life.genny.qwandaq.serialization.datatype.DataTypeKey;
+import life.genny.qwandaq.serialization.datatype.DataTypeMessageMarshaller;
 import life.genny.qwandaq.serialization.entityattribute.EntityAttributeKey;
+import life.genny.qwandaq.serialization.entityattribute.EntityAttributeMessageMarshaller;
 import life.genny.qwandaq.serialization.question.QuestionKey;
+import life.genny.qwandaq.serialization.question.QuestionMessageMarshaller;
 import life.genny.qwandaq.serialization.questionquestion.QuestionQuestionKey;
+import life.genny.qwandaq.serialization.questionquestion.QuestionQuestionMessageMarshaller;
+import life.genny.qwandaq.serialization.validation.ValidationMessageMarshaller;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.QuestionUtils;
@@ -256,7 +263,7 @@ public class CacheManager {
 	 * @return the max id
 	 */
 	public Long getMaxAttributeId() {
-		return getMaxId(GennyConstants.CACHE_NAME_ATTRIBUTE, "life.genny.qwandaq.persistence.attribute.Attribute");
+		return getMaxId(GennyConstants.CACHE_NAME_ATTRIBUTE, AttributeMessageMarshaller.TYPE_NAME);
 	}
 
 	/**
@@ -265,7 +272,7 @@ public class CacheManager {
 	 * @return the max id
 	 */
 	public Long getMaxBaseEntityId() {
-		return getMaxId(GennyConstants.CACHE_NAME_BASEENTITY, "life.genny.qwandaq.persistence.baseentity.BaseEntity");
+		return getMaxId(GennyConstants.CACHE_NAME_BASEENTITY, BaseEntityMessageMarshaller.TYPE_NAME);
 	}
 
 	/**
@@ -274,7 +281,7 @@ public class CacheManager {
 	 * @return the max id
 	 */
 	public Long getMaxQuestionId() {
-		return getMaxId(GennyConstants.CACHE_NAME_QUESTION, "life.genny.qwandaq.persistence.question.Question");
+		return getMaxId(GennyConstants.CACHE_NAME_QUESTION, QuestionMessageMarshaller.TYPE_NAME);
 	}
 
 	/**
@@ -322,7 +329,7 @@ public class CacheManager {
 	public List<Attribute> getAllAttributes() {
 		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_ATTRIBUTE));
 		Query<Attribute> query = queryFactory
-				.create("from life.genny.qwandaq.persistence.attribute.Attribute");
+				.create("from " + AttributeMessageMarshaller.TYPE_NAME);
 		QueryResult<Attribute> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
 		List<Attribute> attributeList = queryResult.list();
 		if (attributeList.size() == 1 && attributeList.get(0) == null)
@@ -339,7 +346,7 @@ public class CacheManager {
 	public List<Attribute> getAttributesForProduct(String productCode) {
 		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_ATTRIBUTE));
 		Query<Attribute> query = queryFactory
-				.create("from life.genny.qwandaq.persistence.attribute.Attribute where realm = '" + productCode + "'");
+				.create("from " + AttributeMessageMarshaller.TYPE_NAME + " where realm = '" + productCode + "'");
 		QueryResult<Attribute> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
 		List<Attribute> attributeList = queryResult.list();
 		if (attributeList.isEmpty() || attributeList.size() == 1 && attributeList.get(0) == null)
@@ -356,7 +363,7 @@ public class CacheManager {
 	public List<Attribute> getAttributesWithPrefix(String prefix) {
 		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_ATTRIBUTE));
 		Query<Attribute> query = queryFactory
-				.create("from life.genny.qwandaq.persistence.attribute.Attribute where code like '" + prefix + "%'");
+				.create("from " + AttributeMessageMarshaller.TYPE_NAME + " where code like '" + prefix + "%'");
 		QueryResult<Attribute> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
 		List<Attribute> attributeList = queryResult.list();
 		if (attributeList.size() == 1 && attributeList.get(0) == null)
@@ -374,7 +381,7 @@ public class CacheManager {
 	public List<Attribute> getAttributesWithPrefixForProduct(String productCode, String prefix) {
 		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_ATTRIBUTE));
 		Query<Attribute> query = queryFactory
-				.create("from life.genny.qwandaq.persistence.attribute.Attribute where realm = '" + productCode
+				.create("from " + AttributeMessageMarshaller.TYPE_NAME + " where realm = '" + productCode
 						+ "' and code like '" + prefix + "%'");
 		QueryResult<Attribute> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
 		List<Attribute> attributeList = queryResult.list();
@@ -392,7 +399,7 @@ public class CacheManager {
 		String inClauseValue = StringUtils.replace(commaSeparatedValidationCodes, ",", "','");
 		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_VALIDATION));
 		Query<Validation> query = queryFactory
-				.create("from life.genny.qwandaq.persistence.validation.Validation where realm = '" + productCode +
+				.create("from " + ValidationMessageMarshaller.TYPE_NAME + " where realm = '" + productCode +
 						"' and code in ('"+inClauseValue+"')");
 		QueryResult<Validation> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
 		List<Validation> validationList = queryResult.list();
@@ -417,7 +424,7 @@ public class CacheManager {
 	public List<BaseEntity> getBaseEntitiesByPrefixUsingIckle(String productCode, String prefix) {
 		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_BASEENTITY));
 		Query<BaseEntity> query = queryFactory
-				.create("from life.genny.qwandaq.persistence.baseentity.BaseEntity where realm = '" + productCode
+				.create("from " + BaseEntityMessageMarshaller.TYPE_NAME + " where realm = '" + productCode
 						+ "' and code like '" + prefix + "%'");
 		QueryResult<BaseEntity> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
 		List<BaseEntity> baseEntityList = queryResult.list();
@@ -450,7 +457,7 @@ public class CacheManager {
 		RemoteCache<CoreEntityKey, CoreEntityPersistable> remoteCache = cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE);
 		QueryFactory queryFactory = Search.getQueryFactory(remoteCache);
 		Query<EntityAttribute> query = queryFactory
-				.create("from life.genny.qwandaq.persistence.entityattribute.EntityAttribute where realm = '" + productCode
+				.create("from " + EntityAttributeMessageMarshaller.TYPE_NAME + " where realm = '" + productCode
 						+ "' and baseEntityCode = '" + baseEntityCode + "'");
 		QueryResult<EntityAttribute> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
 		List<EntityAttribute> attributeList = queryResult.list();
@@ -473,7 +480,7 @@ public class CacheManager {
 		RemoteCache<CoreEntityKey, CoreEntityPersistable> remoteCache = cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE);
 		QueryFactory queryFactory = Search.getQueryFactory(remoteCache);
 		Query<EntityAttribute> query = queryFactory
-				.create("from life.genny.qwandaq.persistence.entityattribute.EntityAttribute where realm = '" + productCode
+				.create("from " + EntityAttributeMessageMarshaller.TYPE_NAME + " where realm = '" + productCode
 						+ "' and baseEntityCode = '" + baseEntityCode + "' and attributeCode like '" + attributeCodePrefix + "%'");
 		QueryResult<EntityAttribute> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
 		List<EntityAttribute> attributeList = queryResult.list();
@@ -492,7 +499,7 @@ public class CacheManager {
 	 * @throws {@link IllegalStateException} if the persistenceName does not start with life.genny (as all of persistenceNames in the ecosystem do)
 	 * @throws {@link IllegalStateException} if the conditionalCheck is not well formatted (not empty and  contains either single or double quotes)
 	 * <p>e.g
-	 * <pre>String delQuery = constructDeleteQuery("life.genny.qwandaq.persistence.entityattribute.EntityAttribute", "SOME_PRODUCT", "'baseEntityCode' = 'DEF_TEST'" and "attributeCode like 'ATT_%'");
+	 * <pre>String delQuery = constructDeleteQuery(EntityAttributeMessageMarshaller.TYPE_NAME, "SOME_PRODUCT", "'baseEntityCode' = 'DEF_TEST'" and "attributeCode like 'ATT_%'");
 	 * </pre>
 	 * Will generate a deleting query for deleting all ATT entity attributes of base entity: DEF_TEST within product: SOME_PRODUCT</p> 
 	 * 
@@ -545,7 +552,7 @@ public class CacheManager {
 	 * @return number of entities affected by deletion
 	 */
 	public int removeValidation(String productCode, String code) {
-		String persistenceObject = "life.genny.qwandaq.persistence.validation.Validation";
+		String persistenceObject = ValidationMessageMarshaller.TYPE_NAME;
 		String conditional = "code = '" + code + "'";
 		String deleteQuery = constructDeleteQuery(persistenceObject, productCode, conditional);
 		return removePersistableEntities(GennyConstants.CACHE_NAME_VALIDATION, deleteQuery);
@@ -558,7 +565,7 @@ public class CacheManager {
 	 * @return number of entities affected by deletion
 	 */
 	public int removeDataType(String productCode, String code) {
-		String persistenceObject = "life.genny.qwandaq.persistence.datatype.DataType";
+		String persistenceObject = DataTypeMessageMarshaller.TYPE_NAME;
 		String conditional = "dttcode = '" + code + "'";
 		String deleteQuery = constructDeleteQuery(persistenceObject, productCode, conditional);
 		return removePersistableEntities(GennyConstants.CACHE_NAME_DATATYPE, deleteQuery);
@@ -571,7 +578,7 @@ public class CacheManager {
 	 * @return number of entities affected by deletion
 	 */
 	public int removeAttribute(String productCode, String code) {
-		String persistenceObject = "life.genny.qwandaq.persistence.attribute.Attribute";
+		String persistenceObject = AttributeMessageMarshaller.TYPE_NAME;
 		String conditional = "code = '" + code + "'";
 		String deleteQuery = constructDeleteQuery(persistenceObject, productCode, conditional);
 		return removePersistableEntities(GennyConstants.CACHE_NAME_ATTRIBUTE, deleteQuery);
@@ -584,7 +591,7 @@ public class CacheManager {
 	 * @return number of entities affected by deletion
 	 */
 	public int removeQuestion(String productCode, String code) {
-		String persistenceObject = "life.genny.qwandaq.persistence.question.Question";
+		String persistenceObject = QuestionMessageMarshaller.TYPE_NAME;
 		String conditional = "code = '" + code + "'";
 		String deleteQuery = constructDeleteQuery(persistenceObject, productCode, conditional);
 		return removePersistableEntities(GennyConstants.CACHE_NAME_QUESTION, deleteQuery);
@@ -597,7 +604,7 @@ public class CacheManager {
 	 * @return number of entities affected by deletion
 	 */
 	public int removeAllEntityAttributesOfBaseEntity(String productCode, String baseEntityCode) {
-		String persistenceObject = "life.genny.qwandaq.persistence.entityattribute.EntityAttribute";
+		String persistenceObject = EntityAttributeMessageMarshaller.TYPE_NAME;
 		String conditional = "baseEntityCode = '" + baseEntityCode + "'";
 		String deleteQuery = constructDeleteQuery(persistenceObject, productCode, conditional);
 		return removePersistableEntities(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, deleteQuery);
@@ -611,7 +618,7 @@ public class CacheManager {
 	 * @return number of entities affected by deletion
 	 */
 	public int removeEntityAttribute(String productCode, String baseEntityCode, String attributeCode) {
-		String persistenceObject = "life.genny.qwandaq.persistence.entityattribute.EntityAttribute";
+		String persistenceObject = EntityAttributeMessageMarshaller.TYPE_NAME;
 		String conditional = "baseEntityCode = '" + baseEntityCode + "' and attributeCode = '" + attributeCode + "'";
 		String deleteQuery = constructDeleteQuery(persistenceObject, productCode, conditional);
 		return removePersistableEntities(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE, deleteQuery);
@@ -625,7 +632,7 @@ public class CacheManager {
 	 * @return number of entities affected by deletion
 	 */
 	public int removeQuestionQuestion(String productCode, String sourceCode, String targetCode) {
-		String persistenceObject = "life.genny.qwandaq.persistence.questionquestion.QuestionQuestion";
+		String persistenceObject = QuestionQuestionMessageMarshaller.TYPE_NAME;
 		String conditional = "sourceCode = '" + sourceCode + "' and targetCode = '" + targetCode + "'";
 		String deleteQuery = constructDeleteQuery(persistenceObject, productCode, conditional);
 		return removePersistableEntities(GennyConstants.CACHE_NAME_QUESTIONQUESTION, deleteQuery);
@@ -638,7 +645,7 @@ public class CacheManager {
 	 * @return number of entities affected by deletion
 	 */
 	public int removeBaseEntity(String productCode, String code) {
-		String persistenceObject = "life.genny.qwandaq.persistence.baseentity.BaseEntity";
+		String persistenceObject = BaseEntityMessageMarshaller.TYPE_NAME;
 		String conditional = "code = '" + code + "'";
 		String deleteQuery = constructDeleteQuery(persistenceObject, productCode, conditional);
 		return removePersistableEntities(GennyConstants.CACHE_NAME_BASEENTITY, deleteQuery);
@@ -651,7 +658,7 @@ public class CacheManager {
 	 * @return number of entities affected by deletion
 	 */
 	public int removeAllQuestionQuestionsInGroup(String productCode, String sourceCode) {
-		String persistenceObject = "life.genny.qwandaq.persistence.questionquestion.QuestionQuestion";
+		String persistenceObject = QuestionQuestionMessageMarshaller.TYPE_NAME;
 		String conditional = "sourceCode = '" + sourceCode + "'";
 		String deleteQuery = constructDeleteQuery(persistenceObject, productCode, conditional);
 		return removePersistableEntities(GennyConstants.CACHE_NAME_QUESTIONQUESTION, deleteQuery);
@@ -709,7 +716,7 @@ public class CacheManager {
 		RemoteCache<CoreEntityKey, CoreEntityPersistable> remoteCache = cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_QUESTIONQUESTION);
 		QueryFactory queryFactory = Search.getQueryFactory(remoteCache);
 		Query<QuestionQuestion> query = queryFactory
-				.create("from life.genny.qwandaq.persistence.questionquestion.QuestionQuestion where sourceCode = '" + parentQuestionCode
+				.create("from " + QuestionQuestionMessageMarshaller.TYPE_NAME + " where sourceCode = '" + parentQuestionCode
 						+ "' and realm = '" + productCode + "' order by weight");
 		// execute query
 		QueryResult<QuestionQuestion> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
@@ -732,7 +739,7 @@ public class CacheManager {
 		log.debug("QuestionQuestion -> productCode = " + productCode + ", questionCode = " + parentCode);
 		// init query
 		Query<EntityAttribute> query = queryFactory
-				.create("from life.genny.qwandaq.persistence.entityattribute.EntityAttribute where baseEntityCode like '"+parentCode+"|%'"
+				.create("from " + EntityAttributeMessageMarshaller.TYPE_NAME + " where baseEntityCode like '"+parentCode+"|%'"
 					 + " and realm = '"+productCode+"'");
 		// execute query
 		QueryResult<EntityAttribute> queryResult = query.maxResults(Integer.MAX_VALUE).execute();

@@ -10,6 +10,8 @@ import java.time.ZoneOffset;
 
 public class QuestionQuestionMessageMarshaller implements MessageMarshaller<QuestionQuestion> {
 
+	public static final String TYPE_NAME = "life.genny.qwandaq.persistence.questionquestion.QuestionQuestion";
+
 	@Override
 	public Class<QuestionQuestion> getJavaClass() {
 		return QuestionQuestion.class;
@@ -17,7 +19,7 @@ public class QuestionQuestionMessageMarshaller implements MessageMarshaller<Ques
 
 	@Override
 	public String getTypeName() {
-		return "life.genny.qwandaq.persistence.questionquestion.QuestionQuestion";
+		return TYPE_NAME;
 	}
 
 	// @Override
