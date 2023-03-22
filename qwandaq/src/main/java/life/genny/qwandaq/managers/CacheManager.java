@@ -641,7 +641,7 @@ public class CacheManager {
 		String persistenceObject = "life.genny.qwandaq.persistence.baseentity.BaseEntity";
 		String conditional = "code = '" + code + "'";
 		String deleteQuery = constructDeleteQuery(persistenceObject, productCode, conditional);
-		return removePersistableEntities(GennyConstants.CACHE_NAME_QUESTIONQUESTION, deleteQuery);
+		return removePersistableEntities(GennyConstants.CACHE_NAME_BASEENTITY, deleteQuery);
 	}
 
 	/**
