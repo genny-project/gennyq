@@ -342,7 +342,7 @@ public class CacheManager {
 				.create("from life.genny.qwandaq.persistence.attribute.Attribute where realm = '" + productCode + "'");
 		QueryResult<Attribute> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
 		List<Attribute> attributeList = queryResult.list();
-		if (attributeList.size() == 1 && attributeList.get(0) == null)
+		if (attributeList.isEmpty() || attributeList.size() == 1 && attributeList.get(0) == null)
 			return new ArrayList<>(0);
 		return attributeList;
 	}

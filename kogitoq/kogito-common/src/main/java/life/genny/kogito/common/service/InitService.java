@@ -90,9 +90,10 @@ public class InitService extends KogitoService {
 		Long attributesUpdatedAt = attributeUtils.getAttributesLastUpdatedAt(productCode);
 		Long attributesLastFetchedAt = attributesLastFetchedAtPerProduct.get(productCode);
 		List<Set<Attribute>> batchedAttributesList = batchedAttributesListPerProduct.get(productCode);
-		if (attributesUpdatedAt == null || attributesLastFetchedAt == null ||
-				attributesLastFetchedAt.compareTo(attributesUpdatedAt) < 0 ||
-				batchedAttributesList == null || batchedAttributesList.isEmpty()) {
+		if (batchedAttributesList == null || batchedAttributesList.isEmpty() ||
+			attributesUpdatedAt == null || attributesLastFetchedAt == null ||
+				attributesLastFetchedAt.compareTo(attributesUpdatedAt) < 0
+				) {
 			cacheAttributesLocallyAndDispatch(productCode);
 			attributesLastFetchedAtPerProduct.put(productCode, attributesUpdatedAt);
 		} else {
@@ -115,6 +116,8 @@ public class InitService extends KogitoService {
 		if (totalAttributesCount % BATCH_SIZE != 0) {
 			totalBatches++;
 		}
+
+		log.debug("Discovered " + totalBatches + " batches for a total attribute count: " + totalAttributesCount);
 		List<Set<Attribute>> batchedAttributesList = new CopyOnWriteArrayList<>();
 		Set<Attribute> attributesBatch = new CopyOnWriteArraySet<>();
 		for(Attribute attribute : allAttributes) {
@@ -141,6 +144,7 @@ public class InitService extends KogitoService {
 				attributesBatch = new HashSet<>();
 			}
 		}
+
 		// Dispatch the last batch, if any
 		if (!attributesBatch.isEmpty()) {
 			dispatchAttributesToKafka(attributesBatch, "ATTRIBUTE_MESSAGE_BATCH_" + batchNum + "_OF_" + totalBatches);
@@ -176,6 +180,7 @@ public class InitService extends KogitoService {
 		// set token and send
 		msg.setToken(userToken.getToken());
 		msg.setAliasCode(aliasCode);
+		log.debug("Sending attribute batch: " + aliasCode + " to webdata");
 		KafkaUtils.writeMsg(KafkaTopic.WEBDATA, msg);
 	}
 
