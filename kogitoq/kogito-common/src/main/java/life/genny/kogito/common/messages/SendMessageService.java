@@ -76,9 +76,11 @@ public class SendMessageService {
 	public void send(String templateCode, String recipientBECode, String entityCode){
 		BaseEntity baseEntity = baseEntityUtils.getBaseEntity(templateCode);
 		if(baseEntity != null){
-			String msgType = baseEntityUtils.getBaseEntityFromLinkAttribute(baseEntity, LNK_MESSAGE_TYPE).getValue(PRI_NAME, null);
+			BaseEntity lnkMessageType = baseEntityUtils.getBaseEntityFromLinkAttribute(baseEntity, LNK_MESSAGE_TYPE);
+			log.debug("lnkMessageType: "+lnkMessageType.getCode());
+			log.debug("lnkMessageType.name: "+lnkMessageType.getName());
+			String msgType = lnkMessageType.getValue(PRI_NAME, null);
 			log.info("Triggering message!");
-			
 			sendMessage(templateCode,recipientBECode,entityCode, msgType);
 		}else{
 			log.error("Message templateCode not found!");
@@ -88,9 +90,9 @@ public class SendMessageService {
 	public void send(String templateCode, String recipientBECode, String entityCode, Map<String, String> ctxMap){
 		BaseEntity baseEntity = baseEntityUtils.getBaseEntity(templateCode);
 		if(baseEntity != null){
-			BaseEntity lnkMessageType = baseEntityUtils.getBaseEntityFromLinkAttribute(baseEntity, LNK_MESSAGE_TYPE);
+			BaseEntity lnkMessageType = baseEntityUtils.getBaseEntityFromLinkAttribute(baseEntity, LNK_MESSAGE_TYPE, true);
 			log.debug("lnkMessageType: "+lnkMessageType.getCode());
-			log.debug("lnkMessageTyp.name: "+lnkMessageType.getName());
+			log.debug("lnkMessageType.name: "+lnkMessageType.getName());
 			String msgType = lnkMessageType.getValue(PRI_NAME, null);
 			log.info("Triggering message!");
 			sendMessage(templateCode,recipientBECode,entityCode, msgType, ctxMap);
