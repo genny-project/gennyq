@@ -7,6 +7,9 @@ import life.genny.qwandaq.message.QBaseMSGMessageType;
 import life.genny.qwandaq.models.UserToken;
 
 import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.CommonUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -28,7 +31,7 @@ public class SendMessageService {
 	UserToken userToken;
 
 	@Inject
-    Logger log;
+	Logger log;
 
 	public static final String RECIPIENT = "RECIPIENT";
 	public static final String SOURCE = "SOURCE";
@@ -69,7 +72,10 @@ public class SendMessageService {
 	public void send(String messageCode, String recipientCode){
 		BaseEntity baseEntity = baseEntityUtils.getBaseEntity(messageCode);
 		if(baseEntity != null){
-			String msgType = baseEntityUtils.getBaseEntityFromLinkAttribute(baseEntity, LNK_MESSAGE_TYPE).getValue(PRI_NAME, null);
+			BaseEntity lnkMessageType = baseEntityUtils.getBaseEntityFromLinkAttribute(baseEntity, LNK_MESSAGE_TYPE, true);
+			log.debug("lnkMessageType: "+lnkMessageType.getCode());
+			log.debug("lnkMessageType.name: "+lnkMessageType.getName());
+			String msgType = lnkMessageType.getValue(PRI_NAME, null);
 			log.info("Triggering message!");
 			sendMessage(messageCode,recipientCode, msgType);
 		}else{
@@ -80,7 +86,10 @@ public class SendMessageService {
 	public void send(String messageCode, String recepientCode, Map<String, String> ctxMap){
 		BaseEntity baseEntity = baseEntityUtils.getBaseEntity(messageCode);
 		if(baseEntity != null){
-			String msgType = baseEntityUtils.getBaseEntityFromLinkAttribute(baseEntity, LNK_MESSAGE_TYPE).getValue(PRI_NAME, null);
+			BaseEntity lnkMessageType = baseEntityUtils.getBaseEntityFromLinkAttribute(baseEntity, LNK_MESSAGE_TYPE, true);
+			log.debug("lnkMessageType: "+lnkMessageType.getCode());
+			log.debug("lnkMessageType.name: "+lnkMessageType.getName());
+			String msgType = lnkMessageType.getValue(PRI_NAME, null);
 			log.info("Triggering message!");
 			sendMessage(messageCode,recepientCode, msgType, ctxMap);
 		}else{
@@ -101,7 +110,14 @@ public class SendMessageService {
 		sendMessage(messageCode, recipientCode, msgType, ctxMap);
 	}
 
-	public void sendMessage(String messageCode,String recipientCode, String msgType, Map<String, String> ctxMap) {
+	public void sendMessage(String messageCode,String recipientCode,String msgType, Map<String, String> ctxMap) {
+		if(StringUtils.isBlank(msgType)){
+			log.error("templateCode: "+ messageCode);
+			log.error("recipientCode: "+ recipientCode);
+			log.error("msgType: "+ msgType);
+			CommonUtils.printMap(ctxMap);
+			return;
+		}
 		if(msgType.contains(QBaseMSGMessageType.TOAST.name())) {
 			ctxMap.put(TARGET,recipientCode);
 			new SendMessage(messageCode, recipientCode, QBaseMSGMessageType.TOAST, ctxMap).sendMessage();

@@ -15,6 +15,7 @@ import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.*;
 import life.genny.qwandaq.managers.CacheManager;
 import org.eclipse.microprofile.context.ManagedExecutor;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -95,21 +96,28 @@ public class MessageProcessor {
 
         BaseEntity templateBe = null;
         if (message.getTemplateCode() != null) {
-            templateBe = beUtils.getBaseEntity(message.getTemplateCode());
+            templateBe = beUtils.getBaseEntity(message.getTemplateCode(),true);
         }
 
         if (templateBe != null) {
             String templateBeCode = templateBe.getCode();
-            EntityAttribute ccAttribute = beaUtils.getEntityAttribute(realm, templateBeCode, "PRI_CC");
-            String cc = ccAttribute != null ? ccAttribute.getValueString() : null;
-            EntityAttribute bccAttribute = beaUtils.getEntityAttribute(realm, templateBeCode, "PRI_BCC");
-            String bcc = bccAttribute != null ? bccAttribute.getValueString() : null;
+            String cc = null;
+            String bcc = null;
+            try{
+                EntityAttribute ccAttribute = beaUtils.getEntityAttribute(realm, templateBeCode, "PRI_CC");
+                cc = ccAttribute != null ? ccAttribute.getValueString() : null;
+                EntityAttribute bccAttribute = beaUtils.getEntityAttribute(realm, templateBeCode, "PRI_BCC");
+                bcc = bccAttribute != null ? bccAttribute.getValueString() : null;
+            }catch(ItemNotFoundException ex){
+                log.error("Error fetching PRI_CC or PRI_BC");
+                log.error("Exception: "+ ex.getMessage());
+            }
 
             if (cc != null) {
                 log.debug("Using CC from template BaseEntity");
 
                 cc = CommonUtils.cleanUpAttributeValue(cc);
-                message.getMessageContextMap().put("CC", cc);
+                message.getMessageContextMap().put("CC", cc); 
             }
             if (bcc != null) {
                 log.debug("Using BCC from template BaseEntity");
@@ -126,26 +134,46 @@ public class MessageProcessor {
         if (templateBe == null) {
             log.warn(ANSIColour.doColour("No Template found for " + message.getTemplateCode(), ANSIColour.YELLOW));
         } else {
-            log.info("Using TemplateBE " + templateBe.getCode());
+                log.info("Using TemplateBE " + templateBe.getCode());
+                EntityAttribute contextAssociationsAttribute = null;
+                try{
+                    // Handle any default context associations
+                    contextAssociationsAttribute = beaUtils.getEntityAttribute(templateBe.getRealm(), templateBe.getCode(), "PRI_CONTEXT_ASSOCIATIONS");
+                }catch(ItemNotFoundException ex){
+                    log.error("Error fetching PRI_CONTEXT_ASSOCIATIONS");
+                    log.error("Exception: "+ ex.getMessage());
+                }
 
-            // Handle any default context associations
-            EntityAttribute contextAssociationsAttribute = beaUtils.getEntityAttribute(templateBe.getRealm(), templateBe.getCode(), "PRI_CONTEXT_ASSOCIATIONS");
-            String contextAssociations = contextAssociationsAttribute != null ? contextAssociationsAttribute.getValueString() : null;
-            if (contextAssociations != null) {
-                mergeUtils.addAssociatedContexts(beUtils, baseEntityContextMap, contextAssociations, false);
-            }
+                String contextAssociations = contextAssociationsAttribute != null ? contextAssociationsAttribute.getValueString() : null;
+                if (contextAssociations != null) {
+                    mergeUtils.addAssociatedContexts(beUtils, baseEntityContextMap, contextAssociations, false);
+                }
 
-            // Check for Default Message
-            if (Arrays.stream(message.getMessageTypeArr()).anyMatch(item -> item == QBaseMSGMessageType.DEFAULT)) {
-                // Use default if told to do so
-                List<String> typeList = beUtils.getBaseEntityCodeArrayFromLinkAttribute(templateBe, "PRI_DEFAULT_MSG_TYPE");
-                try {
-                    messageTypeList = typeList.stream().map(QBaseMSGMessageType::valueOf).toList();
-				} catch (Exception e) {
-					log.error(e.getLocalizedMessage());
-                    return CommonUtils.logAndReturn(log::error, e);
-				}
-            }
+                log.info("msgType: "+ Arrays.toString(message.getMessageTypeArr()));
+                
+                // Check for default msg
+                if (Arrays.stream(message.getMessageTypeArr()).anyMatch(item -> item == QBaseMSGMessageType.DEFAULT)) {
+                    log.debug("Selecting default message type");
+
+                    // Use default if told to do so
+                    List<String> typeList = null;
+                    try{
+                        typeList = beUtils.getBaseEntityCodeArrayFromLinkAttribute(templateBe, "PRI_DEFAULT_MSG_TYPE");
+                        log.debug("typeList: "+ typeList);
+                    }catch(ItemNotFoundException ex){
+                        log.error("Error fetching PRI_DEFAULT_MSG_TYPE");
+                        log.error("Exception: "+ ex.getMessage());
+                    }
+
+                    if(typeList != null){
+                        try {
+                            messageTypeList = typeList.stream().map(QBaseMSGMessageType::valueOf).toList();
+                        } catch (Exception e) {
+                            log.error(e.getLocalizedMessage());
+                            return CommonUtils.logAndReturn(log::error, e);
+                        }
+                    }
+                }
         }
 
 		String[] recipientArr = message.getRecipientArr();
@@ -189,7 +217,7 @@ public class MessageProcessor {
                 baseEntityContextMap.put("URL", url);
             }
 
-            sendToProvider(message, baseEntityContextMap, templateBe, recipientBe, messageTypeList);
+            sendToProvider(baseEntityContextMap, templateBe, messageTypeList);
         }
 
         long duration = System.currentTimeMillis() - start;
@@ -235,47 +263,16 @@ public class MessageProcessor {
         return recipientBeList;
     }
 
-    // TODO: Make this nicer
-    // Ideally we have all our code broken out into different functions in this class, and this is the beginning of that
-    // This class should make more use of attributes
-    private void sendToProvider(QMessageGennyMSG message, Map<String, Object> baseEntityContextMap, 
-                    BaseEntity templateBe, BaseEntity recipientBe, List<QBaseMSGMessageType> messageTypeList) {
-        final String templateCode = message.getTemplateCode() + "_UNSUBSCRIBE";
-        final BaseEntity unsubscriptionBe = beUtils.getBaseEntity("COM_EMAIL_UNSUBSCRIPTION");
-        if(unsubscriptionBe == null) {
-            log.warn("Unsubscription Base Entity is null! All users will be treated at subscribed");
+    private void sendToProvider(Map<String, Object> baseEntityContextMap, BaseEntity templateBe, List<QBaseMSGMessageType> messageTypeList) {
+        if(messageTypeList == null){
+            log.error("messageTypeList is null");
+            return;
         }
-
-        log.debug("unsubscribe be :: " + unsubscriptionBe);
-
         // Iterate our array of send types
         for (QBaseMSGMessageType msgType : messageTypeList) {
-            /* Get Message Provider */
-            final QMessageProvider provider = messageFactory.getMessageProvider(msgType);
-            boolean isUserUnsubscribed = false;
-
-            if (unsubscriptionBe != null) {
-                /* check if unsubscription list for the template code has the userCode */
-                EntityAttribute templateAssociationAttribute = beaUtils.getEntityAttribute(unsubscriptionBe.getRealm(), unsubscriptionBe.getCode(), templateCode);
-                String templateAssociation = templateAssociationAttribute != null ? templateAssociationAttribute.getValueString() : "";
-                isUserUnsubscribed = templateAssociation.contains(recipientBe.getCode());
-            }
-
-            /*
-                * if user is unsubscribed, then dont send emails. But toast and sms are still
-                * applicable
-                */
-
-            if (isUserUnsubscribed && !QBaseMSGMessageType.EMAIL.equals(msgType)) {
-                log.info("unsubscribed");
-                provider.sendMessage(templateBe, baseEntityContextMap);
-            }
-
-            /* if subscribed, allow messages */
-            if (!isUserUnsubscribed) {
-                log.info("subscribed");
-                provider.sendMessage(templateBe, baseEntityContextMap);
-            }
+            log.info("Sending:  "+ msgType);
+            QMessageProvider provider = messageFactory.getMessageProvider(msgType);
+            provider.sendMessage(templateBe, baseEntityContextMap);
         }
     }
 
