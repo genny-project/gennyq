@@ -255,6 +255,12 @@ public class SearchUtils {
 		KafkaUtils.writeMsg(KafkaTopic.EVENTS, msg);
 	}
 
+	/**
+	 *  Merge search base entity by context map
+	 * @param searchBE Search base entity
+	 * @param ctxMap Context Map
+	 * @return Search base entity
+	 */
 	public SearchEntity mergeFilterValues(SearchEntity searchBE, Map<String, Object> ctxMap) {
 		List<ClauseContainer> clauses = searchBE.getClauseContainers();
 		if(clauses.isEmpty())
