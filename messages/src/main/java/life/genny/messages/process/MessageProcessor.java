@@ -134,47 +134,46 @@ public class MessageProcessor {
         if (templateBe == null) {
             log.warn(ANSIColour.doColour("No Template found for " + message.getTemplateCode(), ANSIColour.YELLOW));
         } else {
-                log.info("Using TemplateBE " + templateBe.getCode());
-                EntityAttribute contextAssociationsAttribute = null;
+            log.info("Using TemplateBE " + templateBe.getCode());
+            EntityAttribute contextAssociationsAttribute = null;
+            try{
+                // Handle any default context associations
+                contextAssociationsAttribute = beaUtils.getEntityAttribute(templateBe.getRealm(), templateBe.getCode(), "PRI_CONTEXT_ASSOCIATIONS");
+            }catch(ItemNotFoundException ex){
+                log.error("Error fetching PRI_CONTEXT_ASSOCIATIONS");
+                log.error("Exception: "+ ex.getMessage());
+            }
+
+            String contextAssociations = contextAssociationsAttribute != null ? contextAssociationsAttribute.getValueString() : null;
+            if (contextAssociations != null) {
+                mergeUtils.addAssociatedContexts(beUtils, baseEntityContextMap, contextAssociations, false);
+            }
+
+            log.info("msgType: "+ Arrays.toString(message.getMessageTypeArr()));
+            
+            // Check for default msg
+            if (Arrays.stream(message.getMessageTypeArr()).anyMatch(item -> item == QBaseMSGMessageType.DEFAULT)) {
+                log.debug("Selecting default message type");
+
+                // Use default if told to do so
+                List<String> typeList = null;
                 try{
-                    // Handle any default context associations
-                    contextAssociationsAttribute = beaUtils.getEntityAttribute(templateBe.getRealm(), templateBe.getCode(), "PRI_CONTEXT_ASSOCIATIONS");
+                    typeList = beUtils.getBaseEntityCodeArrayFromLinkAttribute(templateBe, "PRI_DEFAULT_MSG_TYPE");
+                    log.debug("typeList: "+ typeList);
                 }catch(ItemNotFoundException ex){
-                    log.error("Error fetching PRI_CONTEXT_ASSOCIATIONS");
+                    log.error("Error fetching PRI_DEFAULT_MSG_TYPE");
                     log.error("Exception: "+ ex.getMessage());
                 }
 
-                String contextAssociations = contextAssociationsAttribute != null ? contextAssociationsAttribute.getValueString() : null;
-                if (contextAssociations != null) {
-                    mergeUtils.addAssociatedContexts(beUtils, baseEntityContextMap, contextAssociations, false);
-                }
-
-                log.info("msgType: "+ Arrays.toString(message.getMessageTypeArr()));
-                
-                // Check for default msg
-                if (Arrays.stream(message.getMessageTypeArr()).anyMatch(item -> item == QBaseMSGMessageType.DEFAULT)) {
-                    log.debug("Selecting default message type");
-
-                    // Use default if told to do so
-                    List<String> typeList = null;
-                    try{
-                        typeList = beUtils.getBaseEntityCodeArrayFromLinkAttribute(templateBe, "PRI_DEFAULT_MSG_TYPE");
-                        log.debug("typeList: "+ typeList);
-                    }catch(ItemNotFoundException ex){
-                        log.error("Error fetching PRI_DEFAULT_MSG_TYPE");
-                        log.error("Exception: "+ ex.getMessage());
-                    }
-
-                    if(typeList != null){
-                        try {
-                            messageTypeList = typeList.stream().map(QBaseMSGMessageType::valueOf).toList();
-                        } catch (IllegalArgumentException e) {
-                            log.error("Cannot be converted to QBaseMSGMessageType enum");
-                            log.error("Exception: "+ ex.getMessage());
-                            return;
-                        }
+                if(typeList != null){
+                    try {
+                        messageTypeList = typeList.stream().map(QBaseMSGMessageType::valueOf).toList();
+                    } catch (IllegalArgumentException e) {
+                        log.error("Cannot be converted to QBaseMSGMessageType enum");
+                        log.error("Exception: "+ e.getMessage());
                     }
                 }
+            }
         }
 
 		String[] recipientArr = message.getRecipientArr();
