@@ -128,7 +128,7 @@ public class MergeUtils {
 			return DEFAULT;
 
 		if (!entitymap.containsKey(keyCode))
-			return DEFAULT;
+			return mergeText;
 
 		Object value = entitymap.get(keyCode);
 
