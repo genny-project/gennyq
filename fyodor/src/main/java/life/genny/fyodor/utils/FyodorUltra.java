@@ -181,7 +181,7 @@ public class FyodorUltra {
 
 			searchEntity.getClauseContainers().stream()
 					.map(cc -> cc.getFilter())
-					.filter(f -> String.class.equals(f.getC()))
+					.filter(f -> f != null && String.class.equals(f.getC()))
 					.forEach(f -> {
 						log.debug("\tMerging: " + f.getValue());
 						String result =(String) mergeUtils.wordMerge((String) f.getValue(), ctxMap);
