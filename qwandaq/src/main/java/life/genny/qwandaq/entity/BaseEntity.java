@@ -295,10 +295,10 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 	 * baseEntity. For efficiency we assume the attribute exists
 	 * 
 	 * @param attributeCode the code of the Attribute to remove
-	 * @return Boolean
+	 * @return the EntityAttribute that was assigned to this BaseEntity under the provided attributeCode, if it existed
 	 */
-	public Boolean removeAttribute(final String attributeCode) {
-		return this.getBaseEntityAttributesMap().remove(attributeCode) != null ? true : false;
+	public EntityAttribute removeAttribute(final String attributeCode) {
+		return this.getBaseEntityAttributesMap().remove(attributeCode);
 	}
 
 	/**
