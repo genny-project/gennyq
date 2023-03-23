@@ -115,9 +115,16 @@ public class MergeUtils {
 	 * @return Object
 	 */
 	public Object wordMerge(String mergeText, Map<String, Object> entitymap) {
-
 		if (StringUtils.isBlank(mergeText))
 			return DEFAULT;
+
+		if(mergeText.startsWith("[[")) {
+			mergeText.substring(2);
+		}
+
+		if(mergeText.endsWith("]]")) {
+			mergeText.substring(0, mergeText.length() - 1);
+		}
 
 		// we split the text to merge into 2 components: BE.PRI... becomes [BE, PRI...]
 		String[] entityArr = mergeText.split("\\.");
