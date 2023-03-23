@@ -7,6 +7,9 @@ import life.genny.qwandaq.message.QBaseMSGMessageType;
 import life.genny.qwandaq.models.UserToken;
 
 import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.CommonUtils;
+
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -19,8 +22,6 @@ import java.util.HashMap;
 @ApplicationScoped
 public class SendMessageService {
 
-	private static final Logger log = Logger.getLogger(SendMessageService.class);
-
 	Jsonb jsonb = JsonbBuilder.create();
 
 	@Inject
@@ -28,6 +29,9 @@ public class SendMessageService {
 
 	@Inject
 	UserToken userToken;
+
+	@Inject
+	Logger log;
 
 	public static final String RECIPIENT = "RECIPIENT";
 	public static final String SOURCE = "SOURCE";
@@ -72,7 +76,10 @@ public class SendMessageService {
 	public void send(String templateCode, String recipientBECode, String entityCode){
 		BaseEntity baseEntity = baseEntityUtils.getBaseEntity(templateCode);
 		if(baseEntity != null){
-			String msgType = baseEntityUtils.getBaseEntityFromLinkAttribute(baseEntity, LNK_MESSAGE_TYPE).getValue(PRI_NAME, null);
+			BaseEntity lnkMessageType = baseEntityUtils.getBaseEntityFromLinkAttribute(baseEntity, LNK_MESSAGE_TYPE, true);
+			log.debug("lnkMessageType: "+lnkMessageType.getCode());
+			log.debug("lnkMessageType.name: "+lnkMessageType.getName());
+			String msgType = lnkMessageType.getValue(PRI_NAME, null);
 			log.info("Triggering message!");
 			sendMessage(templateCode,recipientBECode,entityCode, msgType);
 		}else{
@@ -83,7 +90,10 @@ public class SendMessageService {
 	public void send(String templateCode, String recipientBECode, String entityCode, Map<String, String> ctxMap){
 		BaseEntity baseEntity = baseEntityUtils.getBaseEntity(templateCode);
 		if(baseEntity != null){
-			String msgType = baseEntityUtils.getBaseEntityFromLinkAttribute(baseEntity, LNK_MESSAGE_TYPE).getValue(PRI_NAME, null);
+			BaseEntity lnkMessageType = baseEntityUtils.getBaseEntityFromLinkAttribute(baseEntity, LNK_MESSAGE_TYPE, true);
+			log.debug("lnkMessageType: "+lnkMessageType.getCode());
+			log.debug("lnkMessageType.name: "+lnkMessageType.getName());
+			String msgType = lnkMessageType.getValue(PRI_NAME, null);
 			log.info("Triggering message!");
 			sendMessage(templateCode,recipientBECode,entityCode, msgType, ctxMap);
 		}else{
@@ -106,6 +116,14 @@ public class SendMessageService {
 	}
 
 	public void sendMessage(String templateCode,String recipientBECode,String entityCode,String msgType, Map<String, String> ctxMap) {
+		if(StringUtils.isBlank(msgType)){
+			log.error("templateCode: "+ templateCode);
+			log.error("recipientBECode: "+ recipientBECode);
+			log.error("entityCode: "+ entityCode);
+			log.error("msgType: "+ msgType);
+			CommonUtils.printMap(ctxMap);
+			return;
+		}
 		if(msgType.contains(QBaseMSGMessageType.TOAST.name())) {
 			ctxMap.put(SOURCE,recipientBECode);
 			ctxMap.put(TARGET,entityCode);
