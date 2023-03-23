@@ -30,6 +30,7 @@ public class Definition extends BaseEntity {
 	public static final String DEF_USER = "DEF_USER";
 	public static final String DEF_ROLE = "DEF_ROLE";
 	public static final String DEF_MESSAGE = "DEF_MESSAGE";
+	public static final String DEF_ROLE = "DEF_ROLE";
 
 	public Definition(String code, String name) {
 		super(code, name);
