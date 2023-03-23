@@ -273,6 +273,8 @@ public class QwandaUtils {
 						return;
 					}
 
+					log.info("QuesQues  => " + questionQuestion.getChildCode() + " -> " + questionQuestion.getMandatory() + ", readonly: " +questionQuestion.getReadonly());
+
 					// set boolean fields
 					child.setMandatory(questionQuestion.getMandatory());
 					child.setDisabled(questionQuestion.getDisabled());
@@ -288,6 +290,8 @@ public class QwandaUtils {
 				});
 			}
 		} else {
+			log.info("Q  => " + question.getCode() + " -> " + question.getMandatory() + ", readonly: " + question.getReadonly());
+			ask.setMandatory(question.getMandatory());
 			ask.setReadonly(question.getReadonly());
 		}
 
