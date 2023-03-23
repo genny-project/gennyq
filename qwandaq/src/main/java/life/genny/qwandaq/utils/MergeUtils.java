@@ -117,7 +117,7 @@ public class MergeUtils {
 	public Object wordMerge(String mergeText, Map<String, Object> entitymap) {
 		if (StringUtils.isBlank(mergeText))
 			return DEFAULT;
-
+		mergeText = mergeText.strip();
 		if(mergeText.startsWith("[[")) {
 			mergeText.substring(2);
 		}
