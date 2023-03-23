@@ -222,19 +222,18 @@ public class RoleManager extends Manager {
 
 	/**
 	 * Have one role inherit another
-	 * @param productCode - productCode that target role is defined in
 	 * @param role - target role
 	 * @param parentRole - role to inherit
 	 * @return - new target role
 	 */
-	public BaseEntity inheritRole(String productCode, BaseEntity role, final BaseEntity parentRole) {
+	public BaseEntity inheritRole(BaseEntity role, final BaseEntity parentRole) {
 		BaseEntity ret = role;
 		List<EntityAttribute> perms = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(parentRole.getRealm(), parentRole.getCode(), Prefix.CAP_);
 		for (EntityAttribute permissionEA : perms) {
 			Attribute attribute = attributeUtils.getAttribute(permissionEA.getAttributeCode(), true, true);
 			permissionEA.setAttribute(attribute);
 			List<CapabilityNode> capabilities = CapabilitiesManager.deserializeCapArray(permissionEA.getValue());
-			ret = capManager.addCapabilityToBaseEntity(productCode, ret, permissionEA.getAttributeCode(), capabilities);
+			ret = capManager.addCapabilityToBaseEntity(ret, permissionEA.getAttributeCode(), capabilities);
 
 			beUtils.updateBaseEntity(ret);
 		}
