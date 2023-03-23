@@ -131,7 +131,7 @@ public class RoleBuilder {
         
         // Role inherits
         for(BaseEntity parentRole : this.inheritedRoles) {
-            roleMan.inheritRole(productCode, targetRole, parentRole);
+            roleMan.inheritRole(targetRole, parentRole);
         }
 
         // Children

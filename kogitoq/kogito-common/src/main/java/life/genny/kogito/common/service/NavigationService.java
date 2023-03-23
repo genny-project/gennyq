@@ -13,11 +13,6 @@ import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-
-import life.genny.kogito.common.utils.KogitoUtils;
-import life.genny.qwandaq.constants.Prefix;
-import life.genny.qwandaq.managers.capabilities.role.RoleManager;
-import life.genny.qwandaq.utils.*;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.attribute.Attribute;
@@ -26,11 +21,9 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.exception.checked.GraphQLException;
 import life.genny.qwandaq.exception.checked.RoleException;
-import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.response.GennyResponseException;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QEventMessage;
-import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 
@@ -40,33 +33,6 @@ public class NavigationService extends KogitoService {
 	private static final Logger log = Logger.getLogger(MethodHandles.lookup().lookupClass());
 
 	Jsonb jsonb = JsonbBuilder.create();
-
-	@Inject
-	UserToken userToken;
-
-	@Inject
-	QwandaUtils qwandaUtils;
-
-	@Inject
-	BaseEntityUtils beUtils;
-
-	@Inject
-	EntityAttributeUtils beaUtils;
-
-	@Inject
-	SearchService searchService;
-
-	@Inject
-	KogitoUtils kogitoUtils;
-
-	@Inject
-	SearchUtils searchUtils;
-
-	@Inject
-	RoleManager roleManager;
-
-	@Inject
-	TaskService tasks;
 
 	public static final String PRI_IS_PREFIX = "PRI_IS_";
 
@@ -134,9 +100,6 @@ public class NavigationService extends KogitoService {
 		String userCode = userToken.getUserCode();
 		String productCode = userToken.getProductCode();
 		EntityAttribute summary = beaUtils.getEntityAttribute(productCode, userCode, Attribute.LNK_SUMMARY);
-		if (summary == null) {
-			throw new ItemNotFoundException(productCode, userCode, Attribute.LNK_SUMMARY);
-		}
 		String summaryCode = CommonUtils.cleanUpAttributeValue(summary.getValueString());
 		log.debug("Found summary PCM: " + summaryCode);
 
