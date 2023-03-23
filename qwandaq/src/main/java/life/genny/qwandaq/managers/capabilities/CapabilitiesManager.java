@@ -252,12 +252,8 @@ public class CapabilitiesManager extends Manager {
 		return addCapabilityToBaseEntity(targetBe.getRealm(), targetBe, capability.code, capability.nodes.toArray(new CapabilityNode[0]));
 	}
 
-	public BaseEntity addCapabilityToBaseEntity(String productCode, BaseEntity targetBe, Attribute capabilityAttribute,
+	public BaseEntity addCapabilityToBaseEntity(BaseEntity targetBe, Attribute capabilityAttribute,
 			final List<CapabilityNode> modes) {
-		if (capabilityAttribute == null) {
-			throw new ItemNotFoundException(productCode, "Capability Attribute");
-		}
-
 		updateCapability(targetBe, capabilityAttribute, modes);
 		return targetBe;
 	}
@@ -273,14 +269,14 @@ public class CapabilitiesManager extends Manager {
 		return addCapabilityToBaseEntity(targetBe, attribute, modes);
 	}
 
-	public BaseEntity addCapabilityToBaseEntity(String productCode, BaseEntity target, final String rawCapCode,
+	public BaseEntity addCapabilityToBaseEntity(BaseEntity target, final String rawCapCode,
 			final List<CapabilityNode> capabilityList) {
 		// Ensure the capability is well defined
 		String cleanCapabilityCode = cleanCapabilityCode(rawCapCode);
 
 		// Don't need to catch here since we don't want to create
-		Attribute attribute = attributeUtils.getAttribute(productCode, cleanCapabilityCode, true);
-		return addCapabilityToBaseEntity(productCode, target, attribute, capabilityList);
+		Attribute attribute = attributeUtils.getAttribute(target.getRealm(), cleanCapabilityCode, true);
+		return addCapabilityToBaseEntity(target, attribute, capabilityList);
 	}
 
 	public static Capability deserializeCapability(String capabilityCode, String modeString) {

@@ -264,7 +264,7 @@ public class Ask extends CoreEntity {
 		this.hidden = hidden;
 	}
 
-	public Boolean getReadonly() {
+	public boolean getReadonly() {
 		return readonly;
 	}
 

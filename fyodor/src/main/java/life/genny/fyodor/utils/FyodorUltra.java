@@ -700,9 +700,8 @@ public class FyodorUltra {
 	 * @return
 	 */
 	public EntityAttribute getRecursiveColumnLink(BaseEntity entity, String code) {
-
-		if (entity == null)
-			throw new NullParameterException("entity");
+		if(entity == null)
+			return null;
 
 		// split code to find next attribute in line
 		String[] array = code.split("__");
@@ -715,7 +714,7 @@ public class FyodorUltra {
 			try {
 				entity = beUtils.getBaseEntityFromLinkAttribute(entity, attributeCode);
 			} catch (ItemNotFoundException e) {
-				throw new BadDataException("BaseEntity fetched from " + entityCode + ":" + attributeCode + " is null");
+				throw new BadDataException("BaseEntity fetched from " + entityCode + ":" + attributeCode + " is null", e);
 			}
 			return getRecursiveColumnLink(entity, code);
 		}

@@ -131,6 +131,7 @@ public class Dispatch {
 			msg.add(eventsAsk);
 		}
 		// init if null to stop null pointers
+		// TODO: This should be moved into the constructor of ProcessData if this is a problem
 		if (processData.getAttributeCodes() == null) {
 			processData.setAttributeCodes(new ArrayList<>());
 		}
@@ -167,7 +168,7 @@ public class Dispatch {
 	 * @param flatMapOfAsks
 	 * @return True if the map contains a non-readonly ask, False otherwise
 	 */
-	public Boolean containsNonReadonly(Map<String, Ask> flatMapOfAsks) {
+	public boolean containsNonReadonly(Map<String, Ask> flatMapOfAsks) {
 		for (Ask ask : flatMapOfAsks.values()) {
 			if (!ask.getReadonly()) {
 				return true;
