@@ -179,8 +179,10 @@ public class FyodorUltra {
 			ctxMap.put("SOURCE", beUtils.getUserBaseEntity());
 			ctxMap.put("USER", beUtils.getUserBaseEntity());
 
-			searchEntity.getTraits(Filter.class).stream()
-					.filter(f -> f.getC() == String.class).forEach(f -> {
+			searchEntity.getClauseContainers().stream()
+					.map(cc -> cc.getFilter())
+					.filter(f -> String.class.equals(f.getC()))
+					.forEach(f -> {
 						log.debug("\tMerging: " + f.getValue());
 						String result =(String) mergeUtils.wordMerge((String) f.getValue(), ctxMap);
 						log.debug("\t\tResult: " + result); 
