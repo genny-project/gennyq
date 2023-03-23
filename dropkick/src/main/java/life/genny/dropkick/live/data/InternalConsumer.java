@@ -202,7 +202,7 @@ public class InternalConsumer {
 			ctxMap.put("TARGET", target);
 
 		searchEntity.setRealm(userToken.getProductCode());
-		searchEntity = defUtils.mergeFilterValueVariables(searchEntity, ctxMap);
+		searchEntity = searchUtils.mergeFilterValues(searchEntity, ctxMap);
 
 		// Perform search and evaluate columns
 		List<BaseEntity> results = searchUtils.searchBaseEntitys(searchEntity);
