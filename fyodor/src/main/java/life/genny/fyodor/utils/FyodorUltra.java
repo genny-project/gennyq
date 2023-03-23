@@ -174,6 +174,7 @@ public class FyodorUltra {
 		// apply capabilities to traits
 		capHandler.refineSearchFromCapabilities(searchEntity);
 		if (!CapHandler.hasSecureToken(userToken)) {
+			log.debug("Attempting Merging");
 			Map<String, Object> ctxMap = new HashMap<>();
 			ctxMap.put("SOURCE", beUtils.getUserBaseEntity());
 			ctxMap.put("USER", beUtils.getUserBaseEntity());
