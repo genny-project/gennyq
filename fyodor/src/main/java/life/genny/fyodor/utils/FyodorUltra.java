@@ -711,6 +711,10 @@ public class FyodorUltra {
 			} catch (ItemNotFoundException e) {
 				throw new BadDataException("BaseEntity fetched from " + entityCode + ":" + attributeCode + " is null");
 			}
+			// TODO: convert getBaseEntityFromLinkAttribute	to throw exception
+			if (entity == null) {
+				throw new BadDataException("BaseEntity fetched from " + entityCode + ":" + attributeCode + " is null");
+			}
 			return getRecursiveColumnLink(entity, code);
 		}
 
