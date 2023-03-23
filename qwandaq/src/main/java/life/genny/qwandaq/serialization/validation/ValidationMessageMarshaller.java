@@ -13,6 +13,8 @@ import life.genny.qwandaq.validation.Validation;
 
 public class ValidationMessageMarshaller implements MessageMarshaller<Validation> {
 
+	public static final String TYPE_NAME = "life.genny.qwandaq.persistence.validation.Validation";
+
 	@Override
 	public Class<Validation> getJavaClass() {
 		return Validation.class;
@@ -20,7 +22,7 @@ public class ValidationMessageMarshaller implements MessageMarshaller<Validation
 
 	@Override
 	public String getTypeName() {
-		return "life.genny.qwandaq.persistence.validation.Validation";
+		return TYPE_NAME;
 	}
 
 	// @Override

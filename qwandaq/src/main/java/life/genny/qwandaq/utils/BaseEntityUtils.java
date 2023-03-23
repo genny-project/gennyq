@@ -27,7 +27,7 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -346,7 +346,7 @@ public class BaseEntityUtils {
 
 		String attributeValue = getBaseEntityCodeFromLinkAttribute(baseEntity, attributeCode);
 		if (attributeValue == null) {
-			return null;
+			return new ArrayList<>(0);
 		}
 
 		String[] baseEntityCodeArray = StringUtils.split(attributeValue,",");
@@ -517,8 +517,12 @@ public class BaseEntityUtils {
 	 * @param name  The name of the entity
 	 * @param code  The code of the entity
 	 * @return The created BaseEntity
+	 * 
+	 * @throws DefinitionException if a prefix could not be found for the supplied definition
+	 * @throws DebugException if a user base entity is missing a prefix
 	 */
-	public BaseEntity create(final Definition definition, String name, String code) {
+	public BaseEntity create(final Definition definition, String name, String code) 
+		throws DefinitionException {
 
 		if (definition == null)
 			throw new NullParameterException("definition");
@@ -529,14 +533,17 @@ public class BaseEntityUtils {
 		String productCode = definition.getRealm();
 		String definitionCode = definition.getCode();
 		try {
-			EntityAttribute uuidEA = beaUtils.getEntityAttribute(productCode, definitionCode, Prefix.ATT_.concat(Attribute.PRI_UUID));
+			beaUtils.getEntityAttribute(productCode, definitionCode, Prefix.ATT_.concat(Attribute.PRI_UUID));
 			log.debug("Creating user base entity");
 			item = createUser(definition);
 		} catch(ItemNotFoundException e) {
 			String prefix = defUtils.getDefinitionPrefix(productCode, definitionCode);
+			
+			// TODO: Standardize this
 			if (StringUtils.isBlank(prefix)) {
 				throw new DefinitionException("No prefix set for the def: " + definitionCode);
 			}
+
 			if (StringUtils.isBlank(code)) {
 				code = (prefix + "_" + UUID.randomUUID().toString().substring(0, 32)).toUpperCase();
 			}
@@ -671,13 +678,13 @@ public class BaseEntityUtils {
 		return be;
 	}
 
-	public BaseEntity removeBaseEntity(BaseEntity baseEntity) {
+	public int removeBaseEntity(BaseEntity baseEntity) {
 		beaUtils.removeBaseEntityAttributesForBaseEntity(baseEntity);
 		return removeBaseEntity(baseEntity.getRealm(), baseEntity.getCode());
 	}
 
-	public BaseEntity removeBaseEntity(String productCode, String beCode) {
+	public int removeBaseEntity(String productCode, String beCode) {
 		beaUtils.removeBaseEntityAttributesForBaseEntity(productCode, beCode);
-		return (BaseEntity) cm.removePersistableEntity(GennyConstants.CACHE_NAME_BASEENTITY, new BaseEntityKey(productCode, beCode));
+		return cm.removeBaseEntity(productCode, beCode);
 	}
 }

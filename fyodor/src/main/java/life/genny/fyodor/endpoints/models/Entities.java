@@ -24,6 +24,7 @@ import io.vertx.core.http.HttpServerRequest;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
@@ -77,23 +78,12 @@ public class Entities {
 					.entity(HttpUtils.error(NOT_AUTHORIZED_TO_MAKE_THIS_REQUEST)).build();
 		}
 
-		String productCode = userToken.getProductCode();
-		BaseEntityKey beKey = new BaseEntityKey(productCode, code);
-		BaseEntity entity = (BaseEntity) cm.getEntity(GennyConstants.CACHE_NAME_BASEENTITY, beKey);
-		if (entity != null) {
-			log.debug("Entity in cache.. returning...  ");
-		} else {
-			entity = beUtils.getBaseEntity(userToken.getProductCode(), code);
-			if (entity != null) {
-				// Entity found in DB but not cache. Add it to cache..
-				log.debug("Entity not in cache, but in DB.. adding to cache...  ");
-				cm.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, beKey, entity);
-			} else {
-				log.error(getBaseEntityNotFoundLog(userToken.getProductCode(), code));
-			}
+		try {
+			return Response.ok(beUtils.getBaseEntity(userToken.getProductCode(), code)).build();
+		} catch(ItemNotFoundException e) {
+			log.error(getBaseEntityNotFoundLog(userToken.getProductCode(), code));
+			return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
 		}
-
-		return Response.ok(entity).build();
 	}
 	
 	/**
@@ -108,16 +98,17 @@ public class Entities {
 	public Response delete(@PathParam("code") String code) {
 
 		if (userToken == null) {
-			return Response.status(Response.Status.BAD_REQUEST)
+			return Response.status(Response.Status.FORBIDDEN)
 					.entity(HttpUtils.error(NOT_AUTHORIZED_TO_MAKE_THIS_REQUEST)).build();
 		}
 
-		BaseEntity entity = beUtils.removeBaseEntity(userToken.getProductCode(), code);
-		if (entity == null) {
+		int numAffected = beUtils.removeBaseEntity(userToken.getProductCode(), code);
+		if (numAffected == 0) {
 			log.error(getBaseEntityNotFoundLog(userToken.getProductCode(), code));
+			return Response.status(Response.Status.NOT_FOUND).entity(getBaseEntityNotFoundLog(userToken.getProductCode(), code)).build();
 		}
 
-		return Response.ok(entity).build();
+		return Response.ok("Removed base entity: " + code + " successfully").build();
 	}
 	
 	/**

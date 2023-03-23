@@ -3,15 +3,13 @@ package life.genny.qwandaq.serialization.attribute;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.List;
 import life.genny.qwandaq.EEntityStatus;
-import life.genny.qwandaq.converter.ValidationListConverter;
-import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.validation.Validation;
 import org.infinispan.protostream.MessageMarshaller;
 
 public class AttributeMessageMarshaller implements MessageMarshaller<Attribute> {
+
+	public static final String TYPE_NAME = "life.genny.qwandaq.persistence.attribute.Attribute";
 
 	@Override
 	public Class<Attribute> getJavaClass() {
@@ -20,7 +18,7 @@ public class AttributeMessageMarshaller implements MessageMarshaller<Attribute> 
 
 	@Override
 	public String getTypeName() {
-		return "life.genny.qwandaq.persistence.attribute.Attribute";
+		return TYPE_NAME;
 	}
 
 	// @Override

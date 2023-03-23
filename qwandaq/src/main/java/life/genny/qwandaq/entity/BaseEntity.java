@@ -253,9 +253,9 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 			entityAttribute = new EntityAttribute(this, attribute, weight, value);
 		}
 		if (value != null) {
-			entityAttribute.setAttribute(attribute);
 			entityAttribute.setValue(value);
 		}
+		entityAttribute.setAttribute(attribute);
 		entityAttribute.setWeight(weight);
 		addAttribute(entityAttribute);
 		return entityAttribute;
