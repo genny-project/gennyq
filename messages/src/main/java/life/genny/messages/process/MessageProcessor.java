@@ -168,9 +168,10 @@ public class MessageProcessor {
                     if(typeList != null){
                         try {
                             messageTypeList = typeList.stream().map(QBaseMSGMessageType::valueOf).toList();
-                        } catch (Exception e) {
-                            log.error(e.getLocalizedMessage());
-                            return CommonUtils.logAndReturn(log::error, e);
+                        } catch (IllegalArgumentException e) {
+                            log.error("Cannot be converted to QBaseMSGMessageType enum");
+                            log.error("Exception: "+ ex.getMessage());
+                            return;
                         }
                     }
                 }
