@@ -119,11 +119,11 @@ public class MergeUtils {
 			return DEFAULT;
 		mergeText = mergeText.strip();
 		if(mergeText.startsWith("[[")) {
-			mergeText.substring(2);
+			mergeText = mergeText.substring(2);
 		}
 
 		if(mergeText.endsWith("]]")) {
-			mergeText.substring(0, mergeText.length() - 1);
+			mergeText = mergeText.substring(0, mergeText.length() - 2);
 		}
 
 		// we split the text to merge into 2 components: BE.PRI... becomes [BE, PRI...]
