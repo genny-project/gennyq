@@ -706,11 +706,11 @@ public class FyodorUltra {
 		// recursion
 		if (array.length > 1) {
 			String entityCode = entity.getCode();
-			entity = beUtils.getBaseEntityFromLinkAttribute(entity, attributeCode);
-			if (entity == null) {
+			try {
+				entity = beUtils.getBaseEntityFromLinkAttribute(entity, attributeCode);
+			} catch (ItemNotFoundException e) {
 				throw new BadDataException("BaseEntity fetched from " + entityCode + ":" + attributeCode + " is null");
 			}
-			
 			return getRecursiveColumnLink(entity, code);
 		}
 
