@@ -181,6 +181,9 @@ public class FyodorUltra {
 
 			searchEntity.getTraits(Filter.class).stream()
 					.filter(f -> f.getC() == String.class).forEach(f -> {
+						log.debug("\tMerging: " + f.getValue());
+						String result =(String) mergeUtils.wordMerge((String) f.getValue(), ctxMap);
+						log.debug("\t\tResult: " + result); 
 						f.setValue(mergeUtils.wordMerge((String) f.getValue(), ctxMap));
 			});
 		}
