@@ -265,8 +265,8 @@ public class Dispatch {
 			if (!StringUtils.isBlank(targetCode) && !targetCode.equals(target.getCode()) && !processedTargetCodes.contains(targetCode+target.getCode())) {
 				// merge targetCode
 				log.debugf("Target code combo already processed? : %s", processedTargetCodes.contains(targetCode + target.getCode()));
-				Map<String, Object> ctxMap = new HashMap<>();
-				ctxMap.put("TARGET", target);
+				Map<String, Object> ctxMap = Map.of("TARGET", target,
+													"USER", beUtils.getUserBaseEntity());
 				targetCode = mergeUtils.merge(targetCode, ctxMap);
 				// update targetCode so it does not re-trigger merging
 				JsonObject payload = Json.createObjectBuilder()
@@ -515,8 +515,9 @@ public class Dispatch {
 	 */
 	public void sendBaseEntities(List<BaseEntity> baseEntities) {
 
-		Map<String, Object> contexts = new HashMap<>();
-		contexts.put("USER_CODE", beUtils.getUserBaseEntity());
+		BaseEntity userBe = beUtils.getUserBaseEntity();
+		Map<String, Object> contexts = Map.of("USER_CODE", userBe,
+												"USER", userBe);
 
 		Attribute priName = attributeUtils.getAttribute(Attribute.PRI_NAME, true);
 
