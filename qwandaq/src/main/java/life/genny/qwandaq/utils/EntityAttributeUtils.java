@@ -100,7 +100,7 @@ public class EntityAttributeUtils {
 						ea.setAttribute(attribute);
 					} catch(ItemNotFoundException e) {
 						log.error("Error occured finding attribute: " + ea.getAttributeCode());
-						log.error("\t" + e.getMessage());
+						log.error("\t[!] " + e.getMessage());
 					}
 				}
 				if (!ea.getAttributeCode().equals(Attribute.LNK_INCLUDE) && ea.getValue() != null) 
