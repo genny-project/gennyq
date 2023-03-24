@@ -154,8 +154,7 @@ public class MergeUtils {
 				return be.getCode();
 			}
 
-			EntityAttribute ea = beaUtils.getEntityAttribute(be.getRealm(), be.getCode(), attributeCode, true, true);
-			Object attributeValue = ea.getValue();
+			Object attributeValue = be.getValue(attributeCode).get();
 			log.debug("context: " + keyCode + ", attr: " + attributeCode + ", value: " + attributeValue);
 
 			Matcher matchFormat = null;
@@ -204,7 +203,7 @@ public class MergeUtils {
 					result = getFormattedString(sValue, matchFormat.group(1));
 					log.debug("String attribute " + attributeCode + " needs formatting. Format is " + entityArr[2] + ", Result is " + result);
 				} else {
-					result = beaUtils.getEntityAttribute(be.getRealm(), be.getCode(), attributeCode).getValueString();
+					result = be.getValueAsString(attributeCode);
 					log.debug("String attribute " + attributeCode + " does NOT need formatting. Result is " + result);
 				}
 				return result;
