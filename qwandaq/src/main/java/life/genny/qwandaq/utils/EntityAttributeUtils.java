@@ -133,7 +133,7 @@ public class EntityAttributeUtils {
 			}
 			for (String parentCode : parentCodes) {
 				try {
-					BaseEntity parent = beUtils.getBaseEntity(current.getRealm(), parentCode, true);
+					BaseEntity parent = beUtils.getBaseEntity(current.getRealm(), parentCode.strip(), true);
 					log.trace("\t[BFS] - Adding neighbour: " + parent.getCode());
 					queue.offer(parent);
 				} catch (ItemNotFoundException e) {
