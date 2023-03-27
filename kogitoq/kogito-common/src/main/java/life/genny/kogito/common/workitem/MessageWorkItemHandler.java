@@ -3,6 +3,7 @@ package life.genny.kogito.common.workitem;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
@@ -23,6 +24,11 @@ public class MessageWorkItemHandler implements KogitoWorkItemHandler {
     SendMessageService sendMessageService;
 
     public static final String CTX = "CTX.";
+
+    @PostConstruct
+    public void init(){
+        log.info("MessageWorkItemHandler initialized!");
+    }
 
     @Override
     public void abortWorkItem(KogitoWorkItem workItem, KogitoWorkItemManager manager) {

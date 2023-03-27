@@ -75,7 +75,7 @@ public class SendMessageService {
 			BaseEntity lnkMessageType = baseEntityUtils.getBaseEntityFromLinkAttribute(baseEntity, LNK_MESSAGE_TYPE, true);
 			log.debug("lnkMessageType: "+lnkMessageType.getCode());
 			log.debug("lnkMessageType.name: "+lnkMessageType.getName());
-			String msgType = lnkMessageType.getValue(PRI_NAME, null);
+			String msgType = lnkMessageType.getName().toUpperCase();
 			log.info("Triggering message!");
 			sendMessage(messageCode,recipientCode, msgType);
 		}else{
@@ -89,7 +89,7 @@ public class SendMessageService {
 			BaseEntity lnkMessageType = baseEntityUtils.getBaseEntityFromLinkAttribute(baseEntity, LNK_MESSAGE_TYPE, true);
 			log.debug("lnkMessageType: "+lnkMessageType.getCode());
 			log.debug("lnkMessageType.name: "+lnkMessageType.getName());
-			String msgType = lnkMessageType.getValue(PRI_NAME, null);
+			String msgType = lnkMessageType.getName().toUpperCase();
 			log.info("Triggering message!");
 			sendMessage(messageCode,recepientCode, msgType, ctxMap);
 		}else{

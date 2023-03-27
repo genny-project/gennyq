@@ -42,7 +42,7 @@ public final class QEmailMessageManager extends QMessageProvider {
 		BaseEntity recipientBe = (BaseEntity) contextMap.get("RECIPIENT");
 		BaseEntity projectBe = (BaseEntity) contextMap.get("PROJECT");
 
-		recipientBe = beUtils.getBaseEntity(recipientBe.getCode());
+		recipientBe = beUtils.getBaseEntity(recipientBe.getCode(),true);
 
 		if (templateBe == null) {
 			throw new NullParameterException("templateBe");
@@ -170,22 +170,22 @@ public final class QEmailMessageManager extends QMessageProvider {
 
 		String urlBasedAttribute = GennySettings.projectUrl().replace("https://", "").replace(".gada.io", "").replace("-", "_").toUpperCase();
 		log.info("Searching for email attr " + urlBasedAttribute);
-		String dedicatedTestEmail = projectBe.getValue("EML_" + urlBasedAttribute, null);
-		if (dedicatedTestEmail != null) {
-			log.info("Found email " + dedicatedTestEmail + " for project attribute EML_" + urlBasedAttribute);
-			tosJsonArray = Json.createArrayBuilder()
-					.add(Json
-						.createObjectBuilder()
-						.add("email", dedicatedTestEmail)
-						.build())
-					.build();
-		}
-
-
+		// String dedicatedTestEmail = projectBe.getValue("EML_" + urlBasedAttribute, null);
+		// if (dedicatedTestEmail != null) {
+		// 	log.info("Found email " + dedicatedTestEmail + " for project attribute EML_" + urlBasedAttribute);
+		// 	tosJsonArray = Json.createArrayBuilder()
+		// 			.add(Json
+		// 				.createObjectBuilder()
+		// 				.add("email", dedicatedTestEmail)
+		// 				.build())
+		// 			.build();
+		// }
+		try{
 		JsonArrayBuilder personalizationArrayBuilder = Json.createArrayBuilder();
 		JsonObjectBuilder personalizationInnerObjectWrapper = Json.createObjectBuilder();
 		personalizationInnerObjectWrapper.add("to", tosJsonArray);
 		personalizationInnerObjectWrapper.add("subject", subject);
+		log.info("Reached here");
 
 		// Handle CC and BCC
 		Object ccVal = contextMap.get("CC");
@@ -277,12 +277,17 @@ public final class QEmailMessageManager extends QMessageProvider {
 		contentArray.add(contentJson.build());
 		mailJsonObjectBuilder.add("content", contentArray.build());
 
+	}catch(Exception ex){
+		log.error("Exception: "+ex);
+	}
+
 //		sendRequest(mailJsonObjectBuilder.build(), emailApiKey);
 
 		try {
 			log.info("ENV_SENDGRID_API_PATH: " + apiPath);
 
 			SendEmailWithSendGridAPI sendEmailWithSendGridAPI = new SendEmailWithSendGridAPI(mailJsonObjectBuilder.build(), emailApiKey, apiPath);
+
 			sendEmailWithSendGridAPI.sendRequest();
 		} catch (Exception e) {
 			log.error("Email sending failed! Error -> " + e.getMessage());

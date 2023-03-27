@@ -89,7 +89,7 @@ public class MessageProcessor {
 
         log.debug("Realm is " + realm + " - Incoming Message :: " + message.toString());
 
-        BaseEntity projectBe = beUtils.getBaseEntity("PRJ_" + realm.toUpperCase());
+        BaseEntity projectBe = beUtils.getBaseEntity("PRJ_" + realm.toUpperCase(), true);
 
         List<QBaseMSGMessageType> messageTypeList = Arrays.asList(message.getMessageTypeArr());
 
