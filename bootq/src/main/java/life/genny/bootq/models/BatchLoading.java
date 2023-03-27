@@ -593,6 +593,7 @@ public class BatchLoading {
                 loadReport.addBuildError(EReportCategoryType.QUESTION_QUESTION, entityInfo, e);
                 continue;
             }
+            
             Map<String, String> row = entry.getValue();
 
             String parentCode = row.get("parentcode");

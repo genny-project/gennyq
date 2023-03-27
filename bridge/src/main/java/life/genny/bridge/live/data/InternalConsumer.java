@@ -2,6 +2,7 @@ package life.genny.bridge.live.data;
 
 import io.quarkus.runtime.StartupEvent;
 import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -135,6 +136,11 @@ public class InternalConsumer {
 		}
 
 		final JsonObject json = new JsonObject(incoming);
+        final JsonArray items = json.getJsonArray("items");
+        if(items != null && items.size() == 0) {
+            log.error("[!] Sending out a message with 0 items!");
+        }
+        
 		GennyToken gennyToken = new GennyToken(json.getString("token"));
 		try {
 			verification.verify(gennyToken.getKeycloakRealm(), gennyToken.getToken());

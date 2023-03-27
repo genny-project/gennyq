@@ -13,8 +13,6 @@ import javax.inject.Inject;
 
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
-import life.genny.qwandaq.attribute.HEntityAttribute;
-import life.genny.qwandaq.entity.HBaseEntity;
 import life.genny.qwandaq.intf.ICapabilityFilterable;
 import life.genny.qwandaq.utils.*;
 import org.jboss.logging.Logger;
@@ -166,26 +164,26 @@ public class CapabilitiesManager extends Manager {
 	 */
 	private void updateCapability(BaseEntity target, final Attribute capability,
 			final CapabilityNode... nodes) {
-		validateTarget(target);
-
-		EntityAttribute addedAttribute = target.addAttribute(capability, 0.0, CommonUtils.getArrayString(nodes));
-		beaUtils.updateEntityAttribute(addedAttribute);
+		updateCapability(target, capability, CommonUtils.getArrayString(nodes));
 	}
 
 	private void updateCapability(BaseEntity target, final Attribute capability,
 			final List<CapabilityNode> modeList) {
+			updateCapability(target, capability, CommonUtils.getArrayString(modeList));
+	}
+
+	private void updateCapability(BaseEntity target, final Attribute capability, String modeString) {
+		validateTarget(target);
+
 		// Update base entity
-		if (capability == null) {
-			throw new NullParameterException("capability");
+		EntityAttribute updatedAttribute;
+		try {
+			updatedAttribute = beaUtils.getEntityAttribute(target.getRealm(), target.getCode(), capability.getCode());
+		} catch(ItemNotFoundException e) {
+			updatedAttribute = target.addAttribute(capability, 0.0);
 		}
-
-		if (target == null) {
-			throw new NullParameterException("target");
-		}
-
-		EntityAttribute addedAttribute = target.addAttribute(capability, 0.0, CommonUtils.getArrayString(modeList));
-		beaUtils.updateEntityAttribute(addedAttribute);
-		beUtils.updateBaseEntity(target);
+		updatedAttribute.setValueString(modeString);
+		beaUtils.updateEntityAttribute(updatedAttribute);
 	}
 
 	/**
@@ -245,14 +243,8 @@ public class CapabilitiesManager extends Manager {
 	}
 
 	public BaseEntity removeCapabilityFromBaseEntity(String productCode, BaseEntity targetBe, Attribute capabilityAttribute) {
-		if (capabilityAttribute == null) {
-			throw new ItemNotFoundException(productCode, "Capability Attribute");
-		}
-
-
-		targetBe.addAttribute(capabilityAttribute, 0.0, "[]");
-		cm.putObject(productCode, targetBe.getCode() + ":" + capabilityAttribute.getCode(), "[]");
-		beUtils.updateBaseEntity(targetBe);
+		targetBe.removeAttribute(capabilityAttribute.getCode());
+		cm.removeEntityAttribute(productCode, targetBe.getCode(), capabilityAttribute.getCode());
 		return targetBe;
 	}
 
@@ -260,12 +252,8 @@ public class CapabilitiesManager extends Manager {
 		return addCapabilityToBaseEntity(targetBe.getRealm(), targetBe, capability.code, capability.nodes.toArray(new CapabilityNode[0]));
 	}
 
-	public BaseEntity addCapabilityToBaseEntity(String productCode, BaseEntity targetBe, Attribute capabilityAttribute,
+	public BaseEntity addCapabilityToBaseEntity(BaseEntity targetBe, Attribute capabilityAttribute,
 			final List<CapabilityNode> modes) {
-		if (capabilityAttribute == null) {
-			throw new ItemNotFoundException(productCode, "Capability Attribute");
-		}
-
 		updateCapability(targetBe, capabilityAttribute, modes);
 		return targetBe;
 	}
@@ -281,14 +269,14 @@ public class CapabilitiesManager extends Manager {
 		return addCapabilityToBaseEntity(targetBe, attribute, modes);
 	}
 
-	public BaseEntity addCapabilityToBaseEntity(String productCode, BaseEntity target, final String rawCapCode,
+	public BaseEntity addCapabilityToBaseEntity(BaseEntity target, final String rawCapCode,
 			final List<CapabilityNode> capabilityList) {
 		// Ensure the capability is well defined
 		String cleanCapabilityCode = cleanCapabilityCode(rawCapCode);
 
 		// Don't need to catch here since we don't want to create
-		Attribute attribute = attributeUtils.getAttribute(productCode, cleanCapabilityCode, true);
-		return addCapabilityToBaseEntity(productCode, target, attribute, capabilityList);
+		Attribute attribute = attributeUtils.getAttribute(target.getRealm(), cleanCapabilityCode, true);
+		return addCapabilityToBaseEntity(target, attribute, capabilityList);
 	}
 
 	public static Capability deserializeCapability(String capabilityCode, String modeString) {

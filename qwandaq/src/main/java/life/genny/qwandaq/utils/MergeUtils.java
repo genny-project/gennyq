@@ -115,9 +115,16 @@ public class MergeUtils {
 	 * @return Object
 	 */
 	public Object wordMerge(String mergeText, Map<String, Object> entitymap) {
-
 		if (StringUtils.isBlank(mergeText))
 			return DEFAULT;
+		mergeText = mergeText.strip();
+		if(mergeText.startsWith("[[")) {
+			mergeText = mergeText.substring(2);
+		}
+
+		if(mergeText.endsWith("]]")) {
+			mergeText = mergeText.substring(0, mergeText.length() - 2);
+		}
 
 		// we split the text to merge into 2 components: BE.PRI... becomes [BE, PRI...]
 		String[] entityArr = mergeText.split("\\.");
@@ -128,7 +135,7 @@ public class MergeUtils {
 			return DEFAULT;
 
 		if (!entitymap.containsKey(keyCode))
-			return DEFAULT;
+			return mergeText;
 
 		Object value = entitymap.get(keyCode);
 
@@ -147,8 +154,7 @@ public class MergeUtils {
 				return be.getCode();
 			}
 
-			EntityAttribute ea = beaUtils.getEntityAttribute(be.getRealm(), be.getCode(), attributeCode, true, true);
-			Object attributeValue = ea.getValue();
+			Object attributeValue = be.getValue(attributeCode).get();
 			log.debug("context: " + keyCode + ", attr: " + attributeCode + ", value: " + attributeValue);
 
 			Matcher matchFormat = null;
@@ -197,7 +203,7 @@ public class MergeUtils {
 					result = getFormattedString(sValue, matchFormat.group(1));
 					log.debug("String attribute " + attributeCode + " needs formatting. Format is " + entityArr[2] + ", Result is " + result);
 				} else {
-					result = beaUtils.getEntityAttribute(be.getRealm(), be.getCode(), attributeCode).getValueString();
+					result = be.getValueAsString(attributeCode);
 					log.debug("String attribute " + attributeCode + " does NOT need formatting. Result is " + result);
 				}
 				return result;

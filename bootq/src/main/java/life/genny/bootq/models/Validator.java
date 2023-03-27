@@ -1,11 +1,14 @@
 package life.genny.bootq.models;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+
+import org.apache.commons.lang3.StringUtils;
 
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
@@ -47,6 +50,8 @@ public class Validator {
      */
     public Set<Capability> validateCapabilities(String capabilityString) 
         throws BadDataException {
+            if(StringUtils.isBlank(capabilityString))
+                return new HashSet<>();
             try {
                 return CapabilityConverter.convertToEA(capabilityString);
             } catch (BadDataException e) {

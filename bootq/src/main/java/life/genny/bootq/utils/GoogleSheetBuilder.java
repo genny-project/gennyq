@@ -6,6 +6,7 @@ import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.datatype.DataType;
+import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.managers.CacheManager;
@@ -19,6 +20,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.bind.Jsonb;
@@ -330,6 +333,7 @@ public class GoogleSheetBuilder {
         boolean readonly = Boolean.parseBoolean(row.get(READONLY));
 
         String icon = row.get("icon");
+
         boolean disabled = Boolean.parseBoolean(row.get("disabled"));
         boolean hidden = Boolean.parseBoolean(row.get("hidden"));
 
@@ -344,6 +348,13 @@ public class GoogleSheetBuilder {
 		questionQuestion.setIcon(icon);
 		questionQuestion.setRealm(realmName);
 		questionQuestion.setParentId(parent.getId());
+
+        String capReqs = row.get("capreqs");
+        if(capReqs != null) {
+            Set<Capability> requirements = validator.validateCapabilities(capReqs);
+            questionQuestion.setCapabilityRequirements(requirements);
+        }
+
 		return questionQuestion;
     }
 

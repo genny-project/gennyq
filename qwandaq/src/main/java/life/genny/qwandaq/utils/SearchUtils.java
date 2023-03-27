@@ -3,6 +3,7 @@ package life.genny.qwandaq.utils;
 import java.net.http.HttpResponse;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -10,6 +11,8 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.ws.rs.core.Response;
 
+import life.genny.qwandaq.entity.search.clause.ClauseContainer;
+import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.constants.GennyConstants;
@@ -60,6 +63,9 @@ public class SearchUtils {
 
 	@Inject
 	CacheManager cm;
+
+	@Inject
+	MergeUtils mergeUtils;
 
 	/**
 	 * Call the Fyodor API to fetch a list of {@link BaseEntity}
@@ -247,6 +253,40 @@ public class SearchUtils {
 		// publish to events for dropkick
 		msg.setToken(userToken.getToken());
 		KafkaUtils.writeMsg(KafkaTopic.EVENTS, msg);
+	}
+
+	/**
+	 *  Merge search base entity by context map
+	 * @param searchBE Search base entity
+	 * @param ctxMap Context Map
+	 * @return Search base entity
+	 */
+	public SearchEntity mergeFilterValues(SearchEntity searchBE, Map<String, Object> ctxMap) {
+		List<ClauseContainer> clauses = searchBE.getClauseContainers();
+		if(clauses.isEmpty())
+			return searchBE;
+
+		// For each perform word merge
+		log.debug("Performing merges for Search Entity: " + searchBE.getCode());
+		for(ClauseContainer clause : clauses) {
+			if(clause.getFilter() == null || !String.class.equals(clause.getFilter().getC())) {
+				continue;
+			}
+
+			String filterVal = (String) clause.getFilter().getValue();
+			filterVal = filterVal.replace("[[", "").replace("]]", "");
+			Object wordMerge = mergeUtils.wordMerge(filterVal, ctxMap);
+			if(wordMerge instanceof String wordString) {
+				if(StringUtils.isBlank(wordString)) {
+					log.debug("Could not merge: " + filterVal);
+					continue;
+				}
+			}
+			log.debug("Inserting " + wordMerge + " into " + clause.getFilter().getValue());
+			clause.getFilter().setValue(wordMerge);
+		}
+
+		return searchBE;
 	}
 
 }

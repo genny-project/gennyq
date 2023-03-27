@@ -193,15 +193,13 @@ public class ExternalConsumer {
 	 * @param gennyToken the users GennyToken
 	 */
 	void routeDataByMessageType(JsonObject body, GennyToken gennyToken) {
-		// JsonObject nonTokenBody = (JsonObject) body.remove("token");
-		
-
-		log.info("Incoming Payload = " + body.toString());
 
 		if (body == null || body.getString("msg_type") == null) {
 			log.error("Bad body JsonObject passed");
 			return;
 		}
+
+		log.info("Incoming Payload = " + body.toString());
 
 		String msgType = body.getString("msg_type");
 		String productCodes = CommonUtils.getSystemEnv("PRODUCT_CODES");

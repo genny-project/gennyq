@@ -82,4 +82,7 @@ public abstract class KogitoService {
 
 	@Inject
 	AttributeUtils attributeUtils;
+	
+	@Inject
+	KeycloakUtils keycloakUtils;
 }
