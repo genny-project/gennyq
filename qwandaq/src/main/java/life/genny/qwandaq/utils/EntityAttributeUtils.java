@@ -95,8 +95,13 @@ public class EntityAttributeUtils {
 			for (EntityAttribute ea : current.getBaseEntityAttributes()) {
 				// For ea.getValue to work as intended, need to ensure datatype is assigned to the EntityAttribute
 				if(ea.getAttribute() == null) {
-					Attribute attribute = attributeUtils.getAttribute(ea.getRealm(), ea.getAttributeCode(), true);
-					ea.setAttribute(attribute);
+					try {
+						Attribute attribute = attributeUtils.getAttribute(ea.getRealm(), ea.getAttributeCode(), true);
+						ea.setAttribute(attribute);
+					} catch(ItemNotFoundException e) {
+						log.error("Error occured finding attribute: " + ea.getAttributeCode());
+						log.error("\t[!] " + e.getMessage());
+					}
 				}
 				if (!ea.getAttributeCode().equals(Attribute.LNK_INCLUDE) && ea.getValue() != null) 
 					allEntityAttributes.putIfAbsent(ea.getAttributeCode(), ea);
@@ -128,7 +133,7 @@ public class EntityAttributeUtils {
 			}
 			for (String parentCode : parentCodes) {
 				try {
-					BaseEntity parent = beUtils.getBaseEntity(current.getRealm(), parentCode, true);
+					BaseEntity parent = beUtils.getBaseEntity(current.getRealm(), parentCode.strip(), true);
 					log.trace("\t[BFS] - Adding neighbour: " + parent.getCode());
 					queue.offer(parent);
 				} catch (ItemNotFoundException e) {

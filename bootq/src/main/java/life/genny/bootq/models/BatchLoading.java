@@ -448,15 +448,21 @@ public class BatchLoading {
             for(Map.Entry<String, EntityAttribute> eas : inheritedEas.entrySet()) {
                 EntityAttribute entityAttribute = eas.getValue();
                 log.trace("Adding " + defBe.getCode() + ":" + entityAttribute.getAttributeCode() + ", value: " + entityAttribute.getValue());
-                Attribute attribute = attributeUtils.getAttribute(entityAttribute.getRealm(), entityAttribute.getAttributeCode(), true);
+                Attribute attribute;
+                try {
+                    attribute = attributeUtils.getAttribute(entityAttribute.getRealm(), entityAttribute.getAttributeCode(), true);
+                } catch(ItemNotFoundException e) {
+                    String entityInfo = realmName + ":" + defBe.getCode() + ":" + entityAttribute.getAttributeCode();
+                    loadReport.addBuildError(EReportCategoryType.LINKING_ENTITIES, entityInfo, e);
+                    continue;
+                }
+                    
                 entityAttribute.setAttribute(attribute);
-                
                 EntityAttribute newEa = defBe.addEntityAttribute(attribute, entityAttribute.getWeight() != null ? entityAttribute.getWeight() : 0.0, entityAttribute.getInferred(), entityAttribute.getValue());
 
                 newEa.setPrivacyFlag(entityAttribute.getPrivacyFlag());
                 newEa.setConfirmationFlag(entityAttribute.getConfirmationFlag());
                 newEa.setCapabilityRequirements(entityAttribute.getCapabilityRequirements());
-
                 try {
                     beaUtils.updateEntityAttribute(newEa);
                 } catch(Exception e) {
