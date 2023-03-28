@@ -287,14 +287,15 @@ public class Dispatch {
 		// iterate locations
 		List<EntityAttribute> locations = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(pcm.getRealm(), pcmCode, Prefix.PRI_LOC);
 
-		List<EntityAttribute> filteredLocations = new ArrayList<>(locations.size());
-		for (EntityAttribute entityAttribute : locations) {
-			if(!entityAttribute.requirementsMet(userCapabilities)) {
-				log.trace("capability requirements not met for location: " + entityAttribute.getAttributeCode() + " (" + entityAttribute.getValueString() + ")");
-				filteredLocations.add(entityAttribute);
-				continue;
+		locations.removeIf(loc -> {
+			if(!loc.requirementsMet(userCapabilities)) {
+				log.debug("capability requirements not met for location: " + loc.getAttributeCode() + " (" + loc.getValueString() + ")");
+				return true;
 			}
+			return false;
+		});
 
+		for (EntityAttribute entityAttribute : locations) {
 			log.debug("Passed Capabilities check for: " + entityAttribute.getBaseEntityCode() + ":" + entityAttribute.getAttributeCode());
 
 			Attribute attribute = attributeUtils.getAttribute(entityAttribute.getRealm(), entityAttribute.getAttributeCode(), true);
@@ -314,12 +315,6 @@ public class Dispatch {
 			} else if (value.startsWith(Prefix.SBE_)) {
 				processData.getSearches().add(value);
 			}
-		}
-
-		// ensure these don't go out to frontend
-		for(EntityAttribute badlocation : filteredLocations) {
-			log.debug("Removing: " + badlocation.getAttributeCode() + " from " + badlocation.getBaseEntityCode());
-			pcm.getBaseEntityAttributes().removeIf(loc -> loc.getAttributeCode().equals(badlocation.getAttributeCode()));
 		}
 
 		msg.add(pcm);
