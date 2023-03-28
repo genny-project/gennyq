@@ -6,6 +6,7 @@ import static life.genny.qwandaq.entity.PCM.PCM_TREE;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Arrays;
 import java.util.Map;
@@ -246,7 +247,7 @@ public class Dispatch {
 	 * @param msg The bulk message to store data
 	 * @param processData The ProcessData used to init the task
 	 */
-	public void traversePCM(CapabilitySet userCapabilities, PCM pcm, BaseEntity source, BaseEntity target,
+	public boolean traversePCM(CapabilitySet userCapabilities, PCM pcm, BaseEntity source, BaseEntity target,
 							String parent, String location, QBulkMessage msg, ProcessData processData) {
 		// TODO: This is too many arguments
 
@@ -255,7 +256,7 @@ public class Dispatch {
 		log.debug("Traversing " + pcmCode);
 		if (!pcm.requirementsMet(userCapabilities)) {
 			log.debug("User " + source.getCode() + " Capability requirements not met for pcm: " + pcmCode);
-			return;
+			return false;
 		}
 
 		// use pcm target if one is specified
@@ -278,7 +279,7 @@ public class Dispatch {
 						.build();
 				kogitoUtils.triggerWorkflow(GADAQ, "processQuestions", payload);
 				processedTargetCodes.add(targetCode+target.getCode());
-				return;
+				return true;
 			}
 		} catch (ItemNotFoundException e) {
 			log.trace("No target code found for " + pcm.getCode());
@@ -302,7 +303,9 @@ public class Dispatch {
 			log.debug(" DID STUFF!");
 		log.debug("Locations size after: " + locations.size() + " .. Expected: " + count.get("key"));
 
-		for (EntityAttribute entityAttribute : locations) {
+		Iterator<EntityAttribute> iter = locations.iterator();
+		while(iter.hasNext()) {
+			EntityAttribute entityAttribute = iter.next();
 			log.debug("Passed Capabilities check for: " + entityAttribute.getBaseEntityCode() + ":" + entityAttribute.getAttributeCode());
 
 			Attribute attribute = attributeUtils.getAttribute(entityAttribute.getRealm(), entityAttribute.getAttributeCode(), true);
@@ -317,7 +320,9 @@ public class Dispatch {
 				} else {
 					traversedPCMs.add(value);
 					PCM childPcm = beUtils.getPCM(value);
-					traversePCM(userCapabilities, childPcm, source, target, parent, location, msg, processData);
+					boolean meetsReqs = traversePCM(userCapabilities, childPcm, source, target, parent, location, msg, processData);
+					if(!meetsReqs)
+						iter.remove();
 				}
 			} else if (value.startsWith(Prefix.SBE_)) {
 				processData.getSearches().add(value);
@@ -339,6 +344,8 @@ public class Dispatch {
 			ask.setTestTargetCode(target.getCode());
 			msg.add(ask);
 		}
+
+		return true;
 	}
 
 	/**
