@@ -110,7 +110,13 @@ public class DefUtils {
 			if (results.isEmpty())
 				throw new DefinitionException("No definition with prefix: " + prefix);
 
-			return Definition.from(results.get(0));
+			// repair LNK_DEF
+			Definition def = Definition.from(results.get(0));
+			Attribute lnkDefAttr = attributeUtils.getAttribute(entity.getRealm(), Attribute.LNK_DEF);
+			EntityAttribute lnkDef = entity.addEntityAttribute(lnkDefAttr, 0.0, false, "[\"" + def.getCode() + "\"]");
+			beaUtils.updateEntityAttribute(lnkDef);
+
+			return def;
 		}
 
 		// fetch DEF if no merging is needed
