@@ -11,7 +11,6 @@ import javax.inject.Inject;
 
 import org.jboss.logging.Logger;
 
-import life.genny.kogito.common.core.Dispatch;
 import life.genny.qwandaq.Answer;
 import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.constants.Prefix;
@@ -21,9 +20,6 @@ import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.utils.QwandaUtils;
-import life.genny.qwandaq.kafka.KafkaTopic;
-import life.genny.qwandaq.message.QDataAskMessage;
-import life.genny.qwandaq.utils.KafkaUtils;
 
 @ApplicationScoped
 public class TaskService extends KogitoService {
@@ -132,7 +128,7 @@ public class TaskService extends KogitoService {
 		log.info("Current Scope Attributes: " + processData.getAttributeCodes());
 
 		boolean readonly = flatMapOfAsks.values().stream()
-				.allMatch(ask -> ask.getReadonly());
+				.allMatch(Ask::getReadonly);
 
 		processData.setReadonly(readonly);
 

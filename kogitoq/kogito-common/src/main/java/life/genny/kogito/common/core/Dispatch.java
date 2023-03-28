@@ -540,6 +540,10 @@ public class Dispatch {
 	 */
 	public void sendAsks(Set<Ask> asks) {
 
+		BaseEntity userBe = beUtils.getUserBaseEntity();
+		Map<String, Object> contexts = Map.of("USER_CODE", userBe,
+												"USER", userBe);
+
 		QDataAskMessage msg = new QDataAskMessage(asks);
 		msg.setReplace(true);
 		msg.setToken(userToken.getToken());
