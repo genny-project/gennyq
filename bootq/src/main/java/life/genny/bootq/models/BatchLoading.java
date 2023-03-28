@@ -118,7 +118,7 @@ public class BatchLoading {
 				break;
 			case "baseentity":
                 timeElapsed = persistBaseEntities(rx.getBaseEntitys(), realm);
-                log.info("Finished baseentityies, cost:" + timeElapsed.toMillis() + " millSeconds, items: " + rx.getBaseEntitys().size());
+                log.info("Finished baseentities, cost:" + timeElapsed.toMillis() + " millSeconds, items: " + rx.getBaseEntitys().size());
 				break;
 			case "def_entityattribute":
 				persistDefBaseEntityAttributes(rx.getDef_entityAttributes(), realm);

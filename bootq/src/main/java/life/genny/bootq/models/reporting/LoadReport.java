@@ -196,7 +196,7 @@ public class LoadReport {
         }
 
         logAndDump(ANSIColour.doColour("/************ Load Summary END ************/", ANSIColour.YELLOW));
-
+        clear();
     }
     
     
