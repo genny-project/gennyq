@@ -52,7 +52,7 @@ public class ImportService {
                 RealmUnit name = new RealmUnit(rawData);
                 list.add(name);
             } else {
-                log.warn("No RAW DATA");
+                log.warn("No RAW DATA from sheet uri: " + sheetURI);
             }
         }
         return list;
