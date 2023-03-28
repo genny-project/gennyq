@@ -287,13 +287,18 @@ public class Dispatch {
 		// iterate locations
 		List<EntityAttribute> locations = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(pcm.getRealm(), pcmCode, Prefix.PRI_LOC);
 
+		log.debug("Locations size before: " + locations.size());
+		final Map<String, Integer> count = new HashMap<>();
 		locations.removeIf(loc -> {
 			if(!loc.requirementsMet(userCapabilities)) {
 				log.debug("capability requirements not met for location: " + loc.getAttributeCode() + " (" + loc.getValueString() + ")");
+				count.put("key", count.getOrDefault("key", 0) + 1);
 				return true;
 			}
 			return false;
 		});
+
+		log.debug("Locations size after: " + locations.size() + " .. Expected: " + count.get("key"));
 
 		for (EntityAttribute entityAttribute : locations) {
 			log.debug("Passed Capabilities check for: " + entityAttribute.getBaseEntityCode() + ":" + entityAttribute.getAttributeCode());
