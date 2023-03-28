@@ -110,7 +110,7 @@ public class Events {
         // auth init
         if (AUTH_INIT.equals(code)) {
             kogitoUtils.triggerWorkflow(SELF, "authInit", "userCode", userToken.getUserCode());
-            return;
+            // We may want services to enact something on auth init, so continue;
         }
 
         // submit, next and update
