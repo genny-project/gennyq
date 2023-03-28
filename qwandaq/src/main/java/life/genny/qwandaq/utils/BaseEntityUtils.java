@@ -301,8 +301,6 @@ public class BaseEntityUtils {
 	 */
 	public String getBaseEntityCodeFromLinkAttribute(BaseEntity baseEntity, String attributeCode) {
 		String attributeValue = getStringValueOfAttribute(baseEntity, attributeCode);
-		if (attributeValue == null || !(attributeValue instanceof String))
-			return null;
 		return CommonUtils.cleanUpAttributeValue(attributeValue);
 	}
 
@@ -344,8 +342,10 @@ public class BaseEntityUtils {
 	 */
 	public List<String> getBaseEntityCodeArrayFromLinkAttribute(BaseEntity baseEntity, String attributeCode) {
 
-		String attributeValue = getBaseEntityCodeFromLinkAttribute(baseEntity, attributeCode);
-		if (attributeValue == null) {
+		String attributeValue;
+		try {
+			attributeValue = getBaseEntityCodeFromLinkAttribute(baseEntity, attributeCode);
+		} catch(ItemNotFoundException e) {
 			return new ArrayList<>(0);
 		}
 
