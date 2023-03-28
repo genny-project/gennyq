@@ -52,7 +52,7 @@ import life.genny.qwandaq.models.ServiceToken;
 /**
  * A static utility class used for standard requests and
  * operations involving Keycloak.
- * 
+ *
  * @author Adam Crow
  * @author Jasper Robison
  */
@@ -65,13 +65,13 @@ public class KeycloakUtils {
     @Inject
     ServiceToken serviceToken;
 
-	private static Logger log = Logger.getLogger(KeycloakUtils.class);
+    private static Logger log = Logger.getLogger(KeycloakUtils.class);
 
     static Jsonb jsonb = JsonbBuilder.create();
 
     /**
      * Fetch a GennyToken for a user using a username, password and client details.
-     * 
+     *
      * @param keycloakUrl the keycloakUrl to use
      * @param realm       the realm to use
      * @param clientId    the clientId to use
@@ -80,8 +80,7 @@ public class KeycloakUtils {
      * @param password    the password to use
      * @return GennyToken
      */
-    public static GennyToken getGennyToken(String keycloakUrl, String realm, String clientId, String secret,
-            String username, String password) {
+    public static GennyToken getGennyToken(String keycloakUrl, String realm, String clientId, String secret, String username, String password) {
 
         String token = getToken(keycloakUrl, realm, clientId, secret, username, password);
 
@@ -92,7 +91,7 @@ public class KeycloakUtils {
     /**
      * Fetch an access token for a user using a username, password and client
      * details.
-     * 
+     *
      * @param keycloakUrl the keycloakUrl to use
      * @param realm       the realm to use
      * @param clientId    the clientId to use
@@ -101,8 +100,7 @@ public class KeycloakUtils {
      * @param password    the password to use
      * @return String
      */
-    public static String getToken(String keycloakUrl, String realm, String clientId, String secret, String username,
-            String password) {
+    public static String getToken(String keycloakUrl, String realm, String clientId, String secret, String username, String password) {
 
         Map<String, String> params = new HashMap<>();
 
@@ -130,7 +128,7 @@ public class KeycloakUtils {
 
     /**
      * Fetch an access token for a user using a refresh token.
-     * 
+     *
      * @param keycloakUrl  the keycloakUrl to use
      * @param realm        the realm to use
      * @param clientId     the clientId to use
@@ -138,8 +136,7 @@ public class KeycloakUtils {
      * @param refreshToken the refreshToken to use
      * @return GennyToken
      */
-    public static GennyToken getToken(String keycloakUrl, String realm, String clientId, String secret,
-            String refreshToken) {
+    public static GennyToken getToken(String keycloakUrl, String realm, String clientId, String secret, String refreshToken) {
 
         HashMap<String, String> params = new HashMap<>();
 
@@ -159,35 +156,33 @@ public class KeycloakUtils {
     /**
      * Fetch an Impersonated Token for a user.
      *
-     * @param userBE     the userBE to get a token for
+     * @param userCode     the userBE to get a token for
      * @param gennyToken the gennyToken to use to fetch the token
-     * @param project    the project to use to fetch the token
      * @return String
      */
-    public String getImpersonatedToken(BaseEntity userBE, GennyToken gennyToken, BaseEntity project) {
+    public String getImpersonatedToken(String userCode, GennyToken gennyToken) {
 
         String realm = gennyToken.getRealm();
         String token = gennyToken.getToken();
         String keycloakUrl = gennyToken.getKeycloakUrl();
 
-        if (userBE == null) {
-            log.error(ANSIColour.doColour("User BE is NULL", ANSIColour.RED));
+        if (userCode == null) {
+            log.error(ANSIColour.doColour("User code is NULL", ANSIColour.RED));
             return null;
         }
 
         // grab uuid to fetch token
-        String uuid = userBE.getValue("PRI_UUID", null);
+        String uuid = beaUtils.getEntityAttribute(realm, userCode, "PRI_UUID").getValueString();
 
         if (uuid == null) {
 
-            log.warn(ANSIColour.doColour("No PRI_UUID found for user " + userBE.getCode()
-                    + ", attempting to use PRI_EMAIL instead",  ANSIColour.YELLOW));
+            log.warn(ANSIColour.doColour("No PRI_UUID found for user " + userCode + ", attempting to use PRI_EMAIL instead", ANSIColour.YELLOW));
 
             // grab email to fetch token
-            String email = userBE.getValue("PRI_EMAIL", null);
+            String email = beaUtils.getEntityAttribute(realm, userCode, "PRI_EMAIL").getValueString();
 
             if (email == null) {
-                log.error(ANSIColour.doColour("No PRI_EMAIL found for user " + userBE.getCode(),  ANSIColour.RED));
+                log.error(ANSIColour.doColour("No PRI_EMAIL found for user " + userCode, ANSIColour.RED));
                 return null;
             }
 
@@ -199,8 +194,7 @@ public class KeycloakUtils {
         }
 
         // fetch keycloak json from project entity
-        String projectCode = project.getCode();
-        String keycloakJson = beaUtils.getEntityAttribute(realm, projectCode, "ENV_KEYCLOAK_JSON", false).getValueString();
+        String keycloakJson = beaUtils.getEntityAttribute(realm, "PRJ_" + realm.toUpperCase(), "ENV_KEYCLOAK_JSON").getValueString();
         JsonReader reader = Json.createReader(new StringReader(keycloakJson));
         String secret = reader.readObject().getJsonObject("credentials").getString("secret");
         reader.close();
@@ -224,7 +218,6 @@ public class KeycloakUtils {
      *
      * @param serviceToken the service user Token
      * @param userCode     the user to use to fetch the token
-     * 
      * @return String
      */
     public static String getImpersonatedToken(ServiceToken serviceToken, String userCode) {
@@ -333,10 +326,8 @@ public class KeycloakUtils {
         try {
             for (Map.Entry<String, String> entry : params.entrySet()) {
                 log.debug("key: " + entry.getKey() + ", value: " + entry.getValue());
-                if (first)
-                    first = false;
-                else
-                    result.append("&");
+                if (first) first = false;
+                else result.append("&");
 
                 result.append(URLEncoder.encode(entry.getKey(), "UTF-8"));
                 result.append("=");
@@ -374,14 +365,7 @@ public class KeycloakUtils {
         String email = username + "@gmail.com";
         String defaultPassword = GennySettings.dummyUserPassword();
 
-        String json = "{ " + "\"username\" : \"" + username + "\"," + "\"email\" : \"" + email + "\" , "
-                + "\"enabled\" : true, " + "\"emailVerified\" : true, " + "\"firstName\" : \"" + username + "\", "
-                + "\"lastName\" : \"" + username + "\", " + "\"groups\" : [" + " \"users\" " + "], "
-                + "\"requiredActions\" : [\"terms_and_conditions\"], "
-                + "\"realmRoles\" : [\"user\"],\"credentials\": [{"
-                + "\"type\":\"password\","
-                + "\"value\":\"" + defaultPassword + "\","
-                + "\"temporary\":true }]}";
+        String json = "{ " + "\"username\" : \"" + username + "\"," + "\"email\" : \"" + email + "\" , " + "\"enabled\" : true, " + "\"emailVerified\" : true, " + "\"firstName\" : \"" + username + "\", " + "\"lastName\" : \"" + username + "\", " + "\"groups\" : [" + " \"users\" " + "], " + "\"requiredActions\" : [\"terms_and_conditions\"], " + "\"realmRoles\" : [\"user\"],\"credentials\": [{" + "\"type\":\"password\"," + "\"value\":\"" + defaultPassword + "\"," + "\"temporary\":true }]}";
 
         log.info("CreateUserjsonDummy = " + json);
 
@@ -390,8 +374,7 @@ public class KeycloakUtils {
         log.info("Create keycloak user - url:" + uri + ", token:" + token);
 
         HttpResponse<String> response = HttpUtils.post(uri, json, token);
-        if (response == null)
-			throw new KeycloakException("Failed to create user: Response is null");
+        if (response == null) throw new KeycloakException("Failed to create user: Response is null");
 
         Integer statusCode = response.statusCode();
         Response.Status status = Response.Status.fromStatusCode(statusCode);
@@ -410,10 +393,10 @@ public class KeycloakUtils {
             }
 
         } catch (IOException e) {
-			throw new KeycloakException("Failed to create user: ", e);
+            throw new KeycloakException("Failed to create user: ", e);
         }
 
-		throw new KeycloakException("Failed to create user: " + response.body());
+        throw new KeycloakException("Failed to create user: " + response.body());
     }
 
     /**
@@ -425,8 +408,7 @@ public class KeycloakUtils {
      * @return Strign
      * @throws IOException if id could not be fetched
      */
-    public static String getKeycloakUserId(final String token, final String realm, final String username)
-            throws IOException {
+    public static String getKeycloakUserId(final String token, final String realm, final String username) throws IOException {
 
         final List<LinkedHashMap<?, ?>> users = fetchKeycloakUser(token, realm, username);
         if (!users.isEmpty()) {
@@ -443,16 +425,12 @@ public class KeycloakUtils {
      * @param username the username to fetch for
      * @return List
      */
-    public static List<LinkedHashMap<?, ?>> fetchKeycloakUser(final String token, final String realm,
-            final String username) {
+    public static List<LinkedHashMap<?, ?>> fetchKeycloakUser(final String token, final String realm, final String username) {
 
         String uri = GennySettings.keycloakUrl() + "/admin/realms/" + realm + "/users?username=" + username;
 
         HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder().uri(URI.create(uri))
-                .setHeader("Content-Type", "application/json")
-                .setHeader("Authorization", "Bearer " + token)
-                .GET().build();
+        HttpRequest request = HttpRequest.newBuilder().uri(URI.create(uri)).setHeader("Content-Type", "application/json").setHeader("Authorization", "Bearer " + token).GET().build();
 
         try {
 
@@ -467,8 +445,7 @@ public class KeycloakUtils {
             log.info("Fetch User Response Status: " + statusCode);
 
             if (statusCode != 200) {
-                log.error("Failed to get users from Keycloak, url:" + uri + ", response code:" + statusCode + ", token:"
-                        + token);
+                log.error("Failed to get users from Keycloak, url:" + uri + ", response code:" + statusCode + ", token:" + token);
                 return null;
             }
 
@@ -502,13 +479,13 @@ public class KeycloakUtils {
     public int updateUserField(BaseEntity user, String field, String value) {
 
         String realm = serviceToken.getKeycloakRealm();
-		String productCode = user.getRealm();
-		String userCode = user.getCode();
+        String productCode = user.getRealm();
+        String userCode = user.getCode();
 
-		EntityAttribute id = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_UUID);
-		if (id == null) {
-			throw new ItemNotFoundException(productCode, userCode, Attribute.PRI_UUID);
-		}
+        EntityAttribute id = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_UUID);
+        if (id == null) {
+            throw new ItemNotFoundException(productCode, userCode, Attribute.PRI_UUID);
+        }
         String uuid = id.getValueString().toLowerCase();
 
         String json = "{\"" + field + "\":\"" + value + "\"}";
@@ -529,13 +506,13 @@ public class KeycloakUtils {
     public int updateUserEmail(BaseEntity user, String email) {
 
         String realm = serviceToken.getKeycloakRealm();
-		String productCode = user.getRealm();
-		String userCode = user.getCode();
+        String productCode = user.getRealm();
+        String userCode = user.getCode();
 
-		EntityAttribute id = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_UUID, true);
-		if (id == null) {
-			throw new ItemNotFoundException(productCode, userCode, Attribute.PRI_UUID);
-		}
+        EntityAttribute id = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_UUID, true);
+        if (id == null) {
+            throw new ItemNotFoundException(productCode, userCode, Attribute.PRI_UUID);
+        }
         String uuid = id.getValueString().toLowerCase();
 
         String json = "{ \"email\" : \"" + email + "\" , \"enabled\" : true, \"emailVerified\" : true}";
@@ -547,6 +524,7 @@ public class KeycloakUtils {
 
     /**
      * Update a keycloak user password.
+     *
      * @param userToken
      * @param user
      * @param password
@@ -554,7 +532,7 @@ public class KeycloakUtils {
      * @return
      */
     public static int updateUserPassword(GennyToken userToken, BaseEntity user, String password, Boolean askUserToResetPassword) {
-        log.debug("Setting password: "+ password+ "for: "+ user.getCode());
+        log.debug("Setting password: " + password + "for: " + user.getCode());
         try {
             String keycloakUrl = GennySettings.keycloakUrl();
             String realm = userToken.getKeycloakRealm();
@@ -568,36 +546,37 @@ public class KeycloakUtils {
             HttpResponse<String> response = HttpUtils.put(requestURL, json, userToken);
 
             return response.statusCode();
-        }catch (Exception ex){
-            log.error("Exception: "+ ex);
+        } catch (Exception ex) {
+            log.error("Exception: " + ex);
             return Response.Status.INTERNAL_SERVER_ERROR.getStatusCode();
         }
     }
 
     /**
      * Update a keycloak user password.
+     *
      * @param userToken
      * @param user
      * @param askUserToResetPassword
      * @return
      */
-    public static String updateUserPassword(GennyToken userToken, BaseEntity user, Boolean askUserToResetPassword){
+    public static String updateUserPassword(GennyToken userToken, BaseEntity user, Boolean askUserToResetPassword) {
         /* Generate a random 15 char password */
         String newPassword = RandomStringUtils.generateRandomString(15);
-        updateUserPassword(userToken,user, newPassword, askUserToResetPassword);
+        updateUserPassword(userToken, user, newPassword, askUserToResetPassword);
         return newPassword;
     }
 
     /**
      * Update a keycloak user password.
+     *
      * @param userToken
      * @param user
      * @return
      */
-    public static String updateUserPassword(GennyToken userToken, BaseEntity user){
-        return updateUserPassword(userToken,user, true);
+    public static String updateUserPassword(GennyToken userToken, BaseEntity user) {
+        return updateUserPassword(userToken, user, true);
     }
 
-    
 
 }

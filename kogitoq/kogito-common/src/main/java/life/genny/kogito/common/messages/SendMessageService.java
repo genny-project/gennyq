@@ -75,7 +75,7 @@ public class SendMessageService {
 			BaseEntity lnkMessageType = baseEntityUtils.getBaseEntityFromLinkAttribute(baseEntity, LNK_MESSAGE_TYPE, true);
 			log.debug("lnkMessageType: "+lnkMessageType.getCode());
 			log.debug("lnkMessageType.name: "+lnkMessageType.getName());
-			String msgType = lnkMessageType.getName().toUpperCase();
+			String msgType = lnkMessageType.getName().toUpperCase().replace(" ", "_");
 			log.info("Triggering message!");
 			sendMessage(messageCode,recipientCode, msgType);
 		}else{
@@ -83,15 +83,15 @@ public class SendMessageService {
 		}
 	}
 
-	public void send(String messageCode, String recepientCode, Map<String, String> ctxMap){
+	public void send(String messageCode, String recipientCode, Map<String, String> ctxMap){
 		BaseEntity baseEntity = baseEntityUtils.getBaseEntity(messageCode);
 		if(baseEntity != null){
 			BaseEntity lnkMessageType = baseEntityUtils.getBaseEntityFromLinkAttribute(baseEntity, LNK_MESSAGE_TYPE, true);
 			log.debug("lnkMessageType: "+lnkMessageType.getCode());
 			log.debug("lnkMessageType.name: "+lnkMessageType.getName());
-			String msgType = lnkMessageType.getName().toUpperCase();
+			String msgType = lnkMessageType.getName().toUpperCase().replace(" ", "_");
 			log.info("Triggering message!");
-			sendMessage(messageCode,recepientCode, msgType, ctxMap);
+			sendMessage(messageCode,recipientCode, msgType, ctxMap);
 		}else{
 			log.error("Message messageCode not found!");
 		}
@@ -129,8 +129,8 @@ public class SendMessageService {
 		if(msgType.contains(QBaseMSGMessageType.SMS.name())) {
 			new SendMessage(messageCode, recipientCode, QBaseMSGMessageType.SMS, ctxMap).sendMessage();
 		}
-		if(msgType.contains(QBaseMSGMessageType.EMAIL.name())) {
-			new SendMessage(messageCode, recipientCode, QBaseMSGMessageType.EMAIL, ctxMap).sendMessage();
+		if(msgType.contains(QBaseMSGMessageType.SENDGRID_RELAY.name())) {
+			new SendMessage(messageCode, recipientCode, QBaseMSGMessageType.SENDGRID_RELAY, ctxMap).sendMessage();
 		}
 		if(msgType.contains(QBaseMSGMessageType.SENDGRID.name())) {
 			new SendMessage(messageCode, recipientCode, QBaseMSGMessageType.SENDGRID, ctxMap).sendMessage();
