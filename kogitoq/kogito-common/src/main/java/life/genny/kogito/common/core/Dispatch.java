@@ -289,15 +289,17 @@ public class Dispatch {
 
 		log.debug("Locations size before: " + locations.size());
 		final Map<String, Integer> count = new HashMap<>();
-		locations.removeIf(loc -> {
+		count.put("key", 0);
+		boolean didRemove = locations.removeIf(loc -> {
 			if(!loc.requirementsMet(userCapabilities)) {
 				log.debug("capability requirements not met for location: " + loc.getAttributeCode() + " (" + loc.getValueString() + ")");
-				count.put("key", count.getOrDefault("key", 0) + 1);
+				count.put("key", count.get("key") + 1);
 				return true;
 			}
 			return false;
 		});
-
+		if(didRemove)
+			log.debug(" DID STUFF!");
 		log.debug("Locations size after: " + locations.size() + " .. Expected: " + count.get("key"));
 
 		for (EntityAttribute entityAttribute : locations) {
