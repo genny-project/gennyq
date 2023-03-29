@@ -285,24 +285,22 @@ public class Dispatch {
 			log.trace("No target code found for " + pcm.getCode());
 		}
 
-		// iterate locations
-		List<EntityAttribute> locations = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(pcm.getRealm(), pcmCode, Prefix.PRI_LOC);
-
-		log.debug("Locations size before: " + locations.size());
+		Set<Map.Entry<String, EntityAttribute>> pcmAttributeMap = pcm.getBaseEntityAttributesMap().entrySet();
+		log.debug("Locations size before: " + pcmAttributeMap.size());
 		final Map<String, Integer> count = new HashMap<>();
 		count.put("key", 0);
-		boolean didRemove = locations.removeIf(loc -> {
-			if(!loc.requirementsMet(userCapabilities))
-				return true;
-			// check the base entity as well
-			String value = loc.getAsString();
+		boolean didRemove = pcmAttributeMap.removeIf(loc -> {
+			String value = loc.getValue().getAsString();
 			if(!value.startsWith(Prefix.PCM_)) {
 				return false;
 			}
+			if(!loc.getValue().requirementsMet(userCapabilities))
+				return true;
+			// check the base entity as well
 			PCM childPCM = beUtils.getPCM(value);
 
 			if(!childPCM.requirementsMet(userCapabilities)) {
-				log.debug("PCM capability requirements not met for location: " + loc.getAttributeCode() + " (" + loc.getValueString() + ")");
+				log.debug("PCM capability requirements not met for location: " + loc.getKey() + " (" + loc.getValue().getValueString() + ")");
 				count.put("key", count.get("key") + 1);
 				return true;
 			}
@@ -310,8 +308,11 @@ public class Dispatch {
 		});
 		if(didRemove)
 			log.debug(" DID STUFF!");
-		log.debug("Locations size after: " + locations.size() + " .. Expected: " + count.get("key"));
+		log.debug("Locations size after: " + pcmAttributeMap.size() + " .. Expected: " + count.get("key"));
 
+		// iterate locations
+		List<EntityAttribute> locations = pcmAttributeMap.stream().filter(val -> val.getKey().startsWith(Prefix.PRI_LOC)).map(Map.Entry::getValue).collect(Collectors.toList());
+		//beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(pcm.getRealm(), pcmCode, Prefix.PRI_LOC);
 		Iterator<EntityAttribute> iter = locations.iterator();
 		while(iter.hasNext()) {
 			EntityAttribute entityAttribute = iter.next();
