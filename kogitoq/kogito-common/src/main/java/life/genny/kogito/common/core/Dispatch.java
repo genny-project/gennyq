@@ -6,6 +6,7 @@ import static life.genny.qwandaq.entity.PCM.PCM_TREE;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Arrays;
 import java.util.Map;
@@ -246,7 +247,7 @@ public class Dispatch {
 	 * @param msg The bulk message to store data
 	 * @param processData The ProcessData used to init the task
 	 */
-	public void traversePCM(CapabilitySet userCapabilities, PCM pcm, BaseEntity source, BaseEntity target,
+	public boolean traversePCM(CapabilitySet userCapabilities, PCM pcm, BaseEntity source, BaseEntity target,
 							String parent, String location, QBulkMessage msg, ProcessData processData) {
 		// TODO: This is too many arguments
 
@@ -255,7 +256,7 @@ public class Dispatch {
 		log.debug("Traversing " + pcmCode);
 		if (!pcm.requirementsMet(userCapabilities)) {
 			log.debug("User " + source.getCode() + " Capability requirements not met for pcm: " + pcmCode);
-			return;
+			return false;
 		}
 
 		// use pcm target if one is specified
@@ -278,23 +279,33 @@ public class Dispatch {
 						.build();
 				kogitoUtils.triggerWorkflow(GADAQ, "processQuestions", payload);
 				processedTargetCodes.add(targetCode+target.getCode());
-				return;
+				return true;
 			}
 		} catch (ItemNotFoundException e) {
 			log.trace("No target code found for " + pcm.getCode());
 		}
 
-		// iterate locations
-		List<EntityAttribute> locations = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(pcm.getRealm(), pcmCode, Prefix.PRI_LOC);
-
-		List<EntityAttribute> filteredLocations = new ArrayList<>(locations.size());
-		for (EntityAttribute entityAttribute : locations) {
-			if(!entityAttribute.requirementsMet(userCapabilities)) {
-				log.trace("capability requirements not met for location: " + entityAttribute.getAttributeCode() + " (" + entityAttribute.getValueString() + ")");
-				filteredLocations.add(entityAttribute);
-				continue;
+		Set<Map.Entry<String, EntityAttribute>> pcmAttributeMap = pcm.getBaseEntityAttributesMap().entrySet();
+		pcmAttributeMap.removeIf(loc -> {
+			if(!loc.getValue().requirementsMet(userCapabilities))
+				return true;
+			String value = loc.getValue().getAsString();
+			if(!value.startsWith(Prefix.PCM_)) {
+				return false;
 			}
+			// check the base entity as well
+			PCM childPCM = beUtils.getPCM(value);
 
+			if(!childPCM.requirementsMet(userCapabilities)) {
+				log.debug("PCM capability requirements not met for location: " + loc.getKey() + " (" + loc.getValue().getValueString() + ")");
+				return true;
+			}
+			return false;
+		});
+		
+		// iterate locations
+		List<EntityAttribute> locations = pcmAttributeMap.stream().filter(val -> val.getKey().startsWith(Prefix.PRI_LOC)).map(Map.Entry::getValue).collect(Collectors.toList());
+		for(EntityAttribute entityAttribute : locations) {
 			log.debug("Passed Capabilities check for: " + entityAttribute.getBaseEntityCode() + ":" + entityAttribute.getAttributeCode());
 
 			Attribute attribute = attributeUtils.getAttribute(entityAttribute.getRealm(), entityAttribute.getAttributeCode(), true);
@@ -316,12 +327,6 @@ public class Dispatch {
 			}
 		}
 
-		// ensure these don't go out to frontend
-		for(EntityAttribute badlocation : filteredLocations) {
-			log.trace("Removing: " + badlocation.getAttributeCode() + " from " + badlocation.getBaseEntityCode());
-			pcm.getBaseEntityAttributes().removeIf(loc -> loc.getAttributeCode().equals(badlocation.getAttributeCode()));
-		}
-
 		msg.add(pcm);
 
 		// check for a question code
@@ -337,6 +342,8 @@ public class Dispatch {
 			ask.setTestTargetCode(target.getCode());
 			msg.add(ask);
 		}
+
+		return true;
 	}
 
 	/**
