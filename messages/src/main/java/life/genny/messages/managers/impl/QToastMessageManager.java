@@ -13,8 +13,8 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.Map;
 
-import static life.genny.messages.util.FailureHandler.optional;
-import static life.genny.messages.util.FailureHandler.required;
+import static life.genny.qwandaq.utils.FailureHandler.optional;
+import static life.genny.qwandaq.utils.FailureHandler.required;
 import static life.genny.qwandaq.message.QBaseMSGMessageType.TOAST;
 
 @ApplicationScoped
@@ -32,23 +32,16 @@ public final class QToastMessageManager extends QMessageProvider {
         log.info(ANSIColour.doColour(">>>>>>>>>>> Triggering Toast <<<<<<<<<<<<<<", ANSIColour.GREEN));
 
         String messageCode = (String) contextMap.get("MESSAGE");
+        log.info(ANSIColour.doColour("messageCode: "+ messageCode, ANSIColour.GREEN));
         String realm = userToken.getRealm();
-
-        if (messageCode == null) {
-            log.error(ANSIColour.RED + "message code is NULL" + ANSIColour.RESET);
-            return;
-        }
-
-        if (realm == null) {
-            log.error(ANSIColour.RED + "realm is NULL" + ANSIColour.RESET);
-            return;
-        }
+        log.info(ANSIColour.doColour("realm: "+ realm, ANSIColour.GREEN));
 
         String body = null;
         if (contextMap.containsKey("BODY")) {
             body = (String) contextMap.get("BODY");
         } else {
             body = required(() -> beaUtils.getEntityAttribute(realm, messageCode, "PRI_BODY").getValueString());
+            log.info(ANSIColour.doColour("body: "+ body, ANSIColour.GREEN));
         }
 
         String style = null;
@@ -56,10 +49,12 @@ public final class QToastMessageManager extends QMessageProvider {
             style = (String) contextMap.get("STYLE");
         } else {
             style = optional(() -> beaUtils.getEntityAttribute(realm, messageCode, "PRI_STYLE").getValueString(), "INFO");
+            log.info(ANSIColour.doColour("style: "+ style, ANSIColour.GREEN));
         }
 
         // Merging Data
         body = mergeUtils.merge(body, contextMap);
+        log.info(ANSIColour.doColour("merge body: "+ body, ANSIColour.GREEN));
 
         // build toast command msg
         QCmdMessage msg = new QCmdMessage("TOAST", style);

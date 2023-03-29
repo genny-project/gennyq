@@ -3,8 +3,6 @@ package life.genny.messages.process;
 import life.genny.messages.live.factory.QMessageFactory;
 import life.genny.messages.managers.QMessageProvider;
 import life.genny.messages.util.MsgUtils;
-import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.message.QBaseMSGMessageType;
@@ -28,9 +26,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
-import static life.genny.messages.util.FailureHandler.optional;
+import static life.genny.qwandaq.utils.FailureHandler.optional;
 
 @ApplicationScoped
 public class MessageProcessor {
@@ -128,7 +125,7 @@ public class MessageProcessor {
 
         String[] recipientArr = message.getRecipientArr();
         for (String recipient : recipientArr) {
-
+            recipient = CommonUtils.cleanUpAttributeValue(recipient);
             // Set our current recipient
             baseEntityContextMap.put("RECIPIENT", recipient);
 
@@ -168,19 +165,6 @@ public class MessageProcessor {
 
         long duration = System.currentTimeMillis() - start;
         log.info("FINISHED PROCESSING MESSAGE :: time taken = " + duration + "ms");
-    }
-
-    private BaseEntity createRecipient(String recipient) {
-
-        BaseEntity recipientBe = null;
-
-        if (recipient.contains("[\"") && recipient.contains("\"]")) {
-            // This is a BE Code
-            String code = CommonUtils.cleanUpAttributeValue(recipient);
-            recipientBe = beUtils.getBaseEntity(code);
-        }
-
-        return recipientBe;
     }
 
     private void sendToProvider(Map<String, Object> baseEntityContextMap, List<QBaseMSGMessageType> messageTypeList) {

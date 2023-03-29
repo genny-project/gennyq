@@ -4,6 +4,7 @@ import static life.genny.qwandaq.attribute.Attribute.LNK_MESSAGE_TYPE;
 import life.genny.qwandaq.entity.BaseEntity;
 import static life.genny.qwandaq.entity.BaseEntity.PRI_NAME;
 import life.genny.qwandaq.message.QBaseMSGMessageType;
+import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.UserToken;
 
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -111,31 +112,29 @@ public class SendMessageService {
 	}
 
 	public void sendMessage(String messageCode,String recipientCode,String msgType, Map<String, String> ctxMap) {
-		if(StringUtils.isBlank(msgType)){
-			log.error("templateCode: "+ messageCode);
-			log.error("recipientCode: "+ recipientCode);
-			log.error("msgType: "+ msgType);
-			CommonUtils.printMap(ctxMap);
-			return;
-		}
-		if(msgType.contains(QBaseMSGMessageType.TOAST.name())) {
+		log.info(ANSIColour.doColour("messageCode: "+ messageCode, ANSIColour.GREEN));
+		log.info(ANSIColour.doColour("recipientCode: "+ recipientCode, ANSIColour.GREEN));
+		log.info(ANSIColour.doColour("msgType: "+ msgType, ANSIColour.GREEN));
+		log.info(ANSIColour.doColour("ctxMap: "+ ctxMap, ANSIColour.GREEN));
+
+		if(msgType.equals(QBaseMSGMessageType.TOAST.name())) {
 			ctxMap.put(TARGET,recipientCode);
 			new SendMessage(messageCode, recipientCode, QBaseMSGMessageType.TOAST, ctxMap).sendMessage();
 		}
-		if(msgType.contains(QBaseMSGMessageType.SLACK.name())) {
+		if(msgType.equals(QBaseMSGMessageType.SLACK.name())) {
 			ctxMap.put(RECIPIENT,messageCode);
 			new SendMessage(messageCode, recipientCode, QBaseMSGMessageType.SLACK, ctxMap).sendMessage();
 		}
-		if(msgType.contains(QBaseMSGMessageType.SMS.name())) {
+		if(msgType.equals(QBaseMSGMessageType.SMS.name())) {
 			new SendMessage(messageCode, recipientCode, QBaseMSGMessageType.SMS, ctxMap).sendMessage();
 		}
-		if(msgType.contains(QBaseMSGMessageType.SENDGRID_RELAY.name())) {
+		if(msgType.equals(QBaseMSGMessageType.SENDGRID_RELAY.name())) {
 			new SendMessage(messageCode, recipientCode, QBaseMSGMessageType.SENDGRID_RELAY, ctxMap).sendMessage();
 		}
-		if(msgType.contains(QBaseMSGMessageType.SENDGRID.name())) {
+		if(msgType.equals(QBaseMSGMessageType.SENDGRID.name())) {
 			new SendMessage(messageCode, recipientCode, QBaseMSGMessageType.SENDGRID, ctxMap).sendMessage();
 		}
-		if(msgType.contains(QBaseMSGMessageType.VOICE.name())) {
+		if(msgType.equals(QBaseMSGMessageType.VOICE.name())) {
 			new SendMessage(messageCode, recipientCode, QBaseMSGMessageType.VOICE, ctxMap).sendMessage();
 		}
 	}

@@ -26,8 +26,8 @@ import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-import static life.genny.messages.util.FailureHandler.optional;
-import static life.genny.messages.util.FailureHandler.required;
+import static life.genny.qwandaq.utils.FailureHandler.optional;
+import static life.genny.qwandaq.utils.FailureHandler.required;
 import static life.genny.qwandaq.message.QBaseMSGMessageType.SENDGRID;
 
 /**
@@ -44,18 +44,27 @@ public final class QSendGridMessageManager extends QMessageProvider {
     public void sendMessage(Map<String, Object> contextMap) {
         log.info(ANSIColour.doColour(">>>>>>>>>>> Triggering Sendgrid email <<<<<<<<<<<<<<", ANSIColour.GREEN));
 
-        String recipientCode = (String) contextMap.get("RECIPIENT");
-        String projectCode = (String) contextMap.get("PROJECT");
-        String messageCode = (String) contextMap.get("MESSAGE");
+        String recipientCode = (String) required(() -> contextMap.get("RECIPIENT"));
+        log.info(ANSIColour.doColour("recipientCode: "+ recipientCode, ANSIColour.GREEN));
+        String projectCode = (String) required(() -> contextMap.get("PROJECT"));
+        log.info(ANSIColour.doColour("projectCode: "+ projectCode, ANSIColour.GREEN));
+        String messageCode = (String) required(() -> contextMap.get("MESSAGE"));
+        log.info(ANSIColour.doColour("messageCode: "+ messageCode, ANSIColour.GREEN));
         String realm = userToken.getRealm();
+        log.info(ANSIColour.doColour("realm: "+ realm, ANSIColour.GREEN));
 
         String recipientEmail = required(() -> beaUtils.getEntityAttribute(realm, recipientCode, "PRI_EMAIL").getValueString()).trim();
-        String templateId = required(() -> beaUtils.getEntityAttribute(realm, recipientCode, "PRI_SENDGRID_ID").getValueString());
+        log.info(ANSIColour.doColour("recipientEmail: "+ recipientEmail, ANSIColour.GREEN));
+        String templateId = required(() -> beaUtils.getEntityAttribute(realm, messageCode, "PRI_SENDGRID_ID").getValueString());
+        log.info(ANSIColour.doColour("templateId: "+ templateId, ANSIColour.GREEN));
         String subject = required(() -> beaUtils.getEntityAttribute(realm, messageCode, "PRI_SUBJECT").getValueString());
+        log.info(ANSIColour.doColour("subject: "+ subject, ANSIColour.GREEN));
         String emailSender = required(() -> beaUtils.getEntityAttribute(realm, projectCode, "ENV_SENDGRID_EMAIL_SENDER").getValueString());
+        log.info(ANSIColour.doColour("emailSender: "+ emailSender, ANSIColour.GREEN));
         String emailNameSender = required(() -> beaUtils.getEntityAttribute(realm, projectCode, "ENV_SENDGRID_EMAIL_NAME_SENDER").getValueString());
+        log.info(ANSIColour.doColour("emailNameSender: "+ emailNameSender, ANSIColour.GREEN));
         String emailApiKey = required(() -> beaUtils.getEntityAttribute(realm, projectCode, "ENV_SENDGRID_API_KEY").getValueString());
-
+        log.info(ANSIColour.doColour("emailApiKey: "+ emailApiKey, ANSIColour.GREEN));
 
         Email from = new Email(emailSender, emailNameSender);
         Email to = new Email(recipientEmail);
@@ -65,8 +74,8 @@ public final class QSendGridMessageManager extends QMessageProvider {
         personalization.setSubject(subject);
 
         // Hande CC and BCC
-        Object ccVal = contextMap.get("CC");
-        Object bccVal = contextMap.get("BCC");
+        String ccVal = (String) contextMap.get("CC");
+        String bccVal = (String) contextMap.get("BCC");
 
         if (ccVal != null) {
             buildCc(to, personalization, ccVal);
@@ -155,47 +164,21 @@ public final class QSendGridMessageManager extends QMessageProvider {
         return templateData;
     }
 
-    private void buildBcc(Email to, Personalization personalization, Object bccVal) {
-        BaseEntity[] bccArray = new BaseEntity[1];
+    private void buildBcc(Email to, Personalization personalization, String bcc) {
+            String email = required(() -> beaUtils.getEntityAttribute(userToken.getRealm(), bcc, "PRI_EMAIL").getValueString()).trim();
 
-        if (bccVal.getClass().equals(BaseEntity.class)) {
-            bccArray[0] = (BaseEntity) bccVal;
-        } else {
-            bccArray = (BaseEntity[]) bccVal;
-        }
-        for (BaseEntity item : bccArray) {
-
-            String email = item.getValue("PRI_EMAIL", null);
-            if (email != null) {
-                email = email.trim();
-            }
-
-            if (email != null && !email.equals(to.getEmail())) {
+            if (!email.equals(to.getEmail())) {
                 personalization.addBcc(new Email(email));
                 log.info(ANSIColour.doColour("Found BCC Email: " + email, ANSIColour.BLUE));
             }
-        }
     }
 
-    private void buildCc(Email to, Personalization personalization, Object ccVal) {
-        BaseEntity[] ccArray = new BaseEntity[1];
+    private void buildCc(Email to, Personalization personalization, String cc) {
+        String email = required(() -> beaUtils.getEntityAttribute(userToken.getRealm(), cc, "PRI_EMAIL").getValueString()).trim();
 
-        if (ccVal.getClass().equals(BaseEntity.class)) {
-            ccArray[0] = (BaseEntity) ccVal;
-        } else {
-            ccArray = (BaseEntity[]) ccVal;
-        }
-        for (BaseEntity item : ccArray) {
-
-            String email = item.getValue("PRI_EMAIL", null);
-            if (email != null) {
-                email = email.trim();
-            }
-
-            if (email != null && !email.equals(to.getEmail())) {
-                personalization.addCc(new Email(email));
-                log.info(ANSIColour.doColour("Found CC Email: " + email, ANSIColour.BLUE));
-            }
+        if (!email.equals(to.getEmail())) {
+            personalization.addCc(new Email(email));
+            log.info(ANSIColour.doColour("Found BCC Email: " + email, ANSIColour.BLUE));
         }
     }
 

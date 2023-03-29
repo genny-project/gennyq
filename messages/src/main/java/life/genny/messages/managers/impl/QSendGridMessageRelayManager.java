@@ -26,9 +26,10 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
-import static life.genny.messages.util.FailureHandler.optional;
-import static life.genny.messages.util.FailureHandler.required;
+import static life.genny.qwandaq.utils.FailureHandler.optional;
+import static life.genny.qwandaq.utils.FailureHandler.required;
 import static life.genny.qwandaq.message.QBaseMSGMessageType.SENDGRID_RELAY;
 
 /**
@@ -45,38 +46,40 @@ public final class QSendGridMessageRelayManager extends QMessageProvider {
     public void sendMessage(Map<String, Object> contextMap) {
         log.info(ANSIColour.doColour(">>>>>>>>>>> Triggering Sendgrid relay email <<<<<<<<<<<<<<", ANSIColour.GREEN));
 
-        String recipientCode = (String) contextMap.get("RECIPIENT");
-        String messageCode = (String) contextMap.get("MESSAGE");
-        String projectCode = (String) contextMap.get("PROJECT");
+        String recipientCode = (String) required(() -> contextMap.get("RECIPIENT"));
+        log.info(ANSIColour.doColour("recipientCode: " + recipientCode, ANSIColour.GREEN));
+        String messageCode = (String) required(() -> contextMap.get("MESSAGE"));
+        log.info(ANSIColour.doColour("messageCode: " + messageCode, ANSIColour.GREEN));
+        String projectCode = (String) required(() -> contextMap.get("PROJECT"));
+        log.info(ANSIColour.doColour("projectCode: " + projectCode, ANSIColour.GREEN));
         String realm = userToken.getRealm();
+        log.info(ANSIColour.doColour("realm: " + realm, ANSIColour.GREEN));
 
         String recipientEmail = required(() -> beaUtils.getEntityAttribute(realm, recipientCode, "PRI_EMAIL").getValueString()).trim();
+        log.info(ANSIColour.doColour("recipientEmail: " + recipientEmail, ANSIColour.GREEN));
         String subject = required(() -> beaUtils.getEntityAttribute(realm, messageCode, "PRI_SUBJECT").getValueString());
+        log.info(ANSIColour.doColour("subject: " + subject, ANSIColour.GREEN));
         String body = required(() -> beaUtils.getEntityAttribute(realm, messageCode, "PRI_BODY").getValueString());
+        log.info(ANSIColour.doColour("body: " + body, ANSIColour.GREEN));
         String emailSender = required(() -> beaUtils.getEntityAttribute(realm, projectCode, "ENV_SENDGRID_EMAIL_SENDER").getValueString());
+        log.info(ANSIColour.doColour("emailSender: " + emailSender, ANSIColour.GREEN));
         String emailNameSender = required(() -> beaUtils.getEntityAttribute(realm, projectCode, "ENV_SENDGRID_EMAIL_NAME_SENDER").getValueString());
+        log.info(ANSIColour.doColour("emailNameSender: " + emailNameSender, ANSIColour.GREEN));
         String emailApiKey = required(() -> beaUtils.getEntityAttribute(realm, projectCode, "ENV_SENDGRID_API_KEY").getValueString());
+        log.info(ANSIColour.doColour("emailApiKey: " + emailApiKey, ANSIColour.GREEN));
         String apiPath = required(() -> beaUtils.getEntityAttribute(realm, projectCode, "ENV_SENDGRID_API_PATH").getValueString());
+        log.info(ANSIColour.doColour("apiPath: " + apiPath, ANSIColour.GREEN));
 
         HashMap<String, Object> templateData = formatValue(contextMap, recipientCode);
 
         // Base Wrapper
         JsonObjectBuilder mailJsonObjectBuilder = Json.createObjectBuilder();
 
-        JsonObject fromJsonObject = Json
-                .createObjectBuilder()
-                .add("name", emailNameSender)
-                .add("email", emailSender)
-                .build();
+        JsonObject fromJsonObject = Json.createObjectBuilder().add("name", emailNameSender).add("email", emailSender).build();
 
-        JsonObject toJsonObject = Json
-                .createObjectBuilder()
-                .add("email", recipientEmail)
-                .build();
+        JsonObject toJsonObject = Json.createObjectBuilder().add("email", recipientEmail).build();
 
-        JsonArray tosJsonArray = Json.createArrayBuilder()
-                .add(toJsonObject)
-                .build();
+        JsonArray tosJsonArray = Json.createArrayBuilder().add(toJsonObject).build();
 
         JsonArrayBuilder personalizationArrayBuilder = Json.createArrayBuilder();
         JsonObjectBuilder personalizationInnerObjectWrapper = Json.createObjectBuilder();
@@ -125,12 +128,12 @@ public final class QSendGridMessageRelayManager extends QMessageProvider {
         HashMap<String, Object> templateData = new HashMap<>();
 
         for (Map.Entry<String, Object> entry : contextMap.entrySet()) {
-
-            Object value = entry.getValue(); //contextMap.get(entry.getKey());
-
-            if (value.getClass().equals(BaseEntity.class)) {
-                log.info("Processing key as BASEENTITY: " + entry.getKey());
-                BaseEntity be = (BaseEntity) value;
+            String value = (String) entry.getValue();
+            log.debug("Key: " + entry.getKey() + " value: " + value);
+            boolean isBaseEntity = Pattern.matches("^[A-Z]{0,3}_.*", value);
+            log.info("Key: "+ entry.getKey()+ " is BASEENTITY: "+ isBaseEntity);
+            if (isBaseEntity) {
+                BaseEntity be = beUtils.getBaseEntity(value);
                 HashMap<String, String> deepReplacementMap = new HashMap<>();
                 for (EntityAttribute ea : beaUtils.getAllEntityAttributesForBaseEntity(be)) {
 
@@ -175,8 +178,7 @@ public final class QSendGridMessageRelayManager extends QMessageProvider {
                     }
                 }
                 templateData.put(entry.getKey(), deepReplacementMap);
-            } else if (value.getClass().equals(String.class)) {
-                log.info("Processing key as STRING: " + entry.getKey());
+            } else {
                 templateData.put(entry.getKey(), value);
             }
         }
@@ -201,12 +203,7 @@ public final class QSendGridMessageRelayManager extends QMessageProvider {
             }
 
             if (email != null && !email.equals(recipientEmail)) {
-                bccJsonArrayBuilder.add(
-                        Json
-                                .createObjectBuilder()
-                                .add("email", email)
-                                .build()
-                );
+                bccJsonArrayBuilder.add(Json.createObjectBuilder().add("email", email).build());
                 log.info(ANSIColour.doColour("Found BCC Email: " + email, ANSIColour.BLUE));
             }
         }
@@ -232,12 +229,7 @@ public final class QSendGridMessageRelayManager extends QMessageProvider {
             }
 
             if (email != null && !email.equals(recipientEmail)) {
-                ccJsonArrayBuilder.add(
-                        Json
-                                .createObjectBuilder()
-                                .add("email", email)
-                                .build()
-                );
+                ccJsonArrayBuilder.add(Json.createObjectBuilder().add("email", email).build());
                 log.info(ANSIColour.doColour("Found CC Email: " + email, ANSIColour.BLUE));
             }
         }

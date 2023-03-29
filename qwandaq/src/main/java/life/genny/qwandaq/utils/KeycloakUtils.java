@@ -156,7 +156,7 @@ public class KeycloakUtils {
     /**
      * Fetch an Impersonated Token for a user.
      *
-     * @param userCode     the userBE to get a token for
+     * @param userCode   the userBE to get a token for
      * @param gennyToken the gennyToken to use to fetch the token
      * @return String
      */
@@ -470,7 +470,6 @@ public class KeycloakUtils {
     /**
      * Update a keycloak user field.
      *
-     * @param userToken the userToken to update with
      * @param user      the user to update for
      * @param field     the field to update
      * @param value     the value to update to
@@ -498,7 +497,6 @@ public class KeycloakUtils {
     /**
      * Update a keycloak user email.
      *
-     * @param userToken the userToken to update with
      * @param user      the user to update for
      * @param email     the email to set
      * @return int statusCode
@@ -523,27 +521,25 @@ public class KeycloakUtils {
     }
 
     /**
-     * Update a keycloak user password.
      *
-     * @param userToken
-     * @param user
+     * @param userCode
      * @param password
      * @param askUserToResetPassword
      * @return
      */
-    public static int updateUserPassword(GennyToken userToken, BaseEntity user, String password, Boolean askUserToResetPassword) {
-        log.debug("Setting password: " + password + "for: " + user.getCode());
+    public int updateUserTemporaryPassword(String userCode, String password, Boolean askUserToResetPassword) {
+        log.debug("Setting password: " + password + "for: " + userCode);
         try {
             String keycloakUrl = GennySettings.keycloakUrl();
-            String realm = userToken.getKeycloakRealm();
-            String uuid = user.getValue("PRI_UUID", null);
+            String realm = serviceToken.getKeycloakRealm();
+            String uuid = beaUtils.getEntityAttribute(realm, userCode, "PRI_UUID").getValueString();
             uuid = uuid.toLowerCase();
 
             String json = "{\"type\": \"password\", " + "\"temporary\": \"" + (askUserToResetPassword ? "true" : "false") + "\",\"value\": \"" + password + "\"" + "}";
 
             String requestURL = keycloakUrl + "/auth/admin/realms/" + realm + "/users/" + uuid + "/reset-password";
 
-            HttpResponse<String> response = HttpUtils.put(requestURL, json, userToken);
+            HttpResponse<String> response = HttpUtils.put(requestURL, json, serviceToken);
 
             return response.statusCode();
         } catch (Exception ex) {
@@ -553,29 +549,25 @@ public class KeycloakUtils {
     }
 
     /**
-     * Update a keycloak user password.
      *
-     * @param userToken
-     * @param user
+     * @param userCode
      * @param askUserToResetPassword
      * @return
      */
-    public static String updateUserPassword(GennyToken userToken, BaseEntity user, Boolean askUserToResetPassword) {
+    public String updateUserPassword(String userCode, Boolean askUserToResetPassword) {
         /* Generate a random 15 char password */
         String newPassword = RandomStringUtils.generateRandomString(15);
-        updateUserPassword(userToken, user, newPassword, askUserToResetPassword);
+        updateUserTemporaryPassword(userCode, newPassword, askUserToResetPassword);
         return newPassword;
     }
 
     /**
-     * Update a keycloak user password.
      *
-     * @param userToken
-     * @param user
+     * @param userCode
      * @return
      */
-    public static String updateUserPassword(GennyToken userToken, BaseEntity user) {
-        return updateUserPassword(userToken, user, true);
+    public String updateUserTemporaryPassword(String userCode) {
+        return updateUserPassword(userCode, true);
     }
 
 

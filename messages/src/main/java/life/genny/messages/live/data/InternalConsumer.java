@@ -45,14 +45,11 @@ public class InternalConsumer {
 
     @Incoming("messages")
     public void getFromMessages(String data) {
-        log.info("Received EVENT :" + (System.getenv("PROJECT_REALM") == null ? "tokenRealm" : System.getenv("PROJECT_REALM")));
-
         log.info(ANSIColour.doColour("################################################################", ANSIColour.GREEN));
         log.info(ANSIColour.doColour(">>>>>>>>>>>>>>>>>> PROCESSING NEW MESSAGE <<<<<<<<<<<<<<<<<<<<<<", ANSIColour.GREEN));
         log.info(ANSIColour.doColour("################################################################", ANSIColour.GREEN));
 
         // Log entire data for debugging purposes
-        log.trace("data ----> " + data);
         scope.init(data);
         QMessageGennyMSG message = null;
 
@@ -60,6 +57,7 @@ public class InternalConsumer {
         try {
             log.info("Deserializing Message");
             message = jsonb.fromJson(data, QMessageGennyMSG.class);
+            log.error(ANSIColour.doColour("messageCode: " + message.getTemplateCode(), ANSIColour.GREEN));
         } catch (JsonbException e) {
             log.error(ANSIColour.doColour("Message deserialization Failed!", ANSIColour.RED));
             log.error(ANSIColour.doColour(ExceptionUtils.getStackTrace(e), ANSIColour.RED));

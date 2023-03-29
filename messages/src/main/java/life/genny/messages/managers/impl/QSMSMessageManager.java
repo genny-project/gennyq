@@ -13,7 +13,7 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.util.Map;
 
-import static life.genny.messages.util.FailureHandler.required;
+import static life.genny.qwandaq.utils.FailureHandler.required;
 import static life.genny.qwandaq.message.QBaseMSGMessageType.SMS;
 
 @ApplicationScoped
@@ -32,44 +32,34 @@ public final class QSMSMessageManager extends QMessageProvider {
         log.info(ANSIColour.doColour(">>>>>>>>>>> Triggering SMS <<<<<<<<<<<<<<", ANSIColour.GREEN));
 
         String messageCode = (String) contextMap.get("MESSAGE");
+        log.info(ANSIColour.doColour("messageCode: "+ messageCode, ANSIColour.GREEN));
         String projectCode = (String) contextMap.get("PROJECT");
+        log.info(ANSIColour.doColour("projectCode: "+ projectCode, ANSIColour.GREEN));
         String realm = userToken.getRealm();
+        log.info(ANSIColour.doColour("realm: "+ realm, ANSIColour.GREEN));
         String recipientCode = (String) contextMap.get("RECIPIENT");
-
-        if (messageCode == null) {
-            log.error(ANSIColour.RED + "message code is NULL" + ANSIColour.RESET);
-            return;
-        }
-
-        if (recipientCode == null) {
-            log.error(ANSIColour.RED + "recipient code is NULL" + ANSIColour.RESET);
-            return;
-        }
-
-        if (projectCode == null) {
-            log.error(ANSIColour.RED + "project code is NULL" + ANSIColour.RESET);
-            return;
-        }
-
-        if (realm == null) {
-            log.error(ANSIColour.RED + "realm is NULL" + ANSIColour.RESET);
-            return;
-        }
+        log.info(ANSIColour.doColour("recipientCode: "+ recipientCode, ANSIColour.GREEN));
 
         String recipientPhoneNumber = required(() -> beaUtils.getEntityAttribute(realm, messageCode, "PRI_MOBILE").getValueString());
+        log.info(ANSIColour.doColour("recipientPhoneNumber: "+ recipientPhoneNumber, ANSIColour.GREEN));
 
         String body = null;
         if (contextMap.containsKey("BODY")) {
             body = (String) contextMap.get("BODY");
         } else {
             body = required(() -> beaUtils.getEntityAttribute(realm, messageCode, "PRI_SHORT_BODY").getValueString());
+            log.info(ANSIColour.doColour("body: "+ body, ANSIColour.GREEN));
         }
 
         body = mergeUtils.merge(body, contextMap);
+        log.info(ANSIColour.doColour("merge body: "+ body, ANSIColour.GREEN));
 
         String accountSid = required(() -> beaUtils.getEntityAttribute(realm, projectCode, "ENV_TWILIO_ACCOUNT_SID").getValueString());
+        log.info(ANSIColour.doColour("accountSid: "+ accountSid, ANSIColour.GREEN));
         String senderPhoneNumber = required(() -> beaUtils.getEntityAttribute(realm, projectCode, "ENV_TWILIO_SOURCE_PHONE").getValueString());
+        log.info(ANSIColour.doColour("senderPhoneNumber: "+ senderPhoneNumber, ANSIColour.GREEN));
         String twilioAuthToken = required(() -> beaUtils.getEntityAttribute(realm, projectCode, "ENV_TWILIO_AUTH_TOKEN").getValueString());
+        log.info(ANSIColour.doColour("twilioAuthToken: "+ twilioAuthToken, ANSIColour.GREEN));
 
         try {
             // Init and Send SMS
@@ -84,10 +74,10 @@ public final class QSMSMessageManager extends QMessageProvider {
 
             // Log response
             log.info("message status:" + msg.getStatus());
-            log.info(ANSIColour.GREEN + " SMS Sent to " + recipientPhoneNumber + ANSIColour.RESET);
+            log.info(ANSIColour.doColour("SMS Sent to " + recipientPhoneNumber, ANSIColour.GREEN));
 
         } catch (Exception e) {
-            log.error(ANSIColour.RED + "Could Not Send SMS!!! Exception:" + e + ANSIColour.RESET);
+            log.error(ANSIColour.doColour("Could Not Send SMS!!! Exception:" + e, ANSIColour.RED));
         }
     }
 }

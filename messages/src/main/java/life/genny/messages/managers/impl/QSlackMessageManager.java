@@ -15,7 +15,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Map;
 
-import static life.genny.messages.util.FailureHandler.required;
+import static life.genny.qwandaq.utils.FailureHandler.required;
 import static life.genny.qwandaq.message.QBaseMSGMessageType.SLACK;
 
 @ApplicationScoped
@@ -32,32 +32,17 @@ public final class QSlackMessageManager extends QMessageProvider {
     public void sendMessage(Map<String, Object> contextMap) {
         log.info(ANSIColour.doColour(">>>>>>>>>>> Triggering SLACK <<<<<<<<<<<<<<", ANSIColour.GREEN));
 
-        String messageCode = (String) contextMap.get("MESSAGE");
-        String recipientCode = (String) contextMap.get("RECIPIENT");
-        String project = (String) contextMap.get("PROJECT");
+        String messageCode = (String) required(() -> contextMap.get("MESSAGE"));
+        log.info(ANSIColour.doColour("messageCode: "+ messageCode, ANSIColour.GREEN));
+        String recipientCode = (String) required(() -> contextMap.get("RECIPIENT"));
+        log.info(ANSIColour.doColour("recipientCode: "+ recipientCode, ANSIColour.GREEN));
+        String project = (String) required(() -> contextMap.get("PROJECT"));
+        log.info(ANSIColour.doColour("project: "+ project, ANSIColour.GREEN));
         String realm = userToken.getRealm();
+        log.info(ANSIColour.doColour("realm: "+ realm, ANSIColour.GREEN));
 
-        if (messageCode == null) {
-            log.error(ANSIColour.doColour("message code is NULL", ANSIColour.RED));
-            return;
-        }
-
-        if (recipientCode == null) {
-            log.error(ANSIColour.doColour("recipient code is NULL", ANSIColour.RED));
-            return;
-        }
-
-        if (project == null) {
-            log.error(ANSIColour.doColour("project code is NULL", ANSIColour.RED));
-            return;
-        }
-
-        if (realm == null) {
-            log.error(ANSIColour.doColour("realm is NULL", ANSIColour.RED));
-            return;
-        }
-
-        String targetUrl = required(() ->beaUtils.getEntityAttribute(realm, recipientCode, "PRI_URL").getValueString());
+        String targetUrl = required(() -> beaUtils.getEntityAttribute(realm, recipientCode, "PRI_URL").getValueString());
+        log.info(ANSIColour.doColour("targetUrl: "+ targetUrl, ANSIColour.GREEN));
 
         String body = null;
 
@@ -65,23 +50,21 @@ public final class QSlackMessageManager extends QMessageProvider {
             body = (String) contextMap.get("BODY");
         } else {
             body = required(() -> beaUtils.getEntityAttribute(realm, messageCode, "PRI_SLACK_BODY").getValueString());
+            log.info(ANSIColour.doColour("body: "+ body, ANSIColour.GREEN));
         }
 
         // Mail Merging Data
         body = mergeUtils.merge(body, contextMap);
+        log.info(ANSIColour.doColour("merged body: "+ body, ANSIColour.GREEN));
 
         HttpClient client = HttpClient.newHttpClient();
 
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(targetUrl))
-                .POST(HttpRequest.BodyPublishers.ofString(body))
-                .build();
+        HttpRequest request = HttpRequest.newBuilder().uri(URI.create(targetUrl)).POST(HttpRequest.BodyPublishers.ofString(body)).build();
 
         HttpResponse<String> response = null;
 
         try {
-            response = client.send(request,
-                    HttpResponse.BodyHandlers.ofString());
+            response = client.send(request, HttpResponse.BodyHandlers.ofString());
         } catch (IOException | InterruptedException e) {
             log.error(e.getLocalizedMessage());
         }
