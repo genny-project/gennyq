@@ -368,6 +368,7 @@ public class FyodorUltra {
 			return findChronoPredicate(jctx, filter);
 
 		Expression<?> expression = findExpression(jctx, filter.getCode());
+		log.info("[!] Building filter on: " + filter.getCode());
 
 		Operator operator = filter.getOperator();
 		Object value = filter.getValue();
