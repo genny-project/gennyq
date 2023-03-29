@@ -269,4 +269,13 @@ public class BaseEntityService extends KogitoService {
 		beUtils.updateBaseEntity(be);
 	}
 
+	/**
+	 * Set pending status to base entity
+	 * @param entityCode
+	 */
+	public void setPending(String entityCode) {
+		BaseEntity entity = beUtils.getBaseEntity(entityCode);
+		entity.setStatus(EEntityStatus.PENDING);
+		beUtils.updateBaseEntity(entity);
+	}
 }
