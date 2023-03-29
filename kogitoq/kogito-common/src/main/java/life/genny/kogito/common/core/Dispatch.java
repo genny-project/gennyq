@@ -292,8 +292,17 @@ public class Dispatch {
 		final Map<String, Integer> count = new HashMap<>();
 		count.put("key", 0);
 		boolean didRemove = locations.removeIf(loc -> {
-			if(!loc.requirementsMet(userCapabilities)) {
-				log.debug("capability requirements not met for location: " + loc.getAttributeCode() + " (" + loc.getValueString() + ")");
+			if(!loc.requirementsMet(userCapabilities))
+				return true;
+			// check the base entity as well
+			String value = loc.getAsString();
+			if(!value.startsWith(Prefix.PCM_)) {
+				return false;
+			}
+			PCM childPCM = beUtils.getPCM(value);
+
+			if(!childPCM.requirementsMet(userCapabilities)) {
+				log.debug("PCM capability requirements not met for location: " + loc.getAttributeCode() + " (" + loc.getValueString() + ")");
 				count.put("key", count.get("key") + 1);
 				return true;
 			}
@@ -321,8 +330,10 @@ public class Dispatch {
 					traversedPCMs.add(value);
 					PCM childPcm = beUtils.getPCM(value);
 					boolean meetsReqs = traversePCM(userCapabilities, childPcm, source, target, parent, location, msg, processData);
-					if(!meetsReqs)
+					if(!meetsReqs) {
+						log.debug("Removing " + entityAttribute.getBaseEntityCode() + ":" + entityAttribute.getAttributeCode() + " during iteration!");
 						iter.remove();
+					}
 				}
 			} else if (value.startsWith(Prefix.SBE_)) {
 				processData.getSearches().add(value);

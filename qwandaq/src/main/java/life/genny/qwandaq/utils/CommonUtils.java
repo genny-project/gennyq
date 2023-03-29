@@ -466,6 +466,8 @@ public class CommonUtils {
 	 * @return A clean string
 	 */
     public static String cleanUpAttributeValue(String value) {
+        if(StringUtils.isBlank(value))
+            return "";
 		return value.replace("\"", "").replace("[", "").replace("]", "").replace(" ", "");
 	}
 

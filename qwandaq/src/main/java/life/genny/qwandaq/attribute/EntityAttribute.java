@@ -886,6 +886,7 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 				return df2.format(date);
 			}
 		}
+
 		return getValueString();
 	}
 
