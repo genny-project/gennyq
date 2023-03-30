@@ -40,7 +40,7 @@ public final class QToastMessageManager extends QMessageProvider {
         if (contextMap.containsKey("BODY")) {
             body = (String) contextMap.get("BODY");
         } else {
-            body = required(() -> beaUtils.getEntityAttribute(realm, messageCode, "PRI_BODY").getValueString());
+            body = required(() -> beaUtils.getEntityAttribute(realm, messageCode, "PRI_SHORT_BODY").getValueString());
             log.info(ANSIColour.doColour("body: "+ body, ANSIColour.GREEN));
         }
 
