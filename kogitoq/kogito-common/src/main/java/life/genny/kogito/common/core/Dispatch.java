@@ -257,6 +257,8 @@ public class Dispatch {
 		if (!pcm.requirementsMet(userCapabilities)) {
 			log.debug("User " + source.getCode() + " Capability requirements not met for pcm: " + pcmCode);
 			return false;
+		} else {
+			log.debug("Capability requirements met. Continuing");
 		}
 
 		// use pcm target if one is specified

@@ -41,6 +41,9 @@ public class QBulkMessage extends QMessage {
 	}
 
 	public void add(Ask ask) {
+		if(ask.getQuestion() != null && ask.getQuestion().getCapabilityRequirements() != null) {
+			ask.getQuestion().getCapabilityRequirements().clear();
+		}
 		this.asks.add(ask);
 	}
 
@@ -49,6 +52,16 @@ public class QBulkMessage extends QMessage {
 	}
 
 	public void setEntities(List<BaseEntity> entities) {
+		entities.stream().forEach(baseEntity -> {
+			// clear cap reqs
+			if(baseEntity.getCapabilityRequirements() != null)
+				baseEntity.getCapabilityRequirements().clear();
+			
+			baseEntity.getBaseEntityAttributes().forEach(ea -> {
+				if(ea.getCapabilityRequirements() != null)
+					ea.getCapabilityRequirements().clear();
+			});
+		});
 		this.entities = entities;
 	}
 
@@ -57,6 +70,11 @@ public class QBulkMessage extends QMessage {
 	}
 
 	public void setAsks(Set<Ask> asks) {
+		asks.stream().forEach(ask -> {
+			if(ask.getQuestion() != null && ask.getQuestion().getCapabilityRequirements() != null) {
+				ask.getQuestion().getCapabilityRequirements().clear();
+			}
+		});
 		this.asks = asks;
 	}
 

@@ -3,7 +3,6 @@ package life.genny.qwandaq.message;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.entity.BaseEntity;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -63,9 +62,9 @@ public class QDataBaseEntityMessage extends QDataMessage implements Comparable<Q
 
 	public QDataBaseEntityMessage(final BaseEntity item, final String alias) {
 		super(DATATYPE_BASEENTITY);
-		items = new ArrayList<>();
+		items = new CopyOnWriteArrayList<>();
 		items.add(item);
-		setItems((List<BaseEntity>) items);
+		setItems(items);
 		setAliasCode(alias);
 		setTotal(1L);
 	}
@@ -81,8 +80,8 @@ public class QDataBaseEntityMessage extends QDataMessage implements Comparable<Q
 
 	public QDataBaseEntityMessage(final BaseEntity[] items) {
 		super(DATATYPE_BASEENTITY);
-		if ((items == null) || (items.length == 0)) {
-			setItems(new BaseEntity[0]);
+		if (items == null) {
+			setItems(new CopyOnWriteArrayList<>());
 		} else {
 			setItems(items);
 		}
@@ -93,9 +92,9 @@ public class QDataBaseEntityMessage extends QDataMessage implements Comparable<Q
 	public QDataBaseEntityMessage(final List<BaseEntity> items) {
 		super(DATATYPE_BASEENTITY);
 		if ((items == null) || (items.isEmpty())) {
-			setItems(new BaseEntity[0]);
+			setItems(new CopyOnWriteArrayList<>());
 		} else {
-			setItems(items.toArray(new BaseEntity[0]));
+			setItems(items);
 		}
 		setTotal(-1L);
 	}
@@ -105,9 +104,9 @@ public class QDataBaseEntityMessage extends QDataMessage implements Comparable<Q
 		super(DATATYPE_BASEENTITY);
 
 		if ((items == null) || (items.isEmpty())) {
-			setItems(new BaseEntity[0]);
+			setItems(new CopyOnWriteArrayList<>());
 		} else {
-			setItems(items.toArray(new BaseEntity[0]));
+			setItems(items);
 		}
 		this.linkCode = linkCode;
 		this.parentCode = parentCode;
@@ -117,10 +116,10 @@ public class QDataBaseEntityMessage extends QDataMessage implements Comparable<Q
 	public QDataBaseEntityMessage(final List<BaseEntity> items, final String parentCode,
 			final String linkCode, final String linkValue) {
 		super(DATATYPE_BASEENTITY);
-		if ((items == null) || (items.isEmpty())) {
-			setItems(new BaseEntity[0]);
+		if (items == null) {
+			setItems(new CopyOnWriteArrayList<>());
 		} else {
-			setItems(items.toArray(new BaseEntity[0]));
+			setItems(items);
 		}
 		this.linkCode = linkCode;
 		this.parentCode = parentCode;
@@ -142,8 +141,8 @@ public class QDataBaseEntityMessage extends QDataMessage implements Comparable<Q
 	public QDataBaseEntityMessage(final BaseEntity[] items, final String parentCode,
 			final String linkCode, final Long total) {
 		super(DATATYPE_BASEENTITY);
-		if ((items == null) || (items.length == 0)) {
-			setItems(new BaseEntity[0]);
+		if (items == null) {
+			setItems(new CopyOnWriteArrayList<>());
 		} else {
 			setItems(items);
 		}
@@ -160,7 +159,7 @@ public class QDataBaseEntityMessage extends QDataMessage implements Comparable<Q
 		List<BaseEntity> bes = this.getItems() != null ? new CopyOnWriteArrayList<>(this.getItems())
 				: new CopyOnWriteArrayList<>();
 		bes.add(item);
-		this.setItems(bes.toArray(new BaseEntity[0]));
+		this.setItems(bes);
 	}
 
 	/**
@@ -169,7 +168,7 @@ public class QDataBaseEntityMessage extends QDataMessage implements Comparable<Q
 	public void add(List<BaseEntity> items) {
 		List<BaseEntity> bes = new CopyOnWriteArrayList<>(this.getItems());
 		bes.addAll(items);
-		this.setItems(bes.toArray(new BaseEntity[0]));
+		this.setItems(bes);
 	}
 
 	/**
@@ -183,6 +182,17 @@ public class QDataBaseEntityMessage extends QDataMessage implements Comparable<Q
 	 * @param items the array of entities to set
 	 */
 	public void setItems(final BaseEntity[] items) {
+		for(BaseEntity baseEntity : items) {
+			// clear cap reqs
+			if(baseEntity.getCapabilityRequirements() != null)
+				baseEntity.getCapabilityRequirements().clear();
+			
+			baseEntity.getBaseEntityAttributes().forEach(ea -> {
+				if(ea.getCapabilityRequirements() != null)
+					ea.getCapabilityRequirements().clear();
+			});
+		}
+
         this.items = Arrays.asList(items);
         setReturnCount(Long.valueOf(items.length));
 	}
@@ -191,6 +201,16 @@ public class QDataBaseEntityMessage extends QDataMessage implements Comparable<Q
 	 * @param items the list of entities to set
 	 */
 	public void setItems(final Collection<BaseEntity> items) {
+		items.stream().forEach(baseEntity -> {
+			// clear cap reqs
+			if(baseEntity.getCapabilityRequirements() != null)
+				baseEntity.getCapabilityRequirements().clear();
+			
+			baseEntity.getBaseEntityAttributes().forEach(ea -> {
+				if(ea.getCapabilityRequirements() != null)
+					ea.getCapabilityRequirements().clear();
+			});
+		});
         this.items = items;
         setReturnCount(Long.valueOf(items.size()));
 	}

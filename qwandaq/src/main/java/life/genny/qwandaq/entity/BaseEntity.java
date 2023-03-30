@@ -26,7 +26,7 @@ import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.converter.CapabilityConverter;
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.exception.runtime.BadDataException;
-import life.genny.qwandaq.intf.ICapabilityHiddenFilterable;
+import life.genny.qwandaq.intf.ICapabilityFilterable;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import org.infinispan.protostream.annotations.ProtoFactory;
 import org.jboss.logging.Logger;
@@ -55,7 +55,7 @@ import java.util.stream.Collectors;
  * @since 1.0
  */
 @RegisterForReflection
-public class BaseEntity extends CodedEntity implements CoreEntityPersistable, BaseEntityIntf, ICapabilityHiddenFilterable {
+public class BaseEntity extends CodedEntity implements CoreEntityPersistable, BaseEntityIntf, ICapabilityFilterable {
 
 	@Transient
 	private static final long serialVersionUID = 1L;

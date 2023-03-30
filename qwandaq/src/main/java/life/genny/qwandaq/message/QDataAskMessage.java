@@ -10,7 +10,7 @@ import java.util.Set;
 public class QDataAskMessage extends QDataMessage {
 
     private static final long serialVersionUID = 1L;
-    private Set<Ask> items;
+    private Set<Ask> items = new HashSet<>();
     private static final String DATATYPE_ASK = Ask.class.getSimpleName();
 
     public QDataAskMessage() {
@@ -18,17 +18,13 @@ public class QDataAskMessage extends QDataMessage {
 	}
 
 	public QDataAskMessage(Set<Ask> items) {
-
 		super(DATATYPE_ASK);
 		setItems(items);
 	}
 
 	public QDataAskMessage(Ask ask) {
-
 		super(DATATYPE_ASK);
-        Set<Ask> asks = new HashSet<>();
-		asks.add(ask);
-		setItems(asks);
+		add(ask);
 	}
 
 	/**
@@ -42,12 +38,17 @@ public class QDataAskMessage extends QDataMessage {
 	 * @param asks the array of asks to set
 	 */
 	public void setItems(Set<Ask> asks) {
+		asks.stream().forEach(ask -> {
+			if(ask.getQuestion() != null && ask.getQuestion().getCapabilityRequirements() != null) {
+				ask.getQuestion().getCapabilityRequirements().clear();
+			}
+		});
 		this.items = asks;
 	}
 
 	public void add(Ask ask) {
-		if (this.items == null) {
-			this.items = new HashSet<>();
+		if(ask.getQuestion() != null && ask.getQuestion().getCapabilityRequirements() != null) {
+			ask.getQuestion().getCapabilityRequirements().clear();
 		}
 		this.items.add(ask);
 	}

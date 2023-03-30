@@ -3,7 +3,6 @@ package life.genny.qwandaq.message;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
-import life.genny.qwandaq.message.QDataMessage;
 import life.genny.qwandaq.models.GennyItem;
 
 @RegisterForReflection

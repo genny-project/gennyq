@@ -1,10 +1,13 @@
 package life.genny.qwandaq.message;
 
 import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.constants.Prefix;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
 
 public class QDataAttributeMessage extends QDataMessage{
 
@@ -33,6 +36,9 @@ public class QDataAttributeMessage extends QDataMessage{
 	 * @param items the array of attributes to set
 	 */
 	public void setItems(Collection<Attribute> items) {
+		items = items.stream()
+			.filter(this::shouldSend)
+			.collect(Collectors.toList());
 		this.items = items;
 	}
 
@@ -40,8 +46,16 @@ public class QDataAttributeMessage extends QDataMessage{
 	public void add(Collection<Attribute> attributes) {
 		Collection<Attribute> items = this.getItems() != null ? new CopyOnWriteArrayList<>(this.getItems())
 				: new CopyOnWriteArrayList<>();
-		items.addAll(attributes);
+		attributes.forEach(attribute -> {
+			if(shouldSend(attribute)) {
+				items.add(attribute);
+			}
+		});
 		this.setItems(items);
+	}
+
+	private boolean shouldSend(Attribute attribute) {
+		return !StringUtils.isBlank(attribute.getCode()) && !attribute.getCode().startsWith(Prefix.CAP_);
 	}
 
 }
