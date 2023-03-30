@@ -17,12 +17,14 @@ import life.genny.qwandaq.Ask;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.PCM;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.graphql.ProcessData;
 import life.genny.qwandaq.message.QBulkMessage;
 import life.genny.qwandaq.utils.QwandaUtils;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QDataAskMessage;
+import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
 
 @ApplicationScoped
@@ -103,8 +105,20 @@ public class TaskService extends KogitoService {
 
 		String userCode = userToken != null ? userToken.getUserCode() : null;
 
-		// find target and target definition
-		BaseEntity target = beUtils.getBaseEntity(targetCode);
+		// find target and target definitionl
+		BaseEntity target;
+		try {
+			target = beUtils.getBaseEntity(targetCode);
+		} catch(ItemNotFoundException e) {
+			// If true then this is a bad login
+			if(targetCode.equals(userCode)) {
+				String msg = "USER BASE ENTITY FOR USER: " + userToken.getEmail() + ":" + userToken.getUsername() + " NOT FOUND!!! Please logout and try again with a user that exists on this server";
+				log.error(CommonUtils.equalsBreak(msg.length()));
+				log.error(CommonUtils.centreString(msg, '*'));
+				log.error(CommonUtils.equalsBreak(msg.length()));
+			}
+			throw e;
+		}
 		BaseEntity definition = defUtils.getDEF(target);
 		processData.setDefinitionCode(definition.getCode());
 
