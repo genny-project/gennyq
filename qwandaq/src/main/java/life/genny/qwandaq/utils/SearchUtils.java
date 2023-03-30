@@ -21,6 +21,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.search.SearchEntity;
 import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.exception.runtime.DebugException;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
@@ -162,6 +163,9 @@ public class SearchUtils {
 		SearchEntity searchEntity = cm.getObject(userToken.getProductCode(), "LAST-SEARCH:" + sessionCode, SearchEntity.class);
 		if (searchEntity == null) {
 			searchEntity = cm.getObject(userToken.getProductCode(), code, SearchEntity.class);
+			if(searchEntity == null) {
+				throw new ItemNotFoundException(userToken.getProductCode(), "Search Entity with code: " + code + " in cache");
+			}
 			searchEntity.setCode(sessionCode);
 		}
 
