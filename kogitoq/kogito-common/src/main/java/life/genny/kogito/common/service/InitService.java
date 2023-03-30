@@ -64,7 +64,17 @@ public class InitService extends KogitoService {
 		String productCode = userToken.getProductCode();
 
 		// fetch the users baseentity, and names
-		BaseEntity user = beUtils.getBaseEntity(userCode);
+		
+		BaseEntity user;
+		try {
+		user = beUtils.getBaseEntity(userCode);
+		} catch (ItemNotFoundException e) {
+			String msg = "USER BASE ENTITY FOR USER: " + userToken.getEmail() + ":" + userToken.getUsername() + " NOT FOUND!!! Please logout and try again with a user that exists on this server";
+			log.error(CommonUtils.equalsBreak(msg.length()));
+			log.error(CommonUtils.centreString(msg, '*'));
+			log.error(CommonUtils.equalsBreak(msg.length()));
+			return;
+		}
 		EntityAttribute name = new EntityAttribute(user, attributeUtils.getAttribute(Attribute.PRI_NAME, true), 1.0, user.getName());
 		user.addAttribute(name);
 		EntityAttribute firstName = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_FIRSTNAME);
