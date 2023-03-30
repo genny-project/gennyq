@@ -182,8 +182,6 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityFilter
 		setBaseEntityId(baseEntity.getId());
 	}
 
-	@JsonbTransient
-    @JsonIgnore
     public Set<Capability> getCapabilityRequirements() {
 		return this.capabilityRequirements;
 	}
