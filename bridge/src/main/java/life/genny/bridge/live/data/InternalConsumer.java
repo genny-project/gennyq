@@ -15,14 +15,12 @@ import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.security.keycloak.KeycloakTokenPayload;
 import life.genny.qwandaq.security.keycloak.TokenVerification;
+import life.genny.qwandaq.utils.vertx.JsonUtils;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Observes;
-import javax.inject.Inject;
 import java.util.UUID;
 
 
@@ -36,20 +34,27 @@ import java.util.UUID;
 @ApplicationScoped
 public class InternalConsumer {
 
-    private static final Logger log = Logger.getLogger(InternalConsumer.class);
+    @Inject
+    Logger log;
 
     @Inject
     TokenVerification verification;
+
     @Inject
     EventBus bus;
+
     @Inject
     BlackListInfo blackList;
+
     @Inject
     BridgeGrpcService grpcService;
+
     @Inject
     GennyScopeInit scope;
+
     @Inject
     Service service;
+
     @Inject
     UserToken userToken;
 
@@ -108,14 +113,15 @@ public class InternalConsumer {
      * @return A JsonObject without the confidential key properties
      */
     public static JsonObject removeKeys(final JsonObject json) {
+        JsonUtils.filter(json, new String[] {"token", "recipientCodeArray", "capabilityRequirements"} );
 
-        if (json.containsKey("token")) {
-            json.remove("token");
-        }
+        // if (json.containsKey("token")) {
+        //     json.remove("token");
+        // }
 
-        if (json.containsKey("recipientCodeArray")) {
-            json.remove("recipientCodeArray");
-        }
+        // if (json.containsKey("recipientCodeArray")) {
+        //     json.remove("recipientCodeArray");
+        // }
 
         return json;
     }
