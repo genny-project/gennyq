@@ -9,6 +9,7 @@ import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
+import life.genny.qwandaq.intf.ICapabilityFilterable;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.utils.AttributeUtils;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -214,6 +215,7 @@ public class GoogleSheetBuilder {
         attribute.setDefaultValue(row.get("defaultvalue"));
         attribute.setIcon(row.get("icon"));
         attribute.setRealm(realmName);
+        
         return attribute;
     }
 
@@ -237,6 +239,9 @@ public class GoogleSheetBuilder {
         String name = row.get("name");
 		baseEntity.setName(name);
         baseEntity.setRealm(realmName);
+
+        String capReqs = row.get("capreqs");
+        attachCapabilityRequirements(baseEntity, capReqs);
         return baseEntity;
     }
 
@@ -272,6 +277,9 @@ public class GoogleSheetBuilder {
 		entityAttribute.setWeight(weight);
 		entityAttribute.setPrivacyFlag(privacy);
 		entityAttribute.setConfirmationFlag(confirmation);
+
+        String capReqs = row.get("capreqs");
+        attachCapabilityRequirements(entityAttribute, capReqs);
 
         return entityAttribute;
     }
@@ -312,6 +320,9 @@ public class GoogleSheetBuilder {
         question.setIcon(icon);
         question.setRealm(realmName);
 
+        String capReqs = row.get("capreqs");
+        attachCapabilityRequirements(question, capReqs);
+
         return question;
     }
 
@@ -348,14 +359,17 @@ public class GoogleSheetBuilder {
 		questionQuestion.setIcon(icon);
 		questionQuestion.setRealm(realmName);
 		questionQuestion.setParentId(parent.getId());
-
         String capReqs = row.get("capreqs");
-        if(capReqs != null) {
-            Set<Capability> requirements = validator.validateCapabilities(capReqs);
-            questionQuestion.setCapabilityRequirements(requirements);
-        }
+        attachCapabilityRequirements(questionQuestion, capReqs);
 
 		return questionQuestion;
+    }
+
+    private void attachCapabilityRequirements(ICapabilityFilterable filterable, String capreqs) {
+        if(capreqs != null) {
+            Set<Capability> requirements = validator.validateCapabilities(capreqs);
+            filterable.setCapabilityRequirements(requirements);
+        }
     }
 
 }
