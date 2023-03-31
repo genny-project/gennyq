@@ -1,7 +1,6 @@
 package life.genny.messages.managers;
 
 
-import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.AttributeUtils;
 import life.genny.qwandaq.utils.BaseEntityUtils;
@@ -14,24 +13,22 @@ import javax.json.bind.JsonbBuilder;
 import java.util.Map;
 
 @ApplicationScoped
-public abstract sealed class QMessageProvider
-        permits QEmailMessageManager, QErrorManager, QSlackMessageManager, QSMSMessageManager,
-        QSendGridMessageManager, QToastMessageManager {
+public abstract class QMessageProvider  {
 
     @Inject
-    AttributeUtils attributeUtils;
+    protected AttributeUtils attributeUtils;
     
     @Inject
-    BaseEntityUtils beUtils;
+    protected BaseEntityUtils beUtils;
 
     @Inject
-    EntityAttributeUtils beaUtils;
+    protected EntityAttributeUtils beaUtils;
 
     @Inject
     protected UserToken userToken;
 
     protected static Jsonb jsonb = JsonbBuilder.create();
 
-    public abstract void sendMessage(BaseEntity templateBe, Map<String, Object> contextMap);
+    public abstract void sendMessage(Map<String, Object> contextMap);
 
 }

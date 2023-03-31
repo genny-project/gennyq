@@ -41,9 +41,8 @@ public class Service2Service extends KogitoService {
 		if (userToken == null) {
 			// We need to fetch the latest token for the sourceUser
 			log.debug(taskExchange.getSourceCode() + " : No token found, fetching latest token");
-			BaseEntity userBE = beUtils.getBaseEntity(taskExchange.getSourceCode());
-			BaseEntity project = beUtils.getBaseEntity(Prefix.PRJ_.concat(userBE.getRealm().toUpperCase()));
-			userToken = new UserToken(keycloakUtils.getImpersonatedToken(userBE, serviceToken, project));
+			String userCode = taskExchange.getSourceCode();
+			userToken = new UserToken(keycloakUtils.getImpersonatedToken(userCode, serviceToken));
 		}
 		logToken();
 		taskExchange.setToken(userToken.getToken());

@@ -14,10 +14,6 @@ import java.util.Map;
 
 public class MsgUtils {
 
-    private MsgUtils() {
-        throw new IllegalArgumentException("Utilities class can't be instantiate");
-    }
-
     private static final Logger log = Logger.getLogger(MsgUtils.class);
 
     public static String encodeUrl(String base, String parentCode, String code, String targetCode) {
