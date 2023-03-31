@@ -133,7 +133,7 @@ public class Events {
         }
 
         // previous
-        if (Question.QUE_PREVIOUS.equals(code)) {
+        if (Question.QUE_PREVIOUS.equals(code) || Question.QUE_BACK.equals(code)) {
             kogitoUtils.sendSignal(SELF, "processQuestions", processId, "previous");
             return;
         }

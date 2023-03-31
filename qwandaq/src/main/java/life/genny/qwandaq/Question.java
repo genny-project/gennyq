@@ -130,6 +130,7 @@ public class Question extends CodedEntity implements CoreEntityPersistable, ICap
 	public static final String QUE_PREVIEW = "QUE_PREVIEW";
 	public static final String QUE_PUBLISH = "QUE_PUBLISH";
 	public static final String QUE_DRAFT = "QUE_DRAFT";
+	public static final String QUE_BACK = "QUE_BACK";
 
 	@JsonbTransient
 	private Set<QuestionQuestion> childQuestions = new HashSet<>(0);
