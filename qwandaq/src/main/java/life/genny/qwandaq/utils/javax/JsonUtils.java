@@ -65,6 +65,7 @@ public class JsonUtils {
     public static JsonObject filter(JsonObject object, String... criteria) {
         if(criteria == null || criteria.length == 0)
             return object;
+
         JsonObjectBuilder builder = Json.createObjectBuilder();
         Set<Entry<String, JsonValue>> values = object.entrySet();
         for(Entry<String, JsonValue> mapping : values) {

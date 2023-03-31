@@ -36,6 +36,15 @@ public class JSONFilterTest {
         return json;
     }
 
+    private boolean containsCheck(String match, String... patterns) {
+        for(String pattern : patterns) {
+            if(match.contains(pattern))
+                return true;
+        }
+
+        return false;
+    }
+
     @Test
     public void wearehere() {
         
@@ -44,7 +53,9 @@ public class JSONFilterTest {
         String json = readFileAsString("/src/test/java/life/genny/test2.json");
         JsonObject obj = jsonb.fromJson(json, JsonObject.class);
         Instant last = Instant.now();
-        obj = JsonUtils.filter(obj, "capabilityRequirements");
+        json = jsonb.toJson(obj);
+        if(containsCheck(json, "item"))
+            obj = JsonUtils.filter(obj, "capabilityRequirements");
         Instant now = Instant.now();
 
         System.out.println(obj.toString());
