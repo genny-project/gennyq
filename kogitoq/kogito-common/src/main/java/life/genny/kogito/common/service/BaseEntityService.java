@@ -176,6 +176,10 @@ public class BaseEntityService extends KogitoService {
 		keycloakUtils.updateUserField(user, "lastName", lastName.getValueString());
 	}
 
+	public String updatePassword(String userCode){
+		return keycloakUtils.updateUserTemporaryPassword(userCode);
+	}
+
 	/**
 	 * Merge a process entity into another entity
 	 */
