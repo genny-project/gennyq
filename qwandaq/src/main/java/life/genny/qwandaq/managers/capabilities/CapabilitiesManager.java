@@ -258,6 +258,11 @@ public class CapabilitiesManager extends Manager {
 		return targetBe;
 	}
 
+	public BaseEntity addCapabilityToBaseEntity(String productCode, String targetCode, String rawCapabilityCode, final CapabilityNode... nodes) {
+		BaseEntity targetBe = beUtils.getBaseEntity(productCode, targetCode);
+		return addCapabilityToBaseEntity(productCode, targetBe, rawCapabilityCode, nodes);
+	}
+
 	public BaseEntity addCapabilityToBaseEntity(String productCode, BaseEntity targetBe, final String rawCapabilityCode,
 			final CapabilityNode... modes) {
 		// Ensure the capability is well defined
