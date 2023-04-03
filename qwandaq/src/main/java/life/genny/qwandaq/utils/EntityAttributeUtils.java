@@ -52,8 +52,7 @@ public class EntityAttributeUtils {
 
 	/**
 	 * Get all DEF EntityAttributes for a BaseEntity that is a {@link Definition}
-	 * using
-	 * Breadth-First Search.
+	 * using Breadth-First Search.
 	 * 
 	 * @param definition - root definition to start at
 	 * @return a {@link HashSet} of {@link EntityAttribute EntityAttributes}
@@ -151,32 +150,32 @@ public class EntityAttributeUtils {
 	/**
 	 * Fetch an EntityAttribute value from the cache.
 	 *
-	 * @param pcm           The BaseEntity to fetch for
-	 * @param attributeCode The Attribute code of the EntityAttribute to fetch
-	 * @return The corresponding EntityAttribute with embedded "Attribute", or null
-	 *         if not found.
-	 */
-	public <T> T getValue(PCM pcm, String attributeCode) {
-		return getValue((BaseEntity) pcm, attributeCode);
-	}
-
-	/**
-	 * Fetch an EntityAttribute value from the cache.
-	 *
 	 * @param baseEntity    The BaseEntity to fetch for
 	 * @param attributeCode The Attribute code of the EntityAttribute to fetch
-	 * @return The corresponding EntityAttribute with embedded "Attribute", or null
-	 *         if not found.
+	 * @return The value of the corresponding entity attribute (decided by its DataType)
+	 * 
+	 * @throws ItemNotFoundException if the EntityAttribute could not be found
+	 * @see {@link EntityAttribute#getValue}
+	 * @see {@link EntityAttributeUtils#getEntityAttribute}
 	 */
 	public <T> T getValue(BaseEntity baseEntity, String attributeCode) {
 		return getValue(baseEntity.getRealm(), baseEntity.getCode(), attributeCode);
 	}
 
+	/**
+	 * Fetch an EntityAttribute value from the cache.
+	 *
+	 * @param product - The product the entity attribute is in
+	 * @param baseEntityCode The base entity code of the entity attribute
+	 * @param attributeCode The attribute code of the entity attribute
+	 * @return The value of the corresponding entity attribute (decided by its DataType)
+	 * 
+	 * @throws ItemNotFoundException if the EntityAttribute could not be found
+	 * @see {@link EntityAttribute#getValue}
+	 * @see {@link EntityAttributeUtils#getEntityAttribute}
+	 */
 	public <T> T getValue(String product, String baseEntityCode, String attributeCode) {
 		EntityAttribute ea = getEntityAttribute(product, baseEntityCode, attributeCode, true, true);
-		if (ea == null) {
-			throw new ItemNotFoundException(product, baseEntityCode, attributeCode);
-		}
 		return ea.getValue();
 	}
 
@@ -187,8 +186,9 @@ public class EntityAttributeUtils {
 	 * @param productCode    The productCode to use
 	 * @param baseEntityCode The BaseEntity code of the EntityAttribute to fetch
 	 * @param attributeCode  The Attribute code of the EntityAttribute to fetch
-	 * @return The corresponding EntityAttribute with embedded "Attribute", or null
-	 *         if not found.
+	 * @return The corresponding EntityAttribute with embedded {@link Attribute}
+	 * 
+	 * @throws ItemNotFoundException if the requested EntityAttribute could not be found
 	 */
 	public EntityAttribute getEntityAttribute(String productCode, String baseEntityCode, String attributeCode) {
 		return getEntityAttribute(productCode, baseEntityCode, attributeCode, false);
@@ -196,14 +196,17 @@ public class EntityAttributeUtils {
 
 	/**
 	 * Fetch a {@link EntityAttribute} from the cache using a
-	 * realm:baseEntityCode:attributeCode.
+	 * realm:baseEntityCode:attributeCode style key.
 	 *
 	 * @param productCode    The productCode to use
 	 * @param baseEntityCode The BaseEntity code of the EntityAttribute to fetch
 	 * @param attributeCode  The Attribute code of the EntityAttribute to fetch
-	 * @param embedAttribute Defines if "Attribute" will be embedded into the
+	 * @param embedAttribute Defines if {@link Attribute} will be embedded into the
 	 *                       returned EntityAttribute
-	 * @return The corresponding BaseEntityAttribute, or null if not found.
+	 * @return The EntityAttribute with or without it's Attribute
+	 * 
+	 * @see {@link EntityAttribute#getAttribute} 
+	 * @throws ItemNotFoundException if the requested EntityAttribute could not be found
 	 */
 	public EntityAttribute getEntityAttribute(String productCode, String baseEntityCode, String attributeCode,
 			boolean embedAttribute) {
@@ -212,15 +215,16 @@ public class EntityAttributeUtils {
 
 	/**
 	 * Fetch a {@link EntityAttribute} from the cache using a
-	 * realm:baseEntityCode:attributeCode.
+	 * realm:baseEntityCode:attributeCode style key.
 	 *
 	 * @param productCode    The productCode to use
 	 * @param baseEntityCode The BaseEntity code of the EntityAttribute to fetch
 	 * @param attributeCode  The Attribute code of the EntityAttribute to fetch
-	 * @param embedAttribute Defines if "Attribute" will be embedded into the
+	 * @param embedAttribute Defines if {@link Attribute} will be embedded into the
 	 *                       returned EntityAttribute
-	 * @return The corresponding BaseEntityAttribute, or null if not found.
+	 * @return The EntityAttribute with or without it's Attribute
 	 * 
+	 * @see {@link EntityAttribute#getAttribute} 
 	 * @throws ItemNotFoundException if the requested EntityAttribute could not be found
 	 */
 	public EntityAttribute getEntityAttribute(String productCode, String baseEntityCode, String attributeCode,
@@ -235,20 +239,19 @@ public class EntityAttributeUtils {
 	 * @param productCode    The productCode to use
 	 * @param baseEntityCode The BaseEntity code of the EntityAttribute to fetch
 	 * @param attributeCode  The Attribute code of the EntityAttribute to fetch
-	 * @param embedAttribute Defines if "Attribute" will be embedded into the
+	 * @param embedAttribute Defines if {@link Attribute} will be embedded into the
 	 *                       returned EntityAttribute
-	 * @return The corresponding BaseEntityAttribute
+	 * @return The EntityAttribute with or without it's Attribute
 	 * 
-	 * @throws {@link ItemNotFoundException} if:
-	 *                <ul>
-	 *                <li>the corresponding {@link EntityAttribute} cannot be
-	 *                found</li>
-	 *                <li>the corresponding {@link Attribute} cannot be found and
-	 *                the attribute has been requested <bembedAttribute</b></li>
-	 *                <li>the corresponding {@link DataType}" cannot be found and
+	 * @see {@link EntityAttribute#getAttribute} 
+	 * 
+	 * @throws {@link ItemNotFoundException} if the corresponding {@link EntityAttribute} cannot be found
+	 * @throws {@link ItemNotFoundException} if the corresponding {@link DataType}" cannot be found and
 	 *                the dataType and attribute has been requested
-	 *                <b>embedAttribute && embedDataType</b></li>
-	 *                </ul>
+	 *                (conditions: <b>embedAttribute && embedDataType</b>)
+	 * @throws {@link ItemNotFoundException} if the corresponding {@link Attribute} cannot be found and
+	 *                the attribute has been requested 
+	 * 				  <p>(conditions: <b>embedAttribute</b>)</p>
 	 * 
 	 * @see {@link AttributeUtils#getAttribute(String, String, Boolean, Boolean)
 	 *      AttributeUtils.getAttribute}
