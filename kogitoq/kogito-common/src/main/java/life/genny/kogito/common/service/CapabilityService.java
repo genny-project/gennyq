@@ -2,6 +2,7 @@ package life.genny.kogito.common.service;
 
 import java.util.Set;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 
 import org.jboss.logging.Logger;
@@ -12,10 +13,13 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.utils.CommonUtils;
 
+@ApplicationScoped
 public class CapabilityService extends KogitoService {
     
     @Inject
     Logger log;
+
+    private static final String LOG_PREPEND = "[!] Kogito Capabilities: ";
 
     @Inject
     CapabilitiesManager capabilities;
@@ -39,6 +43,7 @@ public class CapabilityService extends KogitoService {
      * </p>
      */
     public void addCapabilityToUser(String capability, String capabilityString) {
+        log.info(LOG_PREPEND + "Updating user capability: " + capability + " = " + capabilityString);
         CapabilityNode[] capabilityNodes = CommonUtils.getArrayFromString(capabilityString, CapabilityNode.class, CapabilityNode::parseNode);
         capabilities.addCapabilityToBaseEntity(userToken.getProductCode(), userToken.getCode(), capability, capabilityNodes);
     }
@@ -57,6 +62,7 @@ public class CapabilityService extends KogitoService {
      * </p>
      */
 	public void removeCapabilityFromUser(String capability) {
+        log.info(LOG_PREPEND + "Removing user capability: " + capability);
 		BaseEntity userBe = beUtils.getUserBaseEntity();
         capabilities.removeCapabilityFromBaseEntity(userToken.getProductCode(), userBe, capability);
 	}
