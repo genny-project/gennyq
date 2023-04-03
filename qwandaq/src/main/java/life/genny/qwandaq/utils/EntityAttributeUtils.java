@@ -154,7 +154,7 @@ public class EntityAttributeUtils {
 	 * @param attributeCode The Attribute code of the EntityAttribute to fetch
 	 * @return The value of the corresponding entity attribute (decided by its DataType)
 	 * 
-	 * @throws ItemNotFoundException if the EntityAttribute could not be found
+	 * @throws {@link ItemNotFoundException} if the EntityAttribute could not be found
 	 * @see {@link EntityAttribute#getValue}
 	 * @see {@link EntityAttributeUtils#getEntityAttribute}
 	 */
