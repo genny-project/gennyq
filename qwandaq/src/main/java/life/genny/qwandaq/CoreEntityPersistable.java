@@ -3,6 +3,7 @@ package life.genny.qwandaq;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 /*
  * Interface for the representation of any entity in hibernate form
@@ -10,5 +11,9 @@ import java.io.Serializable;
  * @author Varun Shastry
  */
 public interface CoreEntityPersistable extends Serializable {
-    public CoreEntitySerializable toSerializableCoreEntity();
+    LocalDateTime getCreated();
+    void setCreated(LocalDateTime created);
+    LocalDateTime getUpdated();
+    void setUpdated(LocalDateTime updated);
+    CoreEntitySerializable toSerializableCoreEntity();
 }

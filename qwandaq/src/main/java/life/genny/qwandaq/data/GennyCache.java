@@ -40,6 +40,7 @@ import org.jboss.logging.Logger;
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import java.io.InputStream;
+import java.time.LocalDateTime;
 import java.util.*;
 
 /**
@@ -248,6 +249,10 @@ public class GennyCache {
 		}
 
 		try {
+			if(value.getCreated() == null) {
+				value.setCreated(LocalDateTime.now());
+			}
+			value.setUpdated(LocalDateTime.now());
 			cache.put(key, value);
 		} catch (Exception e) {
 			log.error(ANSIColour.doColour("Exception when inserting entity (key=" + key.getKeyString() + ") into cache: " + cacheName, ANSIColour.RED));
