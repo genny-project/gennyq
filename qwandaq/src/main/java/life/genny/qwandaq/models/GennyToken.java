@@ -275,8 +275,10 @@ public class GennyToken implements Serializable {
 	}
 
 	/**
+	 * @deprecated use {@link GennyToken#getUserCode} for base entity code instead
 	 * @return String
 	 */
+	@Deprecated
 	public String getCode() {
 		return code;
 	}
