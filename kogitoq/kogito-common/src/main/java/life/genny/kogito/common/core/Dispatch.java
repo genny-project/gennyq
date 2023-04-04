@@ -263,6 +263,7 @@ public class Dispatch {
 		try {
 			String targetCode = beaUtils.getValue(pcm, Attribute.PRI_TARGET_CODE);
             log.debugf("pcmCode: %s, sourceCode: %s,  targetCode: %s, target.getCode(): %s", pcmCode, source.getCode(), targetCode, target.getCode());
+
 			if (!StringUtils.isBlank(targetCode) && !targetCode.equals(target.getCode()) && !processedTargetCodes.contains(targetCode+target.getCode())) {
 				// merge targetCode
 				log.debugf("Target code combo already processed? : %s", processedTargetCodes.contains(targetCode + target.getCode()));
@@ -303,15 +304,35 @@ public class Dispatch {
 			return false;
 		});
 		
-		// iterate locations
-		List<EntityAttribute> locations = pcmAttributeMap.stream().filter(val -> val.getKey().startsWith(Prefix.PRI_LOC)).map(Map.Entry::getValue).collect(Collectors.toList());
-		for(EntityAttribute entityAttribute : locations) {
+		/**
+		 * Iterate through all entity attributes
+		 * mail merge required fields
+		 * if attribute code does not refer to a location do not traverse / do further processing
+		 */
+		for(Map.Entry<String, EntityAttribute> entityAttributeEntry : pcmAttributeMap) {
+			EntityAttribute entityAttribute = entityAttributeEntry.getValue();
+		// }
+		// List<EntityAttribute> locations = pcmAttributeMap.stream().filter(val -> val.getKey().startsWith(Prefix.PRI_LOC)).map(Map.Entry::getValue).collect(Collectors.toList());
+		// for(EntityAttribute entityAttribute : locations) {
 			log.debug("Passed Capabilities check for: " + entityAttribute.getBaseEntityCode() + ":" + entityAttribute.getAttributeCode());
 
 			Attribute attribute = attributeUtils.getAttribute(entityAttribute.getRealm(), entityAttribute.getAttributeCode(), true);
 			entityAttribute.setAttribute(attribute);
-			// recursively check PCM fields
 			String value = entityAttribute.getAsString();
+
+			// mail merging
+			if(value.contains("[[")) {
+				BaseEntity user = beUtils.getUserBaseEntity();
+				Map<String, Object> ctxMap = Map.of("USER", user, "USER_CODE", user);
+				value = mergeUtils.merge(pcmCode, ctxMap);
+				entityAttribute.setValueString(value);
+			}
+
+			// Strict location processing past this point
+			if(!attribute.getCode().startsWith("PRI_LOC"))
+				continue;
+
+			// recursively check PCM fields
 			if (value.startsWith(Prefix.PCM_)) {
 				parent = pcmCode;
 				location = entityAttribute.getAttributeCode();
