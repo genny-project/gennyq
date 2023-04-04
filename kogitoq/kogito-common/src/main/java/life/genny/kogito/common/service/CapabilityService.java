@@ -62,7 +62,7 @@ public class CapabilityService extends KogitoService {
     * </p>
     */
     public void addCapabilityToTarget(String targetProduct, String targetCode, String capability, String capabilityString) {
-        log.info(LOG_PREPEND + "Updating user capability: " + capability + " = " + capabilityString);
+        log.info(LOG_PREPEND + "Updating user " + targetCode + " capability: " + capability + " = " + capabilityString);
         CapabilityNode[] capabilityNodes = CommonUtils.getArrayFromString(capabilityString, CapabilityNode.class, CapabilityNode::parseNode);
         capabilities.addCapabilityToBaseEntity(targetProduct, targetCode, capability, capabilityNodes);
     }
