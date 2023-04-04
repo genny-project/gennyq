@@ -517,11 +517,28 @@ public class BaseEntityUtils {
 	 * @param name  The name of the entity
 	 * @param code  The code of the entity
 	 * @return The created BaseEntity
+	 *
+	 * @throws DefinitionException if a prefix could not be found for the supplied definition
+	 * @throws DebugException if a user base entity is missing a prefix
+	 */
+	public BaseEntity create(final Definition definition, String name, String code)
+			throws DefinitionException {
+		return create(definition, name, code, true);
+	}
+
+	/**
+	 * Create a new {@link BaseEntity} using a name and code.
+	 *
+	 * @param definition The def entity to use
+	 * @param name  The name of the entity
+	 * @param code  The code of the entity
+	 * @param saveBaseEntity  Defines whether the created entity should be saved
+	 * @return The created BaseEntity
 	 * 
 	 * @throws DefinitionException if a prefix could not be found for the supplied definition
 	 * @throws DebugException if a user base entity is missing a prefix
 	 */
-	public BaseEntity create(final Definition definition, String name, String code) 
+	public BaseEntity create(final Definition definition, String name, String code, boolean saveBaseEntity)
 		throws DefinitionException {
 
 		if (definition == null)
@@ -556,8 +573,10 @@ public class BaseEntityUtils {
 			//item.addAttribute(new EntityAttribute());
 		}
 
-		// save to DB and cache
-		updateBaseEntity(item);
+		if (saveBaseEntity) {
+			// saveBaseEntity to DB and cache
+			updateBaseEntity(item);
+		}
 
 		List<EntityAttribute> atts = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(productCode, definitionCode, Prefix.ATT_);
 		for (EntityAttribute ea : atts) {
@@ -605,7 +624,9 @@ public class BaseEntityUtils {
 		item.addAttribute(linkAuthorEA);
 		beaUtils.updateEntityAttribute(linkAuthorEA);
 
-		updateBaseEntity(item, false);
+		if (saveBaseEntity) {
+			updateBaseEntity(item, false);
+		}
 
 		return item;
 	}
