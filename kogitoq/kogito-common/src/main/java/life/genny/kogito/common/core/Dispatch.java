@@ -316,10 +316,7 @@ public class Dispatch {
 		// for(EntityAttribute entityAttribute : locations) {
 			log.debug("Passed Capabilities check for: " + entityAttribute.getBaseEntityCode() + ":" + entityAttribute.getAttributeCode());
 
-			Attribute attribute = attributeUtils.getAttribute(entityAttribute.getRealm(), entityAttribute.getAttributeCode(), true);
-			entityAttribute.setAttribute(attribute);
-			String value = entityAttribute.getAsString();
-
+			String value = entityAttribute.getValueString();
 			// mail merging
 			if(value.contains("[[")) {
 				BaseEntity user = beUtils.getUserBaseEntity();
@@ -329,8 +326,13 @@ public class Dispatch {
 			}
 
 			// Strict location processing past this point
-			if(!attribute.getCode().startsWith("PRI_LOC"))
+			if(!entityAttribute.getAttributeCode().startsWith("PRI_LOC"))
 				continue;
+
+
+			Attribute attribute = attributeUtils.getAttribute(entityAttribute.getRealm(), entityAttribute.getAttributeCode(), true);
+			entityAttribute.setAttribute(attribute);
+			value = entityAttribute.getAsString();
 
 			// recursively check PCM fields
 			if (value.startsWith(Prefix.PCM_)) {
