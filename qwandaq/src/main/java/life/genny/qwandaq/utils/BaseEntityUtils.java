@@ -609,22 +609,24 @@ public class BaseEntityUtils {
 				newEA.setRealm(userToken.getProductCode());
 				log.info("Adding mandatory/default -> " + attribute.getCode());
 				item.addAttribute(newEA);
-				beaUtils.updateEntityAttribute(newEA);
+				if (saveBaseEntity) {
+					beaUtils.updateEntityAttribute(newEA);
+				}
 			}
 		}
 
 		Attribute linkDef = attributeUtils.getAttribute(Attribute.LNK_DEF, true);
 		EntityAttribute linkDefEA = new EntityAttribute(item, linkDef, 1.0, "[\"" + definitionCode + "\"]");
 		item.addAttribute(linkDefEA);
-		beaUtils.updateEntityAttribute(linkDefEA);
 
 		// author of the BE
 		Attribute lnkAuthorAttr = attributeUtils.getAttribute(Attribute.LNK_AUTHOR, true);
 		EntityAttribute linkAuthorEA = new EntityAttribute(item, lnkAuthorAttr, 1.0, "[\"" + userToken.getUserCode() + "\"]");
 		item.addAttribute(linkAuthorEA);
-		beaUtils.updateEntityAttribute(linkAuthorEA);
 
 		if (saveBaseEntity) {
+			beaUtils.updateEntityAttribute(linkDefEA);
+			beaUtils.updateEntityAttribute(linkAuthorEA);
 			updateBaseEntity(item, false);
 		}
 
