@@ -269,6 +269,7 @@ public class BaseEntityUtils {
 	public BaseEntity getBaseEntityFromLinkAttribute(BaseEntity baseEntity, String attributeCode, boolean bundleAttributes) {
 		String value = getStringValueOfAttribute(baseEntity, attributeCode);
 		if (StringUtils.isBlank(value)) {
+			log.error("Value contained within " + baseEntity.getCode() + ":" + attributeCode + " is null. Cannot retrieve base entity from lnk attribute");
 			return null;
 		}
 		String newBaseEntityCode = CommonUtils.cleanUpAttributeValue(value);
