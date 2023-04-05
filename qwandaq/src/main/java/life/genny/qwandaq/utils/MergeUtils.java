@@ -304,6 +304,7 @@ public class MergeUtils {
 				// A nice little clean up command for attribute values
 				if (cmd.equals("CLEAN")) {
 					stringToBeFormatted = stringToBeFormatted.replace("\"", "").replace("[", "").replace("]", "").replace(" ", "");
+					continue;
 				}
 				// A nice little substring command
 				if (cmd.startsWith("SUBSTRING(")) {
@@ -315,7 +316,17 @@ public class MergeUtils {
 					} else {
 						stringToBeFormatted = stringToBeFormatted.substring(begin);
 					}
+					continue;
 				}
+
+				if(cmd.startsWith("PREPEND(")) {
+					String prependText = cmd.replace("PREPEND", "").replace("(", "").replace(")", "");
+					stringToBeFormatted = prependText.concat(stringToBeFormatted);
+					continue;
+				}
+
+				// cmds are mutually exclusive so it is okay to have this here
+				log.error("[!] Unregistered Merge command: " + cmd);
 			}
 			return stringToBeFormatted;
 		}
