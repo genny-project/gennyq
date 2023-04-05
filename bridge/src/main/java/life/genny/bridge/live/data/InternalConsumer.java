@@ -17,6 +17,8 @@ import life.genny.qwandaq.security.keycloak.KeycloakTokenPayload;
 import life.genny.qwandaq.security.keycloak.TokenVerification;
 import life.genny.serviceq.Service;
 import life.genny.serviceq.intf.GennyScopeInit;
+
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
@@ -137,8 +139,18 @@ public class InternalConsumer {
 
 		final JsonObject json = new JsonObject(incoming);
         final JsonArray items = json.getJsonArray("items");
-        if(items != null && items.size() == 0) {
-            log.error("[!] Sending out a message with 0 items!");
+        if(items != null) {
+            if(items.size() == 0)
+                log.error("[!] Sending out a message with 0 items!");
+            if(items.size() == 1) {
+                if(StringUtils.isBlank(json.getString("aliasCode"))) {
+                    JsonObject firstItem = items.getJsonObject(0);
+                    if(firstItem != null) {
+                        String aliasCode = firstItem.getString("name");
+                        json.put("aliasCode", aliasCode);
+                    }
+                }
+            }
         }
         
 		GennyToken gennyToken = new GennyToken(json.getString("token"));
