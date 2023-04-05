@@ -140,8 +140,6 @@ public class InternalConsumer {
 		final JsonObject json = new JsonObject(incoming);
         final JsonArray items = json.getJsonArray("items");
         if(items != null) {
-            if(items.size() == 0)
-                log.error("[!] Sending out a message with 0 items!");
             if(items.size() == 1) {
                 if(StringUtils.isBlank(json.getString("aliasCode"))) {
                     JsonObject firstItem = items.getJsonObject(0);
@@ -151,6 +149,9 @@ public class InternalConsumer {
                     }
                 }
             }
+        } else if(items == null || items.size() == 0) {
+            log.error("[!] Sending out a message with 0 items! Not forwarding message to Frontend");
+            return;
         }
         
 		GennyToken gennyToken = new GennyToken(json.getString("token"));
