@@ -708,8 +708,17 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 					case GennyConstants.INTEGER:
 						if (value instanceof BigDecimal)
 							setValueInteger(((BigDecimal) value).intValue());
-						else
-							setValueInteger((Integer) value);
+						else {
+							try {
+								setValueInteger((Integer) value);
+							} catch(ClassCastException e) {
+								System.err.println("[EntityAttribute] Could not cast value: " + value + ". Value type: " + value.getClass());
+								System.err.println("[EntityAttribute] EntityAttribute: " + baseEntityCode + ":" + attributeCode);
+								System.err.println("[EntityAttribute] DataType: " + (dataType != null ? dataType.getDttCode() : "null"));
+								System.err.println("[EntityAttribute] DataType ClassName: " + className);
+								e.printStackTrace();
+							}
+						}
 						break;
 
 					case GennyConstants.JAVA_TIME_LOCAL_DATE_TIME:

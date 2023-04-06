@@ -248,7 +248,7 @@ public class DataType implements CoreEntityPersistable {
 	}
 
 	/**
-	 * @return the name
+	 * @return the datatype code
 	 */
 	public String getDttCode() {
 		return this.dttCode;
