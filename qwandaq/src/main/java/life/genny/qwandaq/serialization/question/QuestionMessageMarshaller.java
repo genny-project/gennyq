@@ -26,7 +26,6 @@ public class QuestionMessageMarshaller implements MessageMarshaller<Question> {
 	// @Override
 	public Question readFrom(ProtoStreamReader reader) throws IOException {
 		Question question = new Question();
-		question.setId(reader.readLong("id"));
 		Long createdLong = reader.readLong("created");
 		if (createdLong != null) {
 			question.setCreated(LocalDateTime.ofEpochSecond(createdLong / 1000, 0, ZoneOffset.UTC));
@@ -49,14 +48,12 @@ public class QuestionMessageMarshaller implements MessageMarshaller<Question> {
 		question.setOneshot(reader.readBoolean("oneshot"));
 		question.setPlaceholder(reader.readString("placeholder"));
 		question.setReadonly(reader.readBoolean("readonly"));
-		question.setAttributeId(reader.readLong("attribute_id"));
 		question.setCapabilityRequirements(CapabilityConverter.convertToEA(reader.readString("capreqs")));
 		return question;
 	}
 
 	// @Override
 	public void writeTo(ProtoStreamWriter writer, Question question) throws IOException {
-		writer.writeLong("id", question.getId());
 		LocalDateTime created = question.getCreated();
 		Long createdLong = created != null ? created.toEpochSecond(ZoneOffset.UTC)*1000 : null;
 		writer.writeLong("created", createdLong);
@@ -76,7 +73,6 @@ public class QuestionMessageMarshaller implements MessageMarshaller<Question> {
 		writer.writeBoolean("oneshot", question.getOneshot());
 		writer.writeString("placeholder", question.getPlaceholder());
 		writer.writeBoolean("readonly", question.getReadonly());
-		writer.writeLong("attribute_id", question.getAttributeId());
 		writer.writeString("capreqs", CapabilityConverter.convertToDBColumn(question.getCapabilityRequirements()));
 	}
 

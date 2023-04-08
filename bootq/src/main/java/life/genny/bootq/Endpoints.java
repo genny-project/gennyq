@@ -7,10 +7,12 @@ import life.genny.bootq.models.BatchLoading;
 import life.genny.bootq.models.reporting.LoadReport;
 import life.genny.bootq.sheets.realm.Realm;
 import life.genny.bootq.sheets.realm.RealmUnit;
+import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.serviceq.Service;
 
+import java.sql.SQLException;
 import java.util.List;
 
 import javax.enterprise.event.Observes;
@@ -102,15 +104,15 @@ public class Endpoints {
     @Produces(MediaType.TEXT_PLAIN)
     @Transactional
     public Response loadSheetsById(@PathParam("sheetid") final String sheetId) {
-        log.info("Loading in sheet " + sheetId);
-        String msg = "";
-        
         if (getIsTaskRunning()) {
             log.error("Batch loading task is running, please try later or force restart pod");
             return Response.status(Response.Status.BAD_REQUEST)
                     .entity("Batch loading task is running, please try later or force restart pod")
                     .build();
         }
+
+        log.info("Loading in sheet " + sheetId);
+        String msg = "";
 
         if (sheetId == null) {
             msg = "Can't find env GOOGLE_SHEETS_ID!!!";
@@ -157,8 +159,6 @@ public class Endpoints {
     @Produces(MediaType.TEXT_PLAIN)
     @Transactional
     public Response loadSheetsTableById(@PathParam("sheetid") final String sheetId, @PathParam("table") final String table) {
-        log.info("Loading in sheet " + sheetId);
-        String msg = "";
         if (getIsTaskRunning()) {
             log.error("Batch loading task is running, please try later or force restart pod");
             return Response.status(Response.Status.BAD_REQUEST)
@@ -166,6 +166,8 @@ public class Endpoints {
                     .build();
         }
 
+        log.info("Loading in sheet " + sheetId);
+        String msg = "";
         if (StringUtils.isBlank(sheetId)) {
             msg = "Sheet Id not supplied as path param!";
             log.error(msg);
@@ -210,6 +212,110 @@ public class Endpoints {
             e.printStackTrace();
         }
         return Response.ok().entity(msg).build();
+    }
+
+    @GET
+    @Path("/loadsheetstosqlite/{sheetid}")
+    @Produces(MediaType.TEXT_PLAIN)
+    @Transactional
+    public Response loadSheetsByIdToSqlite(@PathParam("sheetid") final String sheetId) {
+        if (getIsTaskRunning()) {
+            log.error("Batch loading task is running, please try later or force restart pod");
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Batch loading task is running, please try later or force restart pod")
+                    .build();
+        }
+
+        if (sheetId == null) {
+            String msg = "Can't find env GOOGLE_SHEETS_ID!!!";
+            log.error(msg);
+            setIsTaskRunning(false);
+            return Response.status(Response.Status.NOT_FOUND).entity(msg).build();
+        }
+
+        log.info("Loading in sheet " + sheetId + " to Sqlite");
+
+        setIsTaskRunning(true);
+        Long start = System.currentTimeMillis();
+
+        Realm realm = new Realm(sheetId);
+        List<RealmUnit> realmUnits = realm.getDataUnits();
+        log.info("FOUND " + realmUnits.size() + " realmUnits");
+        for (RealmUnit realmUnit : realmUnits) {
+            log.info("Module Unit: " + realmUnit.getModule());
+            log.info("Importing from sheet " + realmUnit.getUri() + " for realm " + realmUnit.getName());
+
+            if (!realmUnit.getDisable() && !realmUnit.getSkipGoogleDoc()) {
+                log.infof("Persisting project for realmUnit code: %s", realmUnit.getCode());
+                try {
+                    bl.loadToSqlite(realmUnit);
+                } catch (Exception e) {
+                    log.errorf("Can't load data from google sheets to sqlite: %s", e.getMessage());
+                    e.printStackTrace();
+                    setIsTaskRunning(false);
+                    return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+                }
+                log.infof("Finished loading data to Sqlite for realmUnit code: %s", realmUnit.getCode());
+            } else {
+                log.info("SKIPPING sheet " + realmUnit.getUri() + " for realm " + realmUnit.getName());
+            }
+        }
+        String message = "Finished batch loading for all realms in google sheets";
+        log.info(message);
+        setIsTaskRunning(false);
+        Long end = System.currentTimeMillis();
+        log.infof("Total time taken to load the sheet %s : %s (millis)", sheetId, (end - start));
+        try {
+            loadReport.printLoadReport(SHOW_STACK_TRACES);
+        } catch(Exception e) {
+            log.error("Error dumping to file");
+            log.error(e.getMessage());
+            e.printStackTrace();
+        }
+
+        return Response.ok().entity(message).build();
+    }
+
+    @GET
+    @Path("/loadsqlitetodb/{realm}/{sqlitedbnames}")
+    @Produces(MediaType.TEXT_PLAIN)
+    @Transactional
+    public Response loadSqliteToDB(@PathParam("realm") final String realm, @PathParam("sqlitedbnames") final String sqliteDbNames) {
+        if (getIsTaskRunning()) {
+            log.error("Batch loading task is running, please try later or force restart pod");
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity("Batch loading task is running, please try later or force restart pod")
+                    .build();
+        }
+        log.infof("Loading data in Sqlite to DB - realm: %s, databases: %s", realm, sqliteDbNames);
+        setIsTaskRunning(true);
+        Long start = System.currentTimeMillis();
+        String[] sqliteDbNamesArr = StringUtils.split(sqliteDbNames, GennyConstants.COMMA);
+        try {
+            for (int i = 0; i < sqliteDbNamesArr.length; i++) {
+                log.infof("Loading data in Sqlite database: %s", sqliteDbNamesArr[i]);
+                bl.loadDataInSqliteToDB(realm, sqliteDbNamesArr[i]);
+            }
+        } catch (Exception e) {
+            log.errorf("Error loading the data in sqlite to database: %s", e.getMessage());
+            e.printStackTrace();
+            setIsTaskRunning(false);
+            return Response.status(Status.BAD_REQUEST).entity(e.getMessage()).build();
+        }
+        String message = "Finished batch loading for all realms in google sheets";
+        log.info(message);
+        setIsTaskRunning(false);
+        Long end = System.currentTimeMillis();
+        log.infof("Total time taken to load from Sqlite : %s (millis)", (end - start));
+        try {
+            loadReport.printLoadReport(SHOW_STACK_TRACES);
+        } catch(Exception e) {
+            log.error("Error dumping to file");
+            log.error(e.getMessage());
+            e.printStackTrace();
+        }
+
+        return Response.ok().entity(message).build();
     }
 
 }
