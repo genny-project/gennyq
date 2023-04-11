@@ -36,6 +36,7 @@ import life.genny.qwandaq.serialization.CoreEntitySerializable;
 
 import life.genny.qwandaq.CodedEntity;
 import life.genny.qwandaq.converter.StringListConverter;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 /**
  * Validation represents a distinct abstract Validation Representation in the Qwanda library.
@@ -295,5 +296,19 @@ public class Validation extends CodedEntity implements CoreEntityPersistable {
 		ValidationListConverter validationListConverter = new ValidationListConverter();
 		validation.setSelectionGroup(validationListConverter.convertToString(getSelectionBaseEntityGroupList()));
 		return validation;
+	}
+
+	@Override
+	public int hashCode() {
+		HashCodeBuilder hcb = new HashCodeBuilder();
+		hcb.append(getRealm());
+		hcb.append(getCode());
+		return hcb.toHashCode();
+	}
+
+	@Override
+	public boolean equals(Object otherObject) {
+		return this.getRealm().equals(((Validation) otherObject).getRealm())
+				&& this.getCode().equals(((Validation) otherObject).getCode());
 	}
 }

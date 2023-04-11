@@ -228,7 +228,7 @@ public class RoleManager extends Manager {
 	 */
 	public BaseEntity inheritRole(BaseEntity role, final BaseEntity parentRole) {
 		BaseEntity ret = role;
-		List<EntityAttribute> perms = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(parentRole.getRealm(), parentRole.getCode(), Prefix.CAP_);
+		Set<EntityAttribute> perms = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(parentRole.getRealm(), parentRole.getCode(), Prefix.CAP_);
 		for (EntityAttribute permissionEA : perms) {
 			Attribute attribute = attributeUtils.getAttribute(permissionEA.getAttributeCode(), true, true);
 			permissionEA.setAttribute(attribute);

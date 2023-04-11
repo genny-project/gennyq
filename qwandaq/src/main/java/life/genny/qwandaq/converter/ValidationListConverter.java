@@ -10,10 +10,11 @@ import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 @Converter
-public class ValidationListConverter implements AttributeConverter<List<Validation>, String> {
+public class ValidationListConverter implements AttributeConverter<Set<Validation>, String> {
 
 	private static final Logger log = Logger.getLogger(ValidationListConverter.class);
 
@@ -24,7 +25,7 @@ public class ValidationListConverter implements AttributeConverter<List<Validati
 	 * @return String
 	 */
 	@Override
-	public String convertToDatabaseColumn(final List<Validation> list) {
+	public String convertToDatabaseColumn(final Set<Validation> list) {
         StringBuilder ret = new StringBuilder();
 		for (final Validation validation : list) {
 			String validationGroupStr = "";
@@ -57,8 +58,8 @@ public class ValidationListConverter implements AttributeConverter<List<Validati
 	 */
 	@SuppressWarnings("deprecation")
 	@Override
-	public List<Validation> convertToEntityAttribute(String joined) {
-		final List<Validation> validations = new CopyOnWriteArrayList<Validation>();
+	public Set<Validation> convertToEntityAttribute(String joined) {
+		final Set<Validation> validations = new CopyOnWriteArraySet<>();
 		if(StringUtils.isBlank(joined))
 			return validations;
 

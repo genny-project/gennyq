@@ -190,7 +190,7 @@ public class BaseEntityUtils {
 		}
 		// fetch entity attributes
 		if (bundleAttributes) {
-			List<EntityAttribute> entityAttributesForBaseEntity = beaUtils.getAllEntityAttributesForBaseEntity(productCode, code);
+			Set<EntityAttribute> entityAttributesForBaseEntity = beaUtils.getAllEntityAttributesForBaseEntity(productCode, code);
 			if(entityAttributesForBaseEntity.isEmpty()) {
 				log.infof("No BaseEntityAttributes found for base entity [%s:%s]", productCode, code);
 				//throw new ItemNotFoundException();
@@ -579,7 +579,7 @@ public class BaseEntityUtils {
 			updateBaseEntity(item);
 		}
 
-		List<EntityAttribute> atts = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(productCode, definitionCode, Prefix.ATT_);
+		Set<EntityAttribute> atts = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(productCode, definitionCode, Prefix.ATT_);
 		for (EntityAttribute ea : atts) {
 			String attrCode = ea.getAttributeCode().substring(Prefix.ATT_.length());
 			Attribute attribute = attributeUtils.getAttribute(attrCode, true);

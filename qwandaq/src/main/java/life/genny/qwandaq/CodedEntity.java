@@ -150,7 +150,8 @@ public abstract class CodedEntity extends CoreEntity {
 	@Override
 	public int hashCode() {
 		HashCodeBuilder hcb = new HashCodeBuilder();
-		hcb.append(code);
+		hcb.append(getRealm());
+		hcb.append(getCode());
 		return hcb.toHashCode();
 	}
 

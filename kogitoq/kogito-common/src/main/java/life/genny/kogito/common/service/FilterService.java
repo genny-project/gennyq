@@ -664,7 +664,7 @@ public class FilterService extends KogitoService {
     public void addDefinitionCodeByBucket(List<String> definitions) {
         PCM pcm = beUtils.getPCM(PCM.PCM_PROCESS);
 
-        List<EntityAttribute> locations = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(pcm.getRealm(), pcm.getCode(), Prefix.PRI_LOC);
+        Set<EntityAttribute> locations = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(pcm.getRealm(), pcm.getCode(), Prefix.PRI_LOC);
         for (EntityAttribute entityAttribute : locations) {
             Attribute attribute = attributeUtils.getAttribute(entityAttribute.getRealm(), entityAttribute.getAttributeCode(), true);
             entityAttribute.setAttribute(attribute);

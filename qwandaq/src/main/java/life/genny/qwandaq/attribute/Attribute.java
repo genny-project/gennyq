@@ -26,6 +26,7 @@ import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -355,17 +356,6 @@ public class Attribute extends CodedEntity implements CoreEntityPersistable {
 		attributeSerializable.setIcon(getIcon());
 		attributeSerializable.setStatus(getStatus().ordinal());
 		return attributeSerializable;
-	}
-
-	@Override
-	public int hashCode() {
-		return (this.getRealm()+this.getCode()).hashCode();
-	}
-
-	@Override
-	public boolean equals(Object otherObject) {
-		return this.getRealm().equals(((Attribute) otherObject).getRealm())
-				&& this.getCode().equals(((Attribute) otherObject).getCode());
 	}
 
 	public HAttribute toHAttribute() {
