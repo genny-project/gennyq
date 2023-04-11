@@ -106,11 +106,12 @@ public class BatchLoading {
         Set<String> moduleUnitNames = new HashSet<>();
         int i = 1;
         for (ModuleUnit moduleUnit : rx.getModule().getDataUnits()) {
-            String moduleUnitName = moduleUnit.getName();
+            String moduleUnitName = moduleUnit.getModuleName();
             if(moduleUnitNames.contains(moduleUnitName)) {
                 moduleUnitName = moduleUnitName + i++;
             }
             moduleUnitNames.add(moduleUnitName);
+            log.infof("Loading into module: %s - %s", moduleUnit.getName(), moduleUnitName);
             Connection connection = sqliteHelper.getConnectionToDatabase(moduleUnitName);
             loadToSqliteTable(connection, "validation", moduleUnit.getValidations());
             loadToSqliteTable(connection, "datatype", moduleUnit.getDataTypes());
@@ -122,6 +123,7 @@ public class BatchLoading {
             loadToSqliteTable(connection, "question", moduleUnit.getQuestions());
             loadToSqliteTable(connection, "question_question", moduleUnit.getQuestionQuestions());
             sqliteHelper.closeConnection(connection);
+            log.infof("Completed loading into module: %s", moduleUnitName);
         }
     }
 

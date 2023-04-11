@@ -12,7 +12,6 @@ import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.serviceq.Service;
 
-import java.sql.SQLException;
 import java.util.List;
 
 import javax.enterprise.event.Observes;
@@ -242,7 +241,6 @@ public class Endpoints {
         List<RealmUnit> realmUnits = realm.getDataUnits();
         log.info("FOUND " + realmUnits.size() + " realmUnits");
         for (RealmUnit realmUnit : realmUnits) {
-            log.info("Module Unit: " + realmUnit.getModule());
             log.info("Importing from sheet " + realmUnit.getUri() + " for realm " + realmUnit.getName());
 
             if (!realmUnit.getDisable() && !realmUnit.getSkipGoogleDoc()) {

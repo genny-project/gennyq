@@ -103,6 +103,7 @@ public class SqliteHelper {
             log.infof("Nothing to insert since recordsMapCollection is empty.");
             return;
         }
+        log.infof("Found %s record(s) to be inserted into %s table", recordsMapCollection.size(), tableName);
         connection.setAutoCommit(false);
         boolean logFlag = true;
         for (Map<String, String> row : recordsMapCollection) {
