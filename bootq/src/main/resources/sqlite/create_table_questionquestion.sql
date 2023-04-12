@@ -1,4 +1,4 @@
-CREATE TABLE question_question (
+CREATE TABLE IF NOT EXISTS question_question (
     parentcode TEXT NOT NULL,
     targetcode TEXT NOT NULL,
     weight TEXT NOT NULL,
@@ -12,5 +12,6 @@ CREATE TABLE question_question (
     dependency TEXT,
     icon TEXT,
     disabled TEXT,
-    hidden TEXT
+    hidden TEXT,
+    UNIQUE(parentcode, targetcode)
 );

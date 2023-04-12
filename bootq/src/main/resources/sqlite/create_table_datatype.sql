@@ -1,4 +1,4 @@
-CREATE TABLE datatype (
+CREATE TABLE IF NOT EXISTS datatype (
     code TEXT NOT NULL UNIQUE,
     name TEXT NOT NULL,
     classname TEXT NOT NULL,

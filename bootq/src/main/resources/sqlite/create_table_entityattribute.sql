@@ -1,4 +1,4 @@
-CREATE TABLE entityattribute (
+CREATE TABLE IF NOT EXISTS entityattribute (
     x TEXT,
     baseentitycode TEXT NOT NULL,
     attributecode TEXT NOT NULL,
@@ -9,5 +9,6 @@ CREATE TABLE entityattribute (
     valueinteger TEXT,
     valuedouble TEXT,
     valuebaseentitycodelist TEXT,
-    privacy TEXT
+    privacy TEXT,
+    UNIQUE(baseentitycode, attributecode)
 );

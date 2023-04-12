@@ -36,7 +36,7 @@ public class SqliteHelper {
 
     public static String DROP_TABLE_IF_EXISTS = "DROP TABLE IF EXISTS ";
 
-    public static String INSERT_INTO = "INSERT INTO ";
+    public static String INSERT_INTO = "INSERT OR REPLACE INTO ";
 
     public static String SELECT_FROM = "SELECT * FROM ";
 
@@ -54,15 +54,20 @@ public class SqliteHelper {
     Logger log;
 
     public Connection getConnectionToDatabase(String databaseName) throws SQLException {
+        if (StringUtils.isBlank(databaseName)) {
+            throw new UnsupportedOperationException("Database name cannot be empty!");
+        }
         String url = SQLITE_CONNECTION_URL + databaseName + SQLITE_EXTENSION;
         return DriverManager.getConnection(url);
     }
 
-    public void dropAndCreateTable(Connection connection, String tableName) throws SQLException, IOException {
-        StringBuilder dropSqlStatement = new StringBuilder(DROP_TABLE_IF_EXISTS);
-        dropSqlStatement.append(tableName);
-        PreparedStatement preparedStatementForDrop = connection.prepareStatement(dropSqlStatement.toString());
-        preparedStatementForDrop.execute();
+    public void createTable(Connection connection, String tableName, boolean dropBeforeCreate) throws SQLException, IOException {
+        if (connection == null) {
+            throw new UnsupportedOperationException("Connection object is null!");
+        }
+        if (StringUtils.isBlank(tableName)) {
+            throw new UnsupportedOperationException("Tablename cannot be empty!");
+        }
         String fileName;
         switch (tableName.toLowerCase()) {
             case "validation" -> fileName = CREATE_TABLE_VALIDATION;
@@ -76,6 +81,9 @@ public class SqliteHelper {
             case "question_question" -> fileName = CREATE_TABLE_QUESTION_QUESTION;
             default -> throw new UnsupportedOperationException("Table not supported: " + tableName);
         }
+        if (dropBeforeCreate) {
+            dropTable(connection, tableName);
+        }
         String createTableStatement = loadCreateTableStatementFromFile(fileName);
         log.infof("createTableStatement for Sqlite: " + createTableStatement);
         PreparedStatement preparedStatementForCreate = connection.prepareStatement(createTableStatement);
@@ -83,22 +91,55 @@ public class SqliteHelper {
         log.infof("Table created in Sqlite: " + tableName);
     }
 
-    private String loadCreateTableStatementFromFile(String fileName) throws IOException {
-        FileReader fileReader = new FileReader(fileName);
-        BufferedReader bufferedReader = new BufferedReader(fileReader);
-        StringBuilder createTableStatementBuilder = new StringBuilder();
-        while (true) {
-            String line = bufferedReader.readLine();
-            if (line == null)
-                break;
-            createTableStatementBuilder.append(line);
+    public void dropTable(Connection connection, String tableName) throws SQLException {
+        if (connection == null) {
+            throw new UnsupportedOperationException("Connection object is null!");
         }
-        bufferedReader.close();
-        fileReader.close();
-        return createTableStatementBuilder.toString();
+        if (StringUtils.isBlank(tableName)) {
+            throw new UnsupportedOperationException("Tablename cannot be empty!");
+        }
+        StringBuilder dropSqlStatement = new StringBuilder(DROP_TABLE_IF_EXISTS);
+        dropSqlStatement.append(tableName);
+        PreparedStatement preparedStatementForDrop = connection.prepareStatement(dropSqlStatement.toString());
+        preparedStatementForDrop.execute();
+    }
+
+    private String loadCreateTableStatementFromFile(String fileName) throws IOException {
+        if (StringUtils.isBlank(fileName)) {
+            throw new UnsupportedOperationException("FileName cannot be empty!");
+        }
+        FileReader fileReader = null;
+        BufferedReader bufferedReader = null;
+        try {
+            fileReader = new FileReader(fileName);
+            bufferedReader = new BufferedReader(fileReader);
+            StringBuilder createTableStatementBuilder = new StringBuilder();
+            while (true) {
+                String line = bufferedReader.readLine();
+                if (line == null)
+                    break;
+                createTableStatementBuilder.append(line);
+            }
+            return createTableStatementBuilder.toString();
+        } catch (IOException e) {
+            throw e;
+        } finally {
+            if (bufferedReader != null) {
+                bufferedReader.close();
+            }
+            if (fileReader != null) {
+                fileReader.close();
+            }
+        }
     }
 
     public void insertRecordIntoDatabase(Connection connection, String tableName, Collection<Map<String, String>> recordsMapCollection) throws SQLException {
+        if (connection == null) {
+            throw new UnsupportedOperationException("Connection object is null!");
+        }
+        if (StringUtils.isBlank(tableName)) {
+            throw new UnsupportedOperationException("Tablename cannot be empty!");
+        }
         if (recordsMapCollection == null || recordsMapCollection.size() == 0) {
             log.infof("Nothing to insert since recordsMapCollection is empty.");
             return;
@@ -148,7 +189,24 @@ public class SqliteHelper {
         connection.commit();
     }
 
+    public void executeCrudStatement(Connection connection, String crudStatement) throws SQLException {
+        if (connection == null) {
+            throw new UnsupportedOperationException("Connection object is null!");
+        }
+        if (StringUtils.isBlank(crudStatement)) {
+            throw new UnsupportedOperationException("crudStatement cannot be empty!");
+        }
+        connection.prepareStatement(crudStatement).execute();
+        connection.commit();
+    }
+
     public Map<String, Map<String, String>> fetchRecordsFromTable(Connection connection, String tableName) throws SQLException {
+        if (connection == null) {
+            throw new UnsupportedOperationException("Connection object is null!");
+        }
+        if (StringUtils.isBlank(tableName)) {
+            throw new UnsupportedOperationException("Tablename cannot be empty!");
+        }
         Map<String, Map<String, String>> recordsMap = new HashMap<>();
         PreparedStatement preparedStatement = connection.prepareStatement(SELECT_FROM + tableName);
         ResultSet results = preparedStatement.executeQuery();
@@ -161,7 +219,6 @@ public class SqliteHelper {
                 String columnName = resultsMetaData.getColumnName(i);
                 String value = results.getString(columnName);
                 if (!StringUtils.isBlank(value))
-                    // log.infof("Colname: %s , Value: %s", columnName, value);
                     record.put(columnName, value);
             }
             if (record.size() > 0) {
@@ -173,6 +230,8 @@ public class SqliteHelper {
     }
 
     public void closeConnection(Connection connection) throws SQLException {
-        connection.close();
+        if (connection != null) {
+            connection.close();
+        }
     }
 }

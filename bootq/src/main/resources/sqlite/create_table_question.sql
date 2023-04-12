@@ -1,4 +1,4 @@
-CREATE TABLE question (
+CREATE TABLE IF NOT EXISTS question (
     code TEXT NOT NULL UNIQUE,
     name TEXT NOT NULL,
     attributecode TEXT NOT NULL,

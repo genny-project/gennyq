@@ -29,6 +29,9 @@ import javax.inject.Inject;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -112,38 +115,85 @@ public class BatchLoading {
             }
             moduleUnitNames.add(moduleUnitName);
             log.infof("Loading into module: %s - %s", moduleUnit.getName(), moduleUnitName);
-            Connection connection = sqliteHelper.getConnectionToDatabase(moduleUnitName);
-            loadToSqliteTable(connection, "validation", moduleUnit.getValidations());
-            loadToSqliteTable(connection, "datatype", moduleUnit.getDataTypes());
-            loadToSqliteTable(connection, "attribute", moduleUnit.getAttributes());
-            loadToSqliteTable(connection, "def_baseentity", moduleUnit.getDef_baseEntitys());
-            loadToSqliteTable(connection, "baseentity", moduleUnit.getBaseEntitys());
-            loadToSqliteTable(connection, "def_entityattribute", moduleUnit.getDef_entityAttributes());
-            loadToSqliteTable(connection, "entityattribute", moduleUnit.getEntityAttributes());
-            loadToSqliteTable(connection, "question", moduleUnit.getQuestions());
-            loadToSqliteTable(connection, "question_question", moduleUnit.getQuestionQuestions());
-            sqliteHelper.closeConnection(connection);
+            Connection connection = null;
+            try {
+                connection = sqliteHelper.getConnectionToDatabase(moduleUnitName);
+                loadToSqliteTable(connection, "validation", moduleUnit.getValidations());
+                loadToSqliteTable(connection, "datatype", moduleUnit.getDataTypes());
+                loadToSqliteTable(connection, "attribute", moduleUnit.getAttributes());
+                loadToSqliteTable(connection, "def_baseentity", moduleUnit.getDef_baseEntitys());
+                loadToSqliteTable(connection, "baseentity", moduleUnit.getBaseEntitys());
+                loadToSqliteTable(connection, "def_entityattribute", moduleUnit.getDef_entityAttributes());
+                loadToSqliteTable(connection, "entityattribute", moduleUnit.getEntityAttributes());
+                loadToSqliteTable(connection, "question", moduleUnit.getQuestions());
+                loadToSqliteTable(connection, "question_question", moduleUnit.getQuestionQuestions());
+            } catch (SQLException | IOException e) {
+                throw e;
+            } finally {
+                if (connection != null) {
+                    sqliteHelper.closeConnection(connection);
+                }
+            }
             log.infof("Completed loading into module: %s", moduleUnitName);
         }
     }
 
     private void loadToSqliteTable(Connection connection, String tableName, Map<String, Map<String, String>> recordsMap) throws SQLException, IOException {
-        sqliteHelper.dropAndCreateTable(connection, tableName);
+        sqliteHelper.createTable(connection, tableName, false);
         sqliteHelper.insertRecordIntoDatabase(connection, tableName, recordsMap.values());
     }
 
     public void loadDataInSqliteToDB(String realm, String sqliteDbName) throws SQLException {
-        Connection connection = sqliteHelper.getConnectionToDatabase(sqliteDbName);
-        persistValidations(sqliteHelper.fetchRecordsFromTable(connection, "validation"), realm);
-        persistDatatypes(sqliteHelper.fetchRecordsFromTable(connection, "datatype"), realm);
-        persistAttributes(sqliteHelper.fetchRecordsFromTable(connection, "attribute"), realm);
-        persistBaseEntities(sqliteHelper.fetchRecordsFromTable(connection, "def_baseentity"), realm);
-        persistBaseEntities(sqliteHelper.fetchRecordsFromTable(connection, "baseentity"), realm);
-        persistDefBaseEntityAttributes(sqliteHelper.fetchRecordsFromTable(connection, "def_entityattribute"), realm);
-        persistBaseEntityAttributes(sqliteHelper.fetchRecordsFromTable(connection, "entityattribute"), realm);
-        persistQuestions(sqliteHelper.fetchRecordsFromTable(connection, "question"), realm);
-        persistQuestionQuestions(sqliteHelper.fetchRecordsFromTable(connection, "question_question"), realm);
-        sqliteHelper.closeConnection(connection);
+        Connection connection = null;
+        try {
+            connection = sqliteHelper.getConnectionToDatabase(sqliteDbName);
+            persistValidations(sqliteHelper.fetchRecordsFromTable(connection, "validation"), realm);
+            persistDatatypes(sqliteHelper.fetchRecordsFromTable(connection, "datatype"), realm);
+            persistAttributes(sqliteHelper.fetchRecordsFromTable(connection, "attribute"), realm);
+            persistBaseEntities(sqliteHelper.fetchRecordsFromTable(connection, "def_baseentity"), realm);
+            persistBaseEntities(sqliteHelper.fetchRecordsFromTable(connection, "baseentity"), realm);
+            persistDefBaseEntityAttributes(sqliteHelper.fetchRecordsFromTable(connection, "def_entityattribute"), realm);
+            persistBaseEntityAttributes(sqliteHelper.fetchRecordsFromTable(connection, "entityattribute"), realm);
+            persistQuestions(sqliteHelper.fetchRecordsFromTable(connection, "question"), realm);
+            persistQuestionQuestions(sqliteHelper.fetchRecordsFromTable(connection, "question_question"), realm);
+            sqliteHelper.closeConnection(connection);
+        } catch (SQLException e) {
+            throw e;
+        } finally {
+            if (connection != null) {
+                sqliteHelper.closeConnection(connection);
+            }
+        }
+    }
+
+    public void loadSqlFileToSqlite(String dbName, File file) throws IOException, SQLException {
+        FileReader fileReader = null;
+        BufferedReader bufferedReader = null;
+        Connection connection = null;
+        try {
+            fileReader = new FileReader(file.getAbsolutePath());
+            bufferedReader = new BufferedReader(fileReader);
+            connection = sqliteHelper.getConnectionToDatabase(dbName);
+            while (true) {
+                String crudStatement = bufferedReader.readLine();
+                if (crudStatement == null) {
+                    break;
+                }
+                sqliteHelper.executeCrudStatement(connection, crudStatement);
+            }
+        } catch (SQLException e) {
+            throw e;
+        } finally {
+            if (connection != null) {
+                sqliteHelper.closeConnection(connection);
+            }
+            if (bufferedReader != null) {
+                bufferedReader.close();
+            }
+            if (fileReader != null) {
+                fileReader.close();
+            }
+        }
     }
 
     /**
