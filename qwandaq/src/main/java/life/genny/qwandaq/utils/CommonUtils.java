@@ -428,12 +428,46 @@ public class CommonUtils {
      * @return The equals string
      */
     public static String equalsBreak(int len) {
+        return repeatedChar(len, '=');
+    }
+
+    /**
+     * Center a string for logging, with the supplied character padding as the "filler/padding"
+     * @param msg msg to centre
+     * @param padding padding char to use
+     * @return a new String with padding on either side of the msg string and the msg string centered
+     */
+    public static String centreString(String msg, char padding) {
+        int len = msg.length();
+        String paddingStr = repeatedChar(len / 2 - 1, padding) + " ";
+        return paddingStr + msg + paddingStr;
+    }
+
+    /**
+     * Create a string of a single repeated character (good for equals and star breaks)
+     * @param len - length of the string
+     * @param repeated - character to repeat
+     * @return
+     * 
+     * @see {@link CommonUtils#equalsBreak}
+     * @see {@link CommonUtils#starBreak}
+     */
+    public static String repeatedChar(int len, char repeated) {
         StringBuilder ret = new StringBuilder();
         for(int i = 0; i < len; i++) {
-            ret.append("=");
+            ret.append(repeated);
         }
 
         return ret.toString();
+    }
+
+    /**
+     * Create a star break (*****) of size len
+     * @param len length of the star break
+     * @return The star string
+     */
+    public static String starBreak(int len) {
+        return repeatedChar(len, '*');
     }
 
     /**
