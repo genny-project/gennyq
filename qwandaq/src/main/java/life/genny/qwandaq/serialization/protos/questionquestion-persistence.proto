@@ -27,5 +27,6 @@ message QuestionQuestion {
   optional int64 updated = 14;
   optional int64 version = 15;
   optional double weight = 16;
-  optional string capreqs = 17;
+  optional int64 source_id = 17;
+  optional string capreqs = 18;
 }

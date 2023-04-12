@@ -1,16 +1,18 @@
 package life.genny.qwandaq.serialization.validation;
 
 message Validation {
-  optional int64 created = 1;
-  optional string name = 2;
-  optional string realm = 3;
-  optional int64 updated = 4;
-  optional string code = 5;
-  optional int32 status = 6;
-  optional string errormsg = 7;
-  optional bool multiAllowed = 8;
-  optional string options = 9;
-  optional bool recursiveGroup = 10;
-  optional string regex = 11;
-  optional string selection_grp = 12;
+  optional string dtype = 1;
+  optional int64 id = 2;
+  optional int64 created = 3;
+  optional string name = 4;
+  optional string realm = 5;
+  optional int64 updated = 6;
+  optional string code = 7;
+  optional int32 status = 8;
+  optional string errormsg = 9;
+  optional bool multiAllowed = 10;
+  optional string options = 11;
+  optional bool recursiveGroup = 12;
+  optional string regex = 13;
+  optional string selection_grp = 14;
 }

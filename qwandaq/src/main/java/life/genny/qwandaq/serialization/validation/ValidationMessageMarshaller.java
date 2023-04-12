@@ -28,6 +28,8 @@ public class ValidationMessageMarshaller implements MessageMarshaller<Validation
 	// @Override
 	public Validation readFrom(ProtoStreamReader reader) throws IOException {
 		Validation validation = new Validation();
+		validation.setId(reader.readLong("id"));
+		validation.setCode(reader.readString("code"));
 		Long createdLong = reader.readLong("created");
 		if (createdLong != null) {
 			validation.setCreated(LocalDateTime.ofEpochSecond(createdLong / 1000, 0, ZoneOffset.UTC));
@@ -40,7 +42,6 @@ public class ValidationMessageMarshaller implements MessageMarshaller<Validation
 		if (updatedLong != null) {
 			validation.setUpdated(LocalDateTime.ofEpochSecond(updatedLong / 1000, 0, ZoneOffset.UTC));
 		}
-		validation.setCode(reader.readString("code"));
 		validation.setErrormsg(reader.readString("errormsg"));
 		validation.setMultiAllowed(reader.readBoolean("multiAllowed"));
 		validation.setOptions(reader.readString("options"));

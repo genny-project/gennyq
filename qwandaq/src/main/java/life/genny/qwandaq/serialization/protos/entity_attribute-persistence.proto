@@ -30,8 +30,10 @@ message EntityAttribute {
   optional string valueString = 17;
   optional int64 valueTime = 18;
   optional double weight = 19;
-  optional string icon = 20;
-  optional bool confirmationFlag = 21;
-  optional string capreqs = 22;
+  optional int64 attribute_id = 20;
+  optional int64 baseentity_id = 21;
+  optional string icon = 22;
+  optional bool confirmationFlag = 23;
+  optional string capreqs = 24;
 }
 

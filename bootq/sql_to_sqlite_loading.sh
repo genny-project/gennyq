@@ -5,7 +5,9 @@ load_file_to_sqlite() {
   dbname=$1
   sqlfile=$2
   echo "Loading $sqlfile into Sqlite db $dbname.sqlite ..."
-  sqlite3 ../../genny-main/sqlite/volume_mount/db/$dbname.sqlite < $sqlfile
+  dbfilename=../../genny-main/sqlite/volume_mount/db/$dbname.sqlite
+  test -f $dbfilename || touch $dbfilename
+  sqlite3 $dbfilename < $sqlfile
   echo "Completed loading $sqlfile into Sqlite db $dbname..."
 }
 
