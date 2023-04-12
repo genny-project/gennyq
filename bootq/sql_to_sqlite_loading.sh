@@ -9,6 +9,11 @@ load_file_to_sqlite() {
   echo "Completed loading $sqlfile into Sqlite db $dbname..."
 }
 
+if ! sqlite3 --version;
+then
+  echo "sqlite3 is required for this script to run. Please install before you try again. Exiting..."
+fi
+
 if [ $# != 1 ]; then
   echo "Wrong number of arguments supplied. Usage: ${0} Genny:../../genny-main/sqlite/volume_mount/db/Genny.sql,InternMatchData:../../genny-main/sqlite/volume_mount/db/InternMatchData"
   exit 1
