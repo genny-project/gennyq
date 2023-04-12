@@ -62,10 +62,11 @@ public class RoleManager extends Manager {
 
 	/**
 	 * Create a new role under a given product code
-	 * @param productCode
-	 * @param roleCode
-	 * @param roleName
-	 * @return
+	 * @param productCode - the product the role belongs in
+	 * @param roleCode - the base entity code of the role
+	 * @param roleName - the name of the role
+	 * @param doFlush - whether or not to get rid of the old capabilities in the role if it already exists
+	 * @return - the new (or preexisting) role with code:roleCode in product:productCode
 	 */
 	public BaseEntity createRole(String productCode, String roleCode, String roleName, boolean doFlush) {
 		
