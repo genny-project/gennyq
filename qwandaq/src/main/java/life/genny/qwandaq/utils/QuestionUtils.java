@@ -327,6 +327,10 @@ public class QuestionUtils {
         return cacheManager.saveEntity(GennyConstants.CACHE_NAME_QUESTIONQUESTION, key, questionQuestion);
     }
 
+    public List<QuestionQuestion> findQuestionQuestionBySource(String productCode, String sourceCode) {
+        return cacheManager.getQuestionQuestionsForParentQuestion(productCode, sourceCode);
+    }
+    
     public QuestionQuestion findQuestionQuestionBySourceAndTarget(String productCode, String sourceCode, String targetCode) {
         QuestionQuestionKey key = new QuestionQuestionKey(productCode, sourceCode, targetCode);
         return (QuestionQuestion) cacheManager.getPersistableEntity(GennyConstants.CACHE_NAME_QUESTIONQUESTION, key);
@@ -334,5 +338,9 @@ public class QuestionUtils {
 
     public int removeQuestionQuestion(String productCode, String sourceCode, String targetCode) {
 		return cacheManager.removeQuestionQuestion(productCode, sourceCode, targetCode);
+    }
+
+    public int removeAllQuestionQuestionsForSource(String productCode, String sourceCode) {
+        return cacheManager.removeAllQuestionQuestionsInGroup(productCode, sourceCode);
     }
 }

@@ -127,6 +127,10 @@ public class Question extends CodedEntity implements CoreEntityPersistable, ICap
 	public static final String QUE_TABLE_NEXT_BTN = "QUE_TABLE_NEXT_BTN";
 	public static final String QUE_TABLE_PREVIOUS_BTN = "QUE_TABLE_PREVIOUS_BTN";
 	public static final String QUE_FILTER_VALUE_BOOLEAN = "QUE_FILTER_VALUE_BOOLEAN";
+	public static final String QUE_PREVIEW = "QUE_PREVIEW";
+	public static final String QUE_PUBLISH = "QUE_PUBLISH";
+	public static final String QUE_DRAFT = "QUE_DRAFT";
+	public static final String QUE_BACK = "QUE_BACK";
 
 	@JsonbTransient
 	private Set<QuestionQuestion> childQuestions = new HashSet<>(0);

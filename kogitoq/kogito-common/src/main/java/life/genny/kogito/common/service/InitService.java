@@ -78,6 +78,13 @@ public class InitService extends KogitoService {
 		user.addAttribute(firstName);
 		EntityAttribute lastName = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_LASTNAME);
 		user.addAttribute(lastName);
+    // fetch image to be displayed in profile picture
+    try {
+      EntityAttribute image = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_IMAGE);
+      user.addAttribute(image);
+    } catch (ItemNotFoundException e) {
+      log.trace("No Image found for " + userCode);
+    }
 
 		// configure msg and send
 		log.info("Sending User " + user.getCode());

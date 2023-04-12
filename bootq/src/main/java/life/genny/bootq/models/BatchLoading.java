@@ -284,7 +284,7 @@ public class BatchLoading {
     public void persistEntities(Map<String, Map<String, String>> project, String realmName) {
         int successFullySaved = 0;
         int count = 1;
-        long id = cm.getMaxAttributeId() + 1;
+        long id = cm.getMaxBaseEntityId() + 1;
         for (Map.Entry<String, Map<String, String>> entry : project.entrySet()) {
 
             BaseEntity baseEntity;

@@ -129,9 +129,9 @@ public class Endpoints {
             log.info("Importing from sheet " + realmUnit.getUri() + " for realm " + realmUnit.getName());
 
             if (!realmUnit.getDisable() && !realmUnit.getSkipGoogleDoc()) {
-                log.info("Persisting project...");
+                log.infof("Persisting project for realmUnit code: %s", realmUnit.getCode());
                 bl.persistProject(realmUnit);
-                log.info("Finished Persisting project");
+                log.infof("Finished persisting project for realmUnit code: %s", realmUnit.getCode());
             } else {
                 log.info("SKIPPING sheet " + realmUnit.getUri() + " for realm " + realmUnit.getName());
             }

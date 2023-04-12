@@ -114,7 +114,8 @@ public class Events {
         }
 
         // submit, next and update
-        if (Question.QUE_SUBMIT.equals(code) || Question.QUE_NEXT.equals(code) || Question.QUE_UPDATE.equals(code)) {
+        if (Question.QUE_SUBMIT.equals(code) || Question.QUE_NEXT.equals(code) || Question.QUE_UPDATE.equals(code)
+                || Question.QUE_PREVIEW.equals(code) || Question.QUE_PUBLISH.equals(code) || Question.QUE_DRAFT.equals(code)) {
             kogitoUtils.sendSignal(SELF, "processQuestions", processId, "submit");
             return;
         }
@@ -132,7 +133,7 @@ public class Events {
         }
 
         // previous
-        if (Question.QUE_PREVIOUS.equals(code)) {
+        if (Question.QUE_PREVIOUS.equals(code) || Question.QUE_BACK.equals(code)) {
             kogitoUtils.sendSignal(SELF, "processQuestions", processId, "previous");
             return;
         }

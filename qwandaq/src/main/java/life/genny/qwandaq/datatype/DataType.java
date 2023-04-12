@@ -19,6 +19,7 @@
 
 package life.genny.qwandaq.datatype;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -385,6 +386,24 @@ public class DataType implements CoreEntityPersistable {
 			}
 		}
 		return null;
+	}
+
+	@Override
+	public LocalDateTime getCreated() {
+		return null;
+	}
+
+	@Override
+	public void setCreated(LocalDateTime created) {
+	}
+
+	@Override
+	public LocalDateTime getUpdated() {
+		return null;
+	}
+
+	@Override
+	public void setUpdated(LocalDateTime updated) {
 	}
 
 	@Override

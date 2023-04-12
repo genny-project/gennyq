@@ -166,7 +166,6 @@ public class ProcessAnswers {
 				String name = answer.getValue();
 				log.debug("Updating BaseEntity Name Value -> " + name);
 				target.setName(name);
-				continue;
 			}
 
 			// update the baseentity

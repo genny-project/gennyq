@@ -176,6 +176,10 @@ public class BaseEntityService extends KogitoService {
 		keycloakUtils.updateUserField(user, "lastName", lastName.getValueString());
 	}
 
+	public String updatePassword(String userCode){
+		return keycloakUtils.updateUserTemporaryPassword(userCode);
+	}
+
 	/**
 	 * Merge a process entity into another entity
 	 */
@@ -269,4 +273,13 @@ public class BaseEntityService extends KogitoService {
 		beUtils.updateBaseEntity(be);
 	}
 
+	/**
+	 * Set pending status to base entity
+	 * @param entityCode
+	 */
+	public void setPending(String entityCode) {
+		BaseEntity entity = beUtils.getBaseEntity(entityCode);
+		entity.setStatus(EEntityStatus.PENDING);
+		beUtils.updateBaseEntity(entity);
+	}
 }

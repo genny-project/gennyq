@@ -269,6 +269,7 @@ public class BaseEntityUtils {
 	public BaseEntity getBaseEntityFromLinkAttribute(BaseEntity baseEntity, String attributeCode, boolean bundleAttributes) {
 		String value = getStringValueOfAttribute(baseEntity, attributeCode);
 		if (StringUtils.isBlank(value)) {
+			log.error("Value contained within " + baseEntity.getCode() + ":" + attributeCode + " is null. Cannot retrieve base entity from lnk attribute");
 			return null;
 		}
 		String newBaseEntityCode = CommonUtils.cleanUpAttributeValue(value);
@@ -517,11 +518,28 @@ public class BaseEntityUtils {
 	 * @param name  The name of the entity
 	 * @param code  The code of the entity
 	 * @return The created BaseEntity
+	 *
+	 * @throws DefinitionException if a prefix could not be found for the supplied definition
+	 * @throws DebugException if a user base entity is missing a prefix
+	 */
+	public BaseEntity create(final Definition definition, String name, String code)
+			throws DefinitionException {
+		return create(definition, name, code, true);
+	}
+
+	/**
+	 * Create a new {@link BaseEntity} using a name and code.
+	 *
+	 * @param definition The def entity to use
+	 * @param name  The name of the entity
+	 * @param code  The code of the entity
+	 * @param saveBaseEntity  Defines whether the created entity should be saved
+	 * @return The created BaseEntity
 	 * 
 	 * @throws DefinitionException if a prefix could not be found for the supplied definition
 	 * @throws DebugException if a user base entity is missing a prefix
 	 */
-	public BaseEntity create(final Definition definition, String name, String code) 
+	public BaseEntity create(final Definition definition, String name, String code, boolean saveBaseEntity)
 		throws DefinitionException {
 
 		if (definition == null)
@@ -556,18 +574,22 @@ public class BaseEntityUtils {
 			//item.addAttribute(new EntityAttribute());
 		}
 
-		// save to DB and cache
-		updateBaseEntity(item);
+		if (saveBaseEntity) {
+			// saveBaseEntity to DB and cache
+			updateBaseEntity(item);
+		}
 
 		List<EntityAttribute> atts = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(productCode, definitionCode, Prefix.ATT_);
 		for (EntityAttribute ea : atts) {
 			String attrCode = ea.getAttributeCode().substring(Prefix.ATT_.length());
-			Attribute attribute = attributeUtils.getAttribute(attrCode, true);
-
-			if (attribute == null) {
+			Attribute attribute;
+			try {
+				attribute = attributeUtils.getAttribute(attrCode, true);
+			} catch(ItemNotFoundException e) {
 				log.warn("No Attribute found for def attr " + attrCode);
 				continue;
 			}
+
 			if (item.containsEntityAttribute(attribute.getCode())) {
 				log.info(item.getCode() + " already has value for " + attribute.getCode());
 				continue;
@@ -586,26 +608,30 @@ public class BaseEntityUtils {
 			}
 			// Only process mandatory attributes, or defaults
 			if (mandatory || defaultVal != null) {
+				log.info("Adding mandatory/default -> " + attribute.getCode());
 				EntityAttribute newEA = new EntityAttribute(item, attribute, ea.getWeight(), defaultVal);
 				newEA.setRealm(userToken.getProductCode());
-				log.info("Adding mandatory/default -> " + attribute.getCode());
 				item.addAttribute(newEA);
-				beaUtils.updateEntityAttribute(newEA);
+				if (saveBaseEntity) {
+					beaUtils.updateEntityAttribute(newEA);
+				}
 			}
 		}
 
 		Attribute linkDef = attributeUtils.getAttribute(Attribute.LNK_DEF, true);
 		EntityAttribute linkDefEA = new EntityAttribute(item, linkDef, 1.0, "[\"" + definitionCode + "\"]");
 		item.addAttribute(linkDefEA);
-		beaUtils.updateEntityAttribute(linkDefEA);
 
 		// author of the BE
 		Attribute lnkAuthorAttr = attributeUtils.getAttribute(Attribute.LNK_AUTHOR, true);
 		EntityAttribute linkAuthorEA = new EntityAttribute(item, lnkAuthorAttr, 1.0, "[\"" + userToken.getUserCode() + "\"]");
 		item.addAttribute(linkAuthorEA);
-		beaUtils.updateEntityAttribute(linkAuthorEA);
 
-		updateBaseEntity(item, false);
+		if (saveBaseEntity) {
+			beaUtils.updateEntityAttribute(linkDefEA);
+			beaUtils.updateEntityAttribute(linkAuthorEA);
+			updateBaseEntity(item, false);
+		}
 
 		return item;
 	}
