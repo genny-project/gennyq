@@ -161,6 +161,11 @@ public class KogitoUtils {
 		log.info("Sending Signal to uri: " + uri);
 
 		HttpResponse<String> response = HttpUtils.post(uri, payload, "application/json", userToken);
+		if(response.statusCode() % 100 != 2) {
+			log.error("Got " + response.statusCode() + " back from signal sent to " + uri);
+			log.error("payload: " + payload);
+			log.error("Response body: " + response.body());
+		}
 
 		return response.body();
 	}
