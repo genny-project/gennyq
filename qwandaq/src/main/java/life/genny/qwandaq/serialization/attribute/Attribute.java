@@ -1,13 +1,14 @@
 package life.genny.qwandaq.serialization.attribute;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.converter.ValidationListConverter;
 import life.genny.qwandaq.datatype.DataType;
-import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import life.genny.qwandaq.validation.Validation;
+
+import java.time.LocalDateTime;
+import java.util.Set;
 
 /*
  * A representation of BaseEntity in the cache
@@ -15,10 +16,6 @@ import life.genny.qwandaq.validation.Validation;
  * @author Varun Shastry
  */
 public class Attribute implements CoreEntitySerializable {
-	
-	private String dtype;
-	
-	private Long id;
 	
 	private LocalDateTime created;
 	
@@ -152,22 +149,6 @@ public class Attribute implements CoreEntitySerializable {
 
 	private Integer status;
 
-	public String getDtype() {
-		return dtype;
-	}
-
-	public void setDtype(String dtype) {
-		this.dtype = dtype;
-	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
-	}
-
 	public LocalDateTime getCreated() {
 		return created;
 	}
@@ -221,7 +202,6 @@ public class Attribute implements CoreEntitySerializable {
 		life.genny.qwandaq.attribute.Attribute attribute = new life.genny.qwandaq.attribute.Attribute();
 		attribute.setCode(getCode());
 		attribute.setCreated(getCreated());
-		attribute.setId(getId());
 		attribute.setName(getName());
 		attribute.setRealm(getRealm());
 		attribute.setStatus(EEntityStatus.valueOf(getStatus()));
@@ -232,7 +212,7 @@ public class Attribute implements CoreEntitySerializable {
 		dataType.setClassName(getClassName());
 		dataType.setComponent(getComponent());
 		dataType.setTypeName(getTypeName());
-		List<Validation> validations = new ValidationListConverter().convertToEntityAttribute(getValidationList());
+		Set<Validation> validations = new ValidationListConverter().convertToEntityAttribute(getValidationList());
 		dataType.setValidationList(validations);
 		attribute.setDataType(dataType);
 		return attribute;
