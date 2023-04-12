@@ -12,6 +12,7 @@ load_file_to_sqlite() {
 if ! sqlite3 --version;
 then
   echo "sqlite3 is required for this script to run. Please install before you try again. Exiting..."
+  exit 1
 fi
 
 if [ $# != 1 ]; then
