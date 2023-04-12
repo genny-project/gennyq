@@ -60,7 +60,7 @@ public class MergeUtils {
 
 	public void mergeBaseEntity(BaseEntity baseEntity, Map<String, Object> contexts) {
 		beaUtils.getAllEntityAttributesForBaseEntity(baseEntity).forEach(ea -> {
-			if (ea.getValueString() == null)
+			if (ea == null || ea.getValueString() == null)
 				return;
 			String value = merge(ea.getValueString(), contexts);
 			ea.setValueString(value);
