@@ -12,6 +12,8 @@ import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.managers.Manager;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.utils.CommonUtils;
+import life.genny.qwandaq.utils.EntityAttributeUtils;
+
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 
@@ -25,6 +27,9 @@ public class RoleManager extends Manager {
 
 	@Inject
 	Logger log;
+
+	@Inject
+	EntityAttributeUtils beaUtils;
 
 	@Inject
 	CapabilitiesManager capManager;
@@ -57,26 +62,33 @@ public class RoleManager extends Manager {
 
 	/**
 	 * Create a new role under a given product code
-	 * @param productCode
-	 * @param roleCode
-	 * @param roleName
-	 * @return
+	 * @param productCode - the product the role belongs in
+	 * @param roleCode - the base entity code of the role
+	 * @param roleName - the name of the role
+	 * @param doFlush - whether or not to get rid of the old capabilities in the role if it already exists
+	 * @return - the new (or preexisting) role with code:roleCode in product:productCode
 	 */
-	public BaseEntity createRole(String productCode, String roleCode, String roleName) {
+	public BaseEntity createRole(String productCode, String roleCode, String roleName, boolean doFlush) {
 		
 		BaseEntity role = null;
 		roleCode = cleanRoleCode(roleCode);
 		log.info("Role code: " + roleCode);
 		try {
 			role = beUtils.getBaseEntity(productCode, roleCode, true);
+			if(doFlush) {
+				log.debug("\tRole Exists. Flushing");
+				int flushedCount = beaUtils.removeBaseEntityAttributesForBaseEntity(role);
+				log.debug("\tFlushed " + flushedCount + " capabilities");
+			}
 		} catch(ItemNotFoundException e) {
+			log.debug("\tRole does not Exist. Creating");
 			Definition def = defUtils.getDEF(productCode, Definition.DEF_ROLE);
 			Attribute priCode = attributeUtils.getAttribute(productCode, Attribute.PRI_CODE, true);
 			role = beUtils.create(def, roleName, roleCode);
 			role.setRealm(productCode);
 			role.addAttribute(priCode, 0.0, roleCode);
-			beUtils.updateBaseEntity(role);
 		}
+		beUtils.updateBaseEntity(role);
 		
 		return role;
 	}
