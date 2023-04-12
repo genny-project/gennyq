@@ -302,12 +302,12 @@ public class BatchLoading {
 
             try {
 				beUtils.updateBaseEntity(baseEntity, false);
+                if (count++ % LOG_BATCH_SIZE == 0)
+                    log.debugf("Saved %s baseEntitys. Continuing...", count);
 			} catch (Exception e) {
                 String entityInfo = realmName + ":" + entry.getValue().get("code");
                 loadReport.addPersistError(EReportCategoryType.BASE_ENTITY, entityInfo, e);
             }
-            if (count++ % LOG_BATCH_SIZE == 0)
-                log.debugf("Saved %s baseEntitys. Continuing...", count);
         }
         
         if(!loadReport.hasErrors(EReportCategoryType.BASE_ENTITY)) {
@@ -471,6 +471,7 @@ public class BatchLoading {
                 }
             }
         }
+
         if(!loadReport.hasErrors(EReportCategoryType.LINKING_ENTITIES)) {
             loadReport.addSuccess(EReportCategoryType.LINKING_ENTITIES, null);
         }
@@ -514,14 +515,14 @@ public class BatchLoading {
 
             try {
                 beaUtils.updateEntityAttribute(entityAttribute);
+                if (count++ % LOG_BATCH_SIZE == 0)
+                    log.debugf("Processed %s entity attributes. Continuing...", count);
             } catch (Exception e) {
                 String entityInfo = realmName + ":" + baseEntityCode + ":" + attributeCode;
                 loadReport.addPersistError(EReportCategoryType.BASEENTITY_ATTRIBUTE, entityInfo, e);
                 continue;
             }
 
-            if (count++ % LOG_BATCH_SIZE == 0)
-                log.debugf("Processed %s entity attributes. Continuing...", count);
         }
 
         Instant end = Instant.now();
@@ -560,13 +561,13 @@ public class BatchLoading {
 
             try {
                 questionUtils.saveQuestion(question);
+                if (count++ % LOG_BATCH_SIZE == 0)
+                    log.debugf("Processed %s questions. Continuing...", count);
             } catch (Exception e) {
                 String entityInfo = realmName + ":" + question.getCode();
                 loadReport.addPersistError(EReportCategoryType.QUESTION, entityInfo, e);
             }
 
-            if (count++ % LOG_BATCH_SIZE == 0)
-                log.debugf("Processed %s questions. Continuing...", count);
 		}
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
@@ -602,6 +603,9 @@ public class BatchLoading {
             
             try {
 				questionUtils.saveQuestionQuestion(questionQuestion);
+            
+                if (count++ % LOG_BATCH_SIZE == 0)
+                    log.debugf("Processed %s questionquestions. Continuing...", count);
 			} catch (Exception e) {
                 Map<String, String> row = entry.getValue();
                 String parentCode = row.get("parentcode");
@@ -609,9 +613,6 @@ public class BatchLoading {
                 String entityInfo = realmName + ":" + parentCode + ":" + targetCode;
                 loadReport.addPersistError(EReportCategoryType.QUESTION_QUESTION, entityInfo, e);
 			}
-            
-            if (count++ % LOG_BATCH_SIZE == 0)
-                log.debugf("Processed %s questionquestions. Continuing...", count);
         }
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
