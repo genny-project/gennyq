@@ -346,7 +346,7 @@ public class CapabilitiesManager extends Manager {
 				// Map data to capability. If capability name/tag is missing then use the code
 				// with standard capitalisation
 				.map((String[] item) -> createCapability(productCode, item[0],
-						(item.length == 2 && item[1] != null ? item[1] : CommonUtils.normalizeString(item[0]))))
+						(item.length == 2 && item[1] != null ? item[1] : CommonUtils.normalizeString(item[0]) + " Capability")))
 				// add each capability attribute to the capability map, stripping the CAP_
 				// prefix to be used with the constants
 				.forEach((Attribute attr) -> capabilityMap.put(attr.getCode(), attr));
