@@ -56,7 +56,7 @@ public class QuestionMessageMarshaller implements MessageMarshaller<Question> {
 
 	// @Override
 	public void writeTo(ProtoStreamWriter writer, Question question) throws IOException {
-		writer.writeLong("attribute_id", question.getAttributeId());
+		writer.writeLong("id", question.getId());
 		LocalDateTime created = question.getCreated();
 		Long createdLong = created != null ? created.toEpochSecond(ZoneOffset.UTC)*1000 : null;
 		writer.writeLong("created", createdLong);
