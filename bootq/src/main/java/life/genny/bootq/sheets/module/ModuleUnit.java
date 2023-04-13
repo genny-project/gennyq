@@ -30,6 +30,8 @@ public class ModuleUnit extends DataUnit {
     
     private static final String RANGE = "!A1:Z";
 
+    private String moduleName;
+
     public ModuleUnit() {
         super();
     }
@@ -51,6 +53,14 @@ public class ModuleUnit extends DataUnit {
 
         processValues(sheetsService, titles, valueRanges, sheetURI);
 
+    }
+
+    public String getModuleName() {
+        return moduleName;
+    }
+
+    public void setModuleName(String moduleName) {
+        this.moduleName = moduleName;
     }
 
     // Get all sheets from spreadSheet
@@ -124,7 +134,7 @@ public class ModuleUnit extends DataUnit {
     		return;
     	}
 
-        log.info("Processing Module: " + this.name);
+        log.info("Processing Module: " + this.name + " - " + this.moduleName);
 
         for (ValueRange valueRange : valueRanges) {
             String title = valueRange.getRange().split("!")[0];

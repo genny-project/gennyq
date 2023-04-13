@@ -69,6 +69,7 @@ public final class GennyConstants {
 	public static final String CACHE_NAME_DATATYPE = "datatype";
 	public static final String CACHE_NAME_VALIDATION = "validation";
 	public static final String CACHE_NAME_ENTITY_LAST_UPDATED_AT = "table_last_updated_at";
-	// =====================================================================================================
+	public static final char COMMA = ',';
+    // =====================================================================================================
 }
 
