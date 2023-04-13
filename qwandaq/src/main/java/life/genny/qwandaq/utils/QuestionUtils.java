@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @ApplicationScoped
 public class QuestionUtils {
@@ -327,7 +328,7 @@ public class QuestionUtils {
         return cacheManager.saveEntity(GennyConstants.CACHE_NAME_QUESTIONQUESTION, key, questionQuestion);
     }
 
-    public List<QuestionQuestion> findQuestionQuestionBySource(String productCode, String sourceCode) {
+    public Set<QuestionQuestion> findQuestionQuestionBySource(String productCode, String sourceCode) {
         return cacheManager.getQuestionQuestionsForParentQuestion(productCode, sourceCode);
     }
     

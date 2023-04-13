@@ -226,10 +226,10 @@ public class CacheManager {
 	 * Get a list of {@link CoreEntity}s to from cache by prefix.
 	 * @param cacheName - Product Code / Cache to retrieve from
 	 * @param prefix - Prefix of the Core Entity code to use
-	 * @param callback - Callback to construct a {@link CoreEntityKey} for cache retrieval
+	 * @param keyStruct - {@link CoreEntityKey} for cache retrieval
 	 * @return a list of core entities with matching prefixes
 	 * 
-	 * See Also: {@link CoreEntityKey}, {@link FICacheKeyCallback}
+	 * See Also: {@link CoreEntityKey}
 	 */
 	public List<CoreEntity> getEntitiesByPrefix(String cacheName, String prefix, CoreEntityKey keyStruct) {
 		List<CoreEntity> entities = cache.getRemoteCache(cacheName)
@@ -639,9 +639,9 @@ public class CacheManager {
 	}
 
 	/**
-	 * Remove all QuestionQuestions with the same sourceCode (in a group) from cache/persistence
+	 * Remove Base Entity with a given code from cache/persistence
 	 * @param productCode - product to remove from
-	 * @param sourceCode - sourceCode of QuestionQuestion to remove
+	 * @param code - code of the base entity to remove
 	 * @return number of entities affected by deletion
 	 */
 	public int removeBaseEntity(String productCode, String code) {
@@ -652,12 +652,11 @@ public class CacheManager {
 	}
 
 	/**
-	 * Remove Base Entity with a given code from cache/persistence
+	 * Remove all QuestionQuestions with the same sourceCode (in a group) from cache/persistence
 	 * @param productCode - product to remove from
-	 * @param code - code of the base entity to remove
+	 * @param sourceCode - sourceCode of QuestionQuestion to remove
 	 * @return number of entities affected by deletion
-	 */
-	public int removeAllQuestionQuestionsInGroup(String productCode, String sourceCode) {
+	 */public int removeAllQuestionQuestionsInGroup(String productCode, String sourceCode) {
 		String persistenceObject = QuestionQuestionMessageMarshaller.TYPE_NAME;
 		String conditional = "sourceCode = '" + sourceCode + "'";
 		String deleteQuery = constructDeleteQuery(persistenceObject, productCode, conditional);
@@ -706,7 +705,7 @@ public class CacheManager {
 		return question;
 	}
 
-	public List<QuestionQuestion> getQuestionQuestionsForParentQuestion(Question parent) {
+	public Set<QuestionQuestion> getQuestionQuestionsForParentQuestion(Question parent) {
 		String productCode = parent.getRealm();
 		String parentQuestionCode = parent.getCode();
 		return getQuestionQuestionsForParentQuestion(productCode, parentQuestionCode);

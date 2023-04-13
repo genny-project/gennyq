@@ -1,6 +1,7 @@
 package life.genny.fyodor.endpoints.models;
 
 import java.util.List;
+import java.util.Set;
 
 import javax.inject.Inject;
 import javax.transaction.Transactional;
@@ -60,15 +61,15 @@ public class QuestionQuestions {
                             .entity("Not authorized to make this request").build();
                 }
 
-                List<QuestionQuestion> questionquestions = questionUtils.findQuestionQuestionBySource(product, parentCode);
-                if(questionquestions.isEmpty()) {
+                Set<QuestionQuestion> questionQuestions = questionUtils.findQuestionQuestionBySource(product, parentCode);
+                if(questionQuestions.isEmpty()) {
                     log.info("Could not find any question questions for: " + product + ":" + parentCode);
                     return Response.status(Response.Status.NOT_FOUND)
                                     .entity("Could not find any question questions with parentCode: " + parentCode + " in product: " + product)
                                     .build();
                 }
-                log.info("Found " + questionquestions.size() + " child questions in the group for: " + product + ":" + parentCode);
-                return Response.ok(questionquestions).build();
+                log.info("Found " + questionQuestions.size() + " child questions in the group for: " + product + ":" + parentCode);
+                return Response.ok(questionQuestions).build();
             }
 
     /**
