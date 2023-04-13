@@ -112,6 +112,7 @@ public class BatchLoading {
             String moduleUnitName = moduleUnit.getModuleName();
             if(moduleUnitNames.contains(moduleUnitName)) {
                 moduleUnitName = moduleUnitName + i++;
+                moduleUnit.setModuleName(moduleUnitName);
             }
             moduleUnitNames.add(moduleUnitName);
             log.infof("Loading into module: %s - %s", moduleUnit.getName(), moduleUnitName);
@@ -520,7 +521,6 @@ public class BatchLoading {
     /**
 	 * Link DEF BaseEntities
 	 *
-     * @param project The project sheets data
      * @param realmName The realm
      */
     public void linkEntityAttributes(Collection<Map<String, String>> entityAttributeRows, String realmName) {
