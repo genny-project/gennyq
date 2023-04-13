@@ -13,5 +13,6 @@ CREATE TABLE IF NOT EXISTS question_question (
     icon TEXT,
     disabled TEXT,
     hidden TEXT,
+    capreqs TEXT,
     UNIQUE(parentcode, targetcode)
 );

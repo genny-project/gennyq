@@ -11,5 +11,6 @@ CREATE TABLE IF NOT EXISTS def_entityattribute (
     valuedouble TEXT,
     valuebaseentitycodelist TEXT,
     privacy TEXT,
+    capreqs TEXT,
     UNIQUE(baseentitycode, attributecode)
 );

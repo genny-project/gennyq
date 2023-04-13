@@ -7,5 +7,6 @@ CREATE TABLE IF NOT EXISTS question (
     oneshot TEXT,
     readonly TEXT,
     helper TEXT,
-    icon TEXT
+    icon TEXT,
+    capreqs TEXT
 );

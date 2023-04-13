@@ -10,5 +10,6 @@ CREATE TABLE IF NOT EXISTS entityattribute (
     valuedouble TEXT,
     valuebaseentitycodelist TEXT,
     privacy TEXT,
+    capreqs TEXT,
     UNIQUE(baseentitycode, attributecode)
 );
