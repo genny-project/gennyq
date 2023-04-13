@@ -208,7 +208,14 @@ public class SqliteHelper {
             throw new UnsupportedOperationException("Tablename cannot be empty!");
         }
         Map<String, Map<String, String>> recordsMap = new HashMap<>();
-        PreparedStatement preparedStatement = connection.prepareStatement(SELECT_FROM + tableName);
+	PreparedStatement preparedStatement;
+        try {
+            preparedStatement = connection.prepareStatement(SELECT_FROM + tableName);
+        } catch (SQLException e) {
+            log.errorf("Skipping loading records from table '%s' in SQLite because of an error while creating prepared-statement", tableName);
+            log.error(e.getMessage());
+            return recordsMap;
+        }
         ResultSet results = preparedStatement.executeQuery();
         int rownum = 0;
         ResultSetMetaData resultsMetaData = results.getMetaData();
