@@ -156,7 +156,6 @@ public class BatchLoading {
             persistBaseEntityAttributes(sqliteHelper.fetchRecordsFromTable(connection, "entityattribute"), realm);
             persistQuestions(sqliteHelper.fetchRecordsFromTable(connection, "question"), realm);
             persistQuestionQuestions(sqliteHelper.fetchRecordsFromTable(connection, "question_question"), realm);
-            sqliteHelper.closeConnection(connection);
         } catch (SQLException e) {
             throw e;
         } finally {

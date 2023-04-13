@@ -58,7 +58,9 @@ public class SqliteHelper {
             throw new UnsupportedOperationException("Database name cannot be empty!");
         }
         String url = SQLITE_CONNECTION_URL + databaseName + SQLITE_EXTENSION;
-        return DriverManager.getConnection(url);
+        Connection connection = DriverManager.getConnection(url);
+        log.debugf("Obtained connection to %s DB in SQLite", databaseName);
+        return connection;
     }
 
     public void createTable(Connection connection, String tableName, boolean dropBeforeCreate) throws SQLException, IOException {
@@ -208,7 +210,7 @@ public class SqliteHelper {
             throw new UnsupportedOperationException("Tablename cannot be empty!");
         }
         Map<String, Map<String, String>> recordsMap = new HashMap<>();
-	PreparedStatement preparedStatement;
+	    PreparedStatement preparedStatement;
         try {
             preparedStatement = connection.prepareStatement(SELECT_FROM + tableName);
         } catch (SQLException e) {
@@ -233,6 +235,7 @@ public class SqliteHelper {
                 rownum++;
             }
         }
+        log.infof("Fetched %s record(s) from %s table in SQLite DB", rownum, tableName);
         return recordsMap;
     }
 
@@ -240,5 +243,6 @@ public class SqliteHelper {
         if (connection != null) {
             connection.close();
         }
+        log.debug("Connection to SQLite DB closed successfully.");
     }
 }
