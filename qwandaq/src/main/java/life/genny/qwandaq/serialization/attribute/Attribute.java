@@ -16,6 +16,10 @@ import java.util.Set;
  * @author Varun Shastry
  */
 public class Attribute implements CoreEntitySerializable {
+
+	private String dtype;
+
+	private Long id;
 	
 	private LocalDateTime created;
 	
@@ -149,6 +153,22 @@ public class Attribute implements CoreEntitySerializable {
 
 	private Integer status;
 
+	public String getDtype() {
+		return dtype;
+	}
+
+	public void setDtype(String dtype) {
+		this.dtype = dtype;
+	}
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
+
 	public LocalDateTime getCreated() {
 		return created;
 	}
@@ -202,6 +222,7 @@ public class Attribute implements CoreEntitySerializable {
 		life.genny.qwandaq.attribute.Attribute attribute = new life.genny.qwandaq.attribute.Attribute();
 		attribute.setCode(getCode());
 		attribute.setCreated(getCreated());
+		attribute.setId(getId());
 		attribute.setName(getName());
 		attribute.setRealm(getRealm());
 		attribute.setStatus(EEntityStatus.valueOf(getStatus()));
