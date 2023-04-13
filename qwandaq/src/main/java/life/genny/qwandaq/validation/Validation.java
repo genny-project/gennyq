@@ -297,18 +297,4 @@ public class Validation extends CodedEntity implements CoreEntityPersistable {
 		validation.setSelectionGroup(validationListConverter.convertToString(getSelectionBaseEntityGroupList()));
 		return validation;
 	}
-
-	@Override
-	public int hashCode() {
-		HashCodeBuilder hcb = new HashCodeBuilder();
-		hcb.append(getRealm());
-		hcb.append(getCode());
-		return hcb.toHashCode();
-	}
-
-	@Override
-	public boolean equals(Object otherObject) {
-		return this.getRealm().equals(((Validation) otherObject).getRealm())
-				&& this.getCode().equals(((Validation) otherObject).getCode());
-	}
 }

@@ -168,6 +168,7 @@ public abstract class CodedEntity extends CoreEntity {
 		}
 		if (obj instanceof CodedEntity that) {
 			EqualsBuilder eb = new EqualsBuilder();
+			eb.append(getRealm(), that.getRealm());
 			eb.append(code, that.getCode());
 			return eb.isEquals();
 		}
@@ -183,8 +184,9 @@ public abstract class CodedEntity extends CoreEntity {
 	@Override
 	public int compareTo(Object o) {
 		CodedEntity myClass = (CodedEntity) o;
-		return new CompareToBuilder().append(code, myClass.getCode())
-				// .append(this.weight, myClass.weight)
+		return new CompareToBuilder()
+				.append(getRealm(), myClass.getRealm())
+				.append(code, myClass.getCode())
 				.toComparison();
 	}
 
