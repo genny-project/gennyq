@@ -1,6 +1,5 @@
 package life.genny.qwandaq.attribute;
 
-import java.lang.invoke.MethodHandles;
 import java.io.StringReader;
 import java.math.BigDecimal;
 import java.text.DateFormat;
@@ -15,8 +14,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.math.BigDecimal;
-import java.io.StringReader;
 import java.util.Set;
 
 import javax.json.Json;
@@ -48,7 +45,7 @@ import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.converter.CapabilityConverter;
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.entity.HBaseEntity;
-import life.genny.qwandaq.intf.ICapabilityHiddenFilterable;
+import life.genny.qwandaq.intf.ICapabilityFilterable;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import life.genny.qwandaq.serialization.entityattribute.EntityAttribute;
 import org.apache.commons.lang3.builder.CompareToBuilder;
@@ -59,24 +56,12 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Type;
 
 import org.javamoney.moneta.Money;
-import javax.money.CurrencyUnit;
-import javax.money.Monetary;
-
-import javax.json.Json;
-import javax.json.JsonReader;
-import javax.json.bind.annotation.JsonbCreator;
-import javax.json.bind.annotation.JsonbProperty;
-import javax.json.bind.annotation.JsonbTransient;
-import javax.json.JsonObject;
 
 import org.jboss.logging.Logger;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import life.genny.qwandaq.converter.MoneyConverter;
-import life.genny.qwandaq.entity.BaseEntity;
 
 @Entity
 @Table(name = "baseentity_attribute", indexes = {
@@ -90,7 +75,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 @RegisterForReflection
 @Cacheable
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-public class HEntityAttribute implements CoreEntityPersistable, Comparable<Object>, ICapabilityHiddenFilterable {
+public class HEntityAttribute implements CoreEntityPersistable, Comparable<Object>, ICapabilityFilterable {
 
 	private static final Logger log = Logger.getLogger(HEntityAttribute.class);
 
@@ -760,7 +745,6 @@ public class HEntityAttribute implements CoreEntityPersistable, Comparable<Objec
 	 * @param value the value to set
 	 * @param lock  should lock
 	 */
-	@SuppressWarnings("unchecked")
 	@JsonIgnore
 	@JsonbTransient
 	@Transient
@@ -946,7 +930,6 @@ public class HEntityAttribute implements CoreEntityPersistable, Comparable<Objec
 	 * @param value the value to set
 	 * @param lock  should lock
 	 */
-	@SuppressWarnings("unchecked")
 	@JsonIgnore
 	@JsonbTransient
 	@Transient

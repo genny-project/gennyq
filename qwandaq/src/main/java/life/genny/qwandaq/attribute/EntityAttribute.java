@@ -40,10 +40,10 @@ import life.genny.qwandaq.converter.MoneyConverter;
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.handler.AttributeMinIOHandler;
-import life.genny.qwandaq.intf.ICapabilityHiddenFilterable;
+import life.genny.qwandaq.intf.ICapabilityFilterable;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 
-public class EntityAttribute implements CoreEntityPersistable, ICapabilityHiddenFilterable, Comparable<Object> {
+public class EntityAttribute implements CoreEntityPersistable, ICapabilityFilterable, Comparable<Object> {
 
 	public static final String DOUBLE = "Double";
 	public static final String MONEY = "Money";

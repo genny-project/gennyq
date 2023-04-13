@@ -40,7 +40,7 @@ import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.exception.runtime.BadDataException;
-import life.genny.qwandaq.intf.ICapabilityHiddenFilterable;
+import life.genny.qwandaq.intf.ICapabilityFilterable;
 
 /**
  * Question is the abstract base class for all questions managed in the Qwanda
@@ -69,7 +69,7 @@ import life.genny.qwandaq.intf.ICapabilityHiddenFilterable;
  */
 
 @RegisterForReflection
-public class Question extends CodedEntity implements CoreEntityPersistable, ICapabilityHiddenFilterable {
+public class Question extends CodedEntity implements CoreEntityPersistable, ICapabilityFilterable {
 
 	private static final Logger log = Logger.getLogger(Question.class);
 

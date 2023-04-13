@@ -3,7 +3,7 @@ package life.genny.qwandaq;
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.converter.CapabilityConverter;
 import life.genny.qwandaq.datatype.capability.core.Capability;
-import life.genny.qwandaq.intf.ICapabilityHiddenFilterable;
+import life.genny.qwandaq.intf.ICapabilityFilterable;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import org.apache.commons.lang3.builder.CompareToBuilder;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -19,7 +19,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @RegisterForReflection
-public class QuestionQuestion implements CoreEntityPersistable, Comparable<Object>, ICapabilityHiddenFilterable {
+public class QuestionQuestion implements CoreEntityPersistable, Comparable<Object>, ICapabilityFilterable {
 
 	private static final long serialVersionUID = 1L;
 

@@ -13,7 +13,9 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
+import life.genny.qwandaq.exception.runtime.BadDataException;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.serialization.adapters.capabilities.CapabilityAdapter;
 import life.genny.qwandaq.utils.CommonUtils;
@@ -102,14 +104,40 @@ public class Capability implements Serializable {
         return null;
     }
 
+    public String nodeString() {
+        return CommonUtils.getArrayString(nodes);
+    }
+    
     public static Capability getFromEA(EntityAttribute ea) {
         String capCode = ea.getAttributeCode();
         List<CapabilityNode> caps = CapabilitiesManager.deserializeCapArray(ea.getValueString());
         return new Capability(capCode, caps);
     }
 
-    public String nodeString() {
-        return CommonUtils.getArrayString(nodes);
+    /**
+     * Get a capability from a string of form CODE=[<node string>]
+     * @param capData
+     * @return
+     * @throws BadDataException
+     */
+    public static Capability fromString(String capData) 
+        throws BadDataException {
+        String ARRAY_START = "=";
+        int delimIndex = capData.indexOf(ARRAY_START);
+        if(delimIndex == -1) {
+            throw new BadDataException("Could not find array start in capability string: " + capData + "\nDelimiter: " + ARRAY_START);
+        }
+
+        if(capData.charAt(delimIndex + 1) != '[') {
+            throw new BadDataException("Could not find array start in capability string: " + capData + "\nFound: '" + capData.charAt(delimIndex + 1) + "'\nDelimiter: " + ARRAY_START);
+        }
+
+        String code = capData.substring(0, delimIndex);
+        if(!code.startsWith(Prefix.CAP_))
+            throw new BadDataException("Capability Requirement code does not start with prefix: " + Prefix.CAP_ + ". Offending code: " + code);
+        String nodes = capData.substring(delimIndex + 1);
+        List<CapabilityNode> nodeData = CapabilitiesManager.deserializeCapArray(nodes);
+        return new Capability(code, nodeData);
     }
 
     @Override
