@@ -26,7 +26,6 @@ import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
