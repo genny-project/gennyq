@@ -439,12 +439,12 @@ public class EntityAttributeUtils {
 				attributeCodePrefix);
 	}
 
-	public void removeBaseEntityAttributesForBaseEntity(BaseEntity baseEntity) {
-		removeBaseEntityAttributesForBaseEntity(baseEntity.getRealm(), baseEntity.getCode());
+	public int removeBaseEntityAttributesForBaseEntity(BaseEntity baseEntity) {
+		return removeBaseEntityAttributesForBaseEntity(baseEntity.getRealm(), baseEntity.getCode());
 	}
 
-	public void removeBaseEntityAttributesForBaseEntity(String productCode, String baseEntityCode) {
-		cm.removeAllEntityAttributesOfBaseEntity(productCode, baseEntityCode);
+	public int removeBaseEntityAttributesForBaseEntity(String productCode, String baseEntityCode) {
+		return cm.removeAllEntityAttributesOfBaseEntity(productCode, baseEntityCode);
 	}
 
 	/**

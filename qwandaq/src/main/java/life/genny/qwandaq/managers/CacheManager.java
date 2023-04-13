@@ -706,13 +706,18 @@ public class CacheManager {
 		return question;
 	}
 
-	/**
-	 * @param parent The question for which child questions need to be fetched
-	 * @return
-	 */
-	public Set<QuestionQuestion> getQuestionQuestionsForParentQuestion(Question parent) {
+	public List<QuestionQuestion> getQuestionQuestionsForParentQuestion(Question parent) {
 		String productCode = parent.getRealm();
 		String parentQuestionCode = parent.getCode();
+		return getQuestionQuestionsForParentQuestion(productCode, parentQuestionCode);
+	}
+
+	/**
+	 * @param productCode The realm for which child questions need to be fetched
+	 * @param parentQuestionCode The parent question code for which child questions need to be fetched
+	 * @return
+	 */
+	public Set<QuestionQuestion> getQuestionQuestionsForParentQuestion(String productCode, String parentQuestionCode) {
 		RemoteCache<CoreEntityKey, CoreEntityPersistable> remoteCache = cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_QUESTIONQUESTION);
 		QueryFactory queryFactory = Search.getQueryFactory(remoteCache);
 		Query<QuestionQuestion> query = queryFactory
