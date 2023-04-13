@@ -23,7 +23,7 @@ then
   exit 1
 fi
 
-echo "Found for Sqlite. Proceeding..."
+echo "Found Sqlite. Proceeding..."
 
 echo "Processing the payload $dbandsqlfileslist ..." 
 IFS=','
