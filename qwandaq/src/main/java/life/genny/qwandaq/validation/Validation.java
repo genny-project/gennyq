@@ -36,7 +36,6 @@ import life.genny.qwandaq.serialization.CoreEntitySerializable;
 
 import life.genny.qwandaq.CodedEntity;
 import life.genny.qwandaq.converter.StringListConverter;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 
 /**
  * Validation represents a distinct abstract Validation Representation in the Qwanda library.
