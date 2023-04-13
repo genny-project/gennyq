@@ -1,7 +1,6 @@
 package life.genny.bootq.models;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -145,7 +144,7 @@ public class Validator {
     public Map<Class<?>, Object> validateDataType(Map<String, String> row, String realmName) 
         throws BadDataException {
             String validationCode = row.get("validations");
-            List<Validation> validations = cm.getValidations(realmName, validationCode);
+            Set<Validation> validations = cm.getValidations(realmName, validationCode);
             if(validations.isEmpty()) {
                 throw new BadDataException("No Corresponding Validation for datatype: " + row.get("code") + " in product " + realmName);
             }

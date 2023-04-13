@@ -5,6 +5,7 @@ import static life.genny.qwandaq.entity.PCM.PCM_CONTENT;
 
 import java.lang.invoke.MethodHandles;
 import java.util.List;
+import java.util.Set;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -195,9 +196,9 @@ public class NavigationService extends KogitoService {
 		String defCode = "";
 		try {
 			BaseEntity user = beUtils.getUserBaseEntity();
-			List<EntityAttribute> priIsAttributes = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(user.getRealm(), user.getCode(), PRI_IS_PREFIX);
+			Set<EntityAttribute> priIsAttributes = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(user.getRealm(), user.getCode(), PRI_IS_PREFIX);
 			if (priIsAttributes.size() > 0) {
-				EntityAttribute attr = priIsAttributes.get(0);
+				EntityAttribute attr = priIsAttributes.iterator().next();
 				defCode = "DEF_" + attr.getAttributeCode().replaceFirst(PRI_IS_PREFIX, "");
 			}
 

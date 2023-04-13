@@ -226,10 +226,10 @@ public class CacheManager {
 	 * Get a list of {@link CoreEntity}s to from cache by prefix.
 	 * @param cacheName - Product Code / Cache to retrieve from
 	 * @param prefix - Prefix of the Core Entity code to use
-	 * @param callback - Callback to construct a {@link CoreEntityKey} for cache retrieval
+	 * @param keyStruct - {@link CoreEntityKey} for cache retrieval
 	 * @return a list of core entities with matching prefixes
 	 * 
-	 * See Also: {@link CoreEntityKey}, {@link FICacheKeyCallback}
+	 * See Also: {@link CoreEntityKey}
 	 */
 	public List<CoreEntity> getEntitiesByPrefix(String cacheName, String prefix, CoreEntityKey keyStruct) {
 		List<CoreEntity> entities = cache.getRemoteCache(cacheName)
@@ -326,15 +326,15 @@ public class CacheManager {
 	 *
 	 * @return Collection of all attributes in the system across all products
 	 */
-	public List<Attribute> getAllAttributes() {
+	public Set<Attribute> getAllAttributes() {
 		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_ATTRIBUTE));
 		Query<Attribute> query = queryFactory
 				.create("from " + AttributeMessageMarshaller.TYPE_NAME);
 		QueryResult<Attribute> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
 		List<Attribute> attributeList = queryResult.list();
 		if (attributeList.size() == 1 && attributeList.get(0) == null)
-			return new ArrayList<>(0);
-		return attributeList;
+			return Collections.EMPTY_SET;
+		return new HashSet<>(attributeList);
 	}
 
 	/**
@@ -343,15 +343,15 @@ public class CacheManager {
 	 * @param productCode
 	 * @return
 	 */
-	public List<Attribute> getAttributesForProduct(String productCode) {
+	public Set<Attribute> getAttributesForProduct(String productCode) {
 		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_ATTRIBUTE));
 		Query<Attribute> query = queryFactory
 				.create("from " + AttributeMessageMarshaller.TYPE_NAME + " where realm = '" + productCode + "'");
 		QueryResult<Attribute> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
 		List<Attribute> attributeList = queryResult.list();
 		if (attributeList.isEmpty() || attributeList.size() == 1 && attributeList.get(0) == null)
-			return new ArrayList<>(0);
-		return attributeList;
+			return Collections.EMPTY_SET;
+		return new HashSet<>(attributeList);
 	}
 
 	/**
@@ -360,15 +360,15 @@ public class CacheManager {
 	 * @param prefix
 	 * @return
 	 */
-	public List<Attribute> getAttributesWithPrefix(String prefix) {
+	public Set<Attribute> getAttributesWithPrefix(String prefix) {
 		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_ATTRIBUTE));
 		Query<Attribute> query = queryFactory
 				.create("from " + AttributeMessageMarshaller.TYPE_NAME + " where code like '" + prefix + "%'");
 		QueryResult<Attribute> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
 		List<Attribute> attributeList = queryResult.list();
 		if (attributeList.size() == 1 && attributeList.get(0) == null)
-			return new ArrayList<>(0);
-		return attributeList;
+			return Collections.EMPTY_SET;
+		return new HashSet<>(attributeList);
 	}
 
 	/**
@@ -378,7 +378,7 @@ public class CacheManager {
 	 * @param prefix
 	 * @return
 	 */
-	public List<Attribute> getAttributesWithPrefixForProduct(String productCode, String prefix) {
+	public Set<Attribute> getAttributesWithPrefixForProduct(String productCode, String prefix) {
 		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_ATTRIBUTE));
 		Query<Attribute> query = queryFactory
 				.create("from " + AttributeMessageMarshaller.TYPE_NAME + " where realm = '" + productCode
@@ -386,8 +386,8 @@ public class CacheManager {
 		QueryResult<Attribute> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
 		List<Attribute> attributeList = queryResult.list();
 		if (attributeList.size() == 1 && attributeList.get(0) == null)
-			return new ArrayList<>(0);
-		return attributeList;
+			return Collections.EMPTY_SET;
+		return new HashSet<>(attributeList);
 	}
 
 	public DataType getDataType(String productCode, String dttCode) {
@@ -395,7 +395,7 @@ public class CacheManager {
 		return (DataType) cache.getPersistableEntityFromCache(GennyConstants.CACHE_NAME_DATATYPE, key);
 	}
 
-	public List<Validation> getValidations(String productCode, String commaSeparatedValidationCodes) {
+	public Set<Validation> getValidations(String productCode, String commaSeparatedValidationCodes) {
 		String inClauseValue = StringUtils.replace(commaSeparatedValidationCodes, ",", "','");
 		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_VALIDATION));
 		Query<Validation> query = queryFactory
@@ -404,11 +404,11 @@ public class CacheManager {
 		QueryResult<Validation> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
 		List<Validation> validationList = queryResult.list();
 		if (validationList.size() == 1 && validationList.get(0) == null)
-			return new ArrayList<>(0);
-		return validationList;
+			return new HashSet<>(0);
+		return new HashSet<>(validationList);
 	}
 
-	public List<Validation> getValidations(String productCode, List<String> validationCodes) {
+	public Set<Validation> getValidations(String productCode, List<String> validationCodes) {
 		return getValidations(productCode, new CopyOnWriteArrayList<>(validationCodes).toString());
 	}
 
@@ -421,7 +421,7 @@ public class CacheManager {
 	 *
 	 * See Also: {@link BaseEntityKey}, {@link CoreEntityKey#fromKey}, {@link CacheManager#getEntitiesByPrefix}
 	 */
-	public List<BaseEntity> getBaseEntitiesByPrefixUsingIckle(String productCode, String prefix) {
+	public Set<BaseEntity> getBaseEntitiesByPrefixUsingIckle(String productCode, String prefix) {
 		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_BASEENTITY));
 		Query<BaseEntity> query = queryFactory
 				.create("from " + BaseEntityMessageMarshaller.TYPE_NAME + " where realm = '" + productCode
@@ -429,19 +429,19 @@ public class CacheManager {
 		QueryResult<BaseEntity> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
 		List<BaseEntity> baseEntityList = queryResult.list();
 		if (baseEntityList.size() == 1 && baseEntityList.get(0) == null)
-			return new ArrayList<>(0);
-		return baseEntityList;
+			return Collections.EMPTY_SET;
+		return new HashSet<>(baseEntityList);
 	}
 
 	/**
 	 * @param ickleQuery
 	 * @return
 	 */
-	public List<life.genny.qwandaq.serialization.baseentity.BaseEntity> getBaseEntitiesUsingIckle(String ickleQuery) {
+	public Set<life.genny.qwandaq.serialization.baseentity.BaseEntity> getBaseEntitiesUsingIckle(String ickleQuery) {
 		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_BASEENTITY));
 		Query<life.genny.qwandaq.serialization.baseentity.BaseEntity> query = queryFactory.create(ickleQuery);
 		QueryResult<life.genny.qwandaq.serialization.baseentity.BaseEntity> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
-		return queryResult.list();
+		return new HashSet<>(queryResult.list());
 	}
 
 	/**
@@ -453,17 +453,17 @@ public class CacheManager {
 	 *
 	 * See Also: {@link BaseEntityKey}, {@link CoreEntityKey#fromKey}, {@link CacheManager#getEntitiesByPrefix}
 	 */
-	public List<EntityAttribute> getAllBaseEntityAttributesForBaseEntity(String productCode, String baseEntityCode) {
+	public Set<EntityAttribute> getAllBaseEntityAttributesForBaseEntity(String productCode, String baseEntityCode) {
 		RemoteCache<CoreEntityKey, CoreEntityPersistable> remoteCache = cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE);
 		QueryFactory queryFactory = Search.getQueryFactory(remoteCache);
 		Query<EntityAttribute> query = queryFactory
 				.create("from " + EntityAttributeMessageMarshaller.TYPE_NAME + " where realm = '" + productCode
 						+ "' and baseEntityCode = '" + baseEntityCode + "'");
 		QueryResult<EntityAttribute> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
-		List<EntityAttribute> attributeList = queryResult.list();
-		if (attributeList.size() == 1 && attributeList.get(0) == null)
-			return new ArrayList<>(0);
-		return attributeList;
+		List<EntityAttribute> entityAttributeList = queryResult.list();
+		if (entityAttributeList.size() == 1 && entityAttributeList.get(0) == null)
+			return Collections.EMPTY_SET;
+		return new HashSet<>(entityAttributeList);
 	}
 
 	/**
@@ -476,7 +476,7 @@ public class CacheManager {
 	 *
 	 * See Also: {@link BaseEntityKey}, {@link CoreEntityKey#fromKey}, {@link CacheManager#getEntitiesByPrefix}
 	 */
-	public List<EntityAttribute> getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(String productCode, String baseEntityCode, String attributeCodePrefix) {
+	public Set<EntityAttribute> getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(String productCode, String baseEntityCode, String attributeCodePrefix) {
 		RemoteCache<CoreEntityKey, CoreEntityPersistable> remoteCache = cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE);
 		QueryFactory queryFactory = Search.getQueryFactory(remoteCache);
 		Query<EntityAttribute> query = queryFactory
@@ -485,8 +485,8 @@ public class CacheManager {
 		QueryResult<EntityAttribute> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
 		List<EntityAttribute> attributeList = queryResult.list();
 		if (attributeList.size() == 1 && attributeList.get(0) == null)
-			return new ArrayList<>(0);
-		return attributeList;
+			return Collections.EMPTY_SET;
+		return new HashSet<>(attributeList);
 	}
 
 	/**
@@ -639,9 +639,9 @@ public class CacheManager {
 	}
 
 	/**
-	 * Remove all QuestionQuestions with the same sourceCode (in a group) from cache/persistence
+	 * Remove Base Entity with a given code from cache/persistence
 	 * @param productCode - product to remove from
-	 * @param sourceCode - sourceCode of QuestionQuestion to remove
+	 * @param code - code of the base entity to remove
 	 * @return number of entities affected by deletion
 	 */
 	public int removeBaseEntity(String productCode, String code) {
@@ -652,12 +652,11 @@ public class CacheManager {
 	}
 
 	/**
-	 * Remove Base Entity with a given code from cache/persistence
+	 * Remove all QuestionQuestions with the same sourceCode (in a group) from cache/persistence
 	 * @param productCode - product to remove from
-	 * @param code - code of the base entity to remove
+	 * @param sourceCode - sourceCode of QuestionQuestion to remove
 	 * @return number of entities affected by deletion
-	 */
-	public int removeAllQuestionQuestionsInGroup(String productCode, String sourceCode) {
+	 */public int removeAllQuestionQuestionsInGroup(String productCode, String sourceCode) {
 		String persistenceObject = QuestionQuestionMessageMarshaller.TYPE_NAME;
 		String conditional = "sourceCode = '" + sourceCode + "'";
 		String deleteQuery = constructDeleteQuery(persistenceObject, productCode, conditional);
@@ -706,17 +705,18 @@ public class CacheManager {
 		return question;
 	}
 
-	public List<QuestionQuestion> getQuestionQuestionsForParentQuestion(Question parent) {
+	public Set<QuestionQuestion> getQuestionQuestionsForParentQuestion(Question parent) {
 		String productCode = parent.getRealm();
 		String parentQuestionCode = parent.getCode();
 		return getQuestionQuestionsForParentQuestion(productCode, parentQuestionCode);
 	}
 
 	/**
-	 * @param parent The question for which child questions need to be fetched
+	 * @param productCode The realm for which child questions need to be fetched
+	 * @param parentQuestionCode The parent question code for which child questions need to be fetched
 	 * @return
 	 */
-	public List<QuestionQuestion> getQuestionQuestionsForParentQuestion(String productCode, String parentQuestionCode) {
+	public Set<QuestionQuestion> getQuestionQuestionsForParentQuestion(String productCode, String parentQuestionCode) {
 		RemoteCache<CoreEntityKey, CoreEntityPersistable> remoteCache = cache.getRemoteCacheForEntity(GennyConstants.CACHE_NAME_QUESTIONQUESTION);
 		QueryFactory queryFactory = Search.getQueryFactory(remoteCache);
 		Query<QuestionQuestion> query = queryFactory
@@ -726,15 +726,15 @@ public class CacheManager {
 		QueryResult<QuestionQuestion> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
 		List<QuestionQuestion> questionQuestionList = queryResult.list();
 		if (questionQuestionList.size() == 1 && questionQuestionList.get(0) == null)
-			return new ArrayList<>(0);
-		return questionQuestionList;
+			return Collections.EMPTY_SET;
+		return new HashSet<>(questionQuestionList);
 	}
 
 	/**
 	 * @param parent The question for which child questions need to be fetched
 	 * @return
 	 */
-	public List<QuestionQuestion> getQuestionQuestionsForParentQuestionFromBECache(Question parent) {
+	public Set<QuestionQuestion> getQuestionQuestionsForParentQuestionFromBECache(Question parent) {
 		// get bea remote cache for querying
 		String productCode = parent.getRealm();
 		String parentCode = parent.getCode();
@@ -749,9 +749,9 @@ public class CacheManager {
 		QueryResult<EntityAttribute> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
 		List<EntityAttribute> attributeList = queryResult.list();
 		if (attributeList.size() == 1 && attributeList.get(0) == null)
-			return new ArrayList<>(0);
+			return Collections.EMPTY_SET;
 		// begin building QQ objects
-		return questionUtils.createQuestionQuestionsForParentQuestion(parent, attributeList);
+		return new HashSet<>(questionUtils.createQuestionQuestionsForParentQuestion(parent, attributeList));
 	}
 
 	/**

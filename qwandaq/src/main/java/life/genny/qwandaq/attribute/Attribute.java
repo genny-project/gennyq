@@ -357,17 +357,6 @@ public class Attribute extends CodedEntity implements CoreEntityPersistable {
 		return attributeSerializable;
 	}
 
-	@Override
-	public int hashCode() {
-		return (this.getRealm()+this.getCode()).hashCode();
-	}
-
-	@Override
-	public boolean equals(Object otherObject) {
-		return this.getRealm().equals(((Attribute) otherObject).getRealm())
-				&& this.getCode().equals(((Attribute) otherObject).getCode());
-	}
-
 	public HAttribute toHAttribute() {
 		HAttribute hAttribute = new HAttribute();
 		hAttribute.setDataType(getDataType());

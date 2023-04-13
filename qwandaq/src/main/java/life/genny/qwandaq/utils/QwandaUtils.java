@@ -254,7 +254,7 @@ public class QwandaUtils {
 			// groups always readonly
 			ask.setReadonly(true);
 			// fetch questionQuestions from the cache
-			List<QuestionQuestion> questionQuestions = cm.getQuestionQuestionsForParentQuestion(question);
+			Set<QuestionQuestion> questionQuestions = cm.getQuestionQuestionsForParentQuestion(question);
 			if (questionQuestions.isEmpty()) {
 				log.debugf("No child questions found for the question: [%s,%s]", question.getRealm(), question.getCode());
 			} else {
@@ -384,7 +384,7 @@ public class QwandaUtils {
 	 */
 	public Map<String, Ask> updateDependentAsks(BaseEntity target, Definition definition, Map<String, Ask> flatMapAsks) {
 
-		List<EntityAttribute> dependentAsks = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(definition.getRealm(), definition.getCode(), Prefix.DEP_);
+		Set<EntityAttribute> dependentAsks = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(definition.getRealm(), definition.getCode(), Prefix.DEP_);
 
 		for (EntityAttribute dep : dependentAsks) {
 			String attributeCode = StringUtils.removeStart(dep.getAttributeCode(), Prefix.DEP_);
@@ -865,7 +865,7 @@ public class QwandaUtils {
 		// Check if attribute code exists as a UNQ for the DEF
 		String productCode = definition.getRealm();
 		String definitionCode = definition.getCode();
-		List<EntityAttribute> uniques = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(productCode, definitionCode, Prefix.UNQ_);
+		Set<EntityAttribute> uniques = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(productCode, definitionCode, Prefix.UNQ_);
 		log.info("Found " + uniques.size() + " UNQ attributes");
 
 		String prefix = beaUtils.getEntityAttribute(productCode, definitionCode, Attribute.PRI_PREFIX).getValueString();

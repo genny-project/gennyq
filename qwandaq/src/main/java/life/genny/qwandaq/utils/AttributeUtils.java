@@ -4,7 +4,6 @@ import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
-import life.genny.qwandaq.exception.runtime.NullParameterException;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.serialization.attribute.AttributeKey;
@@ -19,8 +18,8 @@ import javax.inject.Inject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A non-static utility class used for standard
@@ -235,7 +234,7 @@ public class AttributeUtils {
             throw new ItemNotFoundException(productCode, "DataType Code: " + dttCode);
         }
         if (bundleValidationList) {
-            List<Validation> validationList = getValidationList(dataType);
+            Set<Validation> validationList = getValidationList(dataType);
             dataType.setValidationList(validationList);
         }
         return dataType;
@@ -269,16 +268,16 @@ public class AttributeUtils {
      * @param dataType
      * @return List of validations associated with a data type
      */
-    public List<Validation> getValidationList(DataType dataType) {
+    public Set<Validation> getValidationList(DataType dataType) {
         String validationCodes = dataType.getValidationCodes();
         if (StringUtils.isBlank(validationCodes)) {
-            return Collections.EMPTY_LIST;
+            return Collections.EMPTY_SET;
         }
         // Fire ickle query only in the case of multiple validation codes
         if(validationCodes.contains(",")) {
             return cm.getValidations(dataType.getRealm(), validationCodes);
         }
-        return Collections.singletonList(getValidation(dataType.getRealm(), validationCodes));
+        return Collections.singleton(getValidation(dataType.getRealm(), validationCodes));
     }
 
     /**
@@ -316,7 +315,7 @@ public class AttributeUtils {
      *
      * @return Collection of all attributes in the system across all products
      */
-    public List<Attribute> getAllAttributes() {
+    public Set<Attribute> getAllAttributes() {
         return cm.getAllAttributes();
     }
 
@@ -326,7 +325,7 @@ public class AttributeUtils {
      * @param productCode
      * @return Collection of all attributes for a product.
      */
-    public List<Attribute> getAttributesForProduct(String productCode) {
+    public Set<Attribute> getAttributesForProduct(String productCode) {
         return cm.getAttributesForProduct(productCode);
     }
 
@@ -336,7 +335,7 @@ public class AttributeUtils {
      * @param prefix
      * @return
      */
-    public List<Attribute> getAttributesWithPrefix(String prefix) {
+    public Set<Attribute> getAttributesWithPrefix(String prefix) {
         return cm.getAttributesWithPrefix(prefix);
     }
 
@@ -347,7 +346,7 @@ public class AttributeUtils {
      * @param prefix
      * @return
      */
-    public List<Attribute> getAttributesWithPrefixForProduct(String productCode, String prefix) {
+    public Set<Attribute> getAttributesWithPrefixForProduct(String productCode, String prefix) {
         return cm.getAttributesWithPrefixForProduct(productCode, prefix);
     }
 
