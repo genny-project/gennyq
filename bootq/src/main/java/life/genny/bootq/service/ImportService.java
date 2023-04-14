@@ -1,12 +1,11 @@
 package life.genny.bootq.service;
 
-import org.apache.logging.log4j.Logger;
-
 import life.genny.bootq.models.SheetState;
 import life.genny.bootq.sheets.module.ModuleUnit;
 import life.genny.bootq.sheets.realm.RealmUnit;
 import life.genny.bootq.utils.GoogleImportService;
 import life.genny.bootq.utils.XlsxImport;
+import org.apache.logging.log4j.Logger;
 
 import java.lang.invoke.MethodHandles;
 import java.util.ArrayList;
@@ -16,6 +15,7 @@ import java.util.Map;
 public class ImportService {
     private final Logger log = org.apache.logging.log4j.LogManager
             .getLogger(MethodHandles.lookup().lookupClass().getCanonicalName());
+
     private Map<String, XlsxImport> state;
 
     public XlsxImport createXlsImport(String key) {
@@ -69,7 +69,8 @@ public class ImportService {
                 continue;
             ModuleUnit moduleUnit = new ModuleUnit();
             moduleUnit.setName(module.get("name"));
-            log.info("Loading Module: " + moduleUnit.getName());
+            moduleUnit.setModuleName(module.get("module").replaceAll("^\"|\"$|_|-| ", ""));
+            log.info("Loading Module: " + moduleUnit.getName() + " - " + moduleUnit.getModuleName());
             moduleUnit.init(module.get("sheetid"));
 			modules.add(moduleUnit);
         }

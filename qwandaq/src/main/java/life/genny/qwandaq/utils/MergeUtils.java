@@ -3,6 +3,7 @@ package life.genny.qwandaq.utils;
 import java.io.StringReader;
 import java.text.DecimalFormat;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -60,7 +61,7 @@ public class MergeUtils {
 
 	public void mergeBaseEntity(BaseEntity baseEntity, Map<String, Object> contexts) {
 		beaUtils.getAllEntityAttributesForBaseEntity(baseEntity).forEach(ea -> {
-			if (ea.getValueString() == null)
+			if (ea == null || ea.getValueString() == null)
 				return;
 			String value = merge(ea.getValueString(), contexts);
 			ea.setValueString(value);
@@ -154,7 +155,14 @@ public class MergeUtils {
 				return be.getCode();
 			}
 
-			Object attributeValue = be.getValue(attributeCode).get();
+		    Optional<Object> attribute = be.getValue(attributeCode);
+			Object attributeValue = null;
+			if(attribute.isEmpty()) {
+				EntityAttribute ea = beaUtils.getEntityAttribute(be.getRealm(),be.getCode(),attributeCode,true,true);
+				attributeValue = ea.getValue();
+			} else {
+				attributeValue = attribute.get();
+			}
 			log.debug("context: " + keyCode + ", attr: " + attributeCode + ", value: " + attributeValue);
 
 			Matcher matchFormat = null;
@@ -205,6 +213,9 @@ public class MergeUtils {
 				} else {
 					result = be.getValueAsString(attributeCode);
 					log.debug("String attribute " + attributeCode + " does NOT need formatting. Result is " + result);
+				}
+				if(result == null && attributeValue != null) {
+					result = (String) attributeValue;
 				}
 				return result;
 

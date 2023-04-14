@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @ApplicationScoped
 public class QuestionUtils {
@@ -327,6 +328,10 @@ public class QuestionUtils {
         return cacheManager.saveEntity(ECacheRef.QUESTIONQUESTION, key, questionQuestion);
     }
 
+    public Set<QuestionQuestion> findQuestionQuestionBySource(String productCode, String sourceCode) {
+        return cacheManager.getQuestionQuestionsForParentQuestion(productCode, sourceCode);
+    }
+    
     public QuestionQuestion findQuestionQuestionBySourceAndTarget(String productCode, String sourceCode, String targetCode) {
         QuestionQuestionKey key = new QuestionQuestionKey(productCode, sourceCode, targetCode);
         return (QuestionQuestion) cacheManager.getPersistableEntity(ECacheRef.QUESTIONQUESTION, key);
@@ -334,5 +339,9 @@ public class QuestionUtils {
 
     public int removeQuestionQuestion(String productCode, String sourceCode, String targetCode) {
 		return cacheManager.removeQuestionQuestion(productCode, sourceCode, targetCode);
+    }
+
+    public int removeAllQuestionQuestionsForSource(String productCode, String sourceCode) {
+        return cacheManager.removeAllQuestionQuestionsInGroup(productCode, sourceCode);
     }
 }

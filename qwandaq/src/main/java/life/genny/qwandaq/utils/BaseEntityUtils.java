@@ -191,7 +191,7 @@ public class BaseEntityUtils {
 		}
 		// fetch entity attributes
 		if (bundleAttributes) {
-			List<EntityAttribute> entityAttributesForBaseEntity = beaUtils.getAllEntityAttributesForBaseEntity(productCode, code);
+			Set<EntityAttribute> entityAttributesForBaseEntity = beaUtils.getAllEntityAttributesForBaseEntity(productCode, code);
 			if(entityAttributesForBaseEntity.isEmpty()) {
 				log.infof("No BaseEntityAttributes found for base entity [%s:%s]", productCode, code);
 				//throw new ItemNotFoundException();
@@ -580,15 +580,17 @@ public class BaseEntityUtils {
 			updateBaseEntity(item);
 		}
 
-		List<EntityAttribute> atts = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(productCode, definitionCode, Prefix.ATT_);
+		Set<EntityAttribute> atts = beaUtils.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(productCode, definitionCode, Prefix.ATT_);
 		for (EntityAttribute ea : atts) {
 			String attrCode = ea.getAttributeCode().substring(Prefix.ATT_.length());
-			Attribute attribute = attributeUtils.getAttribute(attrCode, true);
-
-			if (attribute == null) {
+			Attribute attribute;
+			try {
+				attribute = attributeUtils.getAttribute(attrCode, true);
+			} catch(ItemNotFoundException e) {
 				log.warn("No Attribute found for def attr " + attrCode);
 				continue;
 			}
+
 			if (item.containsEntityAttribute(attribute.getCode())) {
 				log.info(item.getCode() + " already has value for " + attribute.getCode());
 				continue;
@@ -607,9 +609,9 @@ public class BaseEntityUtils {
 			}
 			// Only process mandatory attributes, or defaults
 			if (mandatory || defaultVal != null) {
+				log.info("Adding mandatory/default -> " + attribute.getCode());
 				EntityAttribute newEA = new EntityAttribute(item, attribute, ea.getWeight(), defaultVal);
 				newEA.setRealm(userToken.getProductCode());
-				log.info("Adding mandatory/default -> " + attribute.getCode());
 				item.addAttribute(newEA);
 				if (saveBaseEntity) {
 					beaUtils.updateEntityAttribute(newEA);

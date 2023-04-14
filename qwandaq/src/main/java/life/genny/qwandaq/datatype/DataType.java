@@ -19,10 +19,14 @@
 
 package life.genny.qwandaq.datatype;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import io.quarkus.runtime.annotations.RegisterForReflection;
+import life.genny.qwandaq.CoreEntityPersistable;
+import life.genny.qwandaq.converter.ValidationListConverter;
+import life.genny.qwandaq.serialization.CoreEntitySerializable;
+import life.genny.qwandaq.validation.Validation;
+import org.javamoney.moneta.Money;
+import org.jboss.logging.Logger;
 
 import javax.money.Monetary;
 import javax.persistence.Column;
@@ -32,17 +36,10 @@ import javax.persistence.Transient;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlTransient;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
-import life.genny.qwandaq.CoreEntityPersistable;
-import life.genny.qwandaq.serialization.CoreEntitySerializable;
-import org.javamoney.moneta.Money;
-import org.jboss.logging.Logger;
-
-import io.quarkus.runtime.annotations.RegisterForReflection;
-import life.genny.qwandaq.converter.ValidationListConverter;
-import life.genny.qwandaq.validation.Validation;
+import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
  * DataType represents a distinct abstract Data Representation in the Qwanda
@@ -118,7 +115,7 @@ public class DataType implements CoreEntityPersistable {
 
 	@Column(name = "validation_list", length = 512)
 	@Convert(converter = ValidationListConverter.class)
-	private List<Validation> validationList = new CopyOnWriteArrayList<Validation>();
+	private Set<Validation> validationList = new CopyOnWriteArraySet<>();
 
 	/**
 	 * Constructor.
@@ -130,14 +127,14 @@ public class DataType implements CoreEntityPersistable {
 	}
 
 	public DataType(final Class clazz) {
-		this(clazz, new ArrayList<>(0));
+		this(clazz, new HashSet<>(0));
 	}
 
 	public DataType(final String className) {
-		this(className, new ArrayList<>(0));
+		this(className, new HashSet<>(0));
 	}
 
-	public DataType(final String className, final List<Validation> aValidationList, final String name,
+	public DataType(final String className, final Set<Validation> aValidationList, final String name,
 			final String inputmask) {
 		setDttCodeFromClassName(className);
 		setClassName(className);
@@ -146,7 +143,7 @@ public class DataType implements CoreEntityPersistable {
 		setInputmask(inputmask);
 	}
 
-	public DataType(final String className, final List<Validation> aValidationList, final String name,
+	public DataType(final String className, final Set<Validation> aValidationList, final String name,
 			final String inputmask, final String component) {
 		setDttCodeFromClassName(className);
 		setClassName(className);
@@ -156,7 +153,7 @@ public class DataType implements CoreEntityPersistable {
 		setComponent(component);
 	}
 
-	public DataType(final String className, final List<Validation> aValidationList, final String name) {
+	public DataType(final String className, final Set<Validation> aValidationList, final String name) {
 		this(className, aValidationList, name, "");
 	}
 
@@ -179,18 +176,18 @@ public class DataType implements CoreEntityPersistable {
 		}
 	}
 
-	public DataType(final String className, final List<Validation> aValidationList) {
+	public DataType(final String className, final Set<Validation> aValidationList) {
 		this(className, aValidationList, className);
 	}
 
-	public DataType(final Class clazz, final List<Validation> aValidationList) {
+	public DataType(final Class clazz, final Set<Validation> aValidationList) {
 		this(clazz.getCanonicalName(), aValidationList);
 	}
 
 	/**
 	 * @return the validationList
 	 */
-	public List<Validation> getValidationList() {
+	public Set<Validation> getValidationList() {
 		return validationList;
 	}
 
@@ -198,7 +195,7 @@ public class DataType implements CoreEntityPersistable {
 	 * @param validationList
 	 *                       the validationList to set
 	 */
-	public void setValidationList(final List<Validation> validationList) {
+	public void setValidationList(final Set<Validation> validationList) {
 		this.validationList = validationList;
 	}
 
@@ -323,7 +320,7 @@ public class DataType implements CoreEntityPersistable {
 	 * @return DataType
 	 */
 	static public DataType getInstance(final String className) {
-		final List<Validation> validationList = new CopyOnWriteArrayList<Validation>();
+		final Set<Validation> validationList = new CopyOnWriteArraySet<Validation>();
 		DataType dataTypeInstance = new DataType(className, validationList);
 		return dataTypeInstance;
 	}

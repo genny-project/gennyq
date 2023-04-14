@@ -7,7 +7,7 @@ import life.genny.bootq.service.ImportService;
 
 public abstract class SheetReferralType<T> {
 
-    protected List<T> units = new ArrayList<>();
+    private List<T> units = new ArrayList<>();
 
     private ImportService service;
 

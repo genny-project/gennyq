@@ -815,17 +815,6 @@ public class BaseEntity extends CodedEntity implements CoreEntityPersistable, Ba
 		return highest;
 	}
 
-	@Override
-	public int hashCode() {
-		return (this.getRealm()+this.getCode()).hashCode();
-	}
-
-	@Override
-	public boolean equals(Object otherObject) {
-		return this.getRealm().equals(((BaseEntity) otherObject).getRealm())
-				&& this.getCode().equals(((BaseEntity) otherObject).getCode());
-	}
-
 	public HBaseEntity toHBaseEntity() {
 		HBaseEntity hBaseEntity = new HBaseEntity();
 		hBaseEntity.setCode(getCode());

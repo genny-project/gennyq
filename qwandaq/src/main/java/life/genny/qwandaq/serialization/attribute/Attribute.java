@@ -1,13 +1,14 @@
 package life.genny.qwandaq.serialization.attribute;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.EEntityStatus;
 import life.genny.qwandaq.converter.ValidationListConverter;
 import life.genny.qwandaq.datatype.DataType;
-import life.genny.qwandaq.CoreEntityPersistable;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import life.genny.qwandaq.validation.Validation;
+
+import java.time.LocalDateTime;
+import java.util.Set;
 
 /*
  * A representation of BaseEntity in the cache
@@ -15,9 +16,9 @@ import life.genny.qwandaq.validation.Validation;
  * @author Varun Shastry
  */
 public class Attribute implements CoreEntitySerializable {
-	
+
 	private String dtype;
-	
+
 	private Long id;
 	
 	private LocalDateTime created;
@@ -232,7 +233,7 @@ public class Attribute implements CoreEntitySerializable {
 		dataType.setClassName(getClassName());
 		dataType.setComponent(getComponent());
 		dataType.setTypeName(getTypeName());
-		List<Validation> validations = new ValidationListConverter().convertToEntityAttribute(getValidationList());
+		Set<Validation> validations = new ValidationListConverter().convertToEntityAttribute(getValidationList());
 		dataType.setValidationList(validations);
 		attribute.setDataType(dataType);
 		return attribute;

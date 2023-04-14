@@ -2,6 +2,8 @@ package life.genny.qwandaq.constants;
 
 public final class GennyConstants {
 
+	private GennyConstants() {}
+
 	public static final String PATH_TO_PROTOS = "/life/genny/qwandaq/serialization/protos/";
     public static final String PACKAGE_PREFIX = "life.genny";
 
@@ -34,6 +36,7 @@ public final class GennyConstants {
 	public static final String SBE_TABLE_MESSAGE = "SBE_TABLE_MESSAGE";
 
     public static final String ERROR_FALLBACK_MSG = "Error Occurred!";
+	public static final char COMMA = ',';
 
 	// ================================== DATA TYPES =============================================
 	public static final String JAVA_LANG_INTEGER = "java.lang.Integer";

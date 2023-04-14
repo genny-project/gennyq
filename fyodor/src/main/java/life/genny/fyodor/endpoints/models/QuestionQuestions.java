@@ -1,5 +1,8 @@
 package life.genny.fyodor.endpoints.models;
 
+import java.util.List;
+import java.util.Set;
+
 import javax.inject.Inject;
 import javax.transaction.Transactional;
 import javax.ws.rs.DELETE;
@@ -34,6 +37,41 @@ public class QuestionQuestions {
 
     @Inject
     Logger log;
+
+    /**
+     * Fetch all QuestionQuestions for a group from a given product using a parentCode
+     * @param product - product to fetch from
+     * @param parentCode - parentCode of the QuestionQuestion group
+     * @return <ul>
+     *             <li>200 OK with the QuestionQuestions if found.</li>
+     *             <li>404 with an associated error message if no QuestionQuestions cannot be found under the parentCode/li>
+     *          </ul>
+     * 
+     */
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/all/{product}/{parentCode}/{childCode}")
+    public Response fetchAll(
+            @PathParam("product") String product, 
+            @PathParam("parentCode") String parentCode) {
+                log.debug("[!] call to GET /all/questionquestion/" + product + "/" + parentCode);
+
+                if (userToken == null) {
+                    return Response.status(Response.Status.FORBIDDEN)
+                            .entity("Not authorized to make this request").build();
+                }
+
+                Set<QuestionQuestion> questionQuestions = questionUtils.findQuestionQuestionBySource(product, parentCode);
+                if(questionQuestions.isEmpty()) {
+                    log.info("Could not find any question questions for: " + product + ":" + parentCode);
+                    return Response.status(Response.Status.NOT_FOUND)
+                                    .entity("Could not find any question questions with parentCode: " + parentCode + " in product: " + product)
+                                    .build();
+                }
+                log.info("Found " + questionQuestions.size() + " child questions in the group for: " + product + ":" + parentCode);
+                return Response.ok(questionQuestions).build();
+            }
+
     /**
      * Fetch a QuestionQuestion from a given product using a parentCode, childCode
      * @param product - product to fetch from
@@ -59,16 +97,12 @@ public class QuestionQuestions {
                             .entity("Not authorized to make this request").build();
                 }
 
-                try {
-                    QuestionQuestion question = questionUtils.findQuestionQuestionBySourceAndTarget(product, parentCode, childCode);
-                    if(question == null) {
-                        return Response.status(Response.Status.NOT_FOUND).entity("Could not find question: " + parentCode + ":" + childCode + " in product " + product).build();
-                    }
-                    log.info("Found QQ: " + (question.getParentCode() != null ? question.getParentCode() : "null") + ":" + (question.getChildCode() != null ? question.getChildCode() : "null"));
-                    return Response.ok(question).build();
-                } catch(ItemNotFoundException e) {
-                    return Response.status(Response.Status.NOT_FOUND).entity(e.getMessage()).build();
+                QuestionQuestion question = questionUtils.findQuestionQuestionBySourceAndTarget(product, parentCode, childCode);
+                if(question == null) {
+                    return Response.status(Response.Status.NOT_FOUND).entity("Could not find question question: " + parentCode + ":" + childCode + " in product " + product).build();
                 }
+                log.info("Found QQ: " + (question.getParentCode() != null ? question.getParentCode() : "null") + ":" + (question.getChildCode() != null ? question.getChildCode() : "null"));
+                return Response.ok(question).build();
             }
 
     /**
@@ -101,4 +135,33 @@ public class QuestionQuestions {
             }
         }
     
+    /**
+     * Delete a QuestionQuestion from a given product using a parentCode and childCode
+     * @param product - product to fetch from
+     * @param parentCode - parentCode of the QuestionQuestion
+     * @param childCode - childCode of the QuestionQuestion
+     * @return 200 OK with the Question if found. 404 with an associated error message
+     */
+    @DELETE
+    @Transactional
+    @Produces(MediaType.APPLICATION_JSON)
+    @Path("/all/{product}/{parentCode}/")
+    public Response deleteAll(
+        @PathParam("product") String product, 
+        @PathParam("parentCode") String parentCode,
+        @PathParam("childCode") String childCode) {
+            log.debug("[!] call to DELETE /all/questionquestion/" + product + "/" + parentCode);
+            // TODO: Need to make a proper authentication check here
+            if (userToken == null) {
+                return Response.status(Response.Status.FORBIDDEN)
+                        .entity("Not authorized to make this request").build();
+            }
+
+            int numChanged = questionUtils.removeAllQuestionQuestionsForSource(product, parentCode);
+            if(numChanged > 0) {
+                return Response.status(Status.OK).entity("Num affected: " + numChanged).build();
+            } else {
+                return Response.status(Status.NOT_FOUND).entity("No entities affected").build();
+            }
+        }
 }

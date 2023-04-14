@@ -311,13 +311,13 @@ public class EntityAttributeUtils {
 	 * @return The list of corresponding BaseEntityAttributes, or empty list if not
 	 *         found.
 	 */
-	public List<life.genny.qwandaq.serialization.entityattribute.EntityAttribute> getSerializableEntityAttributes(
+	public Set<life.genny.qwandaq.serialization.entityattribute.EntityAttribute> getSerializableEntityAttributes(
 			String productCode, String baseEntityCode,
 			List<String> attributeCodes) {
 		List<life.genny.qwandaq.serialization.entityattribute.EntityAttribute> baseEntityAttributes = new LinkedList<>();
 		attributeCodes.parallelStream().forEach(attributeCode -> baseEntityAttributes
 				.add(getSerializableEntityAttribute(productCode, baseEntityCode, attributeCode)));
-		return baseEntityAttributes;
+		return new HashSet<>(baseEntityAttributes);
 	}
 
 	/**
@@ -331,9 +331,9 @@ public class EntityAttributeUtils {
 	 * @return The list of corresponding EntityAttributes, or empty list if not
 	 *         found.
 	 */
-	public List<EntityAttribute> getPersistableEntityAttributes(String productCode, String baseEntityCode,
+	public Set<EntityAttribute> getPersistableEntityAttributes(String productCode, String baseEntityCode,
 			List<String> attributeCodes) {
-		List<EntityAttribute> baseEntityAttributes = new LinkedList<>();
+		Set<EntityAttribute> baseEntityAttributes = new HashSet<>();
 		attributeCodes.parallelStream().forEach(attributeCode -> baseEntityAttributes
 				.add(getEntityAttribute(productCode, baseEntityCode, attributeCode)));
 		return baseEntityAttributes;
@@ -347,7 +347,7 @@ public class EntityAttributeUtils {
 	 * @return The corresponding list of all EntityAttributes, or empty list if not
 	 *         found.
 	 */
-	public List<EntityAttribute> getAllEntityAttributesForBaseEntity(BaseEntity baseEntity) {
+	public Set<EntityAttribute> getAllEntityAttributesForBaseEntity(BaseEntity baseEntity) {
 		return getAllEntityAttributesForBaseEntity(baseEntity, false);
 	}
 
@@ -361,7 +361,7 @@ public class EntityAttributeUtils {
 	 * @return The corresponding list of all EntityAttributes, or empty list if not
 	 *         found.
 	 */
-	public List<EntityAttribute> getAllEntityAttributesForBaseEntity(BaseEntity baseEntity, boolean embedAttribute) {
+	public Set<EntityAttribute> getAllEntityAttributesForBaseEntity(BaseEntity baseEntity, boolean embedAttribute) {
 		return getAllEntityAttributesForBaseEntity(baseEntity.getRealm(), baseEntity.getCode(), embedAttribute);
 	}
 
@@ -375,7 +375,7 @@ public class EntityAttributeUtils {
 	 * @return The corresponding list of all EntityAttributes, or empty list if not
 	 *         found.
 	 */
-	public List<EntityAttribute> getAllEntityAttributesForBaseEntity(String productCode, String baseEntityCode) {
+	public Set<EntityAttribute> getAllEntityAttributesForBaseEntity(String productCode, String baseEntityCode) {
 		return getAllEntityAttributesForBaseEntity(productCode, baseEntityCode, false);
 	}
 
@@ -391,9 +391,9 @@ public class EntityAttributeUtils {
 	 * @return The corresponding list of all EntityAttributes, or empty list if not
 	 *         found.
 	 */
-	public List<EntityAttribute> getAllEntityAttributesForBaseEntity(String productCode, String baseEntityCode,
+	public Set<EntityAttribute> getAllEntityAttributesForBaseEntity(String productCode, String baseEntityCode,
 			boolean embedAttribute) {
-		List<EntityAttribute> entityAttributes = cm.getAllBaseEntityAttributesForBaseEntity(productCode,
+		Set<EntityAttribute> entityAttributes = cm.getAllBaseEntityAttributesForBaseEntity(productCode,
 				baseEntityCode);
 		if (!embedAttribute) {
 			return entityAttributes;
@@ -402,7 +402,7 @@ public class EntityAttributeUtils {
 	}
 
 	@NotNull
-	public List<EntityAttribute> embedAttributesInEntityAttributes(List<EntityAttribute> entityAttributes) {
+	public Set<EntityAttribute> embedAttributesInEntityAttributes(Set<EntityAttribute> entityAttributes) {
 		List<EntityAttribute> entityAttributesWithEmbeddedAttributes = new LinkedList<>();
 		entityAttributes.stream()
 				.forEach((ea) -> {
@@ -418,7 +418,7 @@ public class EntityAttributeUtils {
 							ea.getAttributeCode());
 					ea.setAttribute(attribute);
 				});
-		return entityAttributesWithEmbeddedAttributes;
+		return new HashSet<>(entityAttributesWithEmbeddedAttributes);
 	}
 
 	/**
@@ -432,18 +432,18 @@ public class EntityAttributeUtils {
 	 *         See Also: {@link BaseEntityKey}, {@link CoreEntityKey#fromKey},
 	 *         {@link CacheManager#getEntitiesByPrefix}
 	 */
-	public List<EntityAttribute> getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(String productCode,
+	public Set<EntityAttribute> getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(String productCode,
 			String baseEntityCode, String attributeCodePrefix) {
 		return cm.getBaseEntityAttributesForBaseEntityWithAttributeCodePrefix(productCode, baseEntityCode,
 				attributeCodePrefix);
 	}
 
-	public void removeBaseEntityAttributesForBaseEntity(BaseEntity baseEntity) {
-		removeBaseEntityAttributesForBaseEntity(baseEntity.getRealm(), baseEntity.getCode());
+	public int removeBaseEntityAttributesForBaseEntity(BaseEntity baseEntity) {
+		return removeBaseEntityAttributesForBaseEntity(baseEntity.getRealm(), baseEntity.getCode());
 	}
 
-	public void removeBaseEntityAttributesForBaseEntity(String productCode, String baseEntityCode) {
-		cm.removeAllEntityAttributesOfBaseEntity(productCode, baseEntityCode);
+	public int removeBaseEntityAttributesForBaseEntity(String productCode, String baseEntityCode) {
+		return cm.removeAllEntityAttributesOfBaseEntity(productCode, baseEntityCode);
 	}
 
 	/**

@@ -976,12 +976,10 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 	 */
 	@Override
 	public int hashCode() {
-
 		HashCodeBuilder hcb = new HashCodeBuilder();
 		hcb.append(realm);
 		hcb.append(baseEntityCode);
 		hcb.append(attributeCode);
-		hcb.append(getValueAsObject());
 		return hcb.toHashCode();
 	}
 
@@ -999,7 +997,6 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 		eb.append(realm, that.realm);
 		eb.append(baseEntityCode, that.baseEntityCode);
 		eb.append(attributeCode, that.attributeCode);
-		eb.append(getValueAsObject(), getValueAsObject());
 		return eb.isEquals();
 	}
 

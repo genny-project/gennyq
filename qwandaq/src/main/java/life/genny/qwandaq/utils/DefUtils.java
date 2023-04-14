@@ -3,6 +3,7 @@ package life.genny.qwandaq.utils;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -317,7 +318,7 @@ public class DefUtils {
 	 */
 	@Deprecated
 	public SearchEntity mergeFilterValueVariables(SearchEntity searchBE, Map<String, Object> ctxMap) {
-		List<EntityAttribute> entityAttributes = beaUtils.getAllEntityAttributesForBaseEntity(searchBE);
+		Set<EntityAttribute> entityAttributes = beaUtils.getAllEntityAttributesForBaseEntity(searchBE);
 		for (EntityAttribute entityAttribute : entityAttributes) {
 			// iterate all Filters
 			String attributeCode = entityAttribute.getAttributeCode();
