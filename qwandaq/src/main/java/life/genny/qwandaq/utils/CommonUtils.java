@@ -10,6 +10,7 @@ import org.jboss.logging.Logger;
 import io.quarkus.arc.Arc;
 import life.genny.qwandaq.exception.runtime.config.MissingEnvironmentVariableException;
 import life.genny.qwandaq.exception.runtime.entity.GennyPrefixException;
+import life.genny.qwandaq.utils.callbacks.FIEqualityCallback;
 import life.genny.qwandaq.utils.callbacks.FIGetObjectCallback;
 import life.genny.qwandaq.utils.callbacks.FIGetStringCallback;
 import life.genny.qwandaq.utils.callbacks.FILogCallback;
@@ -436,10 +437,7 @@ public class CommonUtils {
         return ret.toString();
     }
 
-    /**
-     * Check if item is in array
-     */
-    public static <T>boolean isInArray(T[] array, T obj) {
+    public static <T>boolean isInArray(T[] array, T obj, FIEqualityCallback<T> equalityCallback) {
         for(T o : array) {
             if(o == null && obj != null || o != null && obj == null) {
                 continue;
@@ -447,11 +445,18 @@ public class CommonUtils {
 
             // Now o and obj can only be both null or not null
             // so testing if 1 is null tests if both are null
-            if(o == null || o.equals(obj))
+            if(o == null || equalityCallback.objectEquals(o, obj))
                 return true;
         }
 
         return false;
+    }
+
+    /**
+     * Check if item is in array
+     */
+    public static <T>boolean isInArray(T[] array, T obj) {
+        return isInArray(array, obj, (arrayObject, o) -> o.equals(arrayObject));
     }
 
 	/**

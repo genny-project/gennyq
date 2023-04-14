@@ -11,7 +11,7 @@ import life.genny.fyodor.utils.CapHandler;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.constants.ECacheRef;
 import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.intf.ICapabilityFilterable;
@@ -96,7 +96,7 @@ public class CapabilitiesEndpoint {
 
         capabilityUtils.updateCapabilityRequirements(productCode, filterableQuestion, capabilityRequirements);
         BaseEntityKey key = new BaseEntityKey(productCode, baseEntityCode);
-        cm.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, (BaseEntity) filterableQuestion);
+        cm.saveEntity(ECacheRef.BASEENTITY, key, (BaseEntity) filterableQuestion);
         return Response.status(Status.OK).build();
     }
     

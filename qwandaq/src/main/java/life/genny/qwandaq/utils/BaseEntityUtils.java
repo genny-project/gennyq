@@ -1,6 +1,7 @@
 package life.genny.qwandaq.utils;
 
 import life.genny.qwandaq.attribute.Attribute;
+import life.genny.qwandaq.constants.ECacheRef;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
@@ -184,7 +185,7 @@ public class BaseEntityUtils {
 	public BaseEntity getBaseEntity(String productCode, String code, boolean bundleAttributes) {
 		// fetch entity
 		BaseEntityKey key = new BaseEntityKey(productCode, code);
-		BaseEntity baseEntity = (BaseEntity) cm.getPersistableEntity(GennyConstants.CACHE_NAME_BASEENTITY, key);
+		BaseEntity baseEntity = (BaseEntity) cm.getPersistableEntity(ECacheRef.BASEENTITY, key);
 		if (baseEntity == null) {
 			throw new ItemNotFoundException(productCode, code);
 		}
@@ -226,7 +227,7 @@ public class BaseEntityUtils {
 			Long id = cm.getMaxBaseEntityId() + 1;
 			baseEntity.setId(id);
 		}
-		boolean savedSuccessfully = cm.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, key, baseEntity);
+		boolean savedSuccessfully = cm.saveEntity(ECacheRef.BASEENTITY, key, baseEntity);
 		if (updateBaseEntityAttributes) {
 			baseEntity.getBaseEntityAttributes().forEach(bea -> {
 				// ensure for all entityAttribute that baseentity and attribute are not null

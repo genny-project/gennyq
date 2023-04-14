@@ -12,7 +12,6 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 
 import life.genny.qwandaq.message.QDataAnswerMessage;
-import life.genny.qwandaq.utils.SecurityUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jboss.logging.Logger;
 

@@ -8,7 +8,7 @@ import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.constants.ECacheRef;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
@@ -624,6 +624,6 @@ public class BatchLoading {
             loadReport.addSuccess(EReportCategoryType.QUESTION_QUESTION, successFullySaved);
         }
 
-        cm.reindexCache(GennyConstants.CACHE_NAME_QUESTIONQUESTION);
+        cm.reindexCache(ECacheRef.QUESTIONQUESTION);
     }
 }

@@ -1,7 +1,7 @@
 package life.genny.qwandaq.data;
 
 import life.genny.qwandaq.CoreEntityPersistable;
-import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.constants.ECacheRef;
 import life.genny.qwandaq.exception.GennyRuntimeException;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
@@ -22,7 +22,6 @@ import life.genny.qwandaq.serialization.userstore.UserStoreInitializerImpl;
 import life.genny.qwandaq.serialization.userstore.UserStoreKeyInitializerImpl;
 import life.genny.qwandaq.serialization.validation.ValidationInitializerImpl;
 import life.genny.qwandaq.serialization.validation.ValidationKeyInitializerImpl;
-import life.genny.qwandaq.utils.CommonUtils;
 
 import org.infinispan.client.hotrod.DefaultTemplate;
 import org.infinispan.client.hotrod.RemoteCache;
@@ -184,16 +183,16 @@ public class GennyCache {
 	/**
 	 * Return a remote cache for the given entity.
 	 *
-	 * @param entityName
+	 * @param cacheRef - the relevant {@link ECacheRef} to the cache
 	 * 		the name of the associated entity the desired cache
 	 * @return RemoteCache&lt;String, String&gt;
 	 * 		the remote cache associated with the entity
 	 */
-	public RemoteCache<CoreEntityKey, CoreEntityPersistable> getRemoteCacheForEntity(final String entityName) {
+	public RemoteCache<CoreEntityKey, CoreEntityPersistable> getRemoteCacheForEntity(ECacheRef cacheRef) {
 		if (remoteCacheManager == null) {
 			initRemoteCacheManager();
 		}
-		return remoteCacheManager.getCache(entityName);
+		return remoteCacheManager.getCache(cacheRef.cacheName);
 	}
 
 	/**
@@ -203,8 +202,8 @@ public class GennyCache {
 	 * @param key       The key to the entity to fetch
 	 * @return The entity
 	 */
-	public CoreEntitySerializable getEntityFromCache(String cacheName, CoreEntityKey key) {
-		CoreEntityPersistable persistableCoreEntity = getPersistableEntityFromCache(cacheName, key);
+	public CoreEntitySerializable getEntityFromCache(ECacheRef cacheRef, CoreEntityKey key) {
+		CoreEntityPersistable persistableCoreEntity = getPersistableEntityFromCache(cacheRef, key);
 		if (persistableCoreEntity == null) {
 			return null;
 		}
@@ -218,10 +217,10 @@ public class GennyCache {
 	 * @param key The key to the entity to fetch
 	 * @return The persistable core entity
 	 */
-	public CoreEntityPersistable getPersistableEntityFromCache(String cacheName, CoreEntityKey key) {
-		RemoteCache<CoreEntityKey, CoreEntityPersistable> cache = getRemoteCacheForEntity(cacheName);
+	public CoreEntityPersistable getPersistableEntityFromCache(ECacheRef cacheRef, CoreEntityKey key) {
+		RemoteCache<CoreEntityKey, CoreEntityPersistable> cache = getRemoteCacheForEntity(cacheRef);
 		if (cache == null) {
-			throw new NullPointerException("Could not find a cache called " + cacheName);
+			throw new NullPointerException("Could not find a cache called " + cacheRef.cacheName);
 		}
 		return cache.get(key);
 	}
@@ -234,16 +233,16 @@ public class GennyCache {
 	 * @param value     The entity
 	 * @return <b>true</b> if value was persisted successfully or value passed was null, <b>false</b>
 	 */
-	public boolean putEntityIntoCache(String cacheName, CoreEntityKey key, CoreEntityPersistable value) {
+	public boolean putEntityIntoCache(ECacheRef cacheRef, CoreEntityKey key, CoreEntityPersistable value) {
 		if (remoteCacheManager == null) {
 			initRemoteCacheManager();
 		}
-		RemoteCache<CoreEntityKey, CoreEntityPersistable> cache = remoteCacheManager.getCache(cacheName);
+		RemoteCache<CoreEntityKey, CoreEntityPersistable> cache = remoteCacheManager.getCache(cacheRef.cacheName);
 		if (cache == null) {
-			throw new NullPointerException("Cache not found: " + cacheName);
+			throw new NullPointerException("Cache not found: " + cacheRef.cacheName);
 		}
 		if(value == null) {
-			log.warn("[" + cacheName + "]: Value for " + key.getKeyString() + " is null, nothing to be added.");
+			log.warn("[" + cacheRef.cacheName + "]: Value for " + key.getKeyString() + " is null, nothing to be added.");
 			return true;
 		}
 
@@ -254,7 +253,7 @@ public class GennyCache {
 			value.setUpdated(LocalDateTime.now());
 			cache.put(key, value);
 		} catch (Exception e) {
-			log.error(ANSIColour.doColour("Exception when inserting entity (key=" + key.getKeyString() + ") into cache: " + cacheName, ANSIColour.RED));
+			log.error(ANSIColour.doColour("Exception when inserting entity (key=" + key.getKeyString() + ") into cache: " + cacheRef.cacheName, ANSIColour.RED));
 			log.error("Key: " + key.getKeyString());
 			log.error("Value: " + value.toString());
 			log.error(e.getMessage());
@@ -278,8 +277,8 @@ public class GennyCache {
 	 * @param value The serializable entity
 	 * @return True if the entity is successfully inserted into cache, False otherwise
 	 */
-	public boolean putEntityIntoCache(String cacheName, CoreEntityKey key, CoreEntitySerializable value) {
-		return putEntityIntoCache(cacheName, key, value.toPersistableCoreEntity());
+	public boolean putEntityIntoCache(ECacheRef cacheRef, CoreEntityKey key, CoreEntitySerializable value) {
+		return putEntityIntoCache(cacheRef, key, value.toPersistableCoreEntity());
 	}
 
 	/**
@@ -289,23 +288,23 @@ public class GennyCache {
 	 * @param key The key to the entity to remove
 	 * @return The removed persistable core entity
 	 */
-	public CoreEntityPersistable removeEntityFromCache(String cacheName, CoreEntityKey key) {
-		RemoteCache<CoreEntityKey, CoreEntityPersistable> cache = getRemoteCacheForEntity(cacheName);
+	public CoreEntityPersistable removeEntityFromCache(ECacheRef cacheRef, CoreEntityKey key) {
+		RemoteCache<CoreEntityKey, CoreEntityPersistable> cache = getRemoteCacheForEntity(cacheRef);
 		if (cache == null) {
-			throw new NullPointerException("Could not find a cache called " + cacheName);
+			throw new NullPointerException("Could not find a cache called " + cacheRef.cacheName);
 		}
 		return cache.remove(key);
 	}
 
 	public Long getEntityLastUpdatedAt(String entityName, String productCode) {
-		RemoteCache<String, Long> entityLastUpdatedAtCache = remoteCacheManager.getCache(GennyConstants.CACHE_NAME_ENTITY_LAST_UPDATED_AT);
+		RemoteCache<String, Long> entityLastUpdatedAtCache = remoteCacheManager.getCache(ECacheRef.ENTITY_LAST_UPDATED_AT.cacheName);
 		if (entityLastUpdatedAtCache == null) {
 			log.debugf("Cache doesn't exist.. Creating...");
 			entityLastUpdatedAtCache = createEntityLastUpdatedAtCache();
 			if (entityLastUpdatedAtCache == null) {
 
 				log.debugf("Cache creation failed for some reason!!");
-				throw new GennyRuntimeException("Cache creation of " + GennyConstants.CACHE_NAME_ENTITY_LAST_UPDATED_AT + " failed") {
+				throw new GennyRuntimeException("Cache creation of " + ECacheRef.ENTITY_LAST_UPDATED_AT.cacheName + " failed") {
 					
 				};
 			}
@@ -314,24 +313,23 @@ public class GennyCache {
 	}
 
 	private RemoteCache<String, Long> createEntityLastUpdatedAtCache() {
-		return remoteCacheManager.administration().withFlags(CacheContainerAdmin.AdminFlag.VOLATILE).createCache(GennyConstants.CACHE_NAME_ENTITY_LAST_UPDATED_AT, DefaultTemplate.DIST_SYNC);
+		return remoteCacheManager.administration().withFlags(CacheContainerAdmin.AdminFlag.VOLATILE).createCache(ECacheRef.ENTITY_LAST_UPDATED_AT.cacheName, DefaultTemplate.DIST_SYNC);
 	}
 
 	public void updateEntityLastUpdatedAt(String entityName, String productCode, Long updatedTime) {
-		RemoteCache<String, Long> entityLastUpdatedAtCache = remoteCacheManager.getCache(GennyConstants.CACHE_NAME_ENTITY_LAST_UPDATED_AT);
+		RemoteCache<String, Long> entityLastUpdatedAtCache = remoteCacheManager.getCache(ECacheRef.ENTITY_LAST_UPDATED_AT.cacheName);
 		if (entityLastUpdatedAtCache == null) {
 			entityLastUpdatedAtCache = createEntityLastUpdatedAtCache();
 		}
 		entityLastUpdatedAtCache.put(entityName + ":" + productCode, updatedTime);
 	}
 
-	private static final String[] HUGE_CACHES = {GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE};
-	public void reindexCache(String cacheName) {
-		if(CommonUtils.isInArray(HUGE_CACHES, cacheName)) {
-			log.error("Cache: " + cacheName + " is a huge cache! It would take a very long time to index this cache. If it is absolutely necessary please index through the ISPN management console");
+	public void reindexCache(ECacheRef cache) {
+		if(!cache.reindexable) {
+			log.error("Cache: " + cache.cacheName + " is not programattically indexable! It would take a very long time to index this cache. If it is absolutely necessary please index through the ISPN management console");
 			return;
 		}
-		log.debug("Reindexing cache: " + cacheName);
-		remoteCacheManager.administration().reindexCache(cacheName);
+		log.debug("Reindexing cache: " + cache.cacheName);
+		remoteCacheManager.administration().reindexCache(cache.cacheName);
 	}
 }
