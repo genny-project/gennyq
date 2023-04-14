@@ -331,6 +331,7 @@ public class GennyCache {
 			log.error("Cache: " + cacheName + " is a huge cache! It would take a very long time to index this cache. If it is absolutely necessary please index through the ISPN management console");
 			return;
 		}
+		log.debug("Reindexing cache: " + cacheName);
 		remoteCacheManager.administration().reindexCache(cacheName);
 	}
 }
