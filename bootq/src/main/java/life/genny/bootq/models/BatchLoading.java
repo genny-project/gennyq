@@ -8,6 +8,7 @@ import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
@@ -605,6 +606,7 @@ public class BatchLoading {
             String parentCode = row.get("parentcode");
             String targetCode = row.get("targetcode");
             try {
+                questionUtils.removeQuestionQuestion(realmName, parentCode, targetCode);
 				questionUtils.saveQuestionQuestion(questionQuestion);
 			} catch (Exception e) {
                 String entityInfo = realmName + ":" + parentCode + ":" + targetCode;
@@ -621,5 +623,7 @@ public class BatchLoading {
         if(!loadReport.hasErrors(EReportCategoryType.QUESTION_QUESTION)) {
             loadReport.addSuccess(EReportCategoryType.QUESTION_QUESTION, successFullySaved);
         }
+
+        cm.reindexCache(GennyConstants.CACHE_NAME_QUESTIONQUESTION);
     }
 }

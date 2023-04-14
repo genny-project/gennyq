@@ -784,5 +784,9 @@ public class CacheManager {
 	public void updateEntityLastUpdatedAt(String entityName, String productCode, Long updatedTime) {
 		cache.updateEntityLastUpdatedAt(entityName, productCode, updatedTime);
 	}
+
+	public void reindexCache(String cacheName) {
+		cache.reindexCache(cacheName);
+	}
 }
 

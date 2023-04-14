@@ -1,7 +1,6 @@
 package life.genny.qwandaq.data;
 
 import life.genny.qwandaq.CoreEntityPersistable;
-import life.genny.qwandaq.attribute.EntityAttribute;
 import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.exception.GennyRuntimeException;
 import life.genny.qwandaq.models.ANSIColour;
@@ -23,9 +22,9 @@ import life.genny.qwandaq.serialization.userstore.UserStoreInitializerImpl;
 import life.genny.qwandaq.serialization.userstore.UserStoreKeyInitializerImpl;
 import life.genny.qwandaq.serialization.validation.ValidationInitializerImpl;
 import life.genny.qwandaq.serialization.validation.ValidationKeyInitializerImpl;
+import life.genny.qwandaq.utils.CommonUtils;
 
 import org.infinispan.client.hotrod.DefaultTemplate;
-import org.infinispan.client.hotrod.Flag;
 import org.infinispan.client.hotrod.RemoteCache;
 import org.infinispan.client.hotrod.RemoteCacheManager;
 import org.infinispan.client.hotrod.configuration.Configuration;
@@ -258,12 +257,6 @@ public class GennyCache {
 			log.error(ANSIColour.doColour("Exception when inserting entity (key=" + key.getKeyString() + ") into cache: " + cacheName, ANSIColour.RED));
 			log.error("Key: " + key.getKeyString());
 			log.error("Value: " + value.toString());
-			if(value instanceof EntityAttribute ea) {
-				log.error("EntityAttribute ATTRIBUTE: " + ea.getAttributeCode());
-				log.error("EntityAttribute ATTRIBUTE_ID: " + ea.getAttributeId());
-				log.error("EntityAttribute BASEENTITY: " + ea.getBaseEntityCode());
-				log.error("EntityAttribute BASEENTITY_ID: " + ea.getBaseEntityId());
-			}
 			log.error(e.getMessage());
 			StringBuilder sb = new StringBuilder();
 			for(StackTraceElement stack : e.getStackTrace()) {
@@ -330,5 +323,14 @@ public class GennyCache {
 			entityLastUpdatedAtCache = createEntityLastUpdatedAtCache();
 		}
 		entityLastUpdatedAtCache.put(entityName + ":" + productCode, updatedTime);
+	}
+
+	private static final String[] HUGE_CACHES = {GennyConstants.CACHE_NAME_BASEENTITY_ATTRIBUTE};
+	public void reindexCache(String cacheName) {
+		if(CommonUtils.isInArray(HUGE_CACHES, cacheName)) {
+			log.error("Cache: " + cacheName + " is a huge cache! It would take a very long time to index this cache. If it is absolutely necessary please index through the ISPN management console");
+			return;
+		}
+		remoteCacheManager.administration().reindexCache(cacheName);
 	}
 }
