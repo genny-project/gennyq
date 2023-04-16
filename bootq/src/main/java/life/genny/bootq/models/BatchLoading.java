@@ -10,7 +10,7 @@ import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.constants.ECacheRef;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
@@ -704,6 +704,9 @@ public class BatchLoading {
                 continue;
             }
             
+            Map<String, String> row = entry.getValue();
+            String parentCode = row.get("parentcode");
+            String targetCode = row.get("targetcode");
             try {
                 questionUtils.removeQuestionQuestion(realmName, parentCode, targetCode);
 				questionUtils.saveQuestionQuestion(questionQuestion);
@@ -711,9 +714,6 @@ public class BatchLoading {
                 if (count++ % LOG_BATCH_SIZE == 0)
                     log.debugf("Processed %s questionquestions. Continuing...", count);
 			} catch (Exception e) {
-                Map<String, String> row = entry.getValue();
-                String parentCode = row.get("parentcode");
-                String targetCode = row.get("targetcode");
                 String entityInfo = realmName + ":" + parentCode + ":" + targetCode;
                 loadReport.addPersistError(EReportCategoryType.QUESTION_QUESTION, entityInfo, e);
 			}
@@ -726,6 +726,6 @@ public class BatchLoading {
             loadReport.addSuccess(EReportCategoryType.QUESTION_QUESTION, successFullySaved);
         }
 
-        cm.reindexCache(GennyConstants.CACHE_NAME_QUESTIONQUESTION);
+        cm.reindexCache(ECacheRef.QUESTIONQUESTION);
     }
 }

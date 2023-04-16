@@ -19,7 +19,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.constants.ECacheRef;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.QuestionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -279,7 +279,7 @@ public class Cache {
 			// It's a baseentity
 			BaseEntityKey baseEntityKey = new BaseEntityKey(productCode, key);
 			BaseEntity entity = jsonb.fromJson(value, BaseEntity.class);
-			cm.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY,
+			cm.saveEntity(ECacheRef.BASEENTITY,
 					baseEntityKey, entity);
 		} else {
 			cm.writeCache(productCode, key, value);
@@ -366,7 +366,7 @@ public class Cache {
 			// It's a baseentity
 			BaseEntityKey baseEntityKey = new BaseEntityKey(productCode, key);
 			BaseEntity entity = jsonb.fromJson(value, BaseEntity.class);
-			cm.saveEntity(GennyConstants.CACHE_NAME_BASEENTITY, baseEntityKey, entity);
+			cm.saveEntity(ECacheRef.BASEENTITY, baseEntityKey, entity);
 		} else {
 			cm.writeCache(productCode, key, value);
 		}

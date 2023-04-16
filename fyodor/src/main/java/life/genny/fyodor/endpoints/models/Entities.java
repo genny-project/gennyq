@@ -7,7 +7,6 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
@@ -15,7 +14,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.transaction.Transactional;
 
-import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.utils.*;
 import org.jboss.logging.Logger;
 import org.jboss.resteasy.annotations.jaxrs.PathParam;
@@ -27,7 +25,6 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.models.UserToken;
-import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
 
 /**
  * Entities --- Endpoints providing database entity access
@@ -109,33 +106,6 @@ public class Entities {
 		}
 
 		return Response.ok("Removed base entity: " + code + " successfully").build();
-	}
-	
-	/**
-	 * Update a base entity the cache.
-	 *
-	 * @param entity The base entity to be updated
-	 * @return OK response containing the updated base entity
-	 */
-	@PUT
-	@Produces(MediaType.APPLICATION_JSON)
-	public Response update(BaseEntity entity) {
-		String code = entity.getCode();
-		log.info("Put BE " + code);
-		if (userToken == null) {
-			return Response.status(Response.Status.BAD_REQUEST)
-					.entity(HttpUtils.error(NOT_AUTHORIZED_TO_MAKE_THIS_REQUEST)).build();
-		}
-
-		// NOTE: Forgive me for this, but the rulesservice needs it :(
-		String productCode = entity.getRealm();
-		userToken.setProductCode(productCode);
-
-		BaseEntityKey beKey = new BaseEntityKey(productCode, code);
-		cm.saveEntity(productCode, beKey, entity);
-		// beUtils.updateBaseEntity(entity);
-
-		return Response.ok(entity).build();
 	}
 
 	/**

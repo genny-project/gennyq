@@ -11,7 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.constants.ECacheRef;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.converter.CapabilityConverter;
 import life.genny.qwandaq.datatype.DataType;
@@ -166,7 +166,7 @@ public class Validator {
         throws BadDataException {
         String baseEntityCode = row.get("baseentitycode");
 
-        BaseEntity baseEntity = (BaseEntity) cm.getPersistableEntity(GennyConstants.CACHE_NAME_BASEENTITY, new BaseEntityKey(realmName, baseEntityCode));
+        BaseEntity baseEntity = (BaseEntity) cm.getPersistableEntity(ECacheRef.BASEENTITY, new BaseEntityKey(realmName, baseEntityCode));
         if(baseEntity == null)
             throw new BadDataException("No Persisted BaseEntity found for code: " + baseEntityCode + " in product " + realmName);
 

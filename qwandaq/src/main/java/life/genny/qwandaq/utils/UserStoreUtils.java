@@ -1,7 +1,7 @@
 package life.genny.qwandaq.utils;
 
 import life.genny.qwandaq.CoreEntityPersistable;
-import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.constants.ECacheRef;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.serialization.CoreEntitySerializable;
 import life.genny.qwandaq.serialization.userstore.UserStore;
@@ -28,16 +28,16 @@ public class UserStoreUtils {
 
     public CoreEntitySerializable getSerializableUserStore(String productCode, String usercode) {
         UserStoreKey key = new UserStoreKey(productCode, usercode);
-        return cacheManager.getPersistableEntity(GennyConstants.CACHE_NAME_USERSTORE, key).toSerializableCoreEntity();
+        return cacheManager.getPersistableEntity(ECacheRef.USERSTORE, key).toSerializableCoreEntity();
     }
 
     public CoreEntityPersistable getPersistableUserStore(String productCode, String usercode) {
         UserStoreKey key = new UserStoreKey(productCode, usercode);
-        return cacheManager.getPersistableEntity(GennyConstants.CACHE_NAME_USERSTORE, key);
+        return cacheManager.getPersistableEntity(ECacheRef.USERSTORE, key);
     }
 
     public void updateSerializableUserStore(UserStore userStore) {
         UserStoreKey key = new UserStoreKey(userStore.getRealm(), userStore.getUsercode());
-        cacheManager.saveEntity(GennyConstants.CACHE_NAME_USERSTORE, key, userStore.toPersistableCoreEntity());
+        cacheManager.saveEntity(ECacheRef.USERSTORE, key, userStore.toPersistableCoreEntity());
     }
 }

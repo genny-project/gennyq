@@ -15,7 +15,6 @@ import javax.persistence.Transient;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.Set;
 
 @RegisterForReflection

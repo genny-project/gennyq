@@ -1,7 +1,7 @@
 package life.genny.qwandaq.utils;
 
 import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.constants.GennyConstants;
+import life.genny.qwandaq.constants.ECacheRef;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.managers.CacheManager;
@@ -104,7 +104,7 @@ public class AttributeUtils {
      */
     public Validation getValidation(String productCode, String code) {
         ValidationKey key = new ValidationKey(productCode, code);
-        Validation validation = (Validation) cm.getPersistableEntity(GennyConstants.CACHE_NAME_VALIDATION, key);
+        Validation validation = (Validation) cm.getPersistableEntity(ECacheRef.VALIDATION, key);
         if (validation == null) {
             throw new ItemNotFoundException(productCode, code);
         }
@@ -229,7 +229,7 @@ public class AttributeUtils {
      */
     public DataType getDataType(String productCode, String dttCode, boolean bundleValidationList) {
         DataTypeKey key = new DataTypeKey(productCode, dttCode);
-        DataType dataType = (DataType) cm.getPersistableEntity(GennyConstants.CACHE_NAME_DATATYPE, key);
+        DataType dataType = (DataType) cm.getPersistableEntity(ECacheRef.DATATYPE, key);
         if(dataType == null) {
             throw new ItemNotFoundException(productCode, "DataType Code: " + dttCode);
         }
@@ -286,7 +286,7 @@ public class AttributeUtils {
     public void saveValidation(Validation validation) {
         String productCode = validation.getRealm();
         ValidationKey key = new ValidationKey(productCode, validation.getCode());
-        cm.saveEntity(GennyConstants.CACHE_NAME_VALIDATION, key, validation);
+        cm.saveEntity(ECacheRef.VALIDATION, key, validation);
         updateAttributesLastUpdatedAt(productCode, System.currentTimeMillis());
     }
 
@@ -296,7 +296,7 @@ public class AttributeUtils {
     public void saveDataType(DataType dataType) {
         String productCode = dataType.getRealm();
         DataTypeKey key = new DataTypeKey(productCode, dataType.getDttCode());
-        cm.saveEntity(GennyConstants.CACHE_NAME_DATATYPE, key, dataType);
+        cm.saveEntity(ECacheRef.DATATYPE, key, dataType);
         updateAttributesLastUpdatedAt(productCode, System.currentTimeMillis());
     }
 
@@ -306,7 +306,7 @@ public class AttributeUtils {
     public void saveAttribute(Attribute attribute) {
         String productCode = attribute.getRealm();
         AttributeKey key = new AttributeKey(productCode, attribute.getCode());
-        cm.saveEntity(GennyConstants.CACHE_NAME_ATTRIBUTE, key, attribute);
+        cm.saveEntity(ECacheRef.ATTRIBUTE, key, attribute);
         updateAttributesLastUpdatedAt(productCode, System.currentTimeMillis());
     }
 
@@ -351,7 +351,7 @@ public class AttributeUtils {
     }
 
     public Long getAttributesLastUpdatedAt(String productCode) {
-        Long entityLastUpdatedAt = cm.getEntityLastUpdatedAt(GennyConstants.CACHE_NAME_ATTRIBUTE, productCode);
+        Long entityLastUpdatedAt = cm.getEntityLastUpdatedAt(ECacheRef.ATTRIBUTE.cacheName, productCode);
         if(entityLastUpdatedAt != null)
             return entityLastUpdatedAt;
         entityLastUpdatedAt = System.currentTimeMillis();
@@ -360,6 +360,6 @@ public class AttributeUtils {
     }
 
     public void updateAttributesLastUpdatedAt(String productCode, Long updatedTime) {
-        cm.updateEntityLastUpdatedAt(GennyConstants.CACHE_NAME_ATTRIBUTE, productCode, updatedTime);
+        cm.updateEntityLastUpdatedAt(ECacheRef.ATTRIBUTE.cacheName, productCode, updatedTime);
     }
 }
