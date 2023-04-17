@@ -137,17 +137,17 @@ public class InternalConsumer {
 		List<BaseEntity> definitions = new ArrayList<>();
 		BaseEntity definition = null; // For wip usage
     
-    target = beUtils.getBaseEntity(targetCode);
-    // TODO: This will break if it is an old target without a processId
-    BaseEntity def = defUtils.getDEF(target);
-    definitions.add(def);
-
 		if (!StringUtils.isBlank(processId)) {
 			ProcessData processData = qwandaUtils.fetchProcessData(processId);
 			if (processData == null) {
 				log.error("Process data not found for processId: " + processId);
 				return;
 			}
+      target = beUtils.getBaseEntity(processData.getTargetCode());
+      // TODO: This will break if it is an old target without a processId
+      BaseEntity def = defUtils.getDEF(target);
+      definitions.add(def);
+
 			BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
       // update transient target with process enity information
       log.debug("Adding processentity attributes to target");
@@ -163,6 +163,11 @@ public class InternalConsumer {
 				BaseEntity processDef = beUtils.getBaseEntity(defCode, true);
 				definitions.add(processDef);
 			}
+    } else {
+      target = beUtils.getBaseEntity(targetCode);
+      // TODO: This will break if it is an old target without a processId
+      BaseEntity def = defUtils.getDEF(target);
+      definitions.add(def);
     }
 
 		Optional<EntityAttribute> searchEA = Optional.empty();
