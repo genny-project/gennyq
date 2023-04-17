@@ -22,6 +22,7 @@ import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.entity.PCM;
 import life.genny.qwandaq.exception.checked.GraphQLException;
 import life.genny.qwandaq.exception.checked.RoleException;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.exception.runtime.response.GennyResponseException;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.message.QEventMessage;
@@ -44,7 +45,7 @@ public class NavigationService extends KogitoService {
 	 * Trigger the default redirection for the user.
 	 */
 	public void redirect() {
-		redirect(null);
+    redirect(null);
 	}
 
 	/**
@@ -100,7 +101,15 @@ public class NavigationService extends KogitoService {
 		// fetch user's linked summary
 		String userCode = userToken.getUserCode();
 		String productCode = userToken.getProductCode();
-		EntityAttribute summary = beaUtils.getEntityAttribute(productCode, userCode, Attribute.LNK_SUMMARY);
+    		EntityAttribute summary;
+    		try {
+			summary = beaUtils.getEntityAttribute(productCode, userCode, Attribute.LNK_SUMMARY);
+    		} catch (ItemNotFoundException e) {
+			log.warn("Could not find user summary/dashboard for: " + userCode);
+      			e.printStackTrace();
+      			return;
+    		}
+		
 		String summaryCode = CommonUtils.cleanUpAttributeValue(summary.getValueString());
 		log.debug("Found summary PCM: " + summaryCode);
 
