@@ -152,7 +152,7 @@ public class InternalConsumer {
       // update transient target with process enity information
       log.debug("Adding processentity attributes to target");
       for (EntityAttribute ea : processEntity.getBaseEntityAttributes()) {
-        EntityAttribute copy = ea;
+        EntityAttribute copy = ea.clone();
         copy.setBaseEntityCode(target.getCode());
         target.addAttribute(copy);
       }
