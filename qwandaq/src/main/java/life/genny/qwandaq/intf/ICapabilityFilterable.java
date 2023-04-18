@@ -5,6 +5,8 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
+import javax.json.bind.annotation.JsonbTransient;
+
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.datatype.capability.core.Capability;
@@ -23,6 +25,11 @@ public interface ICapabilityFilterable {
     }
     
     public Set<Capability> getCapabilityRequirements();
+
+    @JsonbTransient
+    public default boolean hasCapabilityRequirements() {
+        return getCapabilityRequirements() != null && !getCapabilityRequirements().isEmpty();
+    }
 
     public default void setCapabilityRequirements(Capability... requirements) {
         setCapabilityRequirements(new HashSet<>(Arrays.asList(requirements)));

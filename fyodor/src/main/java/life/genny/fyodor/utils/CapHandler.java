@@ -1,6 +1,11 @@
 package life.genny.fyodor.utils;
 
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -12,6 +17,8 @@ import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
 import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.entity.search.SearchEntity;
+import life.genny.qwandaq.entity.search.clause.Clause;
+import life.genny.qwandaq.entity.search.clause.ClauseArgument;
 import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import life.genny.qwandaq.entity.search.trait.Action;
 import life.genny.qwandaq.entity.search.trait.Column;
@@ -46,7 +53,7 @@ public class CapHandler extends Manager {
 		if (hasSecureToken(userToken))
 			return;
 		
-		if(!searchEntity.hasRequirements()) {
+		if(!searchEntity.hasCapabilityRequirements()) {
 			log.debug("no requirements to check for searchEntity: " + searchEntity.getCode() + ". Skipping");
 			return;
 		} else {
@@ -56,7 +63,7 @@ public class CapHandler extends Manager {
 		CapabilitySet userCapabilities = capMan.getUserCapabilities();
 		refineColumnsFromCapabilities(searchEntity, userCapabilities);
 		refineActionsFromCapabilities(searchEntity, userCapabilities);
-		refineFiltersFromCapabilities(searchEntity, userCapabilities);
+		refineClauseContainersFromCapabilities(searchEntity, userCapabilities);
 		refineSortsFromCapabilities(searchEntity, userCapabilities);
 
 	}
@@ -90,24 +97,74 @@ public class CapHandler extends Manager {
 		searchEntity.setTraits(Sort.class, sorts);
 	}
 
+	private int filterClauseContainerBFS(ClauseContainer container, CapabilitySet userCapabilities) {
+		Queue<ClauseArgument> queue = new LinkedList<>();
+		ReqConfig requirementsConfig = new ReqConfig();
+
+		int numRemoved = 0;
+
+		// offer children of initial container
+		if(container.getAnd() != null)
+			queue.offer(container.getAnd());
+		
+		if(container.getOr() != null)
+			queue.offer(container.getOr());
+
+		if(container.getFilter() != null && !container.getFilter().requirementsMet(userCapabilities, requirementsConfig)) {
+			container.setFilter(null);
+		}
+
+		ClauseArgument currentClause;
+		Set<ClauseArgument> visited = new LinkedHashSet<>();
+
+		while(!queue.isEmpty()) {
+			currentClause = queue.poll();
+			log.trace("[BFS] Iterating through: " + currentClause);
+			if(visited.contains(currentClause)) {
+				log.trace("[BFS] Already visited: " + currentClause);
+				continue;
+			}
+
+			// Remove all filters from the current clause (and or or) that do not have their requirements met
+			// if any children have ands or ors, visit them
+			if(currentClause instanceof Clause clause && clause.hasCapabilityRequirements()) {
+				Iterator<ClauseContainer> iter = clause.getClauseContainers().iterator();
+				if(iter.hasNext()) {
+					ClauseContainer child = iter.next();
+					while(iter.hasNext()) {
+						if(child.getFilter() != null && !child.getFilter().requirementsMet(userCapabilities, requirementsConfig)) {
+							iter.remove();
+							++numRemoved;
+						}
+
+						// offer children of current clause
+						if(child.getAnd() != null)
+							queue.offer(child.getAnd());
+
+						if(child.getOr() != null)
+							queue.offer(child.getOr());
+						child = iter.next();
+					}
+				}
+			}
+
+			visited.add(currentClause);
+		}
+
+		return numRemoved;
+	}
+
 	/**
 	 * @param searchEntity
 	 */
-	public void refineFiltersFromCapabilities(SearchEntity searchEntity, CapabilitySet userCapabilities) {
+	public void refineClauseContainersFromCapabilities(SearchEntity searchEntity, CapabilitySet userCapabilities) {
 		List<ClauseContainer> containers = searchEntity.getClauseContainers();
-		log.info("Filtering " + containers.size() + " filters"); 
-		containers = containers.stream()
-				.filter(container -> {
-					// no filter => no capability requirements => let it through
-					if(container.getFilter() == null)
-						return true;
-					
-					log.info("Filtering " + container.getFilter().getCode());
-					return container.requirementsMet(userCapabilities);
-				})
-				.collect(Collectors.toList());
-
-		log.info("Filtered down to " + containers.size() + " filters");
+		log.info("Filtering from " + containers.size() + " surface level clauseContainers"); 
+		int numRemoved = 0;
+		for(ClauseContainer container : containers) {
+			numRemoved += filterClauseContainerBFS(container, userCapabilities);
+		}
+		log.info("Filtered away " + numRemoved + " filters that do not meet requirements in the clause container tree for: " + searchEntity.getCode());
 		searchEntity.setClauseContainers(containers);
 	}
 
@@ -150,21 +207,18 @@ public class CapHandler extends Manager {
 		//  TODO: Get rid of this service code check. Not ideal
 		// TODO: We also need to consolidate what it means to be a service user
 		boolean isService = hasSecureToken(userToken);
-		if(!isService) {
-			log.info("Checking: " + trait);
-			log.info("Requirements: " + CommonUtils.getArrayString(trait.getCapabilityRequirements()));
-			return trait.requirementsMet(userCapabilities, reqConfig);
-		} else {
+		if(isService) {
 			log.info("Service token. Bypassing requirements");
+			return true;
 		}
-		return true;
+
+		log.info("Checking: " + trait);
+		log.info("Requirements: " + CommonUtils.getArrayString(trait.getCapabilityRequirements()));
+		return trait.requirementsMet(userCapabilities, reqConfig);
 	}
 
 	public static boolean hasSecureToken(UserToken userToken) {
 		if(GennyConstants.PER_SERVICE.equals(userToken.getUserCode()))
-			return true;
-			
-		if(GennyConstants.PER_SERVICE.equals(userToken.getCode()))
 			return true;
 		
 		if(userToken.hasRole("service"))

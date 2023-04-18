@@ -54,6 +54,30 @@ public class ClauseContainer {
   }
 
   public boolean requirementsMet(CapabilitySet userCapabilities) {
-    return filter.requirementsMet(userCapabilities);
+    return filter != null && filter.requirementsMet(userCapabilities);
+  }
+
+  public boolean hasCapabilityRequirements() {
+    if(filter != null && filter.hasCapabilityRequirements())
+      return true;
+    if(and != null && and.hasCapabilityRequirements())
+      return true;
+    if(or != null && or.hasCapabilityRequirements())
+      return true;
+    return false;
+  }
+
+  public String toString() {
+    return new StringBuilder("ClauseContainer: [")
+    .append("requirements: ")
+    .append(hasCapabilityRequirements())
+    .append(", and: ")
+    .append(and != null ? and : "null")
+    .append(", or: ")
+    .append(or != null ? or : "null")
+    .append(", filter: ")
+    .append(filter != null ? filter.getCode() : "null")
+    .append("]")
+    .toString();
   }
 }

@@ -338,7 +338,9 @@ public class FyodorUltra {
 		Or or = clauseContainer.getOr();
 
 		Clause clause = (and != null ? and : or);
-
+		if(clause == null) {
+			throw new QueryBuilderException("Invalid ClauseContainer: " + clauseContainer);
+		}
 		// find predicate for each clause argument
 		List<Predicate> predicates = new ArrayList<>();
 		for (ClauseContainer child : clause.getClauseContainers())

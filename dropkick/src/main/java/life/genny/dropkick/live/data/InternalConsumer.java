@@ -202,10 +202,12 @@ public class InternalConsumer {
 
 		log.debug("Using Search Entity: " + searchEntity);
 		// Filter by name wildcard provided by user
+		if(!StringUtils.isBlank(searchText)) {
 		searchEntity.add(new Or(
 			new Filter(Attribute.PRI_NAME, Operator.LIKE, searchText + "%"),
 			new Filter(Attribute.PRI_NAME, Operator.LIKE, "% " + searchText + "%")));
-
+		}
+		
 		searchEntity.add(new Column("PRI_NAME", "Name"));
 
 		// init context map

@@ -356,7 +356,7 @@ public class RoleManager extends Manager {
 	public static String cleanRoleCode(final String rawRoleCode) {
 		String cleanRoleCode = rawRoleCode.toUpperCase();
 		if (!cleanRoleCode.startsWith(Prefix.ROL_)) {
-			cleanRoleCode = Prefix.ROL_ + cleanRoleCode;
+			cleanRoleCode = Prefix.ROL_.concat(cleanRoleCode);
 		}
 
 		return cleanRoleCode;
