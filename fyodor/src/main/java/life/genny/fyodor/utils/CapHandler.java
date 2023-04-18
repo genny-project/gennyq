@@ -145,7 +145,7 @@ public class CapHandler extends Manager {
 	 */
 	public void refineClauseContainersFromCapabilities(SearchEntity searchEntity, CapabilitySet userCapabilities) {
 		List<ClauseContainer> containers = searchEntity.getClauseContainers();
-		log.info("Filtering " + containers.size() + " filters"); 
+		log.info("Filtering " + containers.size() + " clauseContainers"); 
 		for(ClauseContainer container : containers) {
 			filterClauseContainerBFS(container, userCapabilities);
 		}
