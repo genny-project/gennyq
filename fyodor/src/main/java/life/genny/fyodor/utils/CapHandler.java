@@ -1,5 +1,6 @@
 package life.genny.fyodor.utils;
 
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -122,11 +123,21 @@ public class CapHandler extends Manager {
 			}
 
 			if(currentClause instanceof Clause clause && clause.hasCapabilityRequirements()) {
-				for(ClauseContainer child : clause.getClauseContainers()) {
-					if(child.getFilter() != null && !child.getFilter().requirementsMet(userCapabilities, requirementsConfig)) {
-						child.setFilter(null);
+				Iterator<ClauseContainer> iter = clause.getClauseContainers().iterator();
+				if(iter.hasNext()) {
+					ClauseContainer child = iter.next();
+					while(iter.hasNext()) {
+						if(child.getFilter() != null && !child.getFilter().requirementsMet(userCapabilities, requirementsConfig)) {
+							iter.remove();
+						}
+						child = iter.next();
 					}
 				}
+				// for(ClauseContainer child : clause.getClauseContainers()) {
+				// 	if(child.getFilter() != null && !child.getFilter().requirementsMet(userCapabilities, requirementsConfig)) {
+				// 		child.setFilter(null);
+				// 	}
+				// }
 			}
 
 			visited.add(currentClause);
