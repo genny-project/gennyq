@@ -66,4 +66,18 @@ public class ClauseContainer {
       return true;
     return false;
   }
+
+  public String toString() {
+    return new StringBuilder("ClauseContainer: [")
+    .append("requirements: ")
+    .append(hasCapabilityRequirements())
+    .append(", and: ")
+    .append(and != null ? and : "null")
+    .append(", or: ")
+    .append(or != null ? or : "null")
+    .append(", filter: ")
+    .append(filter != null ? filter.getCode() : "null")
+    .append("]")
+    .toString();
+  }
 }
