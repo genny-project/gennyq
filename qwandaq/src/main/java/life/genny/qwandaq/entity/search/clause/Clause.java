@@ -55,4 +55,12 @@ public class Clause implements ClauseArgument {
 		this.clauseContainers = clauseContainers;
 	}
 
+	public boolean hasCapabilityRequirements() {
+		for(ClauseContainer c : clauseContainers) {
+			if(c.hasCapabilityRequirements())
+				return true;
+		}
+		return false;
+	}
+
 }

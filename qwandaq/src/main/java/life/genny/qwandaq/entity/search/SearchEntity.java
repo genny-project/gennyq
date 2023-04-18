@@ -94,20 +94,18 @@ public class SearchEntity extends BaseEntity {
 	 * Check whether anything in this search entity has capability requirements
 	 * @return <b>true</b> if there is at least one CapabilityRequirement. <b>false</b> otherwise
 	 */
-	@JsonbTransient
-	public boolean hasRequirements() {
-		// Yucky n2. Will need to modify this later
+	@Override
+	public boolean hasCapabilityRequirements() {
 		for(Map.Entry<Integer, List<? extends Trait>> traitList : traits.entrySet()) {
 			for(Trait t : traitList.getValue()) {
-				if(!t.getCapabilityRequirements().isEmpty())
+				if(t.hasCapabilityRequirements())
 					return true;
 			}
 		}
 
 		for(ClauseContainer c : clauseContainers) {
-			if(c.getFilter() != null) {
-				if(!c.getFilter().getCapabilityRequirements().isEmpty())
-					return true;
+			if(c.hasCapabilityRequirements()) {
+				return true;
 			}
 		}
 

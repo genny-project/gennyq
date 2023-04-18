@@ -54,6 +54,16 @@ public class ClauseContainer {
   }
 
   public boolean requirementsMet(CapabilitySet userCapabilities) {
-    return filter.requirementsMet(userCapabilities);
+    return filter != null && filter.requirementsMet(userCapabilities);
+  }
+
+  public boolean hasCapabilityRequirements() {
+    if(filter != null && filter.hasCapabilityRequirements())
+      return true;
+    if(and != null && and.hasCapabilityRequirements())
+      return true;
+    if(or != null && or.hasCapabilityRequirements())
+      return true;
+    return false;
   }
 }

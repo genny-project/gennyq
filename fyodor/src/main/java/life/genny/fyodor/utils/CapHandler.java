@@ -46,7 +46,7 @@ public class CapHandler extends Manager {
 		if (hasSecureToken(userToken))
 			return;
 		
-		if(!searchEntity.hasRequirements()) {
+		if(!searchEntity.hasCapabilityRequirements()) {
 			log.debug("no requirements to check for searchEntity: " + searchEntity.getCode() + ". Skipping");
 			return;
 		} else {
@@ -150,14 +150,14 @@ public class CapHandler extends Manager {
 		//  TODO: Get rid of this service code check. Not ideal
 		// TODO: We also need to consolidate what it means to be a service user
 		boolean isService = hasSecureToken(userToken);
-		if(!isService) {
-			log.info("Checking: " + trait);
-			log.info("Requirements: " + CommonUtils.getArrayString(trait.getCapabilityRequirements()));
-			return trait.requirementsMet(userCapabilities, reqConfig);
-		} else {
+		if(isService) {
 			log.info("Service token. Bypassing requirements");
+			return true;
 		}
-		return true;
+
+		log.info("Checking: " + trait);
+		log.info("Requirements: " + CommonUtils.getArrayString(trait.getCapabilityRequirements()));
+		return trait.requirementsMet(userCapabilities, reqConfig);
 	}
 
 	public static boolean hasSecureToken(UserToken userToken) {
