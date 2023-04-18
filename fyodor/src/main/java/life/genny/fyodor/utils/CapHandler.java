@@ -1,6 +1,10 @@
 package life.genny.fyodor.utils;
 
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -12,6 +16,8 @@ import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.datatype.capability.core.CapabilitySet;
 import life.genny.qwandaq.datatype.capability.requirement.ReqConfig;
 import life.genny.qwandaq.entity.search.SearchEntity;
+import life.genny.qwandaq.entity.search.clause.Clause;
+import life.genny.qwandaq.entity.search.clause.ClauseArgument;
 import life.genny.qwandaq.entity.search.clause.ClauseContainer;
 import life.genny.qwandaq.entity.search.trait.Action;
 import life.genny.qwandaq.entity.search.trait.Column;
@@ -56,7 +62,7 @@ public class CapHandler extends Manager {
 		CapabilitySet userCapabilities = capMan.getUserCapabilities();
 		refineColumnsFromCapabilities(searchEntity, userCapabilities);
 		refineActionsFromCapabilities(searchEntity, userCapabilities);
-		refineFiltersFromCapabilities(searchEntity, userCapabilities);
+		refineClauseContainersFromCapabilities(searchEntity, userCapabilities);
 		refineSortsFromCapabilities(searchEntity, userCapabilities);
 
 	}
@@ -90,22 +96,65 @@ public class CapHandler extends Manager {
 		searchEntity.setTraits(Sort.class, sorts);
 	}
 
+	private void filterClauseContainerBFS(ClauseContainer container, CapabilitySet userCapabilities) {
+		Queue<ClauseArgument> queue = new LinkedList<>();
+		ReqConfig requirementsConfig = new ReqConfig();
+
+		// offer children of container
+		if(container.getAnd() != null)
+			queue.offer(container.getAnd());
+		
+		if(container.getOr() != null)
+			queue.offer(container.getOr());
+
+		if(container.getFilter() != null && !container.getFilter().requirementsMet(userCapabilities, requirementsConfig)) {
+			container.setFilter(null);
+		}
+
+		ClauseArgument currentClause;
+		Set<ClauseArgument> visited = new LinkedHashSet<>();
+		while(!queue.isEmpty()) {
+			currentClause = queue.poll();
+			log.trace("[BFS] Iterating through: " + currentClause);
+			if(visited.contains(currentClause)) {
+				log.trace("[BFS] Already visited: " + currentClause);
+				continue;
+			}
+
+			if(currentClause instanceof Clause clause && clause.hasCapabilityRequirements()) {
+				for(ClauseContainer child : clause.getClauseContainers()) {
+					if(child.getFilter() != null && !child.getFilter().requirementsMet(userCapabilities, requirementsConfig)) {
+						child.setFilter(null);
+					}
+				}
+			}
+
+			visited.add(currentClause);
+
+			// offer children of container
+			if(container.getAnd() != null)
+				queue.offer(container.getAnd());
+			
+			if(container.getOr() != null)
+				queue.offer(container.getOr());
+		}
+	}
+
 	/**
 	 * @param searchEntity
 	 */
-	public void refineFiltersFromCapabilities(SearchEntity searchEntity, CapabilitySet userCapabilities) {
+	public void refineClauseContainersFromCapabilities(SearchEntity searchEntity, CapabilitySet userCapabilities) {
 		List<ClauseContainer> containers = searchEntity.getClauseContainers();
 		log.info("Filtering " + containers.size() + " filters"); 
-		containers = containers.stream()
-				.filter(container -> {
-					// no filter => no capability requirements => let it through
-					if(container.getFilter() == null)
-						return true;
-					
-					log.info("Filtering " + container.getFilter().getCode());
-					return container.requirementsMet(userCapabilities);
-				})
-				.collect(Collectors.toList());
+		for(ClauseContainer container : containers) {
+			filterClauseContainerBFS(container, userCapabilities);
+		}
+		// containers = containers.stream()
+		// 		.filter(container -> {
+		// 			log.info("Filtering " + container.getFilter().getCode());
+		// 			return container.requirementsMet(userCapabilities);
+		// 		})
+		// 		.collect(Collectors.toList());
 
 		log.info("Filtered down to " + containers.size() + " filters");
 		searchEntity.setClauseContainers(containers);
@@ -162,9 +211,6 @@ public class CapHandler extends Manager {
 
 	public static boolean hasSecureToken(UserToken userToken) {
 		if(GennyConstants.PER_SERVICE.equals(userToken.getUserCode()))
-			return true;
-			
-		if(GennyConstants.PER_SERVICE.equals(userToken.getCode()))
 			return true;
 		
 		if(userToken.hasRole("service"))
