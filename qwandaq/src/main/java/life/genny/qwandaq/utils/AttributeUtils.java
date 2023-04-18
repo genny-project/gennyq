@@ -106,7 +106,7 @@ public class AttributeUtils {
         ValidationKey key = new ValidationKey(productCode, code);
         Validation validation = (Validation) cm.getPersistableEntity(ECacheRef.VALIDATION, key);
         if (validation == null) {
-            throw new ItemNotFoundException(productCode, code);
+            throw new ItemNotFoundException(productCode, "validation", code);
         }
         return validation;
     }
@@ -201,7 +201,7 @@ public class AttributeUtils {
     public Attribute getAttribute(String productCode, String code, boolean bundleDataType, boolean bundleValidationList) {
         Attribute attribute = cm.getAttribute(productCode, code);
         if (attribute == null) {
-            throw new ItemNotFoundException(productCode, "attribute: " + code);
+            throw new ItemNotFoundException(productCode, "attribute", code);
         }
         if(bundleDataType) {
             try {
@@ -210,7 +210,7 @@ public class AttributeUtils {
             } catch(ItemNotFoundException e) {
                 log.error("DataType not found for Attribute: " + code);
                 log.error("DataType code: " + attribute.getDttCode());
-                throw new ItemNotFoundException("DataType not found for attribute: " + productCode + ":" + code, e);
+                throw new ItemNotFoundException(productCode, "datatype in attribute: " + code, attribute.getDttCode(), e);
             }
         }
         return attribute;
@@ -231,7 +231,7 @@ public class AttributeUtils {
         DataTypeKey key = new DataTypeKey(productCode, dttCode);
         DataType dataType = (DataType) cm.getPersistableEntity(ECacheRef.DATATYPE, key);
         if(dataType == null) {
-            throw new ItemNotFoundException(productCode, "DataType Code: " + dttCode);
+            throw new ItemNotFoundException(productCode, "datatype", dttCode);
         }
         if (bundleValidationList) {
             Set<Validation> validationList = getValidationList(dataType);

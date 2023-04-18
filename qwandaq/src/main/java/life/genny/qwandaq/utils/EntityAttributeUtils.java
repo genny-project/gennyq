@@ -263,7 +263,7 @@ public class EntityAttributeUtils {
 				.getPersistableEntity(ECacheRef.BASEENTITY_ATTRIBUTE, key);
 
 		if (entityAttribute == null) {
-			throw new ItemNotFoundException(productCode, "EntityAttribute: " + baseEntityCode + ":" + attributeCode);
+			throw new ItemNotFoundException(productCode, "EntityAttribute", baseEntityCode + ":" + attributeCode);
 		}
 
 		if (embedAttribute) {
@@ -412,7 +412,7 @@ public class EntityAttributeUtils {
 					if (attribute == null) {
 						log.debugf("Attribute not found for BaseEntityAttribute [%s:%s:%s]", productCode,
 								baseEntityCode, ea.getAttributeCode());
-						throw new ItemNotFoundException(productCode, ea.getAttributeCode());
+						throw new ItemNotFoundException(productCode, "attribute", ea.getAttributeCode());
 					}
 					log.debugf("Attribute embedded into BaseEntityAttribute [%s:%s:%s]", productCode, baseEntityCode,
 							ea.getAttributeCode());

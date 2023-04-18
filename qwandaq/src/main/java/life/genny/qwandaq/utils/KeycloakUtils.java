@@ -483,7 +483,7 @@ public class KeycloakUtils {
 
         EntityAttribute id = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_UUID);
         if (id == null) {
-            throw new ItemNotFoundException(productCode, userCode, Attribute.PRI_UUID);
+            throw new ItemNotFoundException(productCode, "attribute", userCode, Attribute.PRI_UUID);
         }
         String uuid = id.getValueString().toLowerCase();
 
@@ -509,7 +509,7 @@ public class KeycloakUtils {
 
         EntityAttribute id = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_UUID, true);
         if (id == null) {
-            throw new ItemNotFoundException(productCode, userCode, Attribute.PRI_UUID);
+            throw new ItemNotFoundException(productCode, "attribute", userCode, Attribute.PRI_UUID);
         }
         String uuid = id.getValueString().toLowerCase();
 

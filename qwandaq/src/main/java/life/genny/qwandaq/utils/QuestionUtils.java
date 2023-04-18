@@ -3,6 +3,7 @@ package life.genny.qwandaq.utils;
 import life.genny.qwandaq.Question;
 import life.genny.qwandaq.QuestionQuestion;
 import life.genny.qwandaq.constants.ECacheRef;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.managers.CacheManager;
 import life.genny.qwandaq.serialization.baseentity.BaseEntity;
 import life.genny.qwandaq.serialization.baseentity.BaseEntityKey;
@@ -187,7 +188,11 @@ public class QuestionUtils {
     }
 
     public Question getQuestionFromQuestionCode(String productCode, String questionCode) {
-        return cacheManager.getQuestion(productCode, questionCode);
+        Question question = cacheManager.getQuestion(productCode, questionCode);
+        if(question == null)
+            throw new ItemNotFoundException(productCode, "question", questionCode);
+
+        return question;
     }
 
     public Question getQuestionFromBaseEntityCode(String productCode, String baseEntityCode) {
@@ -227,7 +232,7 @@ public class QuestionUtils {
         updateAttributesInQuestion(question, attributes);
         if(question.getAttribute() == null) {
             log.errorf("Attribute missing for question [%s:%s]", question.getRealm(), question.getAttributeCode());
-            // throw new ItemNotFoundException(question.getRealm(), question.getAttributeCode());
+            // throw new ItemNotFoundException(question.getRealm(), "question", question.getAttributeCode());
         }
         return question;
     }

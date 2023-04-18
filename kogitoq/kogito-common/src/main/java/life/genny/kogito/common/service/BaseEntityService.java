@@ -90,7 +90,7 @@ public class BaseEntityService extends KogitoService {
 		String defaultName = StringUtils.capitalize(defCode.substring(4));
 		EntityAttribute prefixAttr = beaUtils.getEntityAttribute(definition.getRealm(), defCode, Attribute.PRI_PREFIX, false);
 		if (prefixAttr == null) {
-			throw new ItemNotFoundException(definition.getRealm(), defCode, Attribute.PRI_PREFIX);
+			throw new ItemNotFoundException(definition.getRealm(), "definition entity attribute", defCode, Attribute.PRI_PREFIX);
 		}
 		String prefixValue = prefixAttr.getValueString();
 		BaseEntity entity = beUtils.create(definition, defaultName, prefixValue + "_" + processId.toUpperCase());

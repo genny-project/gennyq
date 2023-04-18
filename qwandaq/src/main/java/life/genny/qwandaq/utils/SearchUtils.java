@@ -162,7 +162,7 @@ public class SearchUtils {
 		if (searchEntity == null) {
 			searchEntity = cm.getObject(userToken.getProductCode(), code, SearchEntity.class);
 			if(searchEntity == null) {
-				throw new ItemNotFoundException(userToken.getProductCode(), "Search Entity with code: " + code + " in cache");
+				throw new ItemNotFoundException(userToken.getProductCode(), "search entity", code + " in cache");
 			}
 			searchEntity.setCode(sessionCode);
 		}
