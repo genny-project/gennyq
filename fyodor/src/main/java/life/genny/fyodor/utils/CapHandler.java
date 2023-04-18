@@ -97,11 +97,13 @@ public class CapHandler extends Manager {
 		searchEntity.setTraits(Sort.class, sorts);
 	}
 
-	private void filterClauseContainerBFS(ClauseContainer container, CapabilitySet userCapabilities) {
+	private int filterClauseContainerBFS(ClauseContainer container, CapabilitySet userCapabilities) {
 		Queue<ClauseArgument> queue = new LinkedList<>();
 		ReqConfig requirementsConfig = new ReqConfig();
 
-		// offer children of container
+		int numRemoved = 0;
+
+		// offer children of initial container
 		if(container.getAnd() != null)
 			queue.offer(container.getAnd());
 		
@@ -114,6 +116,7 @@ public class CapHandler extends Manager {
 
 		ClauseArgument currentClause;
 		Set<ClauseArgument> visited = new LinkedHashSet<>();
+
 		while(!queue.isEmpty()) {
 			currentClause = queue.poll();
 			log.trace("[BFS] Iterating through: " + currentClause);
@@ -122,6 +125,8 @@ public class CapHandler extends Manager {
 				continue;
 			}
 
+			// Remove all filters from the current clause (and or or) that do not have their requirements met
+			// if any children have ands or ors, visit them
 			if(currentClause instanceof Clause clause && clause.hasCapabilityRequirements()) {
 				Iterator<ClauseContainer> iter = clause.getClauseContainers().iterator();
 				if(iter.hasNext()) {
@@ -129,26 +134,24 @@ public class CapHandler extends Manager {
 					while(iter.hasNext()) {
 						if(child.getFilter() != null && !child.getFilter().requirementsMet(userCapabilities, requirementsConfig)) {
 							iter.remove();
+							++numRemoved;
 						}
+
+						// offer children of current clause
+						if(child.getAnd() != null)
+							queue.offer(child.getAnd());
+
+						if(child.getOr() != null)
+							queue.offer(child.getOr());
 						child = iter.next();
 					}
 				}
-				// for(ClauseContainer child : clause.getClauseContainers()) {
-				// 	if(child.getFilter() != null && !child.getFilter().requirementsMet(userCapabilities, requirementsConfig)) {
-				// 		child.setFilter(null);
-				// 	}
-				// }
 			}
 
 			visited.add(currentClause);
-
-			// offer children of container
-			if(container.getAnd() != null)
-				queue.offer(container.getAnd());
-			
-			if(container.getOr() != null)
-				queue.offer(container.getOr());
 		}
+
+		return numRemoved;
 	}
 
 	/**
@@ -156,18 +159,12 @@ public class CapHandler extends Manager {
 	 */
 	public void refineClauseContainersFromCapabilities(SearchEntity searchEntity, CapabilitySet userCapabilities) {
 		List<ClauseContainer> containers = searchEntity.getClauseContainers();
-		log.info("Filtering " + containers.size() + " clauseContainers"); 
+		log.info("Filtering from " + containers.size() + " surface level clauseContainers"); 
+		int numRemoved = 0;
 		for(ClauseContainer container : containers) {
-			filterClauseContainerBFS(container, userCapabilities);
+			numRemoved += filterClauseContainerBFS(container, userCapabilities);
 		}
-		// containers = containers.stream()
-		// 		.filter(container -> {
-		// 			log.info("Filtering " + container.getFilter().getCode());
-		// 			return container.requirementsMet(userCapabilities);
-		// 		})
-		// 		.collect(Collectors.toList());
-
-		log.info("Filtered down to " + containers.size() + " filters");
+		log.info("Filtered away " + numRemoved + " filters that do not meet requirements in the clause container tree for: " + searchEntity.getCode());
 		searchEntity.setClauseContainers(containers);
 	}
 
