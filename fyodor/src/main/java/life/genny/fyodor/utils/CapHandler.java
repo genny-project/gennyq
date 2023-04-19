@@ -97,21 +97,34 @@ public class CapHandler extends Manager {
 		searchEntity.setTraits(Sort.class, sorts);
 	}
 
-	private int filterClauseContainerBFS(ClauseContainer container, CapabilitySet userCapabilities) {
+	private int filterClauseContainersBFS(SearchEntity entity, CapabilitySet userCapabilities) {
 		Queue<ClauseArgument> queue = new LinkedList<>();
 		ReqConfig requirementsConfig = new ReqConfig();
 
 		int numRemoved = 0;
 
-		// offer children of initial container
-		if(container.getAnd() != null)
-			queue.offer(container.getAnd());
-		
-		if(container.getOr() != null)
-			queue.offer(container.getOr());
+		// offer children of search entity, providing an initial (shallow) filter as well
+		Iterator<ClauseContainer> iter = entity.getClauseContainers().iterator();
+		if(iter.hasNext()) {
+			log.trace("[BFS] Iterating through: " + entity);
+			ClauseContainer container = iter.next();
+			while(iter.hasNext()) {
+				if(container.getAnd() != null)
+					queue.offer(container.getAnd());
+				
+				if(container.getOr() != null)
+					queue.offer(container.getOr());
 
-		if(container.getFilter() != null && !container.getFilter().requirementsMet(userCapabilities, requirementsConfig)) {
-			container.setFilter(null);
+				if(container.getFilter() != null && !container.getFilter().requirementsMet(userCapabilities, requirementsConfig)) {
+					iter.remove();
+					numRemoved++;
+				}
+
+				container = iter.next();
+			}
+		} else {
+			log.error("[BFS] Received search entity: " + entity.getCode() + " that has no clause containers! Is this meant to be? Please check the relevant search caching/json of this search entity");
+			return numRemoved;
 		}
 
 		ClauseArgument currentClause;
@@ -128,7 +141,7 @@ public class CapHandler extends Manager {
 			// Remove all filters from the current clause (and or or) that do not have their requirements met
 			// if any children have ands or ors, visit them
 			if(currentClause instanceof Clause clause && clause.hasCapabilityRequirements()) {
-				Iterator<ClauseContainer> iter = clause.getClauseContainers().iterator();
+				iter = clause.getClauseContainers().iterator();
 				if(iter.hasNext()) {
 					ClauseContainer child = iter.next();
 					while(iter.hasNext()) {
@@ -160,10 +173,7 @@ public class CapHandler extends Manager {
 	public void refineClauseContainersFromCapabilities(SearchEntity searchEntity, CapabilitySet userCapabilities) {
 		List<ClauseContainer> containers = searchEntity.getClauseContainers();
 		log.info("Filtering from " + containers.size() + " surface level clauseContainers"); 
-		int numRemoved = 0;
-		for(ClauseContainer container : containers) {
-			numRemoved += filterClauseContainerBFS(container, userCapabilities);
-		}
+		int numRemoved = filterClauseContainersBFS(searchEntity, userCapabilities);
 		log.info("Filtered away " + numRemoved + " filters that do not meet requirements in the clause container tree for: " + searchEntity.getCode());
 		searchEntity.setClauseContainers(containers);
 	}
