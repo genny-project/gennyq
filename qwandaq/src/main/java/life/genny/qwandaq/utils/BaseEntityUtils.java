@@ -705,13 +705,24 @@ public class BaseEntityUtils {
 		return be;
 	}
 
+	/**
+	 * Remove a {@link BaseEntity} and all of its {@link EntityAttribute EntityAttributes} from the ISPN Cache
+	 * @param baseEntity base entity to remove
+	 * @return the number of affected entities (including the number of affected entity attributes)
+	 */
 	public int removeBaseEntity(BaseEntity baseEntity) {
-		beaUtils.removeBaseEntityAttributesForBaseEntity(baseEntity);
-		return removeBaseEntity(baseEntity.getRealm(), baseEntity.getCode());
+		int numAffected = beaUtils.removeBaseEntityAttributesForBaseEntity(baseEntity);
+		return numAffected + removeBaseEntity(baseEntity.getRealm(), baseEntity.getCode());
 	}
 
+	/**
+	 * Remove a {@link BaseEntity} and all of its {@link EntityAttribute EntityAttributes} from the ISPN Cache
+	 * @param productCode product of the BaseEntity
+	 * @param beCode code of the BaseEntity
+	 * @return the number of affected entities (including the number of affected entity attributes)
+	 */
 	public int removeBaseEntity(String productCode, String beCode) {
-		beaUtils.removeBaseEntityAttributesForBaseEntity(productCode, beCode);
-		return cm.removeBaseEntity(productCode, beCode);
+		int numAffected = beaUtils.removeBaseEntityAttributesForBaseEntity(productCode, beCode);
+		return numAffected + cm.removeBaseEntity(productCode, beCode);
 	}
 }

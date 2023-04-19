@@ -77,17 +77,17 @@ public class RoleManager extends Manager {
 			role = beUtils.getBaseEntity(productCode, roleCode, true);
 			if(doFlush) {
 				log.debug("\tRole Exists. Flushing");
-				int flushedCount = beaUtils.removeBaseEntityAttributesForBaseEntity(role);
-				log.debug("\tFlushed " + flushedCount + " capabilities");
+				int flushedCount = beUtils.removeBaseEntity(productCode, roleCode);
+				log.debug("\tFlushed " + (flushedCount != 0 ? flushedCount - 1 : 0) + " capabilities");
 			}
 		} catch(ItemNotFoundException e) {
 			log.debug("\tRole does not Exist. Creating");
-			Definition def = defUtils.getDEF(productCode, Definition.DEF_ROLE);
-			Attribute priCode = attributeUtils.getAttribute(productCode, Attribute.PRI_CODE, true);
-			role = beUtils.create(def, roleName, roleCode);
-			role.setRealm(productCode);
-			role.addAttribute(priCode, 0.0, roleCode);
 		}
+
+		Definition def = defUtils.getDEF(productCode, Definition.DEF_ROLE);
+		Attribute priCode = attributeUtils.getAttribute(productCode, Attribute.PRI_CODE, true);
+		role = beUtils.create(def, roleName, roleCode);
+		role.addAttribute(priCode, 0.0, roleCode);
 		beUtils.updateBaseEntity(role);
 		
 		return role;
