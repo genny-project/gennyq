@@ -387,6 +387,18 @@ public class CommonUtils {
      * @param objectCallback
      * @return
      */
+    public static List<String> getListFromString(String arrayString) {
+        return getListFromString(arrayString, Object::toString);
+    }
+
+
+    /**
+     * Assuming arrayString is of the form "[a,b,c,d]"
+     * @param <T>
+     * @param arrayString
+     * @param objectCallback
+     * @return
+     */
     public static <T> List<T> getListFromString(String arrayString, FIGetObjectCallback<T> objectCallback) {
         if(StringUtils.isBlank(arrayString))
             return new ArrayList<>(0);

@@ -87,11 +87,12 @@ public class Ask extends CoreEntity {
 	 * @param sourceCode
 	 * @param targetCode
 	 */
-	public Ask(Question question, String sourceCode, String targetCode) {
+	public Ask(Question question, String sourceCode, String targetCode, double weight) {
 		super(question.getName());
 		setQuestion(question);
 		this.sourceCode = sourceCode;
 		this.targetCode = targetCode;
+		this.weight = weight;
 	}
 
 	/**
@@ -102,13 +103,11 @@ public class Ask extends CoreEntity {
 	 */
 	public Ask clone() {
 
-		Ask ask = new Ask(question, sourceCode, targetCode);
+		Ask ask = new Ask(question, sourceCode, targetCode, weight);
 		ask.mandatory = this.getMandatory();
 		ask.oneshot = this.getOneshot();
 		ask.disabled = this.getDisabled();
 		ask.readonly = this.getReadonly();
-		ask.weight = this.getWeight();
-
 		if (this.hasChildren()) {
 			ask.childAsks = this.childAsks;
 		}

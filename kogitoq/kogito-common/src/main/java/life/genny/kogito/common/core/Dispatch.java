@@ -6,7 +6,6 @@ import static life.genny.qwandaq.entity.PCM.PCM_TREE;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Arrays;
 import java.util.Map;
@@ -361,16 +360,17 @@ public class Dispatch {
 		Question groupQuestion = new Question(Question.QUE_EVENTS, "", groupAttribute);
 
 		// init ask
-		Ask ask = new Ask(groupQuestion, sourceCode, targetCode);
+		Ask ask = new Ask(groupQuestion, sourceCode, targetCode, 0.0);
 		ask.setRealm(userToken.getProductCode());
 
 		// split events string by comma
+		double weight = 0.0;
 		for (String name : buttonEvents.split(",")) {
 			String code = name.toUpperCase().replaceAll(" ", "_");
 			// create child and add to ask
 			Attribute attribute = qwandaUtils.createButtonEvent(code, name);
 			Question question = new Question(Prefix.QUE_ + code, name, attribute);
-			Ask child = new Ask(question, sourceCode, targetCode);
+			Ask child = new Ask(question, sourceCode, targetCode, weight++);
 			ask.add(child);
 		}
 
@@ -425,7 +425,7 @@ public class Dispatch {
 				// get list from target
 				String value = target.getValueAsString(ask.getQuestion().getAttributeCode());
 				if (value != null) {
-					codes = Arrays.asList(CommonUtils.getArrayFromString(value));
+					codes = CommonUtils.getListFromString(value);
 				}
 			} else {
 				// get list of value codes from cache
@@ -522,9 +522,7 @@ public class Dispatch {
 	 */
 	public void sendBaseEntities(List<BaseEntity> baseEntities) {
 
-		Map<String, Object> contexts = new HashMap<>();
-		contexts.put("USER_CODE", beUtils.getUserBaseEntity());
-
+		Map<String, Object> contexts = Map.of("USER_CODE", beUtils.getUserBaseEntity());
 		Attribute priName = attributeUtils.getAttribute(Attribute.PRI_NAME, true);
 
 		baseEntities.stream()

@@ -9,8 +9,6 @@ import javax.json.JsonObject;
 
 import life.genny.kogito.common.models.TaskExchange;
 import life.genny.kogito.common.models.UserExchange;
-import life.genny.qwandaq.constants.Prefix;
-import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.kafka.KafkaTopic;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.KafkaUtils;
@@ -44,7 +42,7 @@ public class Service2Service extends KogitoService {
 			String userCode = taskExchange.getSourceCode();
 			userToken = new UserToken(keycloakUtils.getImpersonatedToken(userCode, serviceToken));
 		}
-		logToken();
+		log.info(getLogString());
 		taskExchange.setToken(userToken.getToken());
 		return taskExchange;
 	}
@@ -67,7 +65,7 @@ public class Service2Service extends KogitoService {
 	 */
 	public void initialiseScope(TaskExchange taskExchange) {
 		scope.init(jsonb.toJson(taskExchange));
-		logToken();
+		log.info(getLogString());
 	}
 
 	/**
@@ -77,14 +75,14 @@ public class Service2Service extends KogitoService {
 	 */
 	public void initialiseScope(UserExchange userExchange) {
 		scope.init(jsonb.toJson(userExchange));
-		logToken();
+		log.info(getLogString());
 	}
 
 	/**
 	 * log token
 	 */
-	public void logToken() {
-		log.debugf("USER [%s] : [%s]", userToken.getUserCode(), userToken.getUsername());
+	private String getLogString() {
+		return String.format("USER [%s] : [%s]", userToken.getUserCode(), userToken.getUsername());
 	}
 
 	/**

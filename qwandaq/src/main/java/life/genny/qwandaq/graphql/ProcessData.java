@@ -4,9 +4,9 @@ import java.util.List;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import javax.json.bind.annotation.JsonbTransient;
-import java.util.ArrayList;
 import java.util.Arrays;
 import life.genny.qwandaq.Answer;
+import life.genny.qwandaq.constants.Prefix;
 
 /**
  * TODO: We need to document this
@@ -17,7 +17,6 @@ import life.genny.qwandaq.Answer;
 public class ProcessData extends ProcessInstanceVariables {
 
 	private String sourceCode;
-	private String targetCode;
 	private String questionCode;
 
 	private String pcmCode;
@@ -45,7 +44,7 @@ public class ProcessData extends ProcessInstanceVariables {
 		// split the definition code into all the defCodes for this baseEntity
 		String defCodesStr = definitionCode;
 		if (defCodesStr.startsWith("DEF_DEF_")) { // TODO: Hack to fix prefix bug
-			defCodesStr = defCodesStr.substring("DEF_".length());
+			defCodesStr = defCodesStr.substring(Prefix.DEF_.length());
 		}
 		defCodesStr = defCodesStr.replace("[", "");
 		defCodesStr = defCodesStr.replace("]", "");
@@ -60,14 +59,6 @@ public class ProcessData extends ProcessInstanceVariables {
 
 	public void setSourceCode(String sourceCode) {
 		this.sourceCode = sourceCode;
-	}
-
-	public String getTargetCode() {
-		return targetCode;
-	}
-
-	public void setTargetCode(String targetCode) {
-		this.targetCode = targetCode;
 	}
 
 	public String getQuestionCode() {
