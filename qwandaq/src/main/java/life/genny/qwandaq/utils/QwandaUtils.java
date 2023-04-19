@@ -38,7 +38,6 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
-import javax.persistence.NoResultException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Pattern;
@@ -229,7 +228,7 @@ public class QwandaUtils {
 
 		String productCode = userToken.getProductCode();
 		// init new parent ask
-		Ask ask = new Ask(question, source.getCode(), target.getCode());
+		Ask ask = new Ask(question, source.getCode(), target.getCode(), 0.0);
 		ask.setRealm(productCode);
 
 		if (Question.QUE_BASEENTITY_GRP.equals(question.getCode()))
@@ -243,7 +242,7 @@ public class QwandaUtils {
 		}
 
 		// check if it is a question group
-		if (StringUtils.isNotEmpty(question.getAttributeCode()) && question.getAttributeCode().startsWith(Attribute.QQQ_QUESTION_GROUP)) {
+		if (question.getAttributeCode() != null && question.getAttributeCode().startsWith(Attribute.QQQ_QUESTION_GROUP)) {
 
 			log.info("[*] Parent Question: " + question.getCode());
 			// groups always readonly
@@ -256,7 +255,7 @@ public class QwandaUtils {
 				// recursively operate on child questions
 				questionQuestions.forEach(questionQuestion -> {
 					log.debug("   [-] Found Child Question:  " + questionQuestion.getParentCode() + ":"
-							+ questionQuestion.getChildCode());
+							+ questionQuestion.getChildCode() + ". Weight: " + questionQuestion.getWeight());
 
 					if (!questionQuestion.requirementsMet(capSet, requirementsConfig)) { // For now all caps are needed. I'll make this more comprehensive later
 						return;
@@ -274,6 +273,7 @@ public class QwandaUtils {
 					child.setHidden(questionQuestion.getHidden());
 					child.setDisabled(questionQuestion.getDisabled());
 					child.setReadonly(questionQuestion.getReadonly());
+					child.setWeight(questionQuestion.getWeight());
 
 					// override with QuestionQuestion icon if exists
 					if (questionQuestion.getIcon() != null) {
@@ -311,21 +311,14 @@ public class QwandaUtils {
 	 * Perform basic code checks on attribute code.
 	 *
 	 * @param code An attribute code
-	 * @return boolean
+	 * @return <b>True</b> if the code prefix is in {@link QwandaUtils#ACCEPTED_PREFIXES the Accepted Prefixes} and 
+	 * 				the code is not in {@link QwandaUtils#EXCLUDED_ATTRIBUTES the Excluded Attributes}. <b>False</b> otherwise
 	 */
 	public static boolean attributeCodeMeetsBasicRequirements(String code) {
-		if (code == null) {
-			throw new NullParameterException("code");
-		}
-		if (code == null) {
-			throw new NullParameterException("code");
-		}
-		if (!Arrays.asList(ACCEPTED_PREFIXES).contains(code.substring(0, 4))) {
+		if(!CommonUtils.isInArray(ACCEPTED_PREFIXES, code.substring(0, 4)))
 			return false;
-		}
-		if (Arrays.asList(EXCLUDED_ATTRIBUTES).contains(code)) {
+		if(CommonUtils.isInArray(EXCLUDED_ATTRIBUTES, code))
 			return false;
-		}
 
 		return true;
 	}
@@ -777,7 +770,7 @@ public class QwandaUtils {
 		Question question = new Question(Question.QUE_BASEENTITY_GRP,
 				"Edit " + baseEntity.getName() + " : " + name,
 				questionAttribute);
-		Ask ask = new Ask(question, sourceCode, targetCode);
+		Ask ask = new Ask(question, sourceCode, targetCode, 0.0);
 
 		LinkedHashSet<Ask> childAsks = new LinkedHashSet<>();
 		QDataBaseEntityMessage entityMessage = new QDataBaseEntityMessage();
@@ -787,10 +780,11 @@ public class QwandaUtils {
 		// grab def entity
 		Definition definition = defUtils.getDEF(baseEntity);
 		// create a child ask for every valid attribute
-		definition.getBaseEntityAttributes().forEach(ea -> {
+		double weight = 0.0;
+		for(EntityAttribute ea : definition.getBaseEntityAttributes()) {
 			String attributeCode = ea.getAttributeCode();
 			if (!attributeCode.startsWith(Prefix.ATT_)) {
-				return;
+				continue;
 			}
 			String strippedAttributeCode = StringUtils.removeStart(attributeCode, Prefix.ATT_);
 			Attribute attribute = attributeUtils.getAttribute(baseEntity.getRealm(), strippedAttributeCode, true);
@@ -800,10 +794,10 @@ public class QwandaUtils {
 									Prefix.PRI_), Prefix.LNK_);
 
 			Question childQues = new Question(questionCode, attribute.getName(), attribute);
-			Ask childAsk = new Ask(childQues, sourceCode, targetCode);
+			Ask childAsk = new Ask(childQues, sourceCode, targetCode, weight++);
 
 			childAsks.add(childAsk);
-		});
+		}
 
 		// set child asks
 		ask.setChildAsks(childAsks);

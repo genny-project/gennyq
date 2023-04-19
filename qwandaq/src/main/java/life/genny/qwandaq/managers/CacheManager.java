@@ -335,7 +335,7 @@ public class CacheManager {
 		List<Attribute> attributeList = queryResult.list();
 		if (attributeList.size() == 1 && attributeList.get(0) == null)
 			return Collections.EMPTY_SET;
-		return new HashSet<>(attributeList);
+		return new LinkedHashSet<>(attributeList);
 	}
 
 	/**
@@ -352,7 +352,7 @@ public class CacheManager {
 		List<Attribute> attributeList = queryResult.list();
 		if (attributeList.isEmpty() || attributeList.size() == 1 && attributeList.get(0) == null)
 			return Collections.EMPTY_SET;
-		return new HashSet<>(attributeList);
+		return new LinkedHashSet<>(attributeList);
 	}
 
 	/**
@@ -369,7 +369,7 @@ public class CacheManager {
 		List<Attribute> attributeList = queryResult.list();
 		if (attributeList.size() == 1 && attributeList.get(0) == null)
 			return Collections.EMPTY_SET;
-		return new HashSet<>(attributeList);
+		return new LinkedHashSet<>(attributeList);
 	}
 
 	/**
@@ -388,7 +388,7 @@ public class CacheManager {
 		List<Attribute> attributeList = queryResult.list();
 		if (attributeList.size() == 1 && attributeList.get(0) == null)
 			return Collections.EMPTY_SET;
-		return new HashSet<>(attributeList);
+		return new LinkedHashSet<>(attributeList);
 	}
 
 	public DataType getDataType(String productCode, String dttCode) {
@@ -406,7 +406,7 @@ public class CacheManager {
 		List<Validation> validationList = queryResult.list();
 		if (validationList.size() == 1 && validationList.get(0) == null)
 			return new HashSet<>(0);
-		return new HashSet<>(validationList);
+		return new LinkedHashSet<>(validationList);
 	}
 
 	public Set<Validation> getValidations(String productCode, List<String> validationCodes) {
@@ -431,7 +431,7 @@ public class CacheManager {
 		List<BaseEntity> baseEntityList = queryResult.list();
 		if (baseEntityList.size() == 1 && baseEntityList.get(0) == null)
 			return Collections.EMPTY_SET;
-		return new HashSet<>(baseEntityList);
+		return new LinkedHashSet<>(baseEntityList);
 	}
 
 	/**
@@ -442,7 +442,7 @@ public class CacheManager {
 		QueryFactory queryFactory = Search.getQueryFactory(cache.getRemoteCacheForEntity(ECacheRef.BASEENTITY));
 		Query<life.genny.qwandaq.serialization.baseentity.BaseEntity> query = queryFactory.create(ickleQuery);
 		QueryResult<life.genny.qwandaq.serialization.baseentity.BaseEntity> queryResult = query.maxResults(Integer.MAX_VALUE).execute();
-		return new HashSet<>(queryResult.list());
+		return new LinkedHashSet<>(queryResult.list());
 	}
 
 	/**
@@ -464,7 +464,7 @@ public class CacheManager {
 		List<EntityAttribute> entityAttributeList = queryResult.list();
 		if (entityAttributeList.size() == 1 && entityAttributeList.get(0) == null)
 			return Collections.EMPTY_SET;
-		return new HashSet<>(entityAttributeList);
+		return new LinkedHashSet<>(entityAttributeList);
 	}
 
 	/**
@@ -487,7 +487,7 @@ public class CacheManager {
 		List<EntityAttribute> attributeList = queryResult.list();
 		if (attributeList.size() == 1 && attributeList.get(0) == null)
 			return Collections.EMPTY_SET;
-		return new HashSet<>(attributeList);
+		return new LinkedHashSet<>(attributeList);
 	}
 
 	/**
@@ -728,7 +728,7 @@ public class CacheManager {
 		List<QuestionQuestion> questionQuestionList = queryResult.list();
 		if (questionQuestionList.size() == 1 && questionQuestionList.get(0) == null)
 			return Collections.EMPTY_SET;
-		return new HashSet<>(questionQuestionList);
+		return new LinkedHashSet<>(questionQuestionList);
 	}
 
 	/**
@@ -752,7 +752,7 @@ public class CacheManager {
 		if (attributeList.size() == 1 && attributeList.get(0) == null)
 			return Collections.EMPTY_SET;
 		// begin building QQ objects
-		return new HashSet<>(questionUtils.createQuestionQuestionsForParentQuestion(parent, attributeList));
+		return new LinkedHashSet<>(questionUtils.createQuestionQuestionsForParentQuestion(parent, attributeList));
 	}
 
 	/**

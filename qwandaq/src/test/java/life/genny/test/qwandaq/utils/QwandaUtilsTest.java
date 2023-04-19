@@ -153,10 +153,10 @@ public class QwandaUtilsTest extends BaseTestCase {
 		Question QUE_FIRSTNAME = new Question("QUE_FIRSTNAME", "FirstName", PRI_FIRSTNAME);
 		Question QUE_LASTNAME = new Question("QUE_LASTNAME", "LastName", PRI_LASTNAME);
 
-		Ask test = new Ask(QUE_TEST, PER_SOURCE, PER_TARGET);
-		Ask firstName = new Ask(QUE_FIRSTNAME, PER_SOURCE, PER_TARGET);
+		Ask test = new Ask(QUE_TEST, PER_SOURCE, PER_TARGET, 0.0);
+		Ask firstName = new Ask(QUE_FIRSTNAME, PER_SOURCE, PER_TARGET, 1.0);
 		firstName.setMandatory(true);
-		Ask lastName = new Ask(QUE_LASTNAME, PER_SOURCE, PER_TARGET);
+		Ask lastName = new Ask(QUE_LASTNAME, PER_SOURCE, PER_TARGET, 2.0);
 		lastName.setMandatory(true);
 
 		test.add(firstName);
