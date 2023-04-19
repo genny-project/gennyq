@@ -198,7 +198,7 @@ public class InternalConsumer {
 		SearchEntity searchEntity = cm.getObject(productCode, key, SearchEntity.class);
 
 		if (searchEntity == null)
-			throw new ItemNotFoundException("Search Entity with key=" + key);
+			throw new ItemNotFoundException(productCode, "SearchEntity", key);
 
 		log.debug("Using Search Entity: " + searchEntity);
 		// Filter by name wildcard provided by user

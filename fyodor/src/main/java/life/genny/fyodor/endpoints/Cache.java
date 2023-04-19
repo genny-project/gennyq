@@ -241,7 +241,7 @@ public class Cache {
 				try {
 					q = questionUtils.getQuestionFromQuestionCode(productCode, key);
 				} catch (NoResultException e) {
-					throw new ItemNotFoundException(key, e);
+					throw new ItemNotFoundException(productCode, "queston", key, e);
 				}
 
 				json = jsonb.toJson(q);

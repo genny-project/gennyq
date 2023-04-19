@@ -69,7 +69,7 @@ public enum ESheetConfiguration {
     public static ESheetConfiguration getByTitle(String title) {
         ESheetConfiguration sheetConfig = titleCacheMap.get(title);
         if(sheetConfig == null)
-            throw new ItemNotFoundException("ESheetConfiguration with title: " + title);
+            throw new ItemNotFoundException("titleCacheMap", "ESheetConfiguration", title);
 
         return sheetConfig;
     }

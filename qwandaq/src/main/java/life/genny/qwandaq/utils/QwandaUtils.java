@@ -202,14 +202,9 @@ public class QwandaUtils {
 		log.debug("Fetching Question: " + code);
 
 		// find the question in the database
-		Question question;
-		try {
-			question = questionUtils.getQuestionFromQuestionCode(productCode, code);
-			Attribute attribute = attributeUtils.getAttribute(productCode, question.getAttributeCode(), true);
-			question.setAttribute(attribute);
-		} catch (NoResultException e) {
-			throw new ItemNotFoundException(code, e);
-		}
+		Question question = questionUtils.getQuestionFromQuestionCode(productCode, code);
+		Attribute attribute = attributeUtils.getAttribute(productCode, question.getAttributeCode(), true);
+		question.setAttribute(attribute);
 
 		return generateAskFromQuestion(question, source, target, capSet, requirementsConfig);
 	}

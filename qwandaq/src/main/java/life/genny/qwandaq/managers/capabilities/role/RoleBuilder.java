@@ -145,7 +145,7 @@ public class RoleBuilder {
 		Attribute attribute = capabilityMap.get(attrCode);
 		if(attribute == null) {
 			log.error("Could not find capability in map: " + attrCode);
-			throw new ItemNotFoundException("capability map", attrCode);
+			throw new ItemNotFoundException("capability map", "capability", attrCode);
 		}
 		return attribute;
 	}

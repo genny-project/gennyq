@@ -9,39 +9,39 @@ import life.genny.qwandaq.exception.GennyRuntimeException;
  */
 public class ItemNotFoundException extends GennyRuntimeException {
 
-	public static final String ERR_TEXT = "%s could not be found";
+	public static final String ERR_TEXT = "type:%s identifier:%s could not be found";
 	public static final String PRD_TXT = ERR_TEXT + " in product %s";
 
 	public ItemNotFoundException() {
 		super();
 	}
 
-	public ItemNotFoundException(String code) {
-		this(code, true);
+	public ItemNotFoundException(String type, String code) {
+		this(type, code, true);
 	}
 
-	public ItemNotFoundException(String code, boolean useFormat) {
-		super(useFormat ? String.format(ERR_TEXT, code) : code);
+	public ItemNotFoundException(String type, String code, boolean useFormat) {
+		super(useFormat ? String.format(ERR_TEXT, type, code) : code);
 	}
 
-	public ItemNotFoundException(String productCode, String code) {
-		super(String.format(PRD_TXT, code, productCode));
+	public ItemNotFoundException(String productCode, String type, String code) {
+		super(String.format(PRD_TXT, type, code, productCode));
 	}
 	
-	public ItemNotFoundException(String code, Throwable err) {
-		this(code, err, true);
+	public ItemNotFoundException(String type, String code, Throwable err) {
+		this(type, code, err, true);
 	}
 
-	public ItemNotFoundException(String code, Throwable err, boolean useFormat) {
-		super(useFormat ? String.format(ERR_TEXT, code) : code, err);
+	public ItemNotFoundException(String type, String code, Throwable err, boolean useFormat) {
+		super(useFormat ? String.format(ERR_TEXT, type, code) : code, err);
 	}
 
-	public ItemNotFoundException(String productCode, String code, Throwable err) {
-		super(String.format(PRD_TXT, code, productCode), err);
+	public ItemNotFoundException(String productCode, String type, String code, Throwable err) {
+		super(String.format(PRD_TXT, type, code, productCode), err);
 	}
 
-	public ItemNotFoundException(String productCode, String baseEntityCode, String attributeCode) {
-		super(String.format(PRD_TXT, "[" + baseEntityCode + ":" + attributeCode + "]", productCode));
+	public ItemNotFoundException(String productCode, String type, String baseEntityCode, String attributeCode) {
+		super(String.format(PRD_TXT, type, "[" + baseEntityCode + ":" + attributeCode + "]", productCode));
 	}
 
 	/**
@@ -54,7 +54,7 @@ public class ItemNotFoundException extends GennyRuntimeException {
 	 * @see {@link ItemNotFoundException#PRD_TXT}
 	 */
 	public static ItemNotFoundException general(String errorMsg, Throwable cause) {
-		return new ItemNotFoundException(errorMsg, cause, false);
+		return new ItemNotFoundException("", errorMsg, cause, false);
 	}
 
 	/**
@@ -66,6 +66,6 @@ public class ItemNotFoundException extends GennyRuntimeException {
 	 * @see {@link ItemNotFoundException#PRD_TXT}
 	 */
 	public static ItemNotFoundException general(String errorMsg) {
-		return new ItemNotFoundException(errorMsg, false);
+		return new ItemNotFoundException("", errorMsg, false);
 	}
 }

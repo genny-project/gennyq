@@ -6,6 +6,7 @@ import life.genny.bridge.blacklisting.BlackListInfo;
 import life.genny.bridge.model.InitColors;
 import life.genny.bridge.model.InitProperties;
 import life.genny.qwandaq.attribute.EntityAttribute;
+import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.entity.BaseEntity;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.kafka.KafkaTopic;
@@ -103,18 +104,16 @@ public class Bridge {
             // init clientId
             String cid = props.determineClientId(url);
             log.info("cid = " + cid + ", url:" + url);
-            String baseEntityCode = "PRJ_" + cid.toUpperCase();
-            BaseEntity project = beUtils.getBaseEntity(cid, baseEntityCode);
+            String baseEntityCode = Prefix.PRJ_ + cid.toUpperCase();
+
+            // sanity check PRJ exists
+            beUtils.getBaseEntity(cid, baseEntityCode);
+
             // init colours
             EntityAttribute primaryEA = beaUtils.getEntityAttribute(cid, baseEntityCode, PRI_COLOR_PRIMARY, true);
-            if (primaryEA == null) {
-                throw new ItemNotFoundException("BaseEntityAttribute for primary color not found!");
-            }
             String primary = primaryEA.getValueString();
+
             EntityAttribute secondaryEA = beaUtils.getEntityAttribute(cid, baseEntityCode, PRI_COLOR_SECONDARY, true);
-            if (secondaryEA == null) {
-                throw new ItemNotFoundException("BaseEntityAttribute for secondary color not found!");
-            }
             String secondary = secondaryEA.getValueString();
             props.setColors(new InitColors(primary, secondary));
 

@@ -2,7 +2,6 @@ package life.genny.qwandaq.utils;
 
 import life.genny.qwandaq.attribute.Attribute;
 import life.genny.qwandaq.constants.ECacheRef;
-import life.genny.qwandaq.constants.GennyConstants;
 import life.genny.qwandaq.constants.Prefix;
 import life.genny.qwandaq.datatype.DataType;
 import life.genny.qwandaq.entity.BaseEntity;
@@ -187,7 +186,7 @@ public class BaseEntityUtils {
 		BaseEntityKey key = new BaseEntityKey(productCode, code);
 		BaseEntity baseEntity = (BaseEntity) cm.getPersistableEntity(ECacheRef.BASEENTITY, key);
 		if (baseEntity == null) {
-			throw new ItemNotFoundException(productCode, code);
+			throw new ItemNotFoundException(productCode, "baseentity", code);
 		}
 		// fetch entity attributes
 		if (bundleAttributes) {
