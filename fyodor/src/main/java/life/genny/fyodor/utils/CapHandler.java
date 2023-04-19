@@ -106,6 +106,7 @@ public class CapHandler extends Manager {
 		// offer children of search entity, providing an initial (shallow) filter as well
 		Iterator<ClauseContainer> iter = entity.getClauseContainers().iterator();
 		if(iter.hasNext()) {
+			log.trace("[BFS] Iterating through: " + entity);
 			ClauseContainer container = iter.next();
 			while(iter.hasNext()) {
 				if(container.getAnd() != null)
@@ -121,6 +122,9 @@ public class CapHandler extends Manager {
 
 				container = iter.next();
 			}
+		} else {
+			log.error("[BFS] Received search entity: " + entity.getCode() + " that has no clause containers! Is this meant to be? Please check the relevant search caching/json of this search entity");
+			return numRemoved;
 		}
 
 		ClauseArgument currentClause;
