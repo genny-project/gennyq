@@ -294,17 +294,18 @@ public class GoogleSheetBuilder {
     public Question buildQuestion(Map<String, String> row, String realmName) {
 
         String code = row.get("code");
+        String name = row.get("name");
 		Map<Class<?>, Object> dependencies = validator.validateQuestion(row, realmName);
 		Attribute attribute = (Attribute) dependencies.get(Attribute.class);
         
-		Question question = questionUtils.getQuestionFromQuestionCode(realmName, code);
-		if (question == null) {
-			question = new Question();
-			question.setCode(code);
+		Question question;
+        try {
+            question = questionUtils.getQuestionFromQuestionCode(realmName, code);
+        } catch(ItemNotFoundException e) {
+            question = new Question(code, name, attribute);
 		}
 
 
-        String name = row.get("name");
         String html = row.get("html");
         String placeholder = row.get("placeholder");
         boolean readonly = Boolean.parseBoolean(row.get(READONLY));
