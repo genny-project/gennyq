@@ -41,7 +41,7 @@ do
 	fi
 
 	# tag the docker container
-    echo "Tagging $project:$VERSION as $project:latest"
+    echo "Tagging gennyproject/$project:$VERSION as gennyproject/$project:latest"
 	docker tag gennyproject/${project}:${VERSION} gennyproject/${project}:latest
 done
 ./say.sh "finished building"
