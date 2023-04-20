@@ -708,8 +708,10 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 					case GennyConstants.INTEGER:
 						if (value instanceof BigDecimal)
 							setValueInteger(((BigDecimal) value).intValue());
-						else
+						else if(value instanceof Integer)
 							setValueInteger((Integer) value);
+						else
+							throw new UnsupportedOperationException("Unsupported java type: " + className + " for value: " + value);
 						break;
 
 					case GennyConstants.JAVA_TIME_LOCAL_DATE_TIME:
