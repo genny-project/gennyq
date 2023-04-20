@@ -180,6 +180,7 @@ public class CapabilityUtilsTest extends BaseTestCase {
         .createTest("Lesser Nodes Test 1")
         .setInput(new CapabilityNode(ADD, ALL))
         .setExpected(new CapabilityNode[] {
+            new CapabilityNode(ADD, GROUP),
             new CapabilityNode(ADD, SELF),
             new CapabilityNode(ADD, NONE)
         }).build()
