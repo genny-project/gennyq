@@ -106,7 +106,7 @@ public class CapHandler extends Manager {
 		// offer children of search entity, providing an initial (shallow) filter as well
 		Iterator<ClauseContainer> iter = entity.getClauseContainers().iterator();
 		if(iter.hasNext()) {
-			log.trace("[BFS] Iterating through: " + entity);
+			log.debug("[BFS] Iterating through: " + entity);
 			ClauseContainer container = iter.next();
 			while(iter.hasNext()) {
 				if(container.getAnd() != null)
@@ -116,9 +116,13 @@ public class CapHandler extends Manager {
 					queue.offer(container.getOr());
 
 				if(container.getFilter() != null && !container.getFilter().requirementsMet(userCapabilities, requirementsConfig)) {
+					log.debug("[BFS] Removing filter: " + container.getFilter());
 					iter.remove();
 					numRemoved++;
+				} else if(container.getFilter() != null) {
+					log.debug("[BFS] Leaving filter: " + container.getFilter().getCode());
 				}
+
 
 				container = iter.next();
 			}
@@ -132,9 +136,9 @@ public class CapHandler extends Manager {
 
 		while(!queue.isEmpty()) {
 			currentClause = queue.poll();
-			log.trace("[BFS] Iterating through: " + currentClause);
+			log.debug("[BFS] Iterating through: " + currentClause);
 			if(visited.contains(currentClause)) {
-				log.trace("[BFS] Already visited: " + currentClause);
+				log.debug("[BFS] Already visited: " + currentClause);
 				continue;
 			}
 
@@ -145,17 +149,21 @@ public class CapHandler extends Manager {
 				if(iter.hasNext()) {
 					ClauseContainer child = iter.next();
 					while(iter.hasNext()) {
-						if(child.getFilter() != null && !child.getFilter().requirementsMet(userCapabilities, requirementsConfig)) {
-							iter.remove();
-							++numRemoved;
-						}
-
 						// offer children of current clause
 						if(child.getAnd() != null)
 							queue.offer(child.getAnd());
 
 						if(child.getOr() != null)
 							queue.offer(child.getOr());
+
+						if(child.getFilter() != null && !child.getFilter().requirementsMet(userCapabilities, requirementsConfig)) {
+							log.debug("[BFS] Removing filter: " + child.getFilter().getCode());
+							iter.remove();
+							++numRemoved;
+						} else if(child.getFilter() != null) {
+							log.debug("[BFS] Leaving filter: " + child.getFilter().getCode());
+						}
+
 						child = iter.next();
 					}
 				}
