@@ -107,8 +107,10 @@ public class CapHandler extends Manager {
 		Iterator<ClauseContainer> iter = entity.getClauseContainers().iterator();
 		if(iter.hasNext()) {
 			log.debug("[BFS] Iterating through: " + entity);
+			log.debug("\tNum Containers: " + entity.getClauseContainers().size());
 			ClauseContainer container = iter.next();
 			while(iter.hasNext()) {
+				log.debug("[BFS] Container: " + container);
 				if(container.getAnd() != null)
 					queue.offer(container.getAnd());
 				
