@@ -9,7 +9,7 @@ import life.genny.qwandaq.entity.search.trait.Trait;
 import life.genny.qwandaq.utils.testsuite.Expected;
 import life.genny.qwandaq.utils.testsuite.JUnitTester;
 
-import static life.genny.qwandaq.datatype.capability.core.node.PermissionScope.*;
+import static life.genny.qwandaq.datatype.capability.core.node.PermissionMode.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.List;

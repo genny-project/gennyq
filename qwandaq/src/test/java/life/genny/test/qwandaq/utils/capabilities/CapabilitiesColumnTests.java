@@ -9,7 +9,7 @@ import life.genny.test.qwandaq.utils.BaseTestCase;
 import life.genny.qwandaq.utils.collections.SetBuilder;
 import life.genny.qwandaq.utils.testsuite.JUnitTester;
 
-import static life.genny.qwandaq.datatype.capability.core.node.PermissionScope.*;
+import static life.genny.qwandaq.datatype.capability.core.node.PermissionMode.*;
 
 import java.util.Set;
 
