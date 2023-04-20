@@ -77,7 +77,7 @@ public class RoleManager extends Manager {
 			role = beUtils.getBaseEntity(productCode, roleCode, true);
 			if(doFlush) {
 				log.debug("\tRole Exists. Flushing");
-				int flushedCount = beaUtils.removeBaseEntityAttributesForBaseEntity(productCode, roleCode);//beUtils.removeBaseEntity(productCode, roleCode);
+				int flushedCount =beUtils.removeBaseEntity(productCode, roleCode);//beaUtils.removeBaseEntityAttributesForBaseEntity(productCode, roleCode);//
 				log.debug("\tFlushed " + (flushedCount != 0 ? flushedCount - 1 : 0) + " capabilities");
 			}
 		} catch(ItemNotFoundException e) {
