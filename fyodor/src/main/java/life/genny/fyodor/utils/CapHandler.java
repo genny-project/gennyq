@@ -108,8 +108,8 @@ public class CapHandler extends Manager {
 		if(iter.hasNext()) {
 			log.debug("[BFS] Iterating through: " + entity);
 			log.debug("\tNum Containers: " + entity.getClauseContainers().size());
-			ClauseContainer container = iter.next();
 			while(iter.hasNext()) {
+				ClauseContainer container = iter.next();
 				log.debug("[BFS] Container: " + container);
 				if(container.getAnd() != null)
 					queue.offer(container.getAnd());
@@ -124,9 +124,6 @@ public class CapHandler extends Manager {
 				} else if(container.getFilter() != null) {
 					log.debug("[BFS] Leaving filter: " + container.getFilter().getCode());
 				}
-
-
-				container = iter.next();
 			}
 		} else {
 			log.error("[BFS] Received search entity: " + entity.getCode() + " that has no clause containers! Is this meant to be? Please check the relevant search caching/json of this search entity");
