@@ -77,19 +77,20 @@ public class RoleManager extends Manager {
 			role = beUtils.getBaseEntity(productCode, roleCode, true);
 			if(doFlush) {
 				log.debug("\tRole Exists. Flushing");
-				int flushedCount =beUtils.removeBaseEntity(productCode, roleCode);//beaUtils.removeBaseEntityAttributesForBaseEntity(productCode, roleCode);//
+				int flushedCount = beUtils.removeBaseEntity(productCode, roleCode);//beaUtils.removeBaseEntityAttributesForBaseEntity(productCode, roleCode);//
 				log.debug("\tFlushed " + (flushedCount != 0 ? flushedCount - 1 : 0) + " capabilities");
+			} else {
+				log.debug("Found existing role: " + roleCode + ". NOT FLUSHING");
 			}
 		} catch(ItemNotFoundException e) {
 			log.debug("\tRole does not Exist. Creating");
+			Definition def = defUtils.getDEF(productCode, Definition.DEF_ROLE);
+			role = beUtils.create(def, roleName, roleCode);
+			Attribute priCode = attributeUtils.getAttribute(productCode, Attribute.PRI_CODE, true);
+			role.addAttribute(priCode, 0.0, roleCode);
+			beUtils.updateBaseEntity(role);
 		}
 
-		Definition def = defUtils.getDEF(productCode, Definition.DEF_ROLE);
-		Attribute priCode = attributeUtils.getAttribute(productCode, Attribute.PRI_CODE, true);
-		role = beUtils.create(def, roleName, roleCode);
-		role.addAttribute(priCode, 0.0, roleCode);
-		beUtils.updateBaseEntity(role);
-		
 		return role;
 	}
 
@@ -101,10 +102,6 @@ public class RoleManager extends Manager {
 	 * @return - updated role
 	 */
 	public BaseEntity setChildren(String productCode, BaseEntity targetRole, String... childrenCodes) {
-		if (targetRole == null)
-			throw new NullParameterException("targetRole");
-
-
 		EntityAttribute children;
 		try {
 			children = beaUtils.getEntityAttribute(productCode, targetRole.getCode(), Attribute.LNK_CHILDREN);
