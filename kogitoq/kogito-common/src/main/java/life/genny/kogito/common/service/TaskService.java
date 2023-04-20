@@ -142,8 +142,10 @@ public class TaskService extends KogitoService {
 		);
 		log.info("Current Scope Attributes: " + processData.getAttributeCodes());
 
-		boolean readonly = flatMapOfAsks.values().stream()
-				.allMatch(ask -> ask.getReadonly());
+		Set<String> nonReadonlyQuestions = flatMapOfAsks.values().stream()
+				.filter(ask -> !ask.getReadonly())
+        .collect(Collectors.toSet());
+    log.info("Non-Readonly Questions: " + nonReadonlyQuestions);
 
 		processData.setReadonly(readonly);
 
