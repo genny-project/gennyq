@@ -45,10 +45,14 @@ public class RoleBuilder {
     private String redirectCode;
 
     public RoleBuilder(String roleCode, String roleName, String productCode) {
+        this(roleCode, roleName, productCode, false);
+    }
+
+    public RoleBuilder(String roleCode, String roleName, String productCode, boolean doFlush) {
         this.capManager = Arc.container().select(CapabilitiesManager.class).get();
         this.roleMan = capManager.getRoleManager();
         this.productCode = productCode;
-        targetRole = roleMan.createRole(productCode, roleCode, roleName, true);
+        targetRole = roleMan.createRole(productCode, roleCode, roleName, doFlush);
     }
 
     /**

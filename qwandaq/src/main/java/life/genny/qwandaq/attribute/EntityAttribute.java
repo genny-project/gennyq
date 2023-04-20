@@ -711,7 +711,7 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 						else if(value instanceof Integer)
 							setValueInteger((Integer) value);
 						else
-							throw new UnsupportedOperationException("Unsupported java type: " + className + " for value: " + value);
+							throw new UnsupportedOperationException("Unsupported java type: " + className + " for value: " + value + ". Value class type: " + value.getClass());
 						break;
 
 					case GennyConstants.JAVA_TIME_LOCAL_DATE_TIME:
