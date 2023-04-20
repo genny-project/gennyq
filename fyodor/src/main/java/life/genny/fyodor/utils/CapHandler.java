@@ -145,25 +145,21 @@ public class CapHandler extends Manager {
 			// if any children have ands or ors, visit them
 			if(currentClause instanceof Clause clause && clause.hasCapabilityRequirements()) {
 				iter = clause.getClauseContainers().iterator();
-				if(iter.hasNext()) {
+				while(iter.hasNext()) {
 					ClauseContainer child = iter.next();
-					while(iter.hasNext()) {
-						// offer children of current clause
-						if(child.getAnd() != null)
-							queue.offer(child.getAnd());
+					// offer children of current clause
+					if(child.getAnd() != null)
+						queue.offer(child.getAnd());
 
-						if(child.getOr() != null)
-							queue.offer(child.getOr());
+					if(child.getOr() != null)
+						queue.offer(child.getOr());
 
-						if(child.getFilter() != null && !child.getFilter().requirementsMet(userCapabilities, requirementsConfig)) {
-							log.debug("[BFS] Removing filter: " + child.getFilter().getCode());
-							iter.remove();
-							++numRemoved;
-						} else if(child.getFilter() != null) {
-							log.debug("[BFS] Leaving filter: " + child.getFilter().getCode());
-						}
-
-						child = iter.next();
+					if(child.getFilter() != null && !child.getFilter().requirementsMet(userCapabilities, requirementsConfig)) {
+						log.debug("[BFS] Removing filter: " + child.getFilter().getCode());
+						iter.remove();
+						++numRemoved;
+					} else if(child.getFilter() != null) {
+						log.debug("[BFS] Leaving filter: " + child.getFilter().getCode());
 					}
 				}
 			}
