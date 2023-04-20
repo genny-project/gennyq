@@ -1,6 +1,6 @@
 package life.genny.test.qwandaq.utils.capabilities.requirements;
 
-import static life.genny.qwandaq.datatype.capability.core.node.PermissionMode.*;
+import static life.genny.qwandaq.datatype.capability.core.node.PermissionScope.*;
 
 import org.junit.jupiter.api.Test;
 

@@ -29,7 +29,7 @@ public class CapabilityNode {
 	/**
 	 * This capability's permission for the given mode
 	 */
-	public PermissionMode permMode;
+	public PermissionScope permMode;
 
 	/**
 	 * Whether or not to negate this particular node or not
@@ -39,7 +39,7 @@ public class CapabilityNode {
 	/**
 	 * Create a new capability with the given mode and permissions
 	 * @param capMode the {@link CapabilityNode} to assign
-	 * @param permMode the {@link PermissionMode} to assign
+	 * @param permMode the {@link PermissionScope} to assign
 	 * <p>
 	 * <pre>
 	 * new Capability(VIEW, ALL)
@@ -47,15 +47,15 @@ public class CapabilityNode {
 	 * will create a new Capability as VIEW:ALL
 	 * </p>
 	 * 
-	 * @see {@link CapabilityMode}, {@link PermissionMode}
+	 * @see {@link CapabilityMode}, {@link PermissionScope}
 	 */
-	public CapabilityNode(CapabilityMode capMode, PermissionMode permMode, boolean negate) {
+	public CapabilityNode(CapabilityMode capMode, PermissionScope permMode, boolean negate) {
 		this.capMode = capMode;
 		this.permMode = permMode;
 		this.negate = negate;
 	}
 
-	public CapabilityNode(CapabilityMode capMode, PermissionMode permMode) {
+	public CapabilityNode(CapabilityMode capMode, PermissionScope permMode) {
 		this(capMode, permMode, false);
 	}
 
@@ -93,7 +93,7 @@ public class CapabilityNode {
 		int size = this.permMode.ordinal();
 		CapabilityNode[] lesserNodes = new CapabilityNode[size];
 		for(int i = 0; i < size; i++) {
-			PermissionMode mode = PermissionMode.getByOrd(size - (i + 1));
+			PermissionScope mode = PermissionScope.getByOrd(size - (i + 1));
 			CapabilityNode node = new CapabilityNode(capMode, mode);
 			node.negate = negate;
 			lesserNodes[i] = node;
@@ -113,12 +113,12 @@ public class CapabilityNode {
 	 * @return a new Capability based on the CapabilityMode and PermissionMode in the String
 	 * @throws BadDataException if the capabilityString is malformed in some way/the corresponding CapabilityMode or PermissionMode could not be found
 	 * 
-	 * @see {@link CapabilityMode}, {@link PermissionMode}
+	 * @see {@link CapabilityMode}, {@link PermissionScope}
 	 */
 	public static CapabilityNode parseNode(String capabilityString) 
 		throws BadDataException {
 		CapabilityMode capMode;
-		PermissionMode permMode;
+		PermissionScope permMode;
 		int len = capabilityString.length();
 		
 		boolean negate = capabilityString.startsWith(NEGATE_IDENTIFIER);
@@ -128,7 +128,7 @@ public class CapabilityNode {
 		}
 		int offset = negate ? 1 : 0;
 		capMode = CapabilityMode.getByIdentifier(capabilityString.charAt(offset));
-		permMode = PermissionMode.getByIdentifier(capabilityString.charAt(offset + 2));
+		permMode = PermissionScope.getByIdentifier(capabilityString.charAt(offset + 2));
 		if(capMode == null) {
 			throw new BadDataException("Could not parse CapabilityMode Identifier: " + capabilityString.charAt(offset) + " in node string: " + capabilityString);
 		}

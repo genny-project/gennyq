@@ -11,14 +11,14 @@ import life.genny.qwandaq.datatype.capability.core.Capability;
 import life.genny.qwandaq.datatype.capability.core.CapabilityBuilder;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityMode;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
-import life.genny.qwandaq.datatype.capability.core.node.PermissionMode;
+import life.genny.qwandaq.datatype.capability.core.node.PermissionScope;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 
 import life.genny.test.qwandaq.utils.BaseTestCase;
 import life.genny.qwandaq.utils.testsuite.JUnitTester;
 
 import static life.genny.qwandaq.datatype.capability.core.node.CapabilityMode.*;
-import static life.genny.qwandaq.datatype.capability.core.node.PermissionMode.*;
+import static life.genny.qwandaq.datatype.capability.core.node.PermissionScope.*;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 // @RunWith(MockitoJUnitRunner.class)
@@ -51,7 +51,7 @@ public class CapabilityUtilsTest extends BaseTestCase {
     public void serializeNodeTest() {
         List<CapabilityNode> caps = new ArrayList<>();
         for(CapabilityMode mode : CapabilityMode.values()) {
-            for(PermissionMode permMode : PermissionMode.values()) {
+            for(PermissionScope permMode : PermissionScope.values()) {
                 caps.add(new CapabilityNode(mode, permMode));
             }
         }
@@ -85,7 +85,7 @@ public class CapabilityUtilsTest extends BaseTestCase {
         // Gen data
         for(int i = 0; i < 2; i++) {
             for(CapabilityMode mode : CapabilityMode.values()) {
-                for(PermissionMode permMode : PermissionMode.values()) {
+                for(PermissionScope permMode : PermissionScope.values()) {
                     capString.add((i != 0 ? "!" : "") + mode.getIdentifier() + CapabilityNode.DELIMITER + permMode.getIdentifier());
                 }
             }
@@ -99,7 +99,7 @@ public class CapabilityUtilsTest extends BaseTestCase {
                 startInd = 1;
             }
             CapabilityMode mode = CapabilityMode.getByIdentifier(caps.charAt(startInd));
-            PermissionMode permMode = PermissionMode.getByIdentifier(caps.charAt(startInd + 2));
+            PermissionScope permMode = PermissionScope.getByIdentifier(caps.charAt(startInd + 2));
             CapabilityNode node = new CapabilityNode(mode, permMode);
             node.negate = negate;
             return node;

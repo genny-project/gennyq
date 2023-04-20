@@ -5,7 +5,7 @@ import life.genny.qwandaq.intf.ICapabilityFilterable;
 import life.genny.qwandaq.utils.testsuite.JUnitTester;
 import life.genny.test.qwandaq.utils.capabilities.requirements.BaseRequirementsTest;
 
-import static life.genny.qwandaq.datatype.capability.core.node.PermissionMode.*;
+import static life.genny.qwandaq.datatype.capability.core.node.PermissionScope.*;
 
 import org.junit.Test;
 

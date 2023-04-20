@@ -9,7 +9,7 @@ import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityMode;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
-import life.genny.qwandaq.datatype.capability.core.node.PermissionMode;
+import life.genny.qwandaq.datatype.capability.core.node.PermissionScope;
 import life.genny.qwandaq.utils.CommonUtils;
 
 public class ReqConfig {
@@ -113,7 +113,7 @@ public class ReqConfig {
 	private static Collection<CapabilityNode> cascadeCapabilities(Collection<CapabilityNode> capSet) {
 		// Allocate new list with max size of all combinations of CapMode and PermMode
 		List<CapabilityNode> newCaps = new ArrayList<>(
-				capSet.size() * CapabilityMode.values().length * PermissionMode.values().length);
+				capSet.size() * CapabilityMode.values().length * PermissionScope.values().length);
 		for (CapabilityNode node : capSet) {
 			newCaps.addAll(Arrays.asList(node.getLesserNodes()));
 		}

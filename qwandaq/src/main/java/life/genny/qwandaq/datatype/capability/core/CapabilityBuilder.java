@@ -7,7 +7,7 @@ import java.util.List;
 
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityMode;
 import life.genny.qwandaq.datatype.capability.core.node.CapabilityNode;
-import life.genny.qwandaq.datatype.capability.core.node.PermissionMode;
+import life.genny.qwandaq.datatype.capability.core.node.PermissionScope;
 import life.genny.qwandaq.managers.capabilities.CapabilitiesManager;
 import life.genny.qwandaq.managers.capabilities.role.RoleBuilder;
 
@@ -65,7 +65,7 @@ public class CapabilityBuilder {
      * 
      * @see CapabilityMode#ADD
      */
-    public CapabilityBuilder add(PermissionMode scope, boolean negate) {
+    public CapabilityBuilder add(PermissionScope scope, boolean negate) {
         return addNode(ADD, scope, negate);
     }
 
@@ -76,7 +76,7 @@ public class CapabilityBuilder {
      * 
      * @see CapabilityMode#ADD
      */
-    public CapabilityBuilder add(PermissionMode scope) {
+    public CapabilityBuilder add(PermissionScope scope) {
         return add(scope, false);
     }
 
@@ -87,7 +87,7 @@ public class CapabilityBuilder {
      * 
      * @see CapabilityMode#EDIT
      */
-    public CapabilityBuilder edit(PermissionMode scope, boolean negate) {
+    public CapabilityBuilder edit(PermissionScope scope, boolean negate) {
         return addNode(EDIT, scope, negate);
     }
 
@@ -98,7 +98,7 @@ public class CapabilityBuilder {
      * 
      * @see CapabilityMode#EDIT
      */
-    public CapabilityBuilder edit(PermissionMode scope) {
+    public CapabilityBuilder edit(PermissionScope scope) {
         return edit(scope, false);
     }
 
@@ -109,7 +109,7 @@ public class CapabilityBuilder {
      * 
      * @see CapabilityMode#DELETE
      */
-    public CapabilityBuilder delete(PermissionMode scope, boolean negate) {
+    public CapabilityBuilder delete(PermissionScope scope, boolean negate) {
         return addNode(DELETE, scope, negate);
     }
 
@@ -120,7 +120,7 @@ public class CapabilityBuilder {
      * 
      * @see CapabilityMode#DELETE
      */
-    public CapabilityBuilder delete(PermissionMode scope) {
+    public CapabilityBuilder delete(PermissionScope scope) {
         return delete(scope, false);
     }
 
@@ -132,7 +132,7 @@ public class CapabilityBuilder {
      * 
      * @see CapabilityMode#VIEW
      */
-    public CapabilityBuilder view(PermissionMode scope, boolean negate) {
+    public CapabilityBuilder view(PermissionScope scope, boolean negate) {
         return addNode(VIEW, scope, negate);
     }
 
@@ -143,18 +143,18 @@ public class CapabilityBuilder {
      * 
      * @see CapabilityMode#VIEW
      */
-    public CapabilityBuilder view(PermissionMode scope) {
+    public CapabilityBuilder view(PermissionScope scope) {
         return view(scope, false);
     }
 
     /**
      * Add a new {@link CapabilityNode} to the given Capability
      * @param mode - mode to set (any of {@link CapabilityMode#values()})
-     * @param scope - scope (permissions) to set for this capability node (any of {@link PermissionMode#values()})
+     * @param scope - scope (permissions) to set for this capability node (any of {@link PermissionScope#values()})
      * @param negate - whether or not this {@link CapabilityNode} will negate
      * @return this
      */
-    public CapabilityBuilder addNode(CapabilityMode mode, PermissionMode scope, boolean negate) {
+    public CapabilityBuilder addNode(CapabilityMode mode, PermissionScope scope, boolean negate) {
         nodes.add(new CapabilityNode(mode, scope, negate));
         return this;
     }
@@ -162,13 +162,13 @@ public class CapabilityBuilder {
     /**
      * Add a new {@link CapabilityNode} to the given Capability
      * @param modeIdentifier - identifier of mode to set (any of {@link CapabilityMode#idMap})
-     * @param scopeIdentifier - identifier of scope (permissions) to set for this capability node (any of {@link PermissionMode#idMap})
+     * @param scopeIdentifier - identifier of scope (permissions) to set for this capability node (any of {@link PermissionScope#idMap})
      * @param negate - whether or not this {@link CapabilityNode} will negate
      * @return this
      */
     public CapabilityBuilder addNode(char modeIdentifier, char scopeIdentifier, boolean negate) {
         CapabilityMode mode = CapabilityMode.getByIdentifier(modeIdentifier);
-        PermissionMode scope = PermissionMode.getByIdentifier(scopeIdentifier);
+        PermissionScope scope = PermissionScope.getByIdentifier(scopeIdentifier);
         return addNode(mode, scope, negate);
     }
 

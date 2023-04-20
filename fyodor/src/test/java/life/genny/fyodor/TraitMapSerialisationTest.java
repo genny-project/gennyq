@@ -16,7 +16,7 @@ import life.genny.qwandaq.entity.search.trait.Operator;
 import life.genny.qwandaq.entity.search.trait.Trait;
 import life.genny.qwandaq.utils.CommonUtils;
 
-import static life.genny.qwandaq.datatype.capability.core.node.PermissionMode.*;
+import static life.genny.qwandaq.datatype.capability.core.node.PermissionScope.*;
 
 public class TraitMapSerialisationTest {
 	public static final String SBE_TABLE_APPLICATIONS = "SBE_TABLE_APPLICATIONS";
