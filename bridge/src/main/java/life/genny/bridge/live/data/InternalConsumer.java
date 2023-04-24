@@ -9,6 +9,8 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 
+import life.genny.qwandaq.message.QDataAskMessage;
+import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.bridge.model.grpc.Item;
 import life.genny.bridge.blacklisting.BlackListInfo;
 import life.genny.qwandaq.models.GennyToken;
@@ -22,9 +24,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Observes;
-import javax.inject.Inject;
 import java.util.UUID;
 
 
@@ -38,96 +37,101 @@ import java.util.UUID;
 @ApplicationScoped
 public class InternalConsumer {
 
-    private static final Logger log = Logger.getLogger(InternalConsumer.class);
+	private static final Logger log = Logger.getLogger(InternalConsumer.class);
 
-    @Inject
-    TokenVerification verification;
-    @Inject
-    EventBus bus;
-    @Inject
-    BlackListInfo blackList;
-    @Inject
-    BridgeGrpcService grpcService;
-    @Inject
-    GennyScopeInit scope;
-    @Inject
-    Service service;
-    @Inject
-    UserToken userToken;
+	@Inject
+	TokenVerification verification;
 
-    void onStart(@Observes StartupEvent ev) {
+	@Inject
+	EventBus bus;
 
-        service.initToken();
-        service.initCache();
-        service.initKafka();
-        log.info("[*] Finished Startup!");
-    }
+	@Inject
+	BlackListInfo blackList;
+
+	@Inject
+	BridgeGrpcService grpcService;
+
+	@Inject
+	GennyScopeInit scope;
+
+	@Inject
+	Service service;
+
+	@Inject
+	UserToken userToken;
+
+	void onStart(@Observes StartupEvent ev) {
+		service.initToken();
+		service.initCache();
+		service.initKafka();
+		log.info("[*] Finished Startup!");
+	}
 
 
-    /**
-     * A request with a protocol which will add, delete all or delete just a record depending on the
-     * protocol specified in the in the message. The protocol consist of the following: - Just a
-     * dash/minus (-) - A dash/minus appended with a {@link UUID} (-UUID.toString()) - A {@link UUID}
-     * (UUID.toString())
-     *
-     * @param protocol A string with the rules already mentioned
-     */
-    @Incoming("blacklists")
-    public void getBlackLists(String protocol) {
+	/**
+	 * A request with a protocol which will add, delete all or delete just a record depending on the
+	 * protocol specified in the in the message. The protocol consist of the following: - Just a
+	 * dash/minus (-) - A dash/minus appended with a {@link UUID} (-UUID.toString()) - A {@link UUID}
+	 * (UUID.toString())
+	 *
+	 * @param protocol A string with the rules already mentioned
+	 */
+	@Incoming("blacklists")
+	public void getBlackLists(String protocol) {
 
-        log.warn("New recorded info associated to invalid data this protocol {"
-                + protocol + "} will be handled in the blacklisted class");
-        blackList.onReceived(protocol);
-    }
+		log.warn("New recorded info associated to invalid data this protocol {"
+			+ protocol + "} will be handled in the blacklisted class");
+		blackList.onReceived(protocol);
+	}
 
-    @Incoming("webcmds")
-    public void getFromWebCmds(String data) {
+	@Incoming("webcmds")
+	public void getFromWebCmds(String data) {
 
-        scope.init(data);
+		scope.init(data);
 
-        log.info("Message received in webcmd");
-        handleIncomingMessage(data);
+		log.info("Message received in webcmd");
+		handleIncomingMessage(data);
 
-        scope.destroy();
-    }
+		scope.destroy();
+	}
 
-    @Incoming("webdata")
-    public void getFromWebData(String data) {
+	@Incoming("webdata")
+	public void getFromWebData(String data) {
 
-        scope.init(data);
+		scope.init(data);
 
-        log.info("Message received in webdata");
-        handleIncomingMessage(data);
+		log.info("Message received in webdata");
+		handleIncomingMessage(data);
 
-        scope.destroy();
-    }
+		scope.destroy();
+	}
 
-    /**
-     * It checks that no confidential information has been leaked. It will delete the key properties
-     * if it finds any
-     *
-     * @param json A JsonObject
-     * @return A JsonObject without the confidential key properties
-     */
-    public static JsonObject removeKeys(final JsonObject json) {
+	/**
+	 * It checks that no confidential information has been leaked. It will delete the key properties
+	 * if it finds any
+	 *
+	 * @param json A JsonObject
+	 * @return A JsonObject without the confidential key properties
+	 */
+	public static JsonObject removeKeys(final JsonObject json) {
 
-        if (json.containsKey("token")) {
-            json.remove("token");
-        }
+		if (json.containsKey("token")) {
+			json.remove("token");
+		}
 
-        if (json.containsKey("recipientCodeArray")) {
-            json.remove("recipientCodeArray");
-        }
+		if (json.containsKey("recipientCodeArray")) {
+			json.remove("recipientCodeArray");
+		}
 
-        return json;
-    }
+		return json;
+	}
 
-    /**
-     * Handle the message and route by session id which is extracted from the token
-     *
-     * @param arg A Json string which is parsed inside the body of the method
-     */
-    public void handleIncomingMessage(String arg) {
+	/**
+	 * Handle the message and route by session id which is extracted from the token
+	 *
+	 * @param arg A Json string which is parsed inside the body of the method
+	 */
+	public void handleIncomingMessage(String arg) {
 
 		log.debug("Outgoing Payload = " + arg);
 
@@ -138,22 +142,24 @@ public class InternalConsumer {
 		}
 
 		final JsonObject json = new JsonObject(incoming);
-        final JsonArray items = json.getJsonArray("items");
-        if(items != null) {
-            if(items.size() == 1) {
-                if(StringUtils.isBlank(json.getString("aliasCode"))) {
-                    JsonObject firstItem = items.getJsonObject(0);
-                    if(firstItem != null) {
-                        String aliasCode = firstItem.getString("name");
-                        json.put("aliasCode", aliasCode);
-                    }
-                }
-            }
-        } else if(items == null || items.size() == 0) {
-            log.error("[!] Sending out a message with 0 items! Not forwarding message to Frontend");
-            return;
-        }
-        
+		final JsonArray items = json.getJsonArray("items");
+		final String msg_type = json.getString("msg_type");
+		// only perform check on messages that have items
+		if (QDataAskMessage.DATATYPE_ASK.equals(msg_type) || QDataBaseEntityMessage.DATATYPE_BASEENTITY.equals(msg_type)) {
+			if(items == null || items.size() == 0) {
+				log.error("[!] Sending out a message with 0 items! Not forwarding message to Frontend");
+				return;
+			}
+
+			if(items.size() == 1 && StringUtils.isBlank(json.getString("aliasCode"))) {
+				JsonObject firstItem = items.getJsonObject(0);
+				if(firstItem != null) {
+					String aliasCode = firstItem.getString("name");
+					json.put("aliasCode", aliasCode);
+				}
+			}
+		}
+		
 		GennyToken gennyToken = new GennyToken(json.getString("token"));
 		try {
 			verification.verify(gennyToken.getKeycloakRealm(), gennyToken.getToken());
@@ -182,6 +188,6 @@ public class InternalConsumer {
 			log.error("The host service of channel producer tried to accessed an endpoint and got an"
 				+ " unauthorised message potentially from api and the producer hosted in rulesservice");
 		}
-    }
+	}
 
 }

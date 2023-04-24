@@ -16,7 +16,7 @@ public class QDataBaseEntityMessage extends QDataMessage implements Comparable<Q
 
 	private Collection<BaseEntity> items;
 
-	private static final String DATATYPE_BASEENTITY = BaseEntity.class.getSimpleName();
+	public static final String DATATYPE_BASEENTITY = BaseEntity.class.getSimpleName();
 	private String parentCode;
 	private String linkCode;
 	private String linkValue;
