@@ -1,5 +1,8 @@
 package life.genny.kogito.common.workitem;
 
+import static life.genny.qwandaq.attribute.Attribute.LNK_MESSAGE_TYPE;
+import static life.genny.qwandaq.entity.BaseEntity.PRI_NAME;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,7 +15,17 @@ import org.kie.kogito.internal.process.runtime.KogitoWorkItem;
 import org.kie.kogito.internal.process.runtime.KogitoWorkItemHandler;
 import org.kie.kogito.internal.process.runtime.KogitoWorkItemManager;
 
-import life.genny.kogito.common.messages.SendMessageService;
+import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.message.QBaseMSGMessageType;
+import life.genny.qwandaq.message.QMessageGennyMSG;
+import life.genny.qwandaq.models.ANSIColour;
+import life.genny.qwandaq.models.UserToken;
+import life.genny.qwandaq.utils.BaseEntityUtils;
+import life.genny.qwandaq.utils.CommonUtils;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
+
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class MessageWorkItemHandler implements KogitoWorkItemHandler {
@@ -21,9 +34,16 @@ public class MessageWorkItemHandler implements KogitoWorkItemHandler {
     Logger log;
 
     @Inject
-    SendMessageService sendMessageService;
+    UserToken userToken;
+
+    @Inject
+    BaseEntityUtils beUtils;
 
     public static final String CTX = "CTX.";
+
+    public static final String RECIPIENT = "RECIPIENT";
+    public static final String SOURCE = "SOURCE";
+    public static final String TARGET = "TARGET";
 
     @PostConstruct
     public void init(){
@@ -32,7 +52,7 @@ public class MessageWorkItemHandler implements KogitoWorkItemHandler {
 
     @Override
     public void abortWorkItem(KogitoWorkItem workItem, KogitoWorkItemManager manager) {
-        log.error("Message WorkItem Handler error!");
+        log.error("MessageWorkItemHandler error!");
     }
 
     @Override
@@ -43,16 +63,58 @@ public class MessageWorkItemHandler implements KogitoWorkItemHandler {
             String recipientCode = (String) workItem.getParameter("recipientCode");
             log.info("recipientCode: " + recipientCode);
 
+            // build the context map
             Map<String, String> ctxMap = new HashMap<>();
-
             for(String parameter : workItem.getParameters().keySet()) {
                 if(parameter.startsWith(CTX)){
                     String key = parameter.replace(CTX, "");
-                    ctxMap.put(key,  (String) workItem.getParameters().get(parameter));
+                    ctxMap.put(key, (String) workItem.getParameters().get(parameter));
                 }
             }
             log.info("contextMap: "+ ctxMap);
-            sendMessageService.send(messageCode, recipientCode, ctxMap);
+
+            // find the template entity
+            BaseEntity baseEntity;
+            try {
+                baseEntity = beUtils.getBaseEntity(messageCode);
+            } catch (ItemNotFoundException e) {
+                log.error("Message template not found!");
+                e.printStackTrace();
+                return;
+            }
+
+            // find the message type selection
+            BaseEntity messageType;
+            try {
+                messageType = beUtils.getBaseEntityFromLinkAttribute(baseEntity, LNK_MESSAGE_TYPE, true);
+                log.debug("messageType: "+messageType.getCode());
+            } catch (ItemNotFoundException e) {
+                log.error("Message type not found!");
+                e.printStackTrace();
+                return;
+            }
+
+            // add valid message types
+            QMessageGennyMSG.Builder msgBuilder = new QMessageGennyMSG.Builder(messageCode);
+            for (QBaseMSGMessageType type : QBaseMSGMessageType.values()) {
+                if (messageType.getCode().contains(type.name())) {
+                    msgBuilder.addMessageType(type);
+                }
+            }
+
+            log.info("Sending message: " + messageCode);
+            msgBuilder.setMessageContextMap(ctxMap);
+            msgBuilder.addRecipient(recipientCode)
+                    .setUtils(beUtils)
+                    .setToken(userToken)
+                    .setMessageContextMap(ctxMap)
+                    .send();
+
+            log.info("Triggered message!");
+            log.info(ANSIColour.doColour("messageCode: "+ messageCode, ANSIColour.GREEN));
+            log.info(ANSIColour.doColour("recipientCode: "+ recipientCode, ANSIColour.GREEN));
+            log.info(ANSIColour.doColour("messageType: "+ messageType, ANSIColour.GREEN));
+            log.info(ANSIColour.doColour("ctxMap: "+ ctxMap, ANSIColour.GREEN));
 
             Map<String, Object> results = new HashMap<String, Object>();
             manager.completeWorkItem(workItem.getStringId(), results);
