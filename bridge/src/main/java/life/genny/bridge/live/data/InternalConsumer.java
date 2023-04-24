@@ -9,6 +9,8 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 
+import life.genny.qwandaq.message.QDataAskMessage;
+import life.genny.qwandaq.message.QDataBaseEntityMessage;
 import life.genny.bridge.model.grpc.Item;
 import life.genny.bridge.blacklisting.BlackListInfo;
 import life.genny.qwandaq.models.GennyToken;
@@ -76,7 +78,7 @@ public class InternalConsumer {
     public void getBlackLists(String protocol) {
 
         log.warn("New recorded info associated to invalid data this protocol {"
-                + protocol + "} will be handled in the blacklisted class");
+            + protocol + "} will be handled in the blacklisted class");
         blackList.onReceived(protocol);
     }
 
@@ -129,59 +131,62 @@ public class InternalConsumer {
      */
     public void handleIncomingMessage(String arg) {
 
-		log.debug("Outgoing Payload = " + arg);
+        log.debug("Outgoing Payload = " + arg);
 
-		String incoming = arg;
-		if ("{}".equals(incoming)) {
-			log.warn("The payload sent from the webcmd producer is empty");
-			return;
-		}
-
-		final JsonObject json = new JsonObject(incoming);
-        final JsonArray items = json.getJsonArray("items");
-        if(items != null) {
-            if(items.size() == 1) {
-                if(StringUtils.isBlank(json.getString("aliasCode"))) {
-                    JsonObject firstItem = items.getJsonObject(0);
-                    if(firstItem != null) {
-                        String aliasCode = firstItem.getString("name");
-                        json.put("aliasCode", aliasCode);
-                    }
-                }
-            }
-        } else if(items == null || items.size() == 0) {
-            log.error("[!] Sending out a message with 0 items! Not forwarding message to Frontend");
+        String incoming = arg;
+        if ("{}".equals(incoming)) {
+            log.warn("The payload sent from the webcmd producer is empty");
             return;
         }
-        
-		GennyToken gennyToken = new GennyToken(json.getString("token"));
-		try {
-			verification.verify(gennyToken.getKeycloakRealm(), gennyToken.getToken());
-		} catch (Exception e) {
-			log.error("The token verification has failed somehow this token was able to penatrate other "
-				+ "security barriers please check this exception in more depth");
-			e.printStackTrace();
-		}
-		// KeycloakTokenPayload payload = KeycloakTokenPayload.decodeToken(json.getString("token"));
 
-		if (json.containsKey("data_type")) {
-			log.info("QBEM being sent outside:" + json);
-		} else {
-			/// is this really empty body ?
-		}
+        final JsonObject json = new JsonObject(incoming);
+        final JsonArray items = json.getJsonArray("items");
+        final String msg_type = json.getString("msg_type");
+        // only perform check on messages that have items
+        if (QDataAskMessage.DATATYPE_ASK.equals(msg_type) || QDataBaseEntityMessage.DATATYPE_BASEENTITY.equals(msg_type)) {
+            if (items != null) {
+                if(items.size() == 1) {
+                    if(StringUtils.isBlank(json.getString("aliasCode"))) {
+                        JsonObject firstItem = items.getJsonObject(0);
+                        if(firstItem != null) {
+                            String aliasCode = firstItem.getString("name");
+                            json.put("aliasCode", aliasCode);
+                        }
+                    }
+                }
+            } else if (items == null || items.size() == 0) {
+                log.error("[!] Sending out a message with 0 items! Not forwarding message to Frontend");
+                return;
+            }
+        }
+        GennyToken gennyToken = new GennyToken(json.getString("token"));
+        try {
+            verification.verify(gennyToken.getKeycloakRealm(), gennyToken.getToken());
+        } catch (Exception e) {
+            log.error("The token verification has failed somehow this token was able to penatrate other "
+                + "security barriers please check this exception in more depth");
+            e.printStackTrace();
+        }
+        // KeycloakTokenPayload payload = KeycloakTokenPayload.decodeToken(json.getString("token"));
 
-		if (!incoming.contains("<body>Unauthorized</body>")) {
-			String sessionState = (String) gennyToken.getAdecodedTokenMap().get("session_state");
-			log.info("Publishing message to session " + sessionState);
+        if (json.containsKey("data_type")) {
+            log.info("QBEM being sent outside:" + json);
+        } else {
+            /// is this really empty body ?
+        }
 
-			KeycloakTokenPayload payload = KeycloakTokenPayload.decodeToken(json.getString("token"));
-			grpcService.send(payload.jti, Item.newBuilder().setBody(removeKeys(json).toString()).build());
-			bus.publish(sessionState, removeKeys(json));
+        if (!incoming.contains("<body>Unauthorized</body>")) {
+            String sessionState = (String) gennyToken.getAdecodedTokenMap().get("session_state");
+            log.info("Publishing message to session " + sessionState);
 
-		} else {
-			log.error("The host service of channel producer tried to accessed an endpoint and got an"
-				+ " unauthorised message potentially from api and the producer hosted in rulesservice");
-		}
+            KeycloakTokenPayload payload = KeycloakTokenPayload.decodeToken(json.getString("token"));
+            grpcService.send(payload.jti, Item.newBuilder().setBody(removeKeys(json).toString()).build());
+            bus.publish(sessionState, removeKeys(json));
+
+        } else {
+            log.error("The host service of channel producer tried to accessed an endpoint and got an"
+                + " unauthorised message potentially from api and the producer hosted in rulesservice");
+        }
     }
 
 }
