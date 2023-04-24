@@ -11,6 +11,7 @@ public enum PermissionMode {
     // Priority to be determined by .ordinal()
     NONE('N'),
     SELF('S'),
+    GROUP('G'),
     ALL('A');
 
     private static Map<Character, PermissionMode> idMap = new HashMap<>(values().length);

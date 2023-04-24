@@ -48,7 +48,7 @@ public class RoleBuilder {
         this.capManager = Arc.container().select(CapabilitiesManager.class).get();
         this.roleMan = capManager.getRoleManager();
         this.productCode = productCode;
-        targetRole = roleMan.createRole(productCode, roleCode, roleName, true);
+        targetRole = roleMan.createRole(productCode, roleCode, roleName, false);
     }
 
     /**
