@@ -57,69 +57,64 @@ public class MessageWorkItemHandler implements KogitoWorkItemHandler {
 
     @Override
     public void executeWorkItem(KogitoWorkItem workItem, KogitoWorkItemManager manager) {
-        try {
-            String messageCode = (String) workItem.getParameter("messageCode");
-            log.info("messageCode: " + messageCode);
-            String recipientCode = (String) workItem.getParameter("recipientCode");
-            log.info("recipientCode: " + recipientCode);
+        String messageCode = (String) workItem.getParameter("messageCode");
+        log.info("messageCode: " + messageCode);
+        String recipientCode = (String) workItem.getParameter("recipientCode");
+        log.info("recipientCode: " + recipientCode);
 
-            // build the context map
-            Map<String, String> ctxMap = new HashMap<>();
-            for(String parameter : workItem.getParameters().keySet()) {
-                if(parameter.startsWith(CTX)){
-                    String key = parameter.replace(CTX, "");
-                    ctxMap.put(key, (String) workItem.getParameters().get(parameter));
-                }
+        // build the context map
+        Map<String, String> ctxMap = new HashMap<>();
+        for(String parameter : workItem.getParameters().keySet()) {
+            if(parameter.startsWith(CTX)){
+                String key = parameter.replace(CTX, "");
+                ctxMap.put(key, (String) workItem.getParameters().get(parameter));
             }
-            log.info("contextMap: "+ ctxMap);
-
-            // find the template entity
-            BaseEntity baseEntity;
-            try {
-                baseEntity = beUtils.getBaseEntity(messageCode);
-            } catch (ItemNotFoundException e) {
-                log.error("Message template not found!");
-                e.printStackTrace();
-                return;
-            }
-
-            // find the message type selection
-            BaseEntity messageType;
-            try {
-                messageType = beUtils.getBaseEntityFromLinkAttribute(baseEntity, LNK_MESSAGE_TYPE, true);
-                log.debug("messageType: "+messageType.getCode());
-            } catch (ItemNotFoundException e) {
-                log.error("Message type not found!");
-                e.printStackTrace();
-                return;
-            }
-
-            // add valid message types
-            QMessageGennyMSG.Builder msgBuilder = new QMessageGennyMSG.Builder(messageCode);
-            for (QBaseMSGMessageType type : QBaseMSGMessageType.values()) {
-                if (messageType.getCode().contains(type.name())) {
-                    msgBuilder.addMessageType(type);
-                }
-            }
-
-            log.info("Sending message: " + messageCode);
-            msgBuilder.setMessageContextMap(ctxMap);
-            msgBuilder.addRecipient(recipientCode)
-                    .setUtils(beUtils)
-                    .setToken(userToken)
-                    .setMessageContextMap(ctxMap)
-                    .send();
-
-            log.info("Triggered message!");
-            log.info(ANSIColour.doColour("messageCode: "+ messageCode, ANSIColour.GREEN));
-            log.info(ANSIColour.doColour("recipientCode: "+ recipientCode, ANSIColour.GREEN));
-            log.info(ANSIColour.doColour("messageType: "+ messageType, ANSIColour.GREEN));
-            log.info(ANSIColour.doColour("ctxMap: "+ ctxMap, ANSIColour.GREEN));
-
-            Map<String, Object> results = new HashMap<String, Object>();
-            manager.completeWorkItem(workItem.getStringId(), results);
-        } catch (Exception ex) {
-            log.error("Exception: " + ex);
         }
+
+        log.info("contextMap: " + ctxMap);
+
+        // find the template entity
+        BaseEntity baseEntity;
+        try {
+            baseEntity = beUtils.getBaseEntity(messageCode);
+        } catch (ItemNotFoundException e) {
+            log.error("Message template not found: " + messageCode + "! Details: " + e.getMessage());
+            return;
+        }
+
+        // find the message type selection
+        BaseEntity messageType;
+        try {
+            messageType = beUtils.getBaseEntityFromLinkAttribute(baseEntity, LNK_MESSAGE_TYPE, true);
+            log.debug("messageType: " + messageType.getCode());
+        } catch (ItemNotFoundException e) {
+            log.error("Message Type (" + LNK_MESSAGE_TYPE + ") not found in: " + messageCode + "! Details: " + e.getMessage());
+            return;
+        }
+
+        // add valid message types
+        QMessageGennyMSG.Builder msgBuilder = new QMessageGennyMSG.Builder(messageCode);
+        for (QBaseMSGMessageType type : QBaseMSGMessageType.values()) {
+            if (messageType.getCode().contains(type.name())) {
+                msgBuilder.addMessageType(type);
+            }
+        }
+
+        log.info("Sending message: " + messageCode);
+        msgBuilder.setMessageContextMap(ctxMap);
+        msgBuilder.addRecipient(recipientCode)
+                .setUtils(beUtils)
+                .setToken(userToken)
+                .setMessageContextMap(ctxMap)
+                .send();
+
+        log.info("Triggered message!");
+        log.info(ANSIColour.doColour("messageCode: " + messageCode, ANSIColour.GREEN));
+        log.info(ANSIColour.doColour("recipientCode: " + recipientCode, ANSIColour.GREEN));
+        log.info(ANSIColour.doColour("messageType: " + messageType, ANSIColour.GREEN));
+        log.info(ANSIColour.doColour("ctxMap: " + ctxMap, ANSIColour.GREEN));
+
+        Map<String, Object> results = new HashMap<String, Object>();
+        manager.completeWorkItem(workItem.getStringId(), results);
     }
 }
