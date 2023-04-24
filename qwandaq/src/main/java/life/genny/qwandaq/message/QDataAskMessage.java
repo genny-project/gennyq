@@ -11,7 +11,7 @@ public class QDataAskMessage extends QDataMessage {
 
     private static final long serialVersionUID = 1L;
     private Set<Ask> items;
-    private static final String DATATYPE_ASK = Ask.class.getSimpleName();
+    public static final String DATATYPE_ASK = Ask.class.getSimpleName();
 
     public QDataAskMessage() {
         super(DATATYPE_ASK);
