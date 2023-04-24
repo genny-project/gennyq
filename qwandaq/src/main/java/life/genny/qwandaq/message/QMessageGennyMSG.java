@@ -2,7 +2,9 @@ package life.genny.qwandaq.message;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 import life.genny.qwandaq.entity.BaseEntity;
+import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
 import life.genny.qwandaq.kafka.KafkaTopic;
+import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.GennyToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
 import life.genny.qwandaq.utils.KafkaUtils;
@@ -261,9 +263,9 @@ public class QMessageGennyMSG extends QMessage {
 				log.warn("Message does not contain a Template Code!!");
 			} else {
 				// Make sure template exists
-				BaseEntity templateBE = beUtils.getBaseEntity(this.msg.getTemplateCode());
-
-				if (templateBE == null) {
+				try {
+					beUtils.getBaseEntity(this.msg.getTemplateCode());
+				} catch(ItemNotFoundException e) {
 					log.error("Message template " + this.msg.getTemplateCode() + " does not exist!!");
 					return this.msg;
 				}
@@ -285,6 +287,8 @@ public class QMessageGennyMSG extends QMessage {
 
 			// Set Msg Type to DEFAULT if none set already
 			if (this.msg.messageTypeArr.length == 0) {
+				log.warn(ANSIColour.doColour("No message type attached to: " + msg.getTemplateCode() + " being sent to " + msg.getRecipientCodeArray()
+						+ ". Defaulting to " + QBaseMSGMessageType.DEFAULT, ANSIColour.YELLOW));
 				this.msg.addMessageType(QBaseMSGMessageType.DEFAULT);
 			}
 

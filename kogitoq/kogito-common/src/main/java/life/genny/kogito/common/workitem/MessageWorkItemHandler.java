@@ -1,7 +1,6 @@
 package life.genny.kogito.common.workitem;
 
 import static life.genny.qwandaq.attribute.Attribute.LNK_MESSAGE_TYPE;
-import static life.genny.qwandaq.entity.BaseEntity.PRI_NAME;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,11 +20,7 @@ import life.genny.qwandaq.message.QMessageGennyMSG;
 import life.genny.qwandaq.models.ANSIColour;
 import life.genny.qwandaq.models.UserToken;
 import life.genny.qwandaq.utils.BaseEntityUtils;
-import life.genny.qwandaq.utils.CommonUtils;
 import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
-
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
 
 @ApplicationScoped
 public class MessageWorkItemHandler implements KogitoWorkItemHandler {
@@ -100,21 +95,25 @@ public class MessageWorkItemHandler implements KogitoWorkItemHandler {
             }
         }
 
-        log.info("Sending message: " + messageCode);
-        msgBuilder.setMessageContextMap(ctxMap);
-        msgBuilder.addRecipient(recipientCode)
-                .setUtils(beUtils)
-                .setToken(userToken)
-                .setMessageContextMap(ctxMap)
-                .send();
+        try {
+            log.info("Sending message: " + messageCode);
+            msgBuilder.setMessageContextMap(ctxMap);
+            msgBuilder.addRecipient(recipientCode)
+                    .setUtils(beUtils)
+                    .setToken(userToken)
+                    .setMessageContextMap(ctxMap)
+                    .send();
 
-        log.info("Triggered message!");
-        log.info(ANSIColour.doColour("messageCode: " + messageCode, ANSIColour.GREEN));
-        log.info(ANSIColour.doColour("recipientCode: " + recipientCode, ANSIColour.GREEN));
-        log.info(ANSIColour.doColour("messageType: " + messageType, ANSIColour.GREEN));
-        log.info(ANSIColour.doColour("ctxMap: " + ctxMap, ANSIColour.GREEN));
+            log.info("Triggered message!");
+            log.info(ANSIColour.doColour("messageCode: " + messageCode, ANSIColour.GREEN));
+            log.info(ANSIColour.doColour("recipientCode: " + recipientCode, ANSIColour.GREEN));
+            log.info(ANSIColour.doColour("messageType: " + messageType, ANSIColour.GREEN));
+            log.info(ANSIColour.doColour("ctxMap: " + ctxMap, ANSIColour.GREEN));
 
-        Map<String, Object> results = new HashMap<String, Object>();
-        manager.completeWorkItem(workItem.getStringId(), results);
+            Map<String, Object> results = new HashMap<String, Object>();
+            manager.completeWorkItem(workItem.getStringId(), results);
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
     }
 }
