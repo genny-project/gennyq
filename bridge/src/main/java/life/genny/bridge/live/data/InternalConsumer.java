@@ -144,14 +144,12 @@ public class InternalConsumer {
         final String msg_type = json.getString("msg_type");
         // only perform check on messages that have items
         if (QDataAskMessage.DATATYPE_ASK.equals(msg_type) || QDataBaseEntityMessage.DATATYPE_BASEENTITY.equals(msg_type)) {
-            if (items != null) {
-                if(items.size() == 1) {
-                    if(StringUtils.isBlank(json.getString("aliasCode"))) {
-                        JsonObject firstItem = items.getJsonObject(0);
-                        if(firstItem != null) {
-                            String aliasCode = firstItem.getString("name");
-                            json.put("aliasCode", aliasCode);
-                        }
+            if (items != null && items.size() == 1) {
+                if(StringUtils.isBlank(json.getString("aliasCode"))) {
+                    JsonObject firstItem = items.getJsonObject(0);
+                    if(firstItem != null) {
+                        String aliasCode = firstItem.getString("name");
+                        json.put("aliasCode", aliasCode);
                     }
                 }
             } else if (items == null || items.size() == 0) {
