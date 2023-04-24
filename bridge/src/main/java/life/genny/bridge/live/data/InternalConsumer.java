@@ -24,9 +24,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.jboss.logging.Logger;
 
-import javax.enterprise.context.ApplicationScoped;
-import javax.enterprise.event.Observes;
-import javax.inject.Inject;
 import java.util.UUID;
 
 
@@ -44,21 +41,26 @@ public class InternalConsumer {
 
 	@Inject
 	TokenVerification verification;
+
 	@Inject
 	EventBus bus;
+
 	@Inject
 	BlackListInfo blackList;
+
 	@Inject
 	BridgeGrpcService grpcService;
+
 	@Inject
 	GennyScopeInit scope;
+
 	@Inject
 	Service service;
+
 	@Inject
 	UserToken userToken;
 
 	void onStart(@Observes StartupEvent ev) {
-
 		service.initToken();
 		service.initCache();
 		service.initKafka();
@@ -144,19 +146,20 @@ public class InternalConsumer {
 		final String msg_type = json.getString("msg_type");
 		// only perform check on messages that have items
 		if (QDataAskMessage.DATATYPE_ASK.equals(msg_type) || QDataBaseEntityMessage.DATATYPE_BASEENTITY.equals(msg_type)) {
-			if (items != null && items.size() == 1) {
-				if(StringUtils.isBlank(json.getString("aliasCode"))) {
-					JsonObject firstItem = items.getJsonObject(0);
-					if(firstItem != null) {
-						String aliasCode = firstItem.getString("name");
-						json.put("aliasCode", aliasCode);
-					}
-				}
-			} else if (items == null || items.size() == 0) {
+			if(items == null || items.size() == 0) {
 				log.error("[!] Sending out a message with 0 items! Not forwarding message to Frontend");
 				return;
 			}
+
+			if(items.size() == 1 && StringUtils.isBlank(json.getString("aliasCode"))) {
+				JsonObject firstItem = items.getJsonObject(0);
+				if(firstItem != null) {
+					String aliasCode = firstItem.getString("name");
+					json.put("aliasCode", aliasCode);
+				}
+			}
 		}
+		
 		GennyToken gennyToken = new GennyToken(json.getString("token"));
 		try {
 			verification.verify(gennyToken.getKeycloakRealm(), gennyToken.getToken());
