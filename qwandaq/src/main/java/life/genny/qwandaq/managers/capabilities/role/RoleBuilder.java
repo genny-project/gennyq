@@ -45,10 +45,6 @@ public class RoleBuilder {
     private String redirectCode;
 
     public RoleBuilder(String roleCode, String roleName, String productCode) {
-        this(roleCode, roleName, productCode);
-    }
-
-    public RoleBuilder(String roleCode, String roleName, String productCode) {
         this.capManager = Arc.container().select(CapabilitiesManager.class).get();
         this.roleMan = capManager.getRoleManager();
         this.productCode = productCode;
