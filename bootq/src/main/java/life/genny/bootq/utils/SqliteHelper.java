@@ -5,9 +5,8 @@ import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -21,18 +20,18 @@ import java.util.Map;
 @ApplicationScoped
 public class SqliteHelper {
 
-    public static final String SQLITE_CONNECTION_URL = "jdbc:sqlite:../../genny-main/sqlite/volume_mount/db/";
+    public static final String SQLITE_CONNECTION_URL = System.getenv("SQLITE_CONNECTION_URL") != null ? System.getenv("SQLITE_CONNECTION_URL") : "jdbc:sqlite:../../genny-main/sqlite/volume_mount/db/";
 
     public static final String SQLITE_EXTENSION = ".sqlite";
-    public static String CREATE_TABLE_VALIDATION = "src/main/resources/sqlite/create_table_validation.sql";
-    public static String CREATE_TABLE_DATATYPE = "src/main/resources/sqlite/create_table_datatype.sql";
-    public static String CREATE_TABLE_ATTRIBUTE = "src/main/resources/sqlite/create_table_attribute.sql";
-    public static String CREATE_TABLE_DEF_BASEENTITY = "src/main/resources/sqlite/create_table_def_baseentity.sql";
-    public static String CREATE_TABLE_BASEENTITY = "src/main/resources/sqlite/create_table_baseentity.sql";
-    public static String CREATE_TABLE_DEF_ENTITY_ATTRIBUTE = "src/main/resources/sqlite/create_table_def_entityattribute.sql";
-    public static String CREATE_TABLE_ENTITY_ATTRIBUTE = "src/main/resources/sqlite/create_table_entityattribute.sql";
-    public static String CREATE_TABLE_QUESTION = "src/main/resources/sqlite/create_table_question.sql";
-    public static String CREATE_TABLE_QUESTION_QUESTION = "src/main/resources/sqlite/create_table_questionquestion.sql";
+    public static String CREATE_TABLE_VALIDATION = "sqlite/create_table_validation.sql";
+    public static String CREATE_TABLE_DATATYPE = "sqlite/create_table_datatype.sql";
+    public static String CREATE_TABLE_ATTRIBUTE = "sqlite/create_table_attribute.sql";
+    public static String CREATE_TABLE_DEF_BASEENTITY = "sqlite/create_table_def_baseentity.sql";
+    public static String CREATE_TABLE_BASEENTITY = "sqlite/create_table_baseentity.sql";
+    public static String CREATE_TABLE_DEF_ENTITY_ATTRIBUTE = "sqlite/create_table_def_entityattribute.sql";
+    public static String CREATE_TABLE_ENTITY_ATTRIBUTE = "sqlite/create_table_entityattribute.sql";
+    public static String CREATE_TABLE_QUESTION = "sqlite/create_table_question.sql";
+    public static String CREATE_TABLE_QUESTION_QUESTION = "sqlite/create_table_questionquestion.sql";
 
     public static String DROP_TABLE_IF_EXISTS = "DROP TABLE IF EXISTS ";
 
@@ -113,8 +112,10 @@ public class SqliteHelper {
         FileReader fileReader = null;
         BufferedReader bufferedReader = null;
         try {
-            fileReader = new FileReader(fileName);
-            bufferedReader = new BufferedReader(fileReader);
+            InputStream is = getClass().getClassLoader().getResourceAsStream(fileName);
+            InputStreamReader streamReader = new InputStreamReader(is, StandardCharsets.UTF_8);
+//            fileReader = new FileReader(fileName);
+            bufferedReader = new BufferedReader(streamReader);
             StringBuilder createTableStatementBuilder = new StringBuilder();
             while (true) {
                 String line = bufferedReader.readLine();
@@ -150,6 +151,9 @@ public class SqliteHelper {
         connection.setAutoCommit(false);
         boolean logFlag = true;
         for (Map<String, String> row : recordsMapCollection) {
+        // skip empty lines
+            if (row.size() == 0)
+                continue;
             StringBuilder columnNames = new StringBuilder(" ");
             StringBuilder valuePlaceholders = new StringBuilder();
             boolean isFirst = true;
