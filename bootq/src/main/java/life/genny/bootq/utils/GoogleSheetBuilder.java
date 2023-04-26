@@ -212,7 +212,7 @@ public class GoogleSheetBuilder {
         attribute.setDescription(row.get("description"));
         attribute.setHelp(row.get("help"));
         attribute.setPlaceholder(row.get("placeholder"));
-        attribute.setDefaultValue(row.get("defaultValue"));
+        attribute.setDefaultValue(row.get("defaultvalue"));
         attribute.setIcon(row.get("icon"));
         attribute.setRealm(realmName);
         
