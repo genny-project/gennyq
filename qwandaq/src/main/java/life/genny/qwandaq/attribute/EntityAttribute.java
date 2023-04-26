@@ -711,7 +711,7 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 						else if(value instanceof Integer)
 							setValueInteger((Integer) value);
 						else {
-							log.error("EntityAttribute: " + getCompositeCode() + " integer conversion error. DttCode: " + attribute != null ? attribute.getDttCode() : "null (no attribute object)");
+							log.error("EntityAttribute: " + getCompositeCode() + " integer conversion error. DttCode: " + (attribute != null ? attribute.getDttCode() : "null (no attribute object)"));
 							throw new UnsupportedOperationException("Unsupported java type: " + className + " for value: " + value + ". Value class type: " + value.getClass());
 						}
 						break;
