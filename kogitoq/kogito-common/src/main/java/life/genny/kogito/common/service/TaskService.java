@@ -28,239 +28,243 @@ import life.genny.qwandaq.utils.KafkaUtils;
 @ApplicationScoped
 public class TaskService extends KogitoService {
 
-	@Inject
-	Logger log;
+    @Inject
+    Logger log;
 
-	/**
-	 * @param processData
-	 */
-	public void doesTaskExist(String sourceCode, String targetCode, String questionCode) {
-		// check if task exists
-		log.info("Checking if task exists...");
+    /**
+     * @param processData
+     */
+    public void doesTaskExist(String sourceCode, String targetCode, String questionCode) {
+        // check if task exists
+        log.info("Checking if task exists...");
 
-		// TODO: re-questions if it does
-	}
+        // TODO: re-questions if it does
+    }
 
-	/**
-	 * Build a question group and assign to the PCM before dispatching a PCM tree
-	 * update.
-	 *
-	 * @param sourceCode
-	 * @param targetCode
-	 * @param questionCode
-	 * @param processId
-	 * @param pcmCode
-	 * @param parent
-	 * @param location
-	 * @param events
-	 * @return
-	 */
-	public ProcessData dispatchTask(String sourceCode, String targetCode, String questionCode, String processId,
-									String pcmCode, String parent, String location, String buttonEvents) {
-		if (sourceCode == null) {
-			throw new NullParameterException("sourceCode");
-		}
-		if (targetCode == null) {
-			throw new NullParameterException("targetCode");
-		}
-		if (processId == null) {
-			throw new NullParameterException("processId");
-		}
-		if (pcmCode == null) {
-			throw new NullParameterException("pcmCode");
-		}
-		// defaults
-		if (parent == null) {
-			parent = PCM.PCM_CONTENT;
-		}
-		if (location == null) {
-			location = PCM.location(1);
-		}
+    /**
+     * Build a question group and assign to the PCM before dispatching a PCM tree
+     * update.
+     *
+     * @param sourceCode
+     * @param targetCode
+     * @param questionCode
+     * @param processId
+     * @param pcmCode
+     * @param parent
+     * @param location
+     * @param events
+     * @return
+     */
+    public ProcessData dispatchTask(String sourceCode, String targetCode, String questionCode, String processId,
+                                    String pcmCode, String parent, String location, String buttonEvents) {
+        if (sourceCode == null) {
+            throw new NullParameterException("sourceCode");
+        }
+        if (targetCode == null) {
+            throw new NullParameterException("targetCode");
+        }
+        if (processId == null) {
+            throw new NullParameterException("processId");
+        }
+        if (pcmCode == null) {
+            throw new NullParameterException("pcmCode");
+        }
+        // defaults
+        if (parent == null) {
+            parent = PCM.PCM_CONTENT;
+        }
+        if (location == null) {
+            location = PCM.location(1);
+        }
 
-		log.info("[ ========== ProcessId : " + processId + " ========== ]");
-		log.info("[  sourceCode : " + sourceCode + " || targetCode : " + targetCode + "  ]");
-		log.info("[  pcmCode : " + pcmCode + " || parent : " + parent + " || location : " + location + "  ]");
-		log.info("[  buttonEvents : " + buttonEvents + " || questionCode : " + questionCode + "  ]");
-		log.info("[ ================================================================== ]");
+        log.info("[ ========== ProcessId : " + processId + " ========== ]");
+        log.info("[  sourceCode : " + sourceCode + " || targetCode : " + targetCode + "  ]");
+        log.info("[  pcmCode : " + pcmCode + " || parent : " + parent + " || location : " + location + "  ]");
+        log.info("[  buttonEvents : " + buttonEvents + " || questionCode : " + questionCode + "  ]");
+        log.info("[ ================================================================== ]");
 
-		// init process data
-		ProcessData processData = new ProcessData();
-		processData.setQuestionCode(questionCode);
-		processData.setSourceCode(sourceCode);
-		processData.setTargetCode(targetCode);
+        // init process data
+        ProcessData processData = new ProcessData();
+        processData.setQuestionCode(questionCode);
+        processData.setSourceCode(sourceCode);
+        processData.setTargetCode(targetCode);
 
-		// pcm data
-		processData.setPcmCode(pcmCode);
-		processData.setParent(parent);
-		processData.setLocation(location);
+        // pcm data
+        processData.setPcmCode(pcmCode);
+        processData.setParent(parent);
+        processData.setLocation(location);
 
-		processData.setButtonEvents(buttonEvents);
-		processData.setProcessId(processId);
-		processData.setAnswers(new ArrayList<>());
+        processData.setButtonEvents(buttonEvents);
+        processData.setProcessId(processId);
+        processData.setAnswers(new ArrayList<>());
 
-		String processEntityCode = Prefix.QBE_.concat(targetCode.substring(4));
-		processData.setProcessEntityCode(processEntityCode);
+        String processEntityCode = Prefix.QBE_.concat(targetCode.substring(4));
+        processData.setProcessEntityCode(processEntityCode);
 
-		String userCode = userToken != null ? userToken.getUserCode() : null;
+        String userCode = userToken != null ? userToken.getUserCode() : null;
 
-		// find target and target definition
-		BaseEntity target = beUtils.getBaseEntity(targetCode);
-		BaseEntity definition = defUtils.getDEF(target);
-		processData.setDefinitionCode(definition.getCode());
+        // find target and target definition
+        BaseEntity target = beUtils.getBaseEntity(targetCode);
+        BaseEntity definition = defUtils.getDEF(target);
+        processData.setDefinitionCode(definition.getCode());
 
-		// update cached process data
-		qwandaUtils.storeProcessData(processData);
+        // update cached process data
+        qwandaUtils.storeProcessData(processData);
 
-		// TODO: Not every task has a userCode
-		if (!sourceCode.equals(userCode)) {
-			log.info("Task on hold: User is not source");
-			return processData;
-		}
+        // TODO: Not every task has a userCode
+        if (!sourceCode.equals(userCode)) {
+            log.info("Task on hold: User is not source");
+            return processData;
+        }
 
-		// build data
-		QBulkMessage msg = dispatch.build(processData);
-		Set<Ask> asks = msg.getAsks();
-		Map<String, Ask> flatMapOfAsks = QwandaUtils.buildAskFlatMap(asks);
+        // build data
+        QBulkMessage msg = dispatch.build(processData);
+        Set<Ask> asks = msg.getAsks();
+        Map<String, Ask> flatMapOfAsks = QwandaUtils.buildAskFlatMap(asks);
 
-		// perform basic checks on attribute codes
-		processData.setAttributeCodes(
-				flatMapOfAsks.values().stream()
-						.map(ask -> ask.getQuestion().getAttribute().getCode())
-						.filter(code -> QwandaUtils.attributeCodeMeetsBasicRequirements(code))
-						.collect(Collectors.toList())
-		);
-		log.info("Current Scope Attributes: " + processData.getAttributeCodes());
+        log.debug("no of asks before filter: " + flatMapOfAsks.size());
 
-		boolean readonly = flatMapOfAsks.values().stream()
-				.allMatch(ask -> ask.getReadonly());
+        // perform basic checks on attribute codes
+        processData.setAttributeCodes(
+                flatMapOfAsks.values().stream()
+                        .map(ask -> ask.getQuestion().getAttribute().getCode())
+                        .filter(code -> QwandaUtils.attributeCodeMeetsBasicRequirements(code))
+                        .collect(Collectors.toList())
+        );
+        log.info("Current Scope Attributes: " + processData.getAttributeCodes());
 
-		processData.setReadonly(readonly);
+        log.debug("no of asks after filter: " + flatMapOfAsks.size());
 
-		// handle non-readonly if necessary
-		// use dispatch.containsNonReadonly(flatMapOfAsks) if this does not work
-		if (!readonly) {
-			BaseEntity processEntity = dispatch.handleNonReadonly(processData, asks, flatMapOfAsks, msg);
-			msg.add(processEntity);
+        boolean readonly = flatMapOfAsks.values().stream()
+                .allMatch(ask -> ask.getReadonly());
 
-			qwandaUtils.storeProcessData(processData);
-			// only cache for non-readonly invocation
-			qwandaUtils.cacheAsks(processData, asks);
-			// ProcessEntity essentially becomes our target
-			target = processEntity;
-		} else {
-			msg.add(target);
-		}
-		// handle initial dropdown selections
-		// TODO: change to use flatMap
-		for (Ask ask : asks) {
-			dispatch.handleDropdownAttributes(ask, ask.getQuestion().getCode(), target, msg);
-		}
-		// send asks and BEs
-		dispatch.sendData(msg);
-		// send searches
-		for (String code : processData.getSearches()) {
-			log.debug("Sending search: " + code);
-			searchUtils.searchTable(code);
-		}
+        processData.setReadonly(readonly);
 
-		return processData;
-	}
+        // handle non-readonly if necessary
+        // use dispatch.containsNonReadonly(flatMapOfAsks) if this does not work
+        if (!readonly) {
+            BaseEntity processEntity = dispatch.handleNonReadonly(processData, asks, flatMapOfAsks, msg);
+            msg.add(processEntity);
 
-	/**
-	 * Save incoming answer to the process baseentity.
-	 *
-	 * @param answerJson    The incoming answer
-	 * @param processBEJson The process entity to store the answer data
-	 * @return The updated process baseentity
-	 */
-	public ProcessData answer(Answer answer, ProcessData processData) {
+            qwandaUtils.storeProcessData(processData);
+            // only cache for non-readonly invocation
+            qwandaUtils.cacheAsks(processData, asks);
+            // ProcessEntity essentially becomes our target
+            target = processEntity;
+        } else {
+            msg.add(target);
+        }
+        // handle initial dropdown selections
+        // TODO: change to use flatMap
+        for (Ask ask : asks) {
+            dispatch.handleDropdownAttributes(ask, ask.getQuestion().getCode(), target, msg);
+        }
+        // send asks and BEs
+        dispatch.sendData(msg);
+        // send searches
+        for (String code : processData.getSearches()) {
+            log.debug("Sending search: " + code);
+            searchUtils.searchTable(code);
+        }
 
-		// validate answer
-		if (!processAnswers.isValid(answer, processData))
-			return processData;
+        return processData;
+    }
 
-		// remove previous answers for this attribute
-		List<Answer> answers = processData.getAnswers();
-		for (int i = 0; i < answers.size();) {
-			Answer a = answers.get(i);
-			if (a.getAttributeCode().equals(answer.getAttributeCode())
-					&& a.getTargetCode().equals(answer.getTargetCode())) {
-				answers.remove(i);
-			} else {
-				i++;
-			}
-		}
-		// add new answer
-		answers.add(answer);
-		processData.setAnswers(answers);
+    /**
+     * Save incoming answer to the process baseentity.
+     *
+     * @param answerJson    The incoming answer
+     * @param processBEJson The process entity to store the answer data
+     * @return The updated process baseentity
+     */
+    public ProcessData answer(Answer answer, ProcessData processData) {
 
-		Set<Ask> asks = qwandaUtils.fetchAsks(processData);
-		Map<String, Ask> flatMapOfAsks = QwandaUtils.buildAskFlatMap(asks);
+        // validate answer
+        if (!processAnswers.isValid(answer, processData))
+            return processData;
 
-		QBulkMessage msg = new QBulkMessage();
-		dispatch.handleNonReadonly(processData, asks, flatMapOfAsks, msg);
+        // remove previous answers for this attribute
+        List<Answer> answers = processData.getAnswers();
+        for (int i = 0; i < answers.size(); ) {
+            Answer a = answers.get(i);
+            if (a.getAttributeCode().equals(answer.getAttributeCode())
+                    && a.getTargetCode().equals(answer.getTargetCode())) {
+                answers.remove(i);
+            } else {
+                i++;
+            }
+        }
+        // add new answer
+        answers.add(answer);
+        processData.setAnswers(answers);
 
-		//check duplicate records
-		if (!processAnswers.checkUniqueness(processData)) {
-			return processData;
-		}
+        Set<Ask> asks = qwandaUtils.fetchAsks(processData);
+        Map<String, Ask> flatMapOfAsks = QwandaUtils.buildAskFlatMap(asks);
 
-		// update cached process data
-		qwandaUtils.storeProcessData(processData);
+        QBulkMessage msg = new QBulkMessage();
+        dispatch.handleNonReadonly(processData, asks, flatMapOfAsks, msg);
 
-		return processData;
-	}
+        //check duplicate records
+        if (!processAnswers.checkUniqueness(processData)) {
+            return processData;
+        }
 
-	/**
-	 * @param processData
-	 * @return
-	 */
-	public Boolean submit(ProcessData processData) {
-		// construct bulk message
-		Set<Ask> asks = qwandaUtils.fetchAsks(processData);
-		Map<String, Ask> flatMapOfAsks = QwandaUtils.buildAskFlatMap(asks);
+        // update cached process data
+        qwandaUtils.storeProcessData(processData);
 
-		// check mandatory fields
-		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
-		if (!qwandaUtils.mandatoryFieldsAreAnswered(flatMapOfAsks, processEntity))
-			return false;
+        return processData;
+    }
 
-		// check uniqueness in answers
-		if (!processAnswers.checkUniqueness(processData))
-			return false;
+    /**
+     * @param processData
+     * @return
+     */
+    public Boolean submit(ProcessData processData) {
+        // construct bulk message
+        Set<Ask> asks = qwandaUtils.fetchAsks(processData);
+        Map<String, Ask> flatMapOfAsks = QwandaUtils.buildAskFlatMap(asks);
 
-		// save answer
-		processAnswers.saveAllAnswers(processData);
+        // check mandatory fields
+        BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
+        if (!qwandaUtils.mandatoryFieldsAreAnswered(flatMapOfAsks, processEntity))
+            return false;
 
-		// clear cache entry
-		qwandaUtils.clearProcessData(processData.getProcessId());
+        // check uniqueness in answers
+        if (!processAnswers.checkUniqueness(processData))
+            return false;
 
-		return true;
-	}
+        // save answer
+        processAnswers.saveAllAnswers(processData);
 
-	/**
-	 * @param processData
-	 * @return
-	 */
-	public ProcessData reset(ProcessData processData) {
-		// delete stored answers
-		processData.setAnswers(new ArrayList<Answer>());
-		qwandaUtils.storeProcessData(processData);
+        // clear cache entry
+        qwandaUtils.clearProcessData(processData.getProcessId());
 
-		// resend BaseEntities
-		dispatch.build(processData);
+        return true;
+    }
 
-		return processData;
-	}
+    /**
+     * @param processData
+     * @return
+     */
+    public ProcessData reset(ProcessData processData) {
+        // delete stored answers
+        processData.setAnswers(new ArrayList<Answer>());
+        qwandaUtils.storeProcessData(processData);
 
-	/**
-	 * @param processData
-	 */
-	public void cancel(ProcessData processData) {
-		// clear cache entry
-		qwandaUtils.clearProcessData(processData.getProcessId());
-		// default redirect
-		navigationService.redirect();
-	}
+        // resend BaseEntities
+        dispatch.build(processData);
+
+        return processData;
+    }
+
+    /**
+     * @param processData
+     */
+    public void cancel(ProcessData processData) {
+        // clear cache entry
+        qwandaUtils.clearProcessData(processData.getProcessId());
+        // default redirect
+        navigationService.redirect();
+    }
 
 }

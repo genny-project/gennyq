@@ -41,7 +41,11 @@ public class SearchCaching {
 		SearchEntity messageTypeSBE = new SearchEntity("SBE_SER_LNK_MESSAGE_TYPE", "Message Types Dropdown")
 				.add(new Filter(LNK_PARENT, Operator.CONTAINS, "GRP_MESSAGE_TYPES"));
 
+		SearchEntity toastTypeSBE = new SearchEntity("SBE_SER_LNK_TOAST_TYPE", "Toast Types Dropdown")
+				.add(new Filter(LNK_PARENT, Operator.CONTAINS, "GRP_TOAST_TYPES"));
+
 		cacheDropdown(DEF_MESSAGE, messageTypeSBE);			
+		cacheDropdown(DEF_MESSAGE, toastTypeSBE);			
 
 		cacheSearch(
 				new SearchEntity(GennyConstants.SBE_TABLE_MESSAGE, "Messages")

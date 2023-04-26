@@ -9,6 +9,7 @@ import java.net.http.HttpRequest.Builder;
 import java.net.http.HttpTimeoutException;
 import java.time.Duration;
 import java.net.http.HttpResponse;
+import javax.enterprise.context.ApplicationScoped;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.bind.Jsonb;
@@ -16,6 +17,7 @@ import javax.json.bind.JsonbBuilder;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 
+import org.checkerframework.checker.units.qual.A;
 import org.jboss.logging.Logger;
 
 import life.genny.qwandaq.exception.GennyRuntimeException;
@@ -28,6 +30,7 @@ import life.genny.qwandaq.models.GennyToken;
  * @author Jasper Robison
  * @author Bryn Meachem
  */
+@ApplicationScoped
 public class HttpUtils {
 
 	static Jsonb jsonb = JsonbBuilder.create();
@@ -96,8 +99,6 @@ public class HttpUtils {
 	 * @param token The token to use in authorization.
 	 * @return The returned response object.
 	 */
-	// We should be moving to using these methods beause the genny token should
-	// always be well defined!
 	public static HttpResponse<String> post(String uri, String body, GennyToken token) {
 		return post(uri, body, token.getToken());
 	}
@@ -131,6 +132,7 @@ public class HttpUtils {
 		return post(uri, body, contentType, token.getToken());
 	}
 
+
 	/**
 	 * Create and send a POST request.
 	 *
@@ -141,7 +143,6 @@ public class HttpUtils {
 	 * @param token       The token to use in authorization.
 	 * @return The returned response object.
 	 */
-	@Deprecated
 	public static java.net.http.HttpResponse<String> post(String uri, String body, String contentType, String token) {
 
 		Builder requestBuilder = HttpRequest.newBuilder()

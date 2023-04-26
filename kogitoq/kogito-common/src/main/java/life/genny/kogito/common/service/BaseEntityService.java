@@ -15,271 +15,274 @@ import org.jboss.logging.Logger;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.json.Json;
+import javax.json.JsonObject;
 import java.util.Optional;
+
+import static life.genny.qwandaq.utils.FailureHandler.optional;
+import static life.genny.qwandaq.utils.FailureHandler.required;
 
 @ApplicationScoped
 public class BaseEntityService extends KogitoService {
 
-	@Inject
-	Logger log;
+    @Inject
+    Logger log;
 
-	/**
-	 * Send a message to perform an update of a persons summary
-	 */
-	public void updateSummary(String personCode, String summaryCode) {
+    /**
+     * Send a message to perform an update of a persons summary
+     */
+    public void updateSummary(String personCode, String summaryCode) {
 
-		BaseEntity person = beUtils.getBaseEntity(personCode);
-		Attribute attribute = attributeUtils.getAttribute(Attribute.LNK_SUMMARY, true);
-		beaUtils.updateEntityAttribute(new EntityAttribute(person, attribute, 1.0, "[\""+summaryCode+"\"]"));
-		log.info("Summary updated -> " + personCode + " : " + summaryCode);
-	}
+        BaseEntity person = beUtils.getBaseEntity(personCode);
+        Attribute attribute = attributeUtils.getAttribute(Attribute.LNK_SUMMARY, true);
+        beaUtils.updateEntityAttribute(new EntityAttribute(person, attribute, 1.0, "[\"" + summaryCode + "\"]"));
+        log.info("Summary updated -> " + personCode + " : " + summaryCode);
+    }
 
-	/**
-	 * @param definitionCode
-	 * @return
-	 */
-	public String commission(String definitionCode) {
+    /**
+     * @param definitionCode
+     * @return
+     */
+    public String commission(String definitionCode) {
 
-		if (definitionCode == null)
-			throw new NullParameterException("definitionCode");
-		if (!definitionCode.startsWith(Prefix.DEF_))
-			throw new DebugException("Invalid definitionCode: " + definitionCode);
+        if (definitionCode == null) throw new NullParameterException("definitionCode");
+        if (!definitionCode.startsWith(Prefix.DEF_))
+            throw new DebugException("Invalid definitionCode: " + definitionCode);
 
-		// fetch the def baseentity
-		Definition definition = beUtils.getDefinition(definitionCode);
+        // fetch the def baseentity
+        Definition definition = beUtils.getDefinition(definitionCode);
 
-		// use entity create function and save to db
-		BaseEntity entity = beUtils.create(definition);
-		log.info("BaseEntity Created: " + entity.getCode());
+        // use entity create function and save to db
+        BaseEntity entity = beUtils.create(definition);
+        log.info("BaseEntity Created: " + entity.getCode());
 
-		entity.setStatus(EEntityStatus.PENDING);
-		beUtils.updateBaseEntity(entity);
+        entity.setStatus(EEntityStatus.PENDING);
+        beUtils.updateBaseEntity(entity);
 
-		return entity.getCode();
-	}
+        return entity.getCode();
+    }
 
-	public void decommission(String code) {
+    public void decommission(String code) {
 
-		if (code == null)
-			throw new NullParameterException("code");
+        if (code == null) throw new NullParameterException("code");
 
-		BaseEntity baseEntity = beUtils.getBaseEntity(code);
-		log.info("Decommissioning entity " + baseEntity.getCode());
+        BaseEntity baseEntity = beUtils.getBaseEntity(code);
+        log.info("Decommissioning entity " + baseEntity.getCode());
 
-		// archive the entity
-		baseEntity.setStatus(EEntityStatus.ARCHIVED);
-		beUtils.updateBaseEntity(baseEntity);
-	}
+        // archive the entity
+        baseEntity.setStatus(EEntityStatus.ARCHIVED);
+        beUtils.updateBaseEntity(baseEntity);
+    }
 
-	public String commission(String definitionCode, String processId, EEntityStatus status) {
+    public String commission(String definitionCode, String processId, EEntityStatus status) {
 
-		if (definitionCode == null)
-			throw new NullParameterException("definitionCode");
-		if (processId == null)
-			throw new NullParameterException("processId");
-		if (status == null)
-			throw new NullParameterException("status");
-		if (!definitionCode.startsWith(Prefix.DEF_))
-			throw new DebugException("Invalid definitionCode: " + definitionCode);
+        if (definitionCode == null) throw new NullParameterException("definitionCode");
+        if (processId == null) throw new NullParameterException("processId");
+        if (status == null) throw new NullParameterException("status");
+        if (!definitionCode.startsWith(Prefix.DEF_))
+            throw new DebugException("Invalid definitionCode: " + definitionCode);
 
-		// fetch the def baseentity
-		Definition definition = beUtils.getDefinition(definitionCode);
+        // fetch the def baseentity
+        Definition definition = beUtils.getDefinition(definitionCode);
 
-		// use entity create function and save to db
-		String defCode = definition.getCode();
-		String defaultName = StringUtils.capitalize(defCode.substring(4));
-		EntityAttribute prefixAttr = beaUtils.getEntityAttribute(definition.getRealm(), defCode, Attribute.PRI_PREFIX, false);
-		if (prefixAttr == null) {
-			throw new ItemNotFoundException(definition.getRealm(), defCode, Attribute.PRI_PREFIX);
-		}
-		String prefixValue = prefixAttr.getValueString();
-		BaseEntity entity = beUtils.create(definition, defaultName, prefixValue + "_" + processId.toUpperCase());
-		log.info("BaseEntity Created: " + entity.getCode());
+        // use entity create function and save to db
+        String defCode = definition.getCode();
+        String defaultName = StringUtils.capitalize(defCode.substring(4));
+        EntityAttribute prefixAttr = beaUtils.getEntityAttribute(definition.getRealm(), defCode, Attribute.PRI_PREFIX, false);
+        if (prefixAttr == null) {
+            throw new ItemNotFoundException(definition.getRealm(), defCode, Attribute.PRI_PREFIX);
+        }
+        String prefixValue = prefixAttr.getValueString();
+        BaseEntity entity = beUtils.create(definition, defaultName, prefixValue + "_" + processId.toUpperCase());
+        log.info("BaseEntity Created: " + entity.getCode());
 
-		entity.setStatus(status);
-		beUtils.updateBaseEntity(entity);
+        entity.setStatus(status);
+        beUtils.updateBaseEntity(entity);
 
-		return entity.getCode();
-	}
+        return entity.getCode();
+    }
 
-	public void delete(String code) {
+    public void delete(String code) {
 
-		if (code == null)
-			throw new NullParameterException("code");
+        if (code == null) throw new NullParameterException("code");
 
-		BaseEntity baseEntity = beUtils.getBaseEntity(code);
-		log.info("Deleting entity using EEntityStatus" + baseEntity.getCode());
+        BaseEntity baseEntity = beUtils.getBaseEntity(code);
+        log.info("Deleting entity using EEntityStatus" + baseEntity.getCode());
 
-		// archive the entity
-		baseEntity.setStatus(EEntityStatus.DELETED);
-		beUtils.updateBaseEntity(baseEntity);
-	}
+        // archive the entity
+        baseEntity.setStatus(EEntityStatus.DELETED);
+        beUtils.updateBaseEntity(baseEntity);
+    }
 
-	public void pendingDelete(String code) {
+    public void pendingDelete(String code) {
 
-		if (code == null)
-			throw new NullParameterException("code");
+        if (code == null) throw new NullParameterException("code");
 
-		BaseEntity baseEntity = beUtils.getBaseEntity(code);
-		log.info("Pending Deleting entity using EEntityStatus" + baseEntity.getCode());
+        BaseEntity baseEntity = beUtils.getBaseEntity(code);
+        log.info("Pending Deleting entity using EEntityStatus" + baseEntity.getCode());
 
-		// archive the entity
-		baseEntity.setStatus(EEntityStatus.PENDING_DELETE);
-		beUtils.updateBaseEntity(baseEntity);
-	}
+        // archive the entity
+        baseEntity.setStatus(EEntityStatus.PENDING_DELETE);
+        beUtils.updateBaseEntity(baseEntity);
+    }
 
-	public void setActive(String entityCode) {
+    public void setActive(String entityCode) {
 
-		BaseEntity entity = beUtils.getBaseEntity(entityCode);
-		entity.setStatus(EEntityStatus.ACTIVE);
-		beUtils.updateBaseEntity(entity);
-	}
+        BaseEntity entity = beUtils.getBaseEntity(entityCode);
+        entity.setStatus(EEntityStatus.ACTIVE);
+        beUtils.updateBaseEntity(entity);
+    }
 
-	public void setDisabled(String entityCode) {
+    public void setDisabled(String entityCode) {
 
-		BaseEntity entity = beUtils.getBaseEntity(entityCode);
-		entity.setStatus(EEntityStatus.DISABLED);
-		beUtils.updateBaseEntity(entity);
-	}
+        BaseEntity entity = beUtils.getBaseEntity(entityCode);
+        entity.setStatus(EEntityStatus.DISABLED);
+        beUtils.updateBaseEntity(entity);
+    }
 
-	public String getDEFPrefix(String definitionCode) {
+    public String getDEFPrefix(String definitionCode) {
 
-		BaseEntity definition = beUtils.getBaseEntity(definitionCode);
+        BaseEntity definition = beUtils.getBaseEntity(definitionCode);
 
-		Optional<String> prefix = definition.getValue("PRI_PREFIX");
-		if (prefix.isEmpty()) {
-			throw new NullParameterException(definition.getCode() + ":PRI_PREFIX");
-		}
+        Optional<String> prefix = definition.getValue("PRI_PREFIX");
+        if (prefix.isEmpty()) {
+            throw new NullParameterException(definition.getCode() + ":PRI_PREFIX");
+        }
 
-		return prefix.get();
-	}
+        return prefix.get();
+    }
 
-	/**
-	 * Update the email, firstname and lastname in keycloak
-	 * @param userCode the UserCode
-	 */
-	public void updateKeycloak(String userCode) {
+    /**
+     * Update the email, firstname and lastname in keycloak
+     *
+     * @param userCode the UserCode
+     */
+    public void updateKeycloak(String userCode) {
 
-		String productCode = userToken.getProductCode();
-		EntityAttribute email = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_EMAIL);
-		EntityAttribute firstName = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_FIRSTNAME);
-		EntityAttribute lastName = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_LASTNAME);
+        String realm = required(() -> userToken.getRealm());
+        String email = required(() -> beaUtils.getEntityAttribute(realm, userCode, Attribute.PRI_EMAIL).getValueString());
+        String firstName = required(() -> beaUtils.getEntityAttribute(realm, userCode, Attribute.PRI_FIRSTNAME).getValueString());
+        String lastName = required(() -> beaUtils.getEntityAttribute(realm, userCode, Attribute.PRI_LASTNAME).getValueString());
+        String uuid = required(() -> beaUtils.getEntityAttribute(realm, userCode, Attribute.PRI_UUID).getValueString());
 
-		BaseEntity user = beUtils.getBaseEntity(userCode);
+        JsonObject request = Json.createObjectBuilder().add("email", email).add("enabled", true).add("emailVerified", true).add("username", email).add("firstName", firstName).add("lastName", lastName).build();
 
-		// update user fields
-		// NOTE: this could be turned into a single http request
-		// Could make it a builder pattern to make it a single http request?
-		keycloakUtils.updateUserEmail(user, email.getValueString());
-		keycloakUtils.updateUserField(user, "username", email.getValueString());
-		keycloakUtils.updateUserField(user, "firstName", firstName.getValueString());
-		keycloakUtils.updateUserField(user, "lastName", lastName.getValueString());
-	}
+        keycloakUtils.updateUserDetails(request, uuid, realm);
+    }
 
-	public String updatePassword(String userCode){
-		return keycloakUtils.updateUserTemporaryPassword(userCode);
-	}
+    public String updatePassword(String userCode) {
+        String uuid = required(() -> beaUtils.getEntityAttribute(userToken.getRealm(), userCode, "PRI_UUID").getValueString());
+        log.info("uuid: " + uuid);
+        return keycloakUtils.updateUserTemporaryPassword(uuid, userToken.getRealm());
+    }
 
-	/**
-	 * Merge a process entity into another entity
-	 */
-	public void mergeFromProcessEntity(String entityCode, ProcessData processData) {
+    /**
+     * Merge a process entity into another entity
+     */
+    public void mergeFromProcessEntity(String entityCode, ProcessData processData) {
 
-		BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
-		BaseEntity entity = beUtils.getBaseEntity(entityCode);
+        BaseEntity processEntity = qwandaUtils.generateProcessEntity(processData);
+        BaseEntity entity = beUtils.getBaseEntity(entityCode);
 
-		// iterate our stored process updates and create an answer
-		for (EntityAttribute ea : beaUtils.getAllEntityAttributesForBaseEntity(processEntity)) {
-			ea.setBaseEntityCode(entity.getCode());
-			ea.setBaseEntityId(entity.getId());
-			beaUtils.updateEntityAttribute(ea);
-		}
-		log.info("Saved answers for entity " + entityCode);
-	}
+        // iterate our stored process updates and create an answer
+        for (EntityAttribute ea : beaUtils.getAllEntityAttributesForBaseEntity(processEntity)) {
+            ea.setBaseEntityCode(entity.getCode());
+            ea.setBaseEntityId(entity.getId());
+            beaUtils.updateEntityAttribute(ea);
+        }
+        log.info("Saved answers for entity " + entityCode);
+    }
 
-	/**
-	 * Update entityAttributes using updatePairs
-	 */
-	public void updatePairsBaseEntity(String baseEntityCode, String updatePairs) {
+    /**
+     * Update entityAttributes using updatePairs
+     */
+    public void updatePairsBaseEntity(String baseEntityCode, String updatePairs) {
 
-		// Now split up the updatePairs
+        // Now split up the updatePairs
 
-		String[] pairs = updatePairs.split(";");
-		for (String pair : pairs) {
-			String[] elements = pair.split(":");
-			if (elements.length == 1) {
-				updateBaseEntity(baseEntityCode, "PRI_PQ_STAGE", elements[0]); // assume valid due to initial
-																				// construction
-			} else if (elements.length == 2) {
-				updateBaseEntity(baseEntityCode, elements[0], elements[1]); // assume valid due to initial
-																			// construction
-			} else if (elements.length == 3) {
-				updateBaseEntity(elements[0], elements[1], elements[2]); // assume valid due to initial
-																			// construction
-			}
-		}
+        String[] pairs = updatePairs.split(";");
+        for (String pair : pairs) {
+            String[] elements = pair.split(":");
+            if (elements.length == 1) {
+                updateBaseEntity(baseEntityCode, "PRI_PQ_STAGE", elements[0]); // assume valid due to initial
+                // construction
+            } else if (elements.length == 2) {
+                updateBaseEntity(baseEntityCode, elements[0], elements[1]); // assume valid due to initial
+                // construction
+            } else if (elements.length == 3) {
+                updateBaseEntity(elements[0], elements[1], elements[2]); // assume valid due to initial
+                // construction
+            }
+        }
 
-	}
+    }
 
-	/**
-	 * Update entityAttributes
-	 */
-	public void updateBaseEntity(String baseEntityCode, String attributeCode, String value) {
+    /**
+     * Update entityAttributes
+     */
+    public void updateBaseEntity(String baseEntityCode, String attributeCode, String value) {
 
-		BaseEntity be = beUtils.getBaseEntity(baseEntityCode);
-		BaseEntity defBe = defUtils.getDEF(be);
+        BaseEntity be = beUtils.getBaseEntity(baseEntityCode);
+        String realm = be.getRealm();
+        BaseEntity defBe = defUtils.getDEF(be);
 
-		//Optional<EntityAttribute> defEAttribute = defBe.findEntityAttribute("ATT_" + attributeCode);
-		EntityAttribute defEAttribute = beaUtils.getEntityAttribute(be.getRealm(), baseEntityCode, attributeCode);
-		if (defEAttribute != null) {
+        EntityAttribute ea = optional(() -> beaUtils.getEntityAttribute(defBe.getRealm(), defBe.getCode(), Prefix.ATT_ + attributeCode));
 
-			if (attributeCode.startsWith(Prefix.LNK_)) {
-				// Check if value is in JsonArray format , otherwise wrap it..
-				if (value != null && !value.startsWith("[")) {
-					value = "[\"" + value + "\"]";
-				}
-			}
+        if (ea != null) {
+            log.infof("%s found in %s", attributeCode, defBe.getCode());
+            EntityAttribute beAttribute = optional(() -> beaUtils.getEntityAttribute(realm, baseEntityCode, attributeCode));
 
-			be = beUtils.addValue(be, attributeCode, value);
+            if (beAttribute == null) log.infof("Adding %s to %s", attributeCode, baseEntityCode);
 
-			beUtils.updateBaseEntity(be);
-		} else {
-			log.error("This attribute is not defined in " + defBe.getCode() + " for the attribute: " + attributeCode);
-		}
-	}
+            if (attributeCode.startsWith(Prefix.LNK_)) {
+                // Check if value is in JsonArray format , otherwise wrap it..
+                if (value != null && !value.startsWith("[")) {
+                    value = "[\"" + value + "\"]";
+                }
+            }
 
-	/**
-	 * Update baseentity with setup attribute values
-	 */
-	public void setupBaseEntity(String baseEntityCode, String... attributeCodeValue) {
+            be = beUtils.addValue(be, attributeCode, value);
 
-		BaseEntity be = beUtils.getBaseEntity(baseEntityCode);
+            beUtils.updateBaseEntity(be);
 
-		for (int i = 0; i < attributeCodeValue.length; i++) {
-			String[] split = attributeCodeValue[i].split("=");
-			String attributeCode = split[0];
-			String value = split[1];
-			if (attributeCode.startsWith("LNK_")) {
-				// Check if value is in JsonArray format , otherwise wrap it..
-				if (value != null) {
-					if (!value.startsWith("[")) {
-						value = "[\"" + value + "\"]";
-					}
-				}
-			}
-			be = beUtils.addValue(be, attributeCode, value);
-		}
+        } else {
+            log.error(attributeCode + " is not defined in " + defBe.getCode());
+        }
+    }
 
-		beUtils.updateBaseEntity(be);
-	}
+    /**
+     * Update baseentity with setup attribute values
+     */
+    public void setupBaseEntity(String baseEntityCode, String... attributeCodeValue) {
 
-	/**
-	 * Set pending status to base entity
-	 * @param entityCode
-	 */
-	public void setPending(String entityCode) {
-		BaseEntity entity = beUtils.getBaseEntity(entityCode);
-		entity.setStatus(EEntityStatus.PENDING);
-		beUtils.updateBaseEntity(entity);
-	}
+        BaseEntity be = beUtils.getBaseEntity(baseEntityCode);
+
+        for (int i = 0; i < attributeCodeValue.length; i++) {
+            String[] split = attributeCodeValue[i].split("=");
+            String attributeCode = split[0];
+            String value = split[1];
+            if (attributeCode.startsWith("LNK_")) {
+                // Check if value is in JsonArray format , otherwise wrap it..
+                if (value != null) {
+                    if (!value.startsWith("[")) {
+                        value = "[\"" + value + "\"]";
+                    }
+                }
+            }
+            be = beUtils.addValue(be, attributeCode, value);
+        }
+
+        beUtils.updateBaseEntity(be);
+    }
+
+    /**
+     * Set pending status to base entity
+     *
+     * @param entityCode
+     */
+    public void setPending(String entityCode) {
+        BaseEntity entity = beUtils.getBaseEntity(entityCode);
+        entity.setStatus(EEntityStatus.PENDING);
+        beUtils.updateBaseEntity(entity);
+    }
 }

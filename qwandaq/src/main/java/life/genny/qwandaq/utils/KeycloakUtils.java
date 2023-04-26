@@ -1,28 +1,14 @@
 package life.genny.qwandaq.utils;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.StringReader;
-import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
-import java.net.URI;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import life.genny.qwandaq.constants.Prefix;
+import life.genny.qwandaq.exception.runtime.KeycloakException;
+import life.genny.qwandaq.models.ANSIColour;
+import life.genny.qwandaq.models.GennySettings;
+import life.genny.qwandaq.models.GennyToken;
+import life.genny.qwandaq.models.ServiceToken;
+import org.apache.commons.lang3.StringUtils;
+import org.jboss.logging.Logger;
+
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.json.Json;
@@ -32,22 +18,20 @@ import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.net.ssl.HttpsURLConnection;
 import javax.ws.rs.core.Response;
-
-import life.genny.qwandaq.attribute.Attribute;
-import life.genny.qwandaq.attribute.EntityAttribute;
-import life.genny.qwandaq.constants.Prefix;
-import life.genny.qwandaq.entity.BaseEntity;
-import org.apache.commons.lang3.StringUtils;
-import org.jboss.logging.Logger;
-import org.keycloak.representations.account.UserRepresentation;
-import org.keycloak.util.JsonSerialization;
-
-import life.genny.qwandaq.exception.runtime.ItemNotFoundException;
-import life.genny.qwandaq.exception.runtime.KeycloakException;
-import life.genny.qwandaq.models.ANSIColour;
-import life.genny.qwandaq.models.GennySettings;
-import life.genny.qwandaq.models.GennyToken;
-import life.genny.qwandaq.models.ServiceToken;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.net.http.HttpResponse;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * A static utility class used for standard requests and
@@ -347,19 +331,16 @@ public class KeycloakUtils {
      * @param realm the realm to create the user under
      * @return the user uuid
      */
-    public static String createDummyUser(GennyToken token, String realm) {
+    public String createDummyUser(GennyToken token, String realm) {
         return createDummyUser(token.getToken(), realm);
     }
 
     /**
-     * Initialise a Dummy User in keycloak.
-     *
-     * @param token the token to use to create the user
-     * @param realm the realm to create the user in
-     * @return the user uuid
+     * @param token
+     * @param realm
+     * @return
      */
-    @Deprecated
-    public static String createDummyUser(String token, String realm) {
+    public String createDummyUser(String token, String realm) {
 
         String username = UUID.randomUUID().toString().substring(0, 18);
         String email = username + "@gmail.com";
@@ -367,208 +348,107 @@ public class KeycloakUtils {
 
         String json = "{ " + "\"username\" : \"" + username + "\"," + "\"email\" : \"" + email + "\" , " + "\"enabled\" : true, " + "\"emailVerified\" : true, " + "\"firstName\" : \"" + username + "\", " + "\"lastName\" : \"" + username + "\", " + "\"groups\" : [" + " \"users\" " + "], " + "\"requiredActions\" : [\"terms_and_conditions\"], " + "\"realmRoles\" : [\"user\"],\"credentials\": [{" + "\"type\":\"password\"," + "\"value\":\"" + defaultPassword + "\"," + "\"temporary\":true }]}";
 
-        log.info("CreateUserjsonDummy = " + json);
+        log.info("Dummy User = " + json);
 
         String uri = GennySettings.keycloakUrl() + "/admin/realms/" + realm + "/users";
 
         log.info("Create keycloak user - url:" + uri + ", token:" + token);
 
-        HttpResponse<String> response = HttpUtils.post(uri, json, token);
-        if (response == null) throw new KeycloakException("Failed to create user: Response is null");
+        HttpResponse<String> response = HttpUtils.post(uri, json, serviceToken);
+        String userIdUrl = response.headers().firstValue("Location").orElseThrow(() -> new KeycloakException("Failed to create user: Response is null"));
 
-        Integer statusCode = response.statusCode();
+        if (userIdUrl == null) throw new KeycloakException("Failed to create user: Response is null");
+
+        int statusCode = response.statusCode();
         Response.Status status = Response.Status.fromStatusCode(statusCode);
         log.info("Create User Response Status: " + statusCode);
 
-        try {
-            // if user already exists, return their id
-            if (status == Response.Status.CONFLICT) {
-                log.warn("Email already taken: " + email);
-                return getKeycloakUserId(token, realm, username);
-            }
+        // if user already exists, return their id
+        if (status == Response.Status.CONFLICT) {
+            log.warn("Email already taken: " + email);
+            return null;
+        }
 
-            if (Response.Status.Family.familyOf(statusCode) == Response.Status.Family.SUCCESSFUL) {
-                log.info("Successfully Created User");
-                return getKeycloakUserId(token, realm, username);
-            }
-
-        } catch (IOException e) {
-            throw new KeycloakException("Failed to create user: ", e);
+        if (Response.Status.Family.familyOf(statusCode) == Response.Status.Family.SUCCESSFUL) {
+            log.info("Successfully Created User");
+            String userId = userIdUrl.replace(uri + "/", "");
+            log.debug("keycloak userid: " + userId);
+            return userId;
         }
 
         throw new KeycloakException("Failed to create user: " + response.body());
     }
 
     /**
-     * Fetch a keycloak users Id using a username.
-     *
-     * @param token    the token to fetch with
-     * @param realm    the realm to fetch in
-     * @param username the username to fetch for
-     * @return Strign
-     * @throws IOException if id could not be fetched
+     * @param jsonObject
+     * @param uuid
+     * @param realm
      */
-    public static String getKeycloakUserId(final String token, final String realm, final String username) throws IOException {
-
-        final List<LinkedHashMap<?, ?>> users = fetchKeycloakUser(token, realm, username);
-        if (!users.isEmpty()) {
-            return (String) users.get(0).get("id");
-        }
-        return null;
-    }
-
-    /**
-     * Fetch a keycloak user using a username.
-     *
-     * @param token    the token to fetch with
-     * @param realm    the realm to fetch in
-     * @param username the username to fetch for
-     * @return List
-     */
-    public static List<LinkedHashMap<?, ?>> fetchKeycloakUser(final String token, final String realm, final String username) {
-
-        String uri = GennySettings.keycloakUrl() + "/admin/realms/" + realm + "/users?username=" + username;
-
-        HttpClient client = HttpClient.newHttpClient();
-        HttpRequest request = HttpRequest.newBuilder().uri(URI.create(uri)).setHeader("Content-Type", "application/json").setHeader("Authorization", "Bearer " + token).GET().build();
-
-        try {
-
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-            if (response == null) {
-                log.error("Response was null from keycloak!!!");
-                return null;
-            }
-
-            int statusCode = response.statusCode();
-            log.info("Fetch User Response Status: " + statusCode);
-
-            if (statusCode != 200) {
-                log.error("Failed to get users from Keycloak, url:" + uri + ", response code:" + statusCode + ", token:" + token);
-                return null;
-            }
-
-            List<LinkedHashMap<?, ?>> results = new ArrayList<LinkedHashMap<?, ?>>();
-
-            final InputStream is = new ByteArrayInputStream(response.body().getBytes("UTF-8"));
-            try {
-                results = JsonSerialization.readValue(is, (new ArrayList<UserRepresentation>()).getClass());
-            } finally {
-                is.close();
-            }
-
-            return results;
-
-        } catch (IOException | InterruptedException e) {
-            log.error(e);
-        }
-
-        return null;
-    }
-
-    /**
-     * Update a keycloak user field.
-     *
-     * @param user      the user to update for
-     * @param field     the field to update
-     * @param value     the value to update to
-     * @return int statusCode
-     */
-    public int updateUserField(BaseEntity user, String field, String value) {
-
-        String realm = serviceToken.getKeycloakRealm();
-        String productCode = user.getRealm();
-        String userCode = user.getCode();
-
-        EntityAttribute id = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_UUID);
-        if (id == null) {
-            throw new ItemNotFoundException(productCode, userCode, Attribute.PRI_UUID);
-        }
-        String uuid = id.getValueString().toLowerCase();
-
-        String json = "{\"" + field + "\":\"" + value + "\"}";
-        String uri = GennySettings.keycloakUrl() + "/admin/realms/" + realm + "/users/" + uuid;
+    public void updateUserDetails(JsonObject jsonObject, String uuid, String realm) {
+        log.info(ANSIColour.doColour("Updating user details for: " + uuid, ANSIColour.GREEN));
+        String json = jsonObject.toString();
+        log.info(ANSIColour.doColour("request body: " + json, ANSIColour.GREEN));
+        String uri = GennySettings.keycloakUrl() + "/admin/realms/" + realm + "/users/" + uuid.toLowerCase();
+        log.info(ANSIColour.doColour("request url: " + uri, ANSIColour.GREEN));
         HttpResponse<String> response = HttpUtils.put(uri, json, serviceToken);
-
-        return response.statusCode();
-    }
-
-    /**
-     * Update a keycloak user email.
-     *
-     * @param user      the user to update for
-     * @param email     the email to set
-     * @return int statusCode
-     */
-    public int updateUserEmail(BaseEntity user, String email) {
-
-        String realm = serviceToken.getKeycloakRealm();
-        String productCode = user.getRealm();
-        String userCode = user.getCode();
-
-        EntityAttribute id = beaUtils.getEntityAttribute(productCode, userCode, Attribute.PRI_UUID, true);
-        if (id == null) {
-            throw new ItemNotFoundException(productCode, userCode, Attribute.PRI_UUID);
+        int statusCode = response.statusCode();
+        String body = response.body();
+        log.info(ANSIColour.doColour("keycloak response -> statusCode: " + statusCode, ANSIColour.YELLOW));
+        log.info(ANSIColour.doColour("keycloak response -> body: " + body, ANSIColour.YELLOW));
+        if (Response.Status.Family.familyOf(statusCode) == Response.Status.Family.SUCCESSFUL) {
+            log.info(ANSIColour.doColour("Successfully updated user details!", ANSIColour.GREEN));
+        } else if (Response.Status.CONFLICT.getStatusCode() == statusCode) {
+            log.error(ANSIColour.doColour("User exists with same username or email!", ANSIColour.RED));
+            throw new KeycloakException("User exists with same username or email");
+        } else {
+            log.error(ANSIColour.doColour("Failed updating user details!", ANSIColour.RED));
+            throw new KeycloakException("Failed to update user details");
         }
-        String uuid = id.getValueString().toLowerCase();
-
-        String json = "{ \"email\" : \"" + email + "\" , \"enabled\" : true, \"emailVerified\" : true}";
-        String uri = GennySettings.keycloakUrl() + "/admin/realms/" + realm + "/users/" + uuid;
-        HttpResponse<String> response = HttpUtils.put(uri, json, serviceToken);
-
-        return response.statusCode();
     }
 
     /**
-     *
-     * @param userCode
+     * @param uuid
+     * @param realm
      * @param password
      * @param askUserToResetPassword
      * @return
      */
-    public int updateUserTemporaryPassword(String userCode, String password, Boolean askUserToResetPassword) {
-        log.debug("Setting password: " + password + "for: " + userCode);
+    public void updateUserTemporaryPassword(String uuid, String realm, String password, Boolean askUserToResetPassword) {
         try {
             String keycloakUrl = GennySettings.keycloakUrl();
-            String realm = serviceToken.getKeycloakRealm();
-            String uuid = beaUtils.getEntityAttribute(realm, userCode, "PRI_UUID").getValueString();
-            uuid = uuid.toLowerCase();
+            JsonObject requestObject = Json.createObjectBuilder().add("type", "password").add("temporary", askUserToResetPassword).add("value", password).build();
 
-            String json = "{\"type\": \"password\", " + "\"temporary\": \"" + (askUserToResetPassword ? "true" : "false") + "\",\"value\": \"" + password + "\"" + "}";
-
-            String requestURL = keycloakUrl + "/auth/admin/realms/" + realm + "/users/" + uuid + "/reset-password";
-
+            String json = requestObject.toString();
+            log.info(ANSIColour.doColour("request body: " + json, ANSIColour.GREEN));
+            String requestURL = keycloakUrl + "/auth/admin/realms/" + realm + "/users/" + uuid.toLowerCase() + "/reset-password";
+            log.info(ANSIColour.doColour("request url: " + requestURL, ANSIColour.GREEN));
             HttpResponse<String> response = HttpUtils.put(requestURL, json, serviceToken);
-
-            return response.statusCode();
+            int statusCode = response.statusCode();
+            String body = response.body();
+            log.info(ANSIColour.doColour("keycloak response -> statusCode: " + statusCode, ANSIColour.YELLOW));
+            log.info(ANSIColour.doColour("keycloak response -> body: " + body, ANSIColour.YELLOW));
         } catch (Exception ex) {
-            log.error("Exception: " + ex);
-            return Response.Status.INTERNAL_SERVER_ERROR.getStatusCode();
+            throw new KeycloakException("Failed to updating user password");
         }
     }
 
     /**
-     *
-     * @param userCode
+     * @param uuid
      * @param askUserToResetPassword
      * @return
      */
-    public String updateUserPassword(String userCode, Boolean askUserToResetPassword) {
+    public String updateUserPassword(String uuid, String realm, Boolean askUserToResetPassword) {
         /* Generate a random 15 char password */
         String newPassword = RandomStringUtils.generateRandomString(15);
-        updateUserTemporaryPassword(userCode, newPassword, askUserToResetPassword);
+        updateUserTemporaryPassword(uuid, realm, newPassword, askUserToResetPassword);
         return newPassword;
     }
 
     /**
-     *
-     * @param userCode
+     * @param uuid
      * @return
      */
-    public String updateUserTemporaryPassword(String userCode) {
-        return updateUserPassword(userCode, true);
+    public String updateUserTemporaryPassword(String uuid, String realm) {
+        return updateUserPassword(uuid, realm, true);
     }
-
-
 }

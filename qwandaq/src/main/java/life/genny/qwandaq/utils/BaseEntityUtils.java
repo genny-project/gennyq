@@ -74,6 +74,9 @@ public class BaseEntityUtils {
 	@Inject
 	DefUtils defUtils;
 
+	@Inject
+	KeycloakUtils keycloakUtils;
+
 	public BaseEntityUtils() { 
 	}
 
@@ -641,7 +644,6 @@ public class BaseEntityUtils {
 	 * @return The created BaseEntity
 	 */
 	public BaseEntity createUser(final Definition definition) {
-
 		Optional<EntityAttribute> opt = definition.findEntityAttribute(Prefix.ATT_.concat(Attribute.PRI_UUID));
 		if (opt.isEmpty())
 			throw new DefinitionException("Definition is not a User definition: " + definition.getCode());
@@ -649,7 +651,8 @@ public class BaseEntityUtils {
 		String email = "random+" + UUID.randomUUID().toString().substring(0, 20) + "@gada.io";
 
 		// generate keycloak id
-		String uuid = KeycloakUtils.createDummyUser(serviceToken, userToken.getKeycloakRealm());
+		String uuid = keycloakUtils.createDummyUser(serviceToken, userToken.getKeycloakRealm());
+		log.debug("uuid: "+ uuid);
 
 		// check definition prefix
 		Optional<String> optCode = definition.getValue(Attribute.PRI_PREFIX);
