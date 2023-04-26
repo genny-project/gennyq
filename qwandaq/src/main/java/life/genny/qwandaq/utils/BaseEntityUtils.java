@@ -598,6 +598,11 @@ public class BaseEntityUtils {
 			// Find any default val for this Attr
 			String defaultDefValueAttr = Prefix.DFT_.concat(attrCode);
 			Object defaultVal = definition.getValue(defaultDefValueAttr, attribute.getDefaultValue());
+			if(defaultVal != null && defaultVal == attribute.getDefaultValue()) {
+				log.debug("Same memory reference for: " + defaultVal + ". Likely not DFT associated with: " + attrCode);
+			} else if(defaultVal != null && defaultVal.equals(attribute.getDefaultValue())) {
+				log.debug("Not same memory reference but defaultVal and attribute.getDefaultValue are identical for: " + attrCode + ". Value: " + defaultVal);
+			}
 
 			// Only process mandatory attributes, or defaults
 			Boolean mandatory = ea.getValueBoolean();
@@ -608,7 +613,7 @@ public class BaseEntityUtils {
 			}
 			// Only process mandatory attributes, or defaults
 			if (mandatory || defaultVal != null) {
-				log.info("Adding mandatory/default -> " + attribute.getCode());
+				log.info("Adding mandatory/default -> " + attribute.getCode() + ". Default: " + (defaultVal != null ? defaultVal : "null") + ", mand: " + mandatory);
 				EntityAttribute newEA = new EntityAttribute(item, attribute, ea.getWeight(), defaultVal);
 				newEA.setRealm(userToken.getProductCode());
 				item.addAttribute(newEA);

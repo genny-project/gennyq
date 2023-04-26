@@ -710,8 +710,10 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 							setValueInteger(((BigDecimal) value).intValue());
 						else if(value instanceof Integer)
 							setValueInteger((Integer) value);
-						else
-							throw new UnsupportedOperationException("Unsupported java type: " + className + " for value: " + value + ". Value class type: " + value.getClass());
+						else {
+							log.error("EntityAttribute: " + getCompositeCode() + " integer conversion error. DttCode: " + (attribute != null ? attribute.getDttCode() : "null (no attribute object)"));
+							// throw new UnsupportedOperationException("Unsupported java type: " + className + " for value: " + value + ". Value class type: " + value.getClass());
+						}
 						break;
 
 					case GennyConstants.JAVA_TIME_LOCAL_DATE_TIME:
@@ -1224,6 +1226,10 @@ public class EntityAttribute implements CoreEntityPersistable, ICapabilityHidden
 
 	public boolean isLocked() {
 		return capabilityRequirements != null;
+	}
+
+	public String getCompositeCode() {
+		return baseEntityCode + ":" + attributeCode;
 	}
 
 	@Override
