@@ -608,7 +608,7 @@ public class BaseEntityUtils {
 			}
 			// Only process mandatory attributes, or defaults
 			if (mandatory || defaultVal != null) {
-				log.info("Adding mandatory/default -> " + attribute.getCode());
+				log.info("Adding mandatory/default -> " + attribute.getCode() + ". Default: " + (defaultVal != null ? defaultVal : "null") + ", mand: " + mandatory);
 				EntityAttribute newEA = new EntityAttribute(item, attribute, ea.getWeight(), defaultVal);
 				newEA.setRealm(userToken.getProductCode());
 				item.addAttribute(newEA);
